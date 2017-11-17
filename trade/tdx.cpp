@@ -2,10 +2,15 @@
 #include <iostream>
 
 tdx::tdx(const char* account, const char* password) : trader(account, password), _tdxapi(0), _client_id(-1) {
-	_server.ip("119.147.172.176");
+	_server.ip("222.247.45.187");
 	_server.port(7708);
-	_server.version("1.12");
-	_server.deptid(2);
+	_server.version("6.00");
+	_server.deptid(1);
+
+	//_server.ip("119.147.172.176");
+	//_server.port(7708);
+	//_server.version("1.12");
+	//_server.deptid(2);
 
 	//_server.ip("119.97.142.136");
 	//_server.port(7708);
@@ -39,6 +44,7 @@ int tdx::login() {
 	_client_id = _tdxapi->login(_server.ip().c_str(), _server.port(), _server.version().c_str(), _server.deptid(), 
 							account().c_str(), account().c_str(), password().c_str(), password().c_str(), error);
 	if (_client_id < 0) {
+		std::cout << error << std::endl;
 		set_last_error(error);
 		return -1;
 	}
@@ -46,9 +52,9 @@ int tdx::login() {
 	return 0;
 }
 
-int tdx::query_money() {
+int tdx::query(int category) {
 	char *result = new char[1024*1024], error[1024] = { 0 };
-	_tdxapi->query_data(_client_id, 0, result, error);//查询资金
+	_tdxapi->query_data(_client_id, category, result, error);//查询资金
 	std::cout << result << std::endl;
 	std::cout << error << std::endl;
 

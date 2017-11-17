@@ -37,7 +37,7 @@ public:
 
 	virtual int login();
 
-	virtual int query_money();
+	virtual int query(int category);
 
 	virtual int logout();
 

@@ -11,7 +11,7 @@ public:
 
 	virtual int login() = 0;
 
-	virtual int query_money() = 0;
+	virtual int query(int category) = 0;
 
 	virtual int logout() = 0;
 
