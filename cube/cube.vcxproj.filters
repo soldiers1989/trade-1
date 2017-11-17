@@ -15,36 +15,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="tdxapi.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="tdxdef.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="type.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="tdx.h">
+    <ClInclude Include="util.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="tdxdll.h">
+    <ClInclude Include="file.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="trader.h">
+    <ClInclude Include="data.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ns.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tdxapi.cpp">
+    <ClCompile Include="util.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="tdx.cpp">
+    <ClCompile Include="file.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="tdxdll.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="trader.cpp">
+    <ClCompile Include="data.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

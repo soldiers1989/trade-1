@@ -15,36 +15,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="tdxapi.h">
+    <ClInclude Include="stdafx.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="tdxdef.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="type.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="tdx.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="tdxdll.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="trader.h">
+    <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tdxapi.cpp">
+    <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="tdx.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="tdxdll.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="trader.cpp">
+    <ClCompile Include="server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,6 @@
 #pragma once
+#include <string>
 #include "tdxdef.h"
-#include <Windows.h>
 
 class tdxapi {
 public:
@@ -13,52 +13,33 @@ public:
 	*@return
 	*	0--on sucess, otherwise for failure
 	*/
-	int load(const char* dllpath, const char* account);
-
-	/*
-	*	free module
-	*@return
-	*	0
-	*/
-	int free();
+	int load(const std::string& account, const std::string& rawdll);
 
 public:
-	func_open open = NULL;
-	func_close close = NULL;
+	func_open open = 0;
+	func_close close = 0;
 	
-	func_login login = NULL;
-	func_logout logout = NULL;
+	func_login login = 0;
+	func_logout logout = 0;
 	
-	func_query_data query_data = NULL;
-	func_query_datas query_datas = NULL;
-	func_query_history_data query_history_data = NULL;
+	func_query_data query_data = 0;
+	func_query_datas query_datas = 0;
+	func_query_history_data query_history_data = 0;
 
-	func_send_order send_order = NULL;
-	func_cancel_order cancel_order = NULL;
-	func_send_orders send_orders = NULL;
-	func_cancel_orders cancel_orders = NULL;
+	func_send_order send_order = 0;
+	func_cancel_order cancel_order = 0;
+	func_send_orders send_orders = 0;
+	func_cancel_orders cancel_orders = 0;
 
-	func_get_quote get_quote = NULL;
-	func_get_quotes get_quotes = NULL;
+	func_get_quote get_quote = 0;
+	func_get_quotes get_quotes = 0;
 
-	func_repay repay = NULL;
+	func_repay repay = 0;
 
 private:
-	//encrypt key for change dll relate with account
-	char *generate_key(const char* account);
-
-	//generate new dll
-	char* generate_dll(const char* dllpath, const char* account);
-
-	//load data from file
-	char* read_file(const char* path, int &sz);
-
-	//write data to file
-	int write_file(const char* path, const char* content, int sz);
-
-	//find byte
-	char* find(char* src, int sz, const char* sub, int subsz);
+	//new dll name for account
+	std::string dllname(const std::string& account, const std::string& rawdll);
 
 	//module of dll
-	HMODULE _hmodule = NULL;
+	void * _hmodule = 0;
 };
