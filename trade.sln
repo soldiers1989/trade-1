@@ -10,12 +10,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcxproj",
 		{F52B5843-A14D-40C6-9CA0-3881DBA887DF} = {F52B5843-A14D-40C6-9CA0-3881DBA887DF}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cube", "cube\cube.vcxproj", "{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server", "server\server.vcxproj", "{3C8E99C2-48A8-4447-9657-FAAA2B0A6699}"
-	ProjectSection(ProjectDependencies) = postProject
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D} = {1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,14 +36,6 @@ Global
 		{A7430E91-18BF-46D6-BF62-DAE49502F0E6}.Release|x64.Build.0 = Release|x64
 		{A7430E91-18BF-46D6-BF62-DAE49502F0E6}.Release|x86.ActiveCfg = Release|Win32
 		{A7430E91-18BF-46D6-BF62-DAE49502F0E6}.Release|x86.Build.0 = Release|Win32
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}.Debug|x64.ActiveCfg = Debug|x64
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}.Debug|x64.Build.0 = Debug|x64
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}.Debug|x86.ActiveCfg = Debug|Win32
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}.Debug|x86.Build.0 = Debug|Win32
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}.Release|x64.ActiveCfg = Release|x64
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}.Release|x64.Build.0 = Release|x64
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}.Release|x86.ActiveCfg = Release|Win32
-		{1FF688A7-45CA-4D12-9BB0-FE54CF9C4E4D}.Release|x86.Build.0 = Release|Win32
 		{3C8E99C2-48A8-4447-9657-FAAA2B0A6699}.Debug|x64.ActiveCfg = Debug|x64
 		{3C8E99C2-48A8-4447-9657-FAAA2B0A6699}.Debug|x64.Build.0 = Debug|x64
 		{3C8E99C2-48A8-4447-9657-FAAA2B0A6699}.Debug|x86.ActiveCfg = Debug|Win32
