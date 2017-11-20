@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-
 #include "cube\ns.h"
 
 BEGIN_CUBE_NAMESPACE

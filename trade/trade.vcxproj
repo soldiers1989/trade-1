@@ -91,7 +91,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;TRADE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -123,7 +124,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;TRADE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>.\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -150,18 +152,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="error.h" />
     <ClInclude Include="tdxapi.h" />
     <ClInclude Include="tdxdef.h" />
     <ClInclude Include="tdxdll.h" />
+    <ClInclude Include="traders.h" />
     <ClInclude Include="trader.h" />
     <ClInclude Include="tdx.h" />
     <ClInclude Include="type.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tdxapi.cpp" />
     <ClCompile Include="tdxdll.cpp" />
-    <ClCompile Include="trader.cpp" />
+    <ClCompile Include="traders.cpp" />
     <ClCompile Include="tdx.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

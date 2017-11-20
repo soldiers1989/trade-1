@@ -77,4 +77,16 @@ std::vector<std::string> str::split(const std::string& str, const std::string& s
 
 	return result;
 }
+
+std::vector<std::vector<std::string>> str::split(const char *str, const char *seprow, const char *sepcol) {
+	std::vector<std::vector<std::string>> table;
+
+	std::vector<std::string> rows = str::split(str, seprow);
+	for (int i = 0; i < (int)rows.size(); i++) {
+		std::vector<std::string> cols = str::split(rows[i], sepcol);
+		table.push_back(cols);
+	}
+
+	return table;
+}
 END_CUBE_NAMESPACE
