@@ -159,7 +159,6 @@
     <ClInclude Include="traders.h" />
     <ClInclude Include="trader.h" />
     <ClInclude Include="tdx.h" />
-    <ClInclude Include="type.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>

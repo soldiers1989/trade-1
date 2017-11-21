@@ -21,9 +21,6 @@
     <ClInclude Include="tdxdef.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="type.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="tdx.h">
       <Filter>头文件</Filter>
     </ClInclude>
