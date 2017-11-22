@@ -1,4 +1,6 @@
 #include "util.h"
+#include <iomanip>
+#include <iostream>
 
 BEGIN_CUBE_NAMESPACE
 std::vector<std::string> util::split(const char* str, const char sep) {
@@ -226,6 +228,15 @@ template<class T> std::string util::tostr(const T val, const char* fmt) {
 	sprintf_s(buf, BUFSZ, fmt, val);
 
 	return std::string(buf);
+}
+
+void util::print(const std::vector<std::vector<std::string>> &table, int colwidth) {
+	for (size_t nrow = 0; nrow < table.size(); nrow++) {
+		for (size_t ncol = 0; ncol < table[nrow].size(); ncol++) {
+			std::cout <<std::setw(colwidth) << table[nrow][ncol].c_str();
+		}
+		std::cout << std::endl;
+	}
 }
 
 END_CUBE_NAMESPACE

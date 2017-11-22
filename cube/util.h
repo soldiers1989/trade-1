@@ -138,5 +138,13 @@ public:
 	*	string of value
 	*/
 	template<class T> static std::string tostr(const T val, const char* fmt);
+
+	/*
+	*	print table data to console
+	*@param table: in, table want to print
+	*@return
+	*	void
+	*/
+	static void print(const std::vector<std::vector<std::string>> &table, int colwidth = 10);
 };
 END_CUBE_NAMESPACE
