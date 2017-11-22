@@ -90,6 +90,33 @@ std::vector<std::vector<std::string>> util::split(const char *str, const char *s
 	return table;
 }
 
+std::vector<std::string> util::splits(const std::string& str, const std::string& seps) {
+	std::vector<std::string> result;
+
+	int startpos = 0, endpos = 0, pos = 0;
+	while (pos < (int)str.size()) {
+		if (seps.find(str[pos]) != std::string::npos) {
+			result.push_back(str.substr(startpos, pos - startpos));
+			pos++;
+			while (pos < (int)str.size()) {
+				if (seps.find(str[pos] == std::string::npos)) {
+					startpos = pos;
+					break;
+				}
+				pos++;
+			}
+		}
+		else
+			pos++;
+	}
+
+	if (startpos < (int)str.size()) {
+		result.push_back(str.substr(startpos));
+	}
+
+	return result;
+}
+
 int util::max_same_prefix_and_postfix(const char* blk, int len) {
 	int rptlen = 0;
 	for (rptlen = len - 1; rptlen > 0; rptlen--) {
@@ -108,7 +135,7 @@ int util::max_same_prefix_and_postfix(const char* blk, int len) {
 	return 0;
 }
 
-char* util::fast_search(const char* content, int content_length, const char* target, int target_length) {
+char* util::fast_search(char* content, int content_length, const char* target, int target_length) {
 	int * next = new int[target_length];
 	for (int sublen = 0; sublen < target_length; sublen++) {
 		next[sublen] = util::max_same_prefix_and_postfix(target, sublen + 1) + 1;
@@ -131,7 +158,7 @@ char* util::fast_search(const char* content, int content_length, const char* tar
 	return 0;
 }
 
-char* util::slow_search(const char* content, int content_length, const char* target, int target_length) {
+char* util::slow_search(char* content, int content_length, const char* target, int target_length) {
 	int i = 0, j = 0;
 	for (i = 0; i < content_length - target_length + 1; i++) {
 		for (j = 0; j < target_length; j++) {
@@ -150,13 +177,40 @@ char* util::slow_search(const char* content, int content_length, const char* tar
 	return 0;
 }
 
-char* util::search(const char* content, int content_length, char* target, int target_length, bool fast/* = true*/) {
+char* util::search(char* content, int content_length, const char* target, int target_length, bool fast/* = true*/) {
 	if (fast) {
 		return util::fast_search(content, content_length, target, target_length);
 	}
 	else {
 		return util::slow_search(content, content_length, target, target_length);
 	}
+}
+
+int util::overwrite(char* data, int datalen, const char* src, int srclen, const char* dest, int destlen, char default/* = 0*/, bool onlyfirst/* = true*/) {
+	//overwrite number
+	int ownum = 0;
+
+	while (data != 0 && datalen > 0) {
+		//first search the source position in data
+		char* pdata = util::search(data, datalen, src, srclen);
+		if (destlen > srclen && (datalen - (pdata - data) < destlen))
+			break;
+
+		//overwrite with destination data
+		if (destlen < srclen)
+			memset(pdata, default, srclen);
+		memcpy(pdata, dest, destlen);
+		ownum++;
+
+		if (onlyfirst)
+			break;
+
+		//next search from new position
+		data = pdata + (destlen > srclen ? destlen : srclen);
+		datalen = datalen - (destlen > srclen ? destlen : srclen);
+	}	
+
+	return ownum;
 }
 
 bool util::empty(const char* str) {

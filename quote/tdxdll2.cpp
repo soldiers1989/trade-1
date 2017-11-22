@@ -7,7 +7,8 @@ int tdxdll2::load(std::string path/* = "TdxL2HqApi.dll"*/, std::string *error/* 
 	//first load dll module
 	_hmodule = LoadLibrary(path.c_str());
 	if (_hmodule == NULL) {
-		*error = cube::sys::getlasterror();
+		if(error != 0)
+			*error = cube::sys::getlasterror();
 		return -1;
 	}
 

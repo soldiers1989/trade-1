@@ -55,6 +55,15 @@ public:
 	static std::vector<std::vector<std::string>> split(const char *str, const char *seprow, const char *sepcol);
 
 	/*
+	*	split a string by specified seperator characters
+	*@param str: string to be splited
+	*@param spes: characters used to seperate
+	*@return:
+	*	split result;
+	*/
+	static std::vector<std::string> splits(const std::string& str, const std::string& seps);
+
+	/*
 	*	get the max length of the same prefix and postfix of input data sequence block.
 	*for example:
 	*	input data block: <abadaba>,  prefix: <a,ab, aba, abad, abada, abadab>, postfix:<a, ba, aba, daba, adaba, badaba>
@@ -75,7 +84,7 @@ public:
 	*@return
 	*	pointer to the first occurence of @target in the @content block, or 0 if target not found.
 	*/
-	static char* fast_search(const char* content, int content_length, const char* target, int target_length);
+	static char* fast_search(char* content, int content_length, const char* target, int target_length);
 
 	/*
 	*	slow search, search a target data block in the content data block, return the position of the first ocurrence in the content
@@ -86,7 +95,7 @@ public:
 	*@return
 	*	pointer to the first occurence of @target in the @content block, or 0 if target not found.
 	*/
-	static char* slow_search(const char* content, int content_length, const char* target, int target_length);
+	static char* slow_search(char* content, int content_length, const char* target, int target_length);
 
 	/*
 	*	search wrapper, search a target data block in the content data block, return the position of the first ocurrence in the content
@@ -97,7 +106,21 @@ public:
 	*@return
 	*	pointer to the first occurence of @target in the @content block, or 0 if target not found.
 	*/
-	static char* search(const char* content, int content_length, char* target, int target_length, bool fast = true);
+	static char* search(char* content, int content_length, const char* target, int target_length, bool fast = true);
+
+	/*
+	*	overwrite source with destination in the given data, use default value if destinaiton length is less than source length
+	*@param data: in/out, given data
+	*@param datalen: in, sizeof data
+	*@param src: in, source data to be overwrite
+	*@param srclen: in, length of source data in bytes
+	*@param dest: in, destiniation data
+	*@param destlen: in, length of destinationdata in bytes
+	*@param default: default value use to overwrite source if destination length is less than source
+	*@return:
+	*	place number overwrited, otherwise <0 
+	*/
+	static int overwrite(char* data, int datalen, const char* src, int srclen, const char* dest, int destlen, char default = 0, bool onlyfirst = true);
 
 	/*
 	*	check if input string is empty
