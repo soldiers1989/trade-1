@@ -39,7 +39,7 @@ typedef enum class hcategory_t { lswt = 0, lscj = 1, jgd = 2, other = -1 } hcate
 typedef enum class ocategory_t { buy = 0, sell = 1, rzmr = 2, rqmc = 3, mqhq = 4, mqhk = 5, xqhk = 6, other = -1 } ocategory_t;
 
 //price type: 0上海限价委托 深圳限价委托 1(市价委托)深圳对方最优价格  2(市价委托)深圳本方最优价格  3(市价委托)深圳即时成交剩余撤销  4(市价委托)上海五档即成剩撤 深圳五档即成剩撤 5(市价委托)深圳全额成交或撤销 6(市价委托)上海五档即成转限价
-typedef enum class pricetype_t { xjwt = 0, sjwt1 = 1, sjwt2 = 2, sjwt3 = 3, sjwt4 = 4, sjwt5 = 5, sjwt6 = 6, other = -1 } price_t;
+typedef enum class pricetype_t { xjwt = 0, sjwt1 = 1, sjwt2 = 2, sjwt3 = 3, sjwt4 = 4, sjwt5 = 5, sjwt6 = 6, other = -1 } pricetype_t;
 
 //structure for send or cancel order
 class order_t {

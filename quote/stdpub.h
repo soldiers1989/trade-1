@@ -11,6 +11,10 @@ typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
+static const char* TDX_QUOTE1_DLL = "TdxHqApi.dll";
+static const char* TDX_QUOTE2_DLL = "TdxL2HqApi.dll";
+//static const char* TDX_QUOTE2_DLL = "TradeX.dll";
+
 static const int TDX_BATCH_LIMIT = 20;
 static const int TDX_BUFFER_SIZE_RESULT = 64 * 1024;
 static const int TDX_BUFFER_SIZE_ERROR = 4 * 1024;

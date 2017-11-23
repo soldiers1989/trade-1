@@ -1,7 +1,6 @@
 #include "tdx2.h"
 #include "error.h"
 #include "cube\util.h"
-#define TDX_QUOTE2_DLL "TdxL2HqApi.dll"
 
 BEGIN_QUOTE_NAMESPACE
 tdx2::tdx2() : _quote(0)

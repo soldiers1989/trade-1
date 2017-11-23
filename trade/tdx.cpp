@@ -127,7 +127,7 @@ int tdx::send(order_t order, table_t &result, std::string& error) {
 	return send(order.category, order.type, order.gddm, order.zqdm, order.price, order.count, result, error);
 }
 
-int tdx::send(ocategory_t category, price_t type, std::string gddm, std::string zqdm, float price, int count, table_t &result, std::string& error) {
+int tdx::send(ocategory_t category, pricetype_t type, std::string gddm, std::string zqdm, float price, int count, table_t &result, std::string& error) {
 	//send order
 	_trade->SendOrder(_client_id, static_cast<int>(category), static_cast<int>(type), gddm.c_str(), zqdm.c_str(), price, count, _results[0], _errors[0]);
 	if (!cube::util::empty(_errors[0])) {
