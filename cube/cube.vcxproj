@@ -19,13 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ini.cpp" />
     <ClCompile Include="cube.cpp" />
     <ClCompile Include="file.cpp" />
+    <ClCompile Include="str.cpp" />
+    <ClCompile Include="url.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ini.h" />
     <ClInclude Include="cube.h" />
     <ClInclude Include="file.h" />
+    <ClInclude Include="str.h" />
+    <ClInclude Include="url.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

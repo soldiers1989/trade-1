@@ -24,6 +24,15 @@
     <ClCompile Include="file.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="str.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="url.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ini.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="util.h">
@@ -33,6 +42,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="file.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="str.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="url.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ini.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,6 +4,11 @@
 #define END_CUBE_NAMESPACE }
 
 BEGIN_CUBE_NAMESPACE
+typedef unsigned char byte;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef unsigned long ulong;
+
 class sys {
 public:
 	static std::string getlasterror();
