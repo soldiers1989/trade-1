@@ -90,7 +90,7 @@ bool str::isfloat(const char* str)
 	{
 		if (!::isdigit(*str))
 		{
-			if (! *str=='.' )
+			if (! (*str == '.') )
 				return false; //float only has number or '.'
 			else
 			{
