@@ -45,7 +45,7 @@ int session::on_timeout()
 int session::send(const char *buf, int sz)
 {
 	DWORD snt = 0;
-	overlapped_t *olp = new overlapped_t(buf, sz, _sock);
+	overlapped_t *olp = new overlapped_t(_sock, buf, sz);
 	if (WSASend(_sock, &(olp->_buf), 1, &snt, 0, &(olp->_overlapped), NULL) == SOCKET_ERROR)
 	{
 		int eno = WSAGetLastError();
@@ -61,9 +61,8 @@ int session::send(const char *buf, int sz)
 
 int session::recv(int sz)
 {
-	DWORD rcv = 0;
-	DWORD flag = 0;
-	overlapped_t *olp = new overlapped_t(sz, _sock);
+	DWORD rcv = 0, flag = 0;
+	overlapped_t *olp = new overlapped_t(_sock, sz);
 	if (WSARecv(_sock, &(olp->_buf), 1, &rcv, &flag, &(olp->_overlapped), NULL) == SOCKET_ERROR)
 	{
 		int eno = WSAGetLastError();

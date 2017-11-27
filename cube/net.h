@@ -1,7 +1,5 @@
 #pragma once
 #include <WinSock2.h>
-#include <Windows.h>
-
 #include <thread>
 
 #include "cube.h"
@@ -15,11 +13,11 @@ typedef enum { IOCP_SEND, IOCP_RECV, IOCP_INVALID } iocp_opt;
 typedef struct overlapped
 {
 	OVERLAPPED _overlapped;
-	WSABUF _buf;
-	iocp_opt _opt;
 	SOCKET _sock;
+	iocp_opt _opt;
+	WSABUF _buf;
 
-	overlapped(const char *data, int send_sz, SOCKET sock) :_opt(IOCP_SEND), _sock(sock)
+	overlapped(SOCKET sock, const char *data, int send_sz) : _sock(sock), _opt(IOCP_SEND)
 	{
 		_buf.len = send_sz;
 		_buf.buf = new char[send_sz];
@@ -27,7 +25,7 @@ typedef struct overlapped
 		memset(&_overlapped, 0, sizeof(_overlapped));
 	}
 
-	overlapped(int recv_sz, SOCKET sock) :_opt(IOCP_RECV), _sock(sock)
+	overlapped(SOCKET sock, int recv_sz) : _sock(sock), _opt(IOCP_RECV)
 	{
 		_buf.len = recv_sz;
 		_buf.buf = new char[recv_sz];
@@ -113,38 +111,71 @@ private:
 	void *_service;
 };
 
-template<class session>
+template<class session_impl>
 class service
 {
 public:
-	service()
+	service() : _iocp(INVALID_HANDLE_VALUE), _thread(NULL)
 	{
 
 	}
 
 	virtual ~service()
 	{
+		if (_iocp != INVALID_HANDLE_VALUE)
+		{
+			CloseHandle(_iocp);
+			_iocp = INVALID_HANDLE_VALUE;
+		}
+	}
 
+	/*
+	*	start service
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int start()
+	{
+		/*create io complete port*/
+		_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
+		if (_iocp == NULL)
+			return -1; //create iocp failed.
+
+					   /*start worker thread*/
+		_worker_stop = false;
+		_hdl = (HANDLE)_beginthreadex(NULL, 0, work_thread, this, 0, &_thread_id);
+		if (_hdl == NULL)
+		{
+			_worker_stop = true;
+			return -1; //start worker thread failed.
+		}
+		return 0;
+	}
+
+	//serve new session
+	int serve(session *s)
+	{
+		return 0;
 	}
 
 	//stop iocp service
-	int start();
-
-	//serve new session
-	int serve(session *s);
-
-	//stop iocp service
-	int stop();
+	int stop()
+	{
+		return 0;
+	}
 
 private:
 	//iocp server thread
-	static unsigned __stdcall serve_thread(void *arg);
+	static unsigned __stdcall serve_thread(void *arg)
+	{
+
+	}
 
 private:
 	//iocp handler
 	HANDLE _iocp;
 	//sessions of service
-	map<uint, session*> _sessions;
+	map<uint, session_impl*> _sessions;
 
 	//thread of service
 	std::thread *_thread;
@@ -152,38 +183,52 @@ private:
 	bool _stop;
 };
 
-template<class session>
+template<class session_impl>
 class server
 {
 public:
-	server()
+	server() : _sock(INVALID_SOCKET), _port(0)
 	{
 
 	}
 
 	virtual ~server()
 	{
-
+		if (_sock != INVALID_SOCKET)
+		{
+			closesocket(_sock);
+			_sock = INVALID_SOCKET;
+			_port = 0;
+		}
 	}
 
-	int start();
+	int start()
+	{
+		return 0;
+	}
 
-	int accept(ushort port);
+	int accept(ushort port)
+	{
+		return 0;
+	}
 
 	/*stop accepter*/
-	int stop();
+	int stop()
+	{
+		return 0;
+	}
 
 private:
 	//listen socket
-	SOCKET _listen_sock;
+	SOCKET _sock;
 	//listen port
-	ushort _listen_port;
+	ushort _port;
 
 	//service for server
-	service<session> _service;
+	service<session_impl> _service;
 };
 
-template<class session>
+template<class session_impl>
 class client
 {
 public:
@@ -197,15 +242,24 @@ public:
 
 	}
 
-	int start();
+	int start()
+	{
+		return 0;
+	}
 
-	int connect(uint ip, ushort port);
+	int connect(uint ip, ushort port)
+	{
+		return 0;
+	}
 
 	/*stop accepter*/
-	int stop();
+	int stop()
+	{
+		return 0;
+	}
 
 private:
 	//service for client
-	service<session> _service;
+	service<session_impl> _service;
 };
 END_CUBE_NAMESPACE

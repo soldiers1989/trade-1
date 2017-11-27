@@ -22,6 +22,7 @@
     <ClCompile Include="ini.cpp" />
     <ClCompile Include="cube.cpp" />
     <ClCompile Include="file.cpp" />
+    <ClCompile Include="net.cpp" />
     <ClCompile Include="str.cpp" />
     <ClCompile Include="url.cpp" />
     <ClCompile Include="util.cpp" />
@@ -30,6 +31,7 @@
     <ClInclude Include="ini.h" />
     <ClInclude Include="cube.h" />
     <ClInclude Include="file.h" />
+    <ClInclude Include="net.h" />
     <ClInclude Include="str.h" />
     <ClInclude Include="url.h" />
     <ClInclude Include="util.h" />
