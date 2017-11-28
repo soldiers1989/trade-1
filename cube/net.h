@@ -1,5 +1,8 @@
 #pragma once
 #include <WinSock2.h>
+#include <map>
+#include <list>
+#include <mutex>
 #include <thread>
 
 #include "cube.h"
@@ -45,7 +48,18 @@ class session
 {
 public:
 	session();
+	session(SOCKET s, uint ip, ushort port);
 	virtual ~session();
+
+	/*
+	*	create a new session object
+	*@param s: in, socket of new session
+	*@param ip: in, remote ip address of new session
+	*@param port: in, remote port of new session
+	*@return:
+	*	new session object
+	*/
+	virtual session* create(SOCKET s, uint ip, ushort port);
 
 	/*
 	*	recalled when the connection has build, the @arg is the
@@ -92,6 +106,23 @@ public:
 	*/
 	virtual int on_timeout();
 
+public:
+	//get socket/ip/port of current session
+	SOCKET socket() 
+	{
+		return _socket;
+	}
+
+	uint ip()
+	{
+		return _ip;
+	}
+
+	ushort port()
+	{
+		return _port;
+	}
+
 protected:
 	/*make an asynchronize iocp send operation with data @buf which size is @sz*/
 	int send(const char *buf, int sz);
@@ -101,17 +132,13 @@ protected:
 
 private:
 	//socket of the relate handler
-	SOCKET _sock;
+	SOCKET _socket;
 	//remote peer ip
 	unsigned int _ip;
 	//remote peer port
 	unsigned short _port;
-
-	//service belong to
-	void *_service;
 };
 
-template<class session_impl>
 class service
 {
 public:
@@ -141,20 +168,30 @@ public:
 		if (_iocp == NULL)
 			return -1; //create iocp failed.
 
-					   /*start worker thread*/
-		_worker_stop = false;
-		_hdl = (HANDLE)_beginthreadex(NULL, 0, work_thread, this, 0, &_thread_id);
-		if (_hdl == NULL)
-		{
-			_worker_stop = true;
-			return -1; //start worker thread failed.
-		}
+		/*start worker thread*/
+		_stop = false;
+		_thread = std::thread(service_thread, this);
+		_thread.detach();
+
 		return 0;
 	}
 
-	//serve new session
-	int serve(session *s)
+	/*
+	*	serve a new incoming session
+	*@param s: in, new incoming session
+	*@param error: out, error message when serve the new session
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int serve(session *s, std::string *error = 0)
 	{
+		//bind new session to completion port
+		if (CreateIoCompletionPort((HANDLE)s->socket(), _iocp, (ULONG_PTR)s, 0) == NULL)
+		{
+			safe_assign<std::string>(error, sys::getlasterror());
+			return -1;
+		}
+
 		return 0;
 	}
 
@@ -165,20 +202,74 @@ public:
 	}
 
 private:
-	//iocp server thread
-	static unsigned __stdcall serve_thread(void *arg)
+	/*
+	*	accept new sessions from pending queue
+	*@return:
+	*	always 0
+	*/
+	int accept()
 	{
+		return 0;
+	}
 
+	/*
+	*	process session
+	*/
+	int process()
+	{
+		session *s = NULL; // session
+		DWORD transfered = 0; // data transfered
+		iocp_overlapped *olp = NULL; // overlapped object
+		while (!_stop)
+		{
+			/*process the handlers in the iocp*/
+			if(GetQueuedCompletionStatus(_iocp, &transfered, (PULONG_PTR)&s, (LPOVERLAPPED*)&olp, 0))
+			{
+				if (transfered == 0)
+				{//socket closed
+				}
+				else
+				{
+					int err = 0;
+					if (olp->_opt == IOCP_SEND)
+						err = hd->on_send(transfered);
+					else if (olp->_opt == IOCP_RECV)
+						err = hd->on_recv(olp->_buf.buf, transfered);
+					else
+						; // nerver happped
+				}
+			}
+			else
+			{
+				int err = WSAGetLastError();
+				if (err != WSA_WAIT_TIMEOUT)
+				{
+					worker->remove(olp->_sock);
+					delete olp;
+				}
+				else
+					break;
+			}
+		}
+	}
+
+	/*
+	*	service thread
+	*/
+	static unsigned __stdcall service_thread(void *arg)
+	{
+		service *pservice = (service*)arg;
+		pservice->process();
 	}
 
 private:
 	//iocp handler
 	HANDLE _iocp;
 	//sessions of service
-	map<uint, session_impl*> _sessions;
+	std::map<uint, session*> _sessions;
 
 	//thread of service
-	std::thread *_thread;
+	std::thread _thread;
 	//stop flag for worker thread
 	bool _stop;
 };
