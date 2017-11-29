@@ -11,7 +11,7 @@ typedef unsigned long ulong;
 
 template <class T> void safe_assign(T *dest, const T &val) {
 	if (dest != 0) {
-		*dest = value;
+		*dest = val;
 	}
 }
 

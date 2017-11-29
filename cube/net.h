@@ -2,10 +2,7 @@
 #include <WinSock2.h>
 #include <map>
 #include <list>
-#include <mutex>
-#include <thread>
-
-#include "cube.h"
+#include "cc.h"
 
 BEGIN_CUBE_NAMESPACE
 
@@ -48,18 +45,7 @@ class session
 {
 public:
 	session();
-	session(SOCKET s, uint ip, ushort port);
 	virtual ~session();
-
-	/*
-	*	create a new session object
-	*@param s: in, socket of new session
-	*@param ip: in, remote ip address of new session
-	*@param port: in, remote port of new session
-	*@return:
-	*	new session object
-	*/
-	virtual session* create(SOCKET s, uint ip, ushort port);
 
 	/*
 	*	recalled when the connection has build, the @arg is the
@@ -107,27 +93,44 @@ public:
 	virtual int on_timeout();
 
 public:
-	//get socket/ip/port of current session
-	SOCKET socket() 
-	{
-		return _socket;
-	}
+	/*
+	*	open the new session
+	*@param s: in, socket of new session
+	*@param ip: in, remote ip address of new session
+	*@param port: in, remote port of new session
+	*@return:
+	*	void
+	*/
+	void open(SOCKET s, uint ip, ushort port);
 
-	uint ip()
-	{
-		return _ip;
-	}
+	/*
+	*	close current session
+	*@return:
+	*	void
+	*/
+	void close();
 
-	ushort port()
-	{
-		return _port;
-	}
+	//session address information
+	SOCKET socket() { return _socket; }
+	uint ip() {	return _ip;	}
+	ushort port() {	return _port; }
 
 protected:
-	/*make an asynchronize iocp send operation with data @buf which size is @sz*/
+	/*
+	*	make an asynchronize iocp send operation with data @buf which size is @sz
+	*@param buf: in, data to send
+	*@param sz: in, data size in bytes
+	*@return:
+	*	0 for success, otherwise <0
+	*/
 	int send(const char *buf, int sz);
 
-	/*make an asynchronize iocp receive operation with size @sz*/
+	/*
+	*	make an asynchronize iocp receive operation with size @sz
+	*@param sz: in, data size in bytes want to receive
+	*@return:
+	*	0 for success, otherwise <0
+	*/
 	int recv(int sz);
 
 private:
@@ -139,139 +142,141 @@ private:
 	unsigned short _port;
 };
 
-class service
+class service : public runnable
 {
 public:
-	service() : _iocp(INVALID_HANDLE_VALUE), _thread(NULL)
+	service() : _iocp(INVALID_HANDLE_VALUE)
 	{
 
 	}
 
 	virtual ~service()
 	{
-		if (_iocp != INVALID_HANDLE_VALUE)
-		{
-			CloseHandle(_iocp);
-			_iocp = INVALID_HANDLE_VALUE;
-		}
+
 	}
 
 	/*
-	*	start service
+	*	start service with specified workers(concurrent threads for io completion port)
+	*@param workers: in, concurrent thread number for io completion port, better the same with cpu cores
+	*@param error: out, error message when start service failed.
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int start()
+	int start(int workers = 0, std::string *error = 0)
 	{
 		/*create io complete port*/
 		_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
 		if (_iocp == NULL)
+		{
+			safe_assign<std::string>(error, sys::getlasterror());
 			return -1; //create iocp failed.
+		}
 
-		/*start worker thread*/
-		_stop = false;
-		_thread = std::thread(service_thread, this);
-		_thread.detach();
+		/*start worker threads*/
+		if (_threads.start(this, workers, error) != 0)
+			return -1;
 
 		return 0;
 	}
 
 	/*
-	*	serve a new incoming session
+	*	accept and serve a new incoming session
 	*@param s: in, new incoming session
 	*@param error: out, error message when serve the new session
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int serve(session *s, std::string *error = 0)
+	int accept(session *s, std::string *error = 0)
 	{
-		//bind new session to completion port
+		//first bind the new session to completion port
 		if (CreateIoCompletionPort((HANDLE)s->socket(), _iocp, (ULONG_PTR)s, 0) == NULL)
 		{
 			safe_assign<std::string>(error, sys::getlasterror());
 			return -1;
 		}
 
+		//notify the session with connection opened event
+		if (s->on_open(0) != 0)
+		{
+			//close session first
+			s->close();
+			//notify the session with connection closed event
+			s->on_close();
+		}
+
+
+		return 0;
+	}
+
+	/*
+	*	discard an existing session in the service
+	*/
+	int discard(session *s)
+	{
 		return 0;
 	}
 
 	//stop iocp service
 	int stop()
 	{
+		//close all handles refer to the iocp
+
+
+		//close the iocp handle
+		if (_iocp != INVALID_HANDLE_VALUE)
+		{
+			CloseHandle(_iocp);
+			_iocp = INVALID_HANDLE_VALUE;
+		}
 		return 0;
 	}
 
-private:
-	/*
-	*	accept new sessions from pending queue
-	*@return:
-	*	always 0
-	*/
-	int accept()
-	{
-		return 0;
-	}
-
+public:
 	/*
 	*	process session
 	*/
-	int process()
+	void loop()
 	{
-		session *s = NULL; // session
+		session *s = NULL; // session 
 		DWORD transfered = 0; // data transfered
-		iocp_overlapped *olp = NULL; // overlapped object
-		while (!_stop)
+		overlapped_t *olp = NULL; // overlapped object
+
+		/*process the handlers in the iocp*/
+		if(GetQueuedCompletionStatus(_iocp, &transfered, (PULONG_PTR)&s, (LPOVERLAPPED*)&olp, 0))
 		{
-			/*process the handlers in the iocp*/
-			if(GetQueuedCompletionStatus(_iocp, &transfered, (PULONG_PTR)&s, (LPOVERLAPPED*)&olp, 0))
-			{
-				if (transfered == 0)
-				{//socket closed
-				}
-				else
-				{
-					int err = 0;
-					if (olp->_opt == IOCP_SEND)
-						err = hd->on_send(transfered);
-					else if (olp->_opt == IOCP_RECV)
-						err = hd->on_recv(olp->_buf.buf, transfered);
-					else
-						; // nerver happped
-				}
+			if (transfered == 0)
+			{//socket closed
 			}
 			else
 			{
-				int err = WSAGetLastError();
-				if (err != WSA_WAIT_TIMEOUT)
-				{
-					worker->remove(olp->_sock);
-					delete olp;
-				}
+				int err = 0;
+				if (olp->_opt == IOCP_SEND)
+					err = hd->on_send(transfered);
+				else if (olp->_opt == IOCP_RECV)
+					err = hd->on_recv(olp->_buf.buf, transfered);
 				else
-					break;
+					; // nerver happped
 			}
 		}
-	}
-
-	/*
-	*	service thread
-	*/
-	static unsigned __stdcall service_thread(void *arg)
-	{
-		service *pservice = (service*)arg;
-		pservice->process();
+		else
+		{
+			int err = WSAGetLastError();
+			if (err != WSA_WAIT_TIMEOUT)
+			{
+				worker->remove(olp->_sock);
+				delete olp;
+			}
+		}
 	}
 
 private:
 	//iocp handler
 	HANDLE _iocp;
 	//sessions of service
-	std::map<uint, session*> _sessions;
+	std::map<SOCKET, session*> _sessions;
 
-	//thread of service
-	std::thread _thread;
-	//stop flag for worker thread
-	bool _stop;
+	//thread pool for service
+	threads _threads;
 };
 
 template<class session_impl>

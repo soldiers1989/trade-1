@@ -5,11 +5,6 @@ session::session() :_socket(INVALID_SOCKET), _ip(0), _port(0)
 
 }
 
-session::session(SOCKET s, uint ip, ushort port) : _socket(s), _ip(ip), _port(port)
-{
-
-}
-
 session::~session(void)
 {
 	if (_socket != INVALID_SOCKET)
@@ -49,16 +44,26 @@ int session::on_timeout()
 	return -1;
 }
 
-session* session::create(SOCKET s, uint ip, ushort port)
+void session::open(SOCKET s, uint ip, ushort port)
 {
-	return new session(s, ip, port);
+	_socket = s;
+	_ip = ip;
+	_port = port;
+}
+
+void session::close()
+{
+	if (_socket != INVALID_SOCKET)
+	{
+		closesocket(_socket);
+		_socket = INVALID_SOCKET;
+	}
 }
 
 int session::send(const char *buf, int sz)
 {
-	DWORD snt = 0;
 	overlapped_t *olp = new overlapped_t(_socket, buf, sz);
-	if (WSASend(_socket, &(olp->_buf), 1, &snt, 0, &(olp->_overlapped), NULL) == SOCKET_ERROR)
+	if (WSASend(_socket, &(olp->_buf), 1, 0, 0, &(olp->_overlapped), NULL) == SOCKET_ERROR)
 	{
 		int eno = WSAGetLastError();
 		if (eno != WSA_IO_PENDING)
@@ -68,14 +73,14 @@ int session::send(const char *buf, int sz)
 		}
 	}
 	
-	return (int)snt;
+	return 0;
 }
 
 int session::recv(int sz)
 {
-	DWORD rcv = 0, flag = 0;
+	DWORD flag = 0;
 	overlapped_t *olp = new overlapped_t(_socket, sz);
-	if (WSARecv(_sock, &(olp->_buf), 1, &rcv, &flag, &(olp->_overlapped), NULL) == SOCKET_ERROR)
+	if (WSARecv(_socket, &(olp->_buf), 1, 0, &flag, &(olp->_overlapped), NULL) == SOCKET_ERROR)
 	{
 		int eno = WSAGetLastError();
 		if (eno != WSA_IO_PENDING)
@@ -85,6 +90,6 @@ int session::recv(int sz)
 		}
 	}
 
-	return (int)rcv;
+	return 0;
 }
 END_CUBE_NAMESPACE
