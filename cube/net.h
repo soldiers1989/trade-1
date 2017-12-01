@@ -7,17 +7,17 @@
 BEGIN_CUBE_NAMESPACE
 
 //iocp operation
-typedef enum { IOCP_SEND, IOCP_RECV, IOCP_INVALID } iocp_opt;
+typedef enum io_opt{ IO_SEND, IO_RECV } io_opt;
 
 //self defined overlapped structure for iocp
-typedef struct overlapped
+typedef struct io_context
 {
 	OVERLAPPED _overlapped;
 	SOCKET _sock;
-	iocp_opt _opt;
+	io_opt _opt;
 	WSABUF _buf;
 
-	overlapped(SOCKET sock, const char *data, int send_sz) : _sock(sock), _opt(IOCP_SEND)
+	io_context(SOCKET sock, const char *data, int send_sz) : _sock(sock), _opt(IO_SEND)
 	{
 		_buf.len = send_sz;
 		_buf.buf = new char[send_sz];
@@ -25,25 +25,29 @@ typedef struct overlapped
 		memset(&_overlapped, 0, sizeof(_overlapped));
 	}
 
-	overlapped(SOCKET sock, int recv_sz) : _sock(sock), _opt(IOCP_RECV)
+	io_context(SOCKET sock, int recv_sz) : _sock(sock), _opt(IO_RECV)
 	{
 		_buf.len = recv_sz;
 		_buf.buf = new char[recv_sz];
 		memset(&_overlapped, 0, sizeof(_overlapped));
 	}
 
-	~overlapped()
+	~io_context()
 	{
 		delete[](_buf.buf);
 		_buf.len = 0;
-		_opt = IOCP_INVALID;
 	}
-}overlapped_t;
+} io_context;
 
 //session class
 class session
 {
 public:
+	//make service can access private member
+	friend class service;
+	/*
+	*	constructor & destructor
+	*/
 	session();
 	virtual ~session();
 
@@ -58,25 +62,21 @@ public:
 
 	/*
 	*	recalled when the the data has send out, with send size @sz_send.
+	*@param context: in, context of send opertation
+	*@param transfered: in, data has transfered
 	*return:
 	*	0--success, other--failed, handler will be destroyed
 	*/
-	virtual int on_send(int sz_send);
+	virtual int on_send(io_context *context, uint transfered);
 
 	/*
 	*	recalled when the the @data with size @sz_recv has received.
+	*@param context: in, context of receive opertation
+	*@param transfered: in, data has transfered
 	*return:
 	*	0--success, other--failed, handler will be destroyed
 	*/
-	virtual int on_recv(const char *data, int sz_recv);
-
-	/*
-	*	recalled when there is error happened on the connection, @err
-	*is the errno return by the system.
-	*return:
-	*	0--success, other--failed, handler will be destroyed
-	*/
-	virtual int on_error(int err);
+	virtual int on_recv(io_context *context, uint transfered);
 
 	/*
 	*	recalled when the handler will be destroyed.
@@ -84,13 +84,6 @@ public:
 	*	0--success, other--failed
 	*/
 	virtual int on_close();
-
-	/*
-	*	recalled when the timer has triggered.
-	*return:
-	*	0--success, other--failed
-	*/
-	virtual int on_timeout();
 
 public:
 	/*
@@ -120,10 +113,11 @@ protected:
 	*	make an asynchronize iocp send operation with data @buf which size is @sz
 	*@param buf: in, data to send
 	*@param sz: in, data size in bytes
+	*@param error: out, error message when start service failed.
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int send(const char *buf, int sz);
+	int send(io_context *context, std::string *error = 0);
 
 	/*
 	*	make an asynchronize iocp receive operation with size @sz
@@ -131,7 +125,26 @@ protected:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int recv(int sz);
+	int recv(io_context *context, std::string *error = 0);
+
+private:
+	int _on_open(void *arg);
+
+	/*
+	*	recalled when the the data has send out, with send size @sz_send.
+	*return:
+	*	0--success, other--failed, handler will be destroyed
+	*/
+	int _on_send(io_context *context, uint transfered);
+
+	/*
+	*	recalled when the the @data with size @sz_recv has received.
+	*return:
+	*	0--success, other--failed, handler will be destroyed
+	*/
+	int _on_recv(io_context *context, uint transfered);
+
+	int _on_close();
 
 private:
 	//socket of the relate handler
@@ -140,6 +153,10 @@ private:
 	unsigned int _ip;
 	//remote peer port
 	unsigned short _port;
+
+	//pending io context has sent to the completion port
+	std::mutex _mutex;
+	std::list<io_context*> _contexts;
 };
 
 class service : public runnable
@@ -164,6 +181,8 @@ public:
 	*/
 	int start(int workers = 0, std::string *error = 0)
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
+
 		/*create io complete port*/
 		_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
 		if (_iocp == NULL)
@@ -186,8 +205,9 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int accept(session *s, std::string *error = 0)
+	int dispatch(session *s, std::string *error = 0)
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
 		//first bind the new session to completion port
 		if (CreateIoCompletionPort((HANDLE)s->socket(), _iocp, (ULONG_PTR)s, 0) == NULL)
 		{
@@ -196,14 +216,18 @@ public:
 		}
 
 		//notify the session with connection opened event
-		if (s->on_open(0) != 0)
+		if (s->_on_open(0) != 0)
 		{
-			//close session first
-			s->close();
 			//notify the session with connection closed event
-			s->on_close();
-		}
+			s->_on_close();
+			//remove session from sessions
+			_sessions.erase(s->socket());
 
+			return -1;
+		}
+		
+		//add to sessions
+		_sessions.insert(std::pair<SOCKET, session*>(s->socket(), s));
 
 		return 0;
 	}
@@ -213,14 +237,30 @@ public:
 	*/
 	int discard(session *s)
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
+		//notify the session with connection closed event
+		s->_on_close();
+		//remove session from sessions
+		_sessions.erase(s->socket());
+		//free session object
+		delete s;
+
 		return 0;
 	}
 
 	//stop iocp service
 	int stop()
 	{
+		std::lock_guard<std::mutex> lock(_mutex);
 		//close all handles refer to the iocp
-
+		std::map<SOCKET, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
+		while (iter != iterend)
+		{
+			iter->second->_on_close();
+			delete iter->second;
+			iter++;
+		}
+		_sessions.clear();
 
 		//close the iocp handle
 		if (_iocp != INVALID_HANDLE_VALUE)
@@ -228,6 +268,10 @@ public:
 			CloseHandle(_iocp);
 			_iocp = INVALID_HANDLE_VALUE;
 		}
+
+		//stop threads
+		_threads.stop();
+
 		return 0;
 	}
 
@@ -272,11 +316,12 @@ public:
 private:
 	//iocp handler
 	HANDLE _iocp;
-	//sessions of service
-	std::map<SOCKET, session*> _sessions;
-
-	//thread pool for service
+	//service worker threads
 	threads _threads;
+
+	//sessions of service
+	std::mutex _mutex;
+	std::map<SOCKET, session*> _sessions;
 };
 
 template<class session_impl>

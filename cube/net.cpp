@@ -19,27 +19,17 @@ int session::on_open(void *arg)
 	return -1;
 }
 
-int session::on_send(int sz_send)
+int session::on_send(io_context *context, uint transfered)
 {
 	return -1;
 }
 
-int session::on_recv(const char*data, int sz_recv)
+int session::on_recv(io_context *context, uint transfered)
 {
 	return -1;
 }
 
 int session::on_close()
-{
-	return -1;
-}
-
-int session::on_error(int err)
-{
-	return -1;
-}
-
-int session::on_timeout()
 {
 	return -1;
 }
@@ -60,36 +50,59 @@ void session::close()
 	}
 }
 
-int session::send(const char *buf, int sz)
+int session::send(io_context *context, std::string *error/* = 0*/)
 {
-	overlapped_t *olp = new overlapped_t(_socket, buf, sz);
-	if (WSASend(_socket, &(olp->_buf), 1, 0, 0, &(olp->_overlapped), NULL) == SOCKET_ERROR)
+	std::lock_guard<std::mutex> lock(_mutex);
+	if (WSASend(_socket, &(context->_buf), 1, 0, 0, &(context->_overlapped), NULL) == SOCKET_ERROR)
 	{
 		int eno = WSAGetLastError();
 		if (eno != WSA_IO_PENDING)
 		{
-			delete olp;
+			safe_assign<std::string>(error, sys::geterrormsg(eno));
 			return -1;
 		}
 	}
+
+	//add to pending context list
+	_contexts.push_back(context);
 	
 	return 0;
 }
 
-int session::recv(int sz)
+int session::recv(io_context *context, std::string *error/* = 0*/)
 {
+	std::lock_guard<std::mutex> lock(_mutex);
 	DWORD flag = 0;
-	overlapped_t *olp = new overlapped_t(_socket, sz);
-	if (WSARecv(_socket, &(olp->_buf), 1, 0, &flag, &(olp->_overlapped), NULL) == SOCKET_ERROR)
+	if (WSARecv(_socket, &(context->_buf), 1, 0, &flag, &(context->_overlapped), NULL) == SOCKET_ERROR)
 	{
 		int eno = WSAGetLastError();
-		if (eno != WSA_IO_PENDING)
-		{
-			delete olp;
+		if (eno != WSA_IO_PENDING) {
+			safe_assign<std::string>(error, sys::geterrormsg(eno));
 			return -1;
 		}
 	}
 
+	//add to pending context list
+	_contexts.push_back(context);
+
 	return 0;
+}
+
+int session::_on_send(io_context *context, uint transfered)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	//remove from pending context
+	_contexts.remove(context);
+
+	return on_send(context, transfered);
+}
+
+int session::_on_recv(io_context *context, uint transfered)
+{
+	std::lock_guard<std::mutex> lock(_mutex);
+	//remove from pending context
+	_contexts.remove(context);
+
+	return on_recv(context, transfered);
 }
 END_CUBE_NAMESPACE
