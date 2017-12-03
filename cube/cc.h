@@ -13,9 +13,9 @@ public:
 	virtual ~runnable();
 
 	/*
-	*	loop for repeat doing something
+	*	thread function to do something
 	*/
-	virtual void loop() = 0;
+	virtual void run() = 0;
 };
 
 //thread 
@@ -55,11 +55,11 @@ public:
 	void detach();
 
 	/*
-	*	stop thread
+	*	wait for thread exit
 	*@return:
 	*	void
 	*/
-	void stop();
+	void join();
 
 	/*
 	*	get thread id
@@ -78,10 +78,6 @@ private:
 	//thread object
 	std::thread _thread;
 
-	//stopped flag for thread
-	bool _stopped;
-	//stop flag for loop
-	volatile bool _stop;
 	//runnable object
 	runnable *_runnable;
 };
@@ -125,11 +121,11 @@ public:
 	void detach();
 
 	/*
-	*	stop threads
+	*	wait for threads exit
 	*@return:
 	*	void
 	*/
-	void stop();
+	void join();
 
 	/*
 	*	get thread id

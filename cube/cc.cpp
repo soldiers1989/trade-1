@@ -1,12 +1,12 @@
 #include "cc.h"
 
 BEGIN_CUBE_NAMESPACE
-thread::thread() : _runnable(0), _stop(false), _stopped(true)
+thread::thread() : _runnable(0)
 {
 
 }
 
-thread::thread(runnable *runnable) : _runnable(runnable), _stop(false), _stopped(true)
+thread::thread(runnable *runnable) : _runnable(runnable)
 {
 
 }
@@ -27,11 +27,7 @@ int thread::start(std::string *error/* = 0*/)
 	//start thread
 	try
 	{
-		if (!_stopped)
-			return 0;
-		_stop = false;
 		_thread = std::thread(thread_func, this);
-		_stopped = false;
 	}
 	catch (const std::exception& e)
 	{
@@ -53,16 +49,9 @@ void thread::detach()
 	_thread.detach();
 }
 
-void thread::stop()
+void thread::join()
 {
-	//thread is not running
-	if (_stopped)
-		return;
-
-	//stop running thread
-	_stop = true;
 	_thread.join();
-	_stopped = true;
 }
 
 std::thread::id thread::getid()
@@ -73,8 +62,7 @@ std::thread::id thread::getid()
 unsigned __stdcall thread::thread_func(void *arg)
 {
 	thread *pr = (thread*)arg;
-	while (!pr->_stop)
-		pr->_runnable->loop();
+	pr->_runnable->run();
 	return 0;
 }
 
@@ -99,11 +87,7 @@ int threads::start(int nthread, std::string *error/* = 0*/)
 	{
 		thread *pthread = new thread(_runnable);
 		if (pthread->start(error) != 0)
-		{
-			//stop the started threads
-			stop();
 			return -1;
-		}
 		_threads.push_back(pthread);
 	}
 
@@ -123,11 +107,11 @@ void threads::detach()
 		_threads[i]->detach();
 }
 
-void threads::stop()
+void threads::join()
 {
 	for (size_t i = 0; i < _threads.size(); i++)
 	{
-		_threads[i]->stop();
+		_threads[i]->join();
 		delete _threads[i];
 	}
 	_threads.clear();

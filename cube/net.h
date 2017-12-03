@@ -39,6 +39,16 @@ typedef struct io_context
 	}
 } io_context;
 
+class socket
+{
+public:
+	static int set_reuseaddr(SOCKET s);
+	static int set_nonblock(SOCKET s);
+	static int bind(SOCKET s, uint ip, ushort port);
+	static SOCKET listen(uint ip, ushort port, bool nonblk = true);
+	static SOCKET connect(uint ip, ushort port, bool nonblk = true);
+};
+
 //session class
 class session
 {
@@ -48,7 +58,7 @@ public:
 	/*
 	*	constructor & destructor
 	*/
-	session();
+	session(SOCKET s, uint ip, uint port);
 	virtual ~session();
 
 	/*
@@ -86,23 +96,6 @@ public:
 	virtual int on_close();
 
 public:
-	/*
-	*	open the new session
-	*@param s: in, socket of new session
-	*@param ip: in, remote ip address of new session
-	*@param port: in, remote port of new session
-	*@return:
-	*	void
-	*/
-	void open(SOCKET s, uint ip, ushort port);
-
-	/*
-	*	close current session
-	*@return:
-	*	void
-	*/
-	void close();
-
 	//session address information
 	SOCKET socket() { return _socket; }
 	uint ip() {	return _ip;	}
@@ -128,6 +121,26 @@ protected:
 	int recv(io_context *context, std::string *error = 0);
 
 private:
+	/*
+	*	open the new session
+	*@param s: in, socket of new session
+	*@param ip: in, remote ip address of new session
+	*@param port: in, remote port of new session
+	*@return:
+	*	void
+	*/
+	void _open(SOCKET s, uint ip, ushort port);
+
+	/*
+	*	close current session
+	*@return:
+	*	void
+	*/
+	void _close();
+
+	/*
+	*	notify session closed
+	*/
 	int _on_open(void *arg);
 
 	/*
@@ -144,6 +157,9 @@ private:
 	*/
 	int _on_recv(io_context *context, uint transfered);
 
+	/*
+	*	notify session closed
+	*/
 	int _on_close();
 
 private:
@@ -162,7 +178,7 @@ private:
 class service : public runnable
 {
 public:
-	service() : _iocp(INVALID_HANDLE_VALUE)
+	service() : _iocp(INVALID_HANDLE_VALUE), _stopped(true), _stop(true)
 	{
 
 	}
@@ -182,6 +198,8 @@ public:
 	int start(int workers = 0, std::string *error = 0)
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
+		if (!_stopped)
+			return 0;
 
 		/*create io complete port*/
 		_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, 0);
@@ -192,8 +210,10 @@ public:
 		}
 
 		/*start worker threads*/
+		_stop = false;
 		if (_threads.start(this, workers, error) != 0)
 			return -1;
+		_stopped = false;
 
 		return 0;
 	}
@@ -220,9 +240,6 @@ public:
 		{
 			//notify the session with connection closed event
 			s->_on_close();
-			//remove session from sessions
-			_sessions.erase(s->socket());
-
 			return -1;
 		}
 		
@@ -252,6 +269,9 @@ public:
 	int stop()
 	{
 		std::lock_guard<std::mutex> lock(_mutex);
+		if (_stopped)
+			return 0;
+
 		//close all handles refer to the iocp
 		std::map<SOCKET, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
 		while (iter != iterend)
@@ -270,7 +290,9 @@ public:
 		}
 
 		//stop threads
-		_threads.stop();
+		_stop = true;
+		_threads.join();
+		_stopped = true;
 
 		return 0;
 	}
@@ -279,36 +301,44 @@ public:
 	/*
 	*	process session
 	*/
-	void loop()
+	void run()
 	{
-		session *s = NULL; // session 
+		session *session = NULL; // session 
 		DWORD transfered = 0; // data transfered
-		overlapped_t *olp = NULL; // overlapped object
+		io_context *context = NULL; // overlapped object
 
-		/*process the handlers in the iocp*/
-		if(GetQueuedCompletionStatus(_iocp, &transfered, (PULONG_PTR)&s, (LPOVERLAPPED*)&olp, 0))
+		//process complete io request until stop
+		while (!_stop)
 		{
-			if (transfered == 0)
-			{//socket closed
+			if (GetQueuedCompletionStatus(_iocp, &transfered, (PULONG_PTR)&session, (LPOVERLAPPED*)&context, 0))
+			{
+				if (transfered == 0)
+					discard(session); //socket closed
+				else
+				{
+					int err = 0;
+					switch (context->_opt)
+					{
+					case IO_SEND:
+						err = session->on_send(context, transfered);
+						break;
+					case IO_RECV:
+						err = session->on_recv(context, transfered);
+						break;
+					default:
+						err = 0;
+						break;
+					}
+
+					if (err != 0)
+						discard(session); //something wrong with process io
+				}
 			}
 			else
 			{
-				int err = 0;
-				if (olp->_opt == IOCP_SEND)
-					err = hd->on_send(transfered);
-				else if (olp->_opt == IOCP_RECV)
-					err = hd->on_recv(olp->_buf.buf, transfered);
-				else
-					; // nerver happped
-			}
-		}
-		else
-		{
-			int err = WSAGetLastError();
-			if (err != WSA_WAIT_TIMEOUT)
-			{
-				worker->remove(olp->_sock);
-				delete olp;
+				int err = WSAGetLastError();
+				if (err != WSA_WAIT_TIMEOUT)
+					discard(session); // session closed
 			}
 		}
 	}
@@ -318,6 +348,10 @@ private:
 	HANDLE _iocp;
 	//service worker threads
 	threads _threads;
+	//stopped flag for service
+	bool _stopped;
+	//stop flag for thread
+	volatile bool _stop;
 
 	//sessions of service
 	std::mutex _mutex;
@@ -325,38 +359,111 @@ private:
 };
 
 template<class session_impl>
-class server
+class server : public runnable
 {
 public:
-	server() : _sock(INVALID_SOCKET), _port(0)
+	server() : _sock(INVALID_SOCKET), _port(0), _stopped(true), _stop(true)
 	{
 
 	}
 
 	virtual ~server()
 	{
-		if (_sock != INVALID_SOCKET)
-		{
-			closesocket(_sock);
-			_sock = INVALID_SOCKET;
-			_port = 0;
-		}
+
 	}
 
-	int start()
+	/*
+	*	start server with listen port and argument pass to new session
+	*@param port: in, listen port
+	*@param arg: in, argument pass to new session
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int start(ushort port, void* arg = NULL)
 	{
-		return 0;
+		return start(INADDR_ANY, port, arg);
 	}
 
-	int accept(ushort port)
+	/*
+	*	start server with listen port and argument pass to new session
+	@param ip: in, listen ip
+	*@param port: in, listen port
+	*@param arg: in, argument pass to new session
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int start(uint ip, ushort port, void *arg = NULL)
 	{
+		/*local bind ip and port for listen*/
+		_ip = ip;
+		_port = port;
+		_arg = arg;
+
+		//start service
+		if (_service.start() != 0)
+			return -1; //start service faild
+
+		//start listen on socket
+		_sock = socket::listen(ip, port);
+		if (_sock == INVALID_SOCKET)
+			return -1; //listen failed
+
+		//start accept thread
+		_stop = false;
+		if (_thread.start(this) != 0)
+			return -1;
+		_stopped = false;
+
 		return 0;
 	}
 
 	/*stop accepter*/
 	int stop()
 	{
+		if (_stopped)
+			return 0;
+		//close listen socket
+		closesocket(_sock);
+		_sock = INVALID_SOCKET;
+
+		//stop accept thread
+		_stop = true;
+		_thread.join();
+		_stopped = true;
+
+		//stop service
+		_service.stop();
+
 		return 0;
+	}
+
+public:
+	/*
+	*	accept new connections
+	*/
+	void run()
+	{
+		//new connect socket information
+		struct sockaddr_in remote;
+		int addr_len = sizeof(remote);
+		memset(&remote, 0, addr_len);
+
+		//accept new socket
+		while (!_stop)
+		{
+			SOCKET s = WSAAccept(_sock, (struct sockaddr*)&remote, &addr_len, 0, 0);
+			if (s != INVALID_SOCKET)
+			{
+				session *ns = new session_impl(s, ntohl(remote.sin_addr.s_addr), ntohs(remote.sin_port);
+				_service.dispatch(ns);
+			}
+			else
+			{
+				int err = WSAGetLastError();
+				if(err != WSA_WAIT_TIMEOUT)
+					break;	//something wrong with listen socket
+			}
+		}
 	}
 
 private:
@@ -364,6 +471,11 @@ private:
 	SOCKET _sock;
 	//listen port
 	ushort _port;
+
+	//accept thread
+	bool _stopped;
+	volatile bool _stop;
+	thread _thread;
 
 	//service for server
 	service<session_impl> _service;
@@ -385,17 +497,31 @@ public:
 
 	int start()
 	{
+		//start worker service
+		_service.start();
+
 		return 0;
 	}
 
 	int connect(uint ip, ushort port)
 	{
+		//connect to remote service
+		SOCKET sock = socket::connect(ip, port);
+		if (sock == INVALID_SOCKET)
+			return -1;
+
+		/*add to worker service*/
+		session *ns = new session_impl(sock, ip, port);
+		_service.dispatch(ns);
+
 		return 0;
 	}
 
 	/*stop accepter*/
 	int stop()
 	{
+		//stop worker service
+		_service.stop();
 		return 0;
 	}
 
