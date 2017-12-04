@@ -9,8 +9,8 @@ BEGIN_CUBE_NAMESPACE
 class runnable
 {
 public:
-	runnable();
-	virtual ~runnable();
+	runnable() {}
+	virtual ~runnable() {}
 
 	/*
 	*	thread function to do something
