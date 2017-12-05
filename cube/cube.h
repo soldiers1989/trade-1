@@ -14,10 +14,4 @@ template <class T> void safe_assign(T *dest, const T &val) {
 		*dest = val;
 	}
 }
-
-class sys {
-public:
-	static std::string getlasterror();
-	static std::string geterrormsg(int code);
-};
 END_CUBE_NAMESPACE

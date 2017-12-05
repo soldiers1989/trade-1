@@ -1,12 +1,10 @@
+/*
+*	file - file module
+*/
 #pragma once
 #include "cube.h"
 BEGIN_CUBE_NAMESPACE
-class file
-{
-public:
-	file();
-	~file();
-
+class file {
 public:
 	/*
 	*	test if specified file or directory is exist

@@ -22,9 +22,13 @@
     <ClCompile Include="ini.cpp" />
     <ClCompile Include="cube.cpp" />
     <ClCompile Include="file.cpp" />
+    <ClCompile Include="io.cpp" />
     <ClCompile Include="net.cpp" />
+    <ClCompile Include="os.cpp" />
+    <ClCompile Include="sa.cpp" />
     <ClCompile Include="str.cpp" />
     <ClCompile Include="cc.cpp" />
+    <ClCompile Include="tsc.cpp" />
     <ClCompile Include="url.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
@@ -32,9 +36,13 @@
     <ClInclude Include="ini.h" />
     <ClInclude Include="cube.h" />
     <ClInclude Include="file.h" />
+    <ClInclude Include="io.h" />
     <ClInclude Include="net.h" />
+    <ClInclude Include="os.h" />
+    <ClInclude Include="sa.h" />
     <ClInclude Include="str.h" />
     <ClInclude Include="cc.h" />
+    <ClInclude Include="tsc.h" />
     <ClInclude Include="url.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>

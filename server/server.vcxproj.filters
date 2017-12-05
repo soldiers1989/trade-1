@@ -18,12 +18,15 @@
     <ClCompile Include="server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="apisession.cpp">
+    <ClCompile Include="sessionapi.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="apisession.h">
+    <ClInclude Include="sessionapi.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdsvr.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

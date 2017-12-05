@@ -1,3 +1,6 @@
+/*
+*	cc - concurrence module
+*/
 #pragma once
 #include <mutex>
 #include <thread>
@@ -6,8 +9,7 @@
 
 BEGIN_CUBE_NAMESPACE
 //runnable class for thread/threads
-class runnable
-{
+class runnable {
 public:
 	runnable() {}
 	virtual ~runnable() {}
@@ -19,8 +21,7 @@ public:
 };
 
 //thread 
-class thread
-{
+class thread {
 public:
 	/*
 	*	create a new thread object by a runnable object
@@ -83,8 +84,7 @@ private:
 };
 
 //thread pool
-class threads
-{
+class threads {
 public:
 	/*
 	*	create a new threads object by a runnable object

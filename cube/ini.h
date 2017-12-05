@@ -1,13 +1,15 @@
+/*
+*	ini - ini configure file module
+*/
 #pragma once
 #include <map>
 #include "cube.h"
 BEGIN_CUBE_NAMESPACE
 //section structure of configure file
-class section
-{
+class section {
 public:
-	section(std::string name);
-	~section();
+	section(std::string name) : _name(name){}
+	virtual ~section() {}
 
 	/*
 	*	add a item to section
@@ -42,11 +44,10 @@ private:
 };
 
 //sections of configure file
-class sections
-{
+class sections {
 public:
-	sections();
-	~sections();
+	sections() {}
+	virtual ~sections() {}
 
 	/*
 	*	add a item to section
@@ -81,11 +82,10 @@ private:
 };
 
 
-class ini
-{
+class ini {
 public:
-	ini();
-	~ini();
+	ini() {}
+	virtual ~ini() {}
 
 	/*
 	*	load a configure

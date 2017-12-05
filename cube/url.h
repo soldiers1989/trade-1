@@ -1,12 +1,11 @@
+/*
+*	url - url module
+*/
 #pragma once
 #include "cube.h"
 BEGIN_CUBE_NAMESPACE
-class url
-{
+class url {
 public:
-	url();
-	~url();
-
 	/*
 	*	escape a charater to format "%XY" string
 	*@param ch: in, charater to escape

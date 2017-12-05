@@ -7,14 +7,6 @@
 #include "util.h"
 
 BEGIN_CUBE_NAMESPACE
-file::file()
-{
-}
-
-file::~file()
-{
-}
-
 bool file::exist(std::string path) {
 	if (_access(path.c_str(), 0) == 0) {
 		return true;
@@ -88,8 +80,7 @@ int file::mkdirs(std::string path) {
 			pos++;
 		}
 		lastpos = pos < rpos ? rpos : lpos;
-	}
-	else if (pos1 != std::string::npos)
+	} else if (pos1 != std::string::npos)
 		lastpos = pos1;
 	else if (pos2 != std::string::npos)
 		lastpos = pos2;
@@ -126,7 +117,7 @@ char* file::read(std::string path, int &sz) {
 	char *content = new char[file_size];
 	size_t rdsz = fread(content, sizeof(char), file_size, pf);
 	if (rdsz != (size_t)file_size) {
-		delete []content;
+		delete[]content;
 		fclose(pf);
 		return NULL;
 	}
@@ -138,7 +129,7 @@ char* file::read(std::string path, int &sz) {
 	sz = file_size;
 
 	return content;
-	
+
 }
 
 int file::write(std::string path, const char* content, int sz) {

@@ -3,12 +3,8 @@
 
 BEGIN_CUBE_NAMESPACE
 static const char* SPACES = "\t\f\v\n\r\t ";
-class str
-{
+class str {
 public:
-	str();
-	~str();
-	
 	/*
 	*	functions to classify characters
 	*@param str: in, string to classify
@@ -111,8 +107,8 @@ public:
 	*/
 	static std::string strip(const char* str, const char* packs = SPACES);
 	static std::string strip(const std::string &str, const char* packs = SPACES);
-	static std::string strip(const char *str, int len, const char* packs= SPACES);
-	
+	static std::string strip(const char *str, int len, const char* packs = SPACES);
+
 	static std::string lstrip(const char* str, const char* packs = SPACES);
 	static std::string lstrip(const std::string &str, const char* packs = SPACES);
 	static std::string lstrip(const char *str, int len, const char* packs = SPACES);
@@ -120,7 +116,7 @@ public:
 	static std::string rstrip(const char* str, const char* packs = SPACES);
 	static std::string rstrip(const std::string &str, const char* packs = SPACES);
 	static std::string rstrip(const char *str, int len, const char* packs = SPACES);
-	
+
 
 	/*
 	*	format string

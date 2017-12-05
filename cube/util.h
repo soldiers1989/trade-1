@@ -1,3 +1,6 @@
+/*
+*	util - utility module
+*/
 #pragma once
 #include <vector>
 #include <string>
@@ -5,8 +8,7 @@
 #include "cube.h"
 
 BEGIN_CUBE_NAMESPACE
-class util
-{
+class util {
 public:
 	/*
 	*	split a string by character seperator
@@ -118,7 +120,7 @@ public:
 	*@param destlen: in, length of destinationdata in bytes
 	*@param default: default value use to overwrite source if destination length is less than source
 	*@return:
-	*	place number overwrited, otherwise <0 
+	*	place number overwrited, otherwise <0
 	*/
 	static int overwrite(char* data, int datalen, const char* src, int srclen, const char* dest, int destlen, char default = 0, bool onlyfirst = true);
 

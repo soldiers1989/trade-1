@@ -13,8 +13,7 @@ std::vector<std::string> util::split(const char* str, const char sep) {
 		if (end != 0) {
 			result.push_back(std::string(start, end - start));
 			start = end + 1;
-		}
-		else
+		} else
 			break;
 	}
 	if (start < str + lenstr) {
@@ -35,8 +34,7 @@ std::vector<std::string> util::split(const char* str, const char* sep) {
 		if (end != 0) {
 			result.push_back(std::string(start, end - start));
 			start = end + lensep;
-		}
-		else
+		} else
 			break;
 	}
 	if (start < str + lenstr) {
@@ -107,8 +105,7 @@ std::vector<std::string> util::splits(const std::string& str, const std::string&
 				}
 				pos++;
 			}
-		}
-		else
+		} else
 			pos++;
 	}
 
@@ -182,8 +179,7 @@ char* util::slow_search(char* content, int content_length, const char* target, i
 char* util::search(char* content, int content_length, const char* target, int target_length, bool fast/* = true*/) {
 	if (fast) {
 		return util::fast_search(content, content_length, target, target_length);
-	}
-	else {
+	} else {
 		return util::slow_search(content, content_length, target, target_length);
 	}
 }
@@ -210,7 +206,7 @@ int util::overwrite(char* data, int datalen, const char* src, int srclen, const 
 		//next search from new position
 		data = pdata + (destlen > srclen ? destlen : srclen);
 		datalen = datalen - (destlen > srclen ? destlen : srclen);
-	}	
+	}
 
 	return ownum;
 }
@@ -233,7 +229,7 @@ template<class T> std::string util::tostr(const T val, const char* fmt) {
 void util::print(const std::vector<std::vector<std::string>> &table, int colwidth) {
 	for (size_t nrow = 0; nrow < table.size(); nrow++) {
 		for (size_t ncol = 0; ncol < table[nrow].size(); ncol++) {
-			std::cout <<std::setw(colwidth) << table[nrow][ncol].c_str();
+			std::cout << std::setw(colwidth) << table[nrow][ncol].c_str();
 		}
 		std::cout << std::endl;
 	}

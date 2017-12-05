@@ -39,6 +39,18 @@
     <ClCompile Include="cc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="sa.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="os.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="io.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="tsc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="util.h">
@@ -63,6 +75,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="cc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sa.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="os.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="io.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="tsc.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

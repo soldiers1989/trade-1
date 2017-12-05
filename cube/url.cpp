@@ -1,27 +1,15 @@
 #include "str.h"
 #include "url.h"
 BEGIN_CUBE_NAMESPACE
-
-url::url()
-{
-}
-
-url::~url()
-{
-}
-
-std::string url::escape(char ch)
-{
+std::string url::escape(char ch) {
 	std::string res("%");
 	res.append(str::hex(ch));
 	return res;
 }
 
-std::string url::escape(const char* str)
-{
+std::string url::escape(const char* str) {
 	std::string res("");
-	while(*str != 0)
-	{
+	while (*str != 0) {
 		if (isalnum(*str))
 			res.append(1, *str);
 		else
@@ -31,16 +19,13 @@ std::string url::escape(const char* str)
 	return res;
 }
 
-std::string url::escape(const std::string &str)
-{
+std::string url::escape(const std::string &str) {
 	return escape(str.c_str(), str.length());
 }
 
-std::string url::escape(const char *str, int len)
-{
+std::string url::escape(const char *str, int len) {
 	std::string res("");
-	for (int i = 0; i < len; i++)
-	{
+	for (int i = 0; i < len; i++) {
 		char ch = *(str + i);
 		if (isalnum(ch))
 			res.append(1, ch);
@@ -50,23 +35,16 @@ std::string url::escape(const char *str, int len)
 	return res;
 }
 
-std::string url::unescape(const char* str)
-{
+std::string url::unescape(const char* str) {
 	std::string res("");
-	while (*str != 0)
-	{
-		if (*str == '%')
-		{
-			if (*(str + 1) != 0 && *(str + 2) != 0 && isxdigit(*(str + 1)) && isxdigit(*(str + 2)))
-			{
+	while (*str != 0) {
+		if (*str == '%') {
+			if (*(str + 1) != 0 && *(str + 2) != 0 && isxdigit(*(str + 1)) && isxdigit(*(str + 2))) {
 				res.append(1, str::bytes(*(str + 1), *(str + 2)));
 				str += 3;
-			}
-			else
+			} else
 				return ""; //error input escaped string
-		}
-		else
-		{
+		} else {
 			res.append(1, *str);
 			str++;
 		}
@@ -74,28 +52,20 @@ std::string url::unescape(const char* str)
 	return res;
 }
 
-std::string url::unescape(const std::string &str)
-{
+std::string url::unescape(const std::string &str) {
 	return unescape(str.c_str(), str.length());
 }
 
-std::string url::unescape(const char *str, int len)
-{
+std::string url::unescape(const char *str, int len) {
 	std::string res("");
-	for (int i = 0; i < len; )
-	{
-		if (*(str + i) == '%')
-		{
-			if (*(str + i + 1) != 0 && *(str + i + 2) != 0 && isxdigit(*(str + i + 1)) && isxdigit(*(str + i + 2)))
-			{
+	for (int i = 0; i < len; ) {
+		if (*(str + i) == '%') {
+			if (*(str + i + 1) != 0 && *(str + i + 2) != 0 && isxdigit(*(str + i + 1)) && isxdigit(*(str + i + 2))) {
 				res.append(1, str::bytes(*(str + i + 1), *(str + i + 2)));
 				i += 3;
-			}
-			else
+			} else
 				return ""; //error input escaped string
-		}
-		else
-		{
+		} else {
 			res.append(1, *(str + i));
 			i++;
 		}
