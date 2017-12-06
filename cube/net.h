@@ -416,7 +416,4 @@ public:
 	}
 };
 
-//for initialize the windows socket environment
-static netinit _g_netsvc_init;
-
 END_CUBE_NAMESPACE

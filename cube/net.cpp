@@ -1,6 +1,9 @@
 #include "net.h"
 
 BEGIN_CUBE_NAMESPACE
+//for initialize the windows socket environment
+static const netinit _g_netsvc_init;
+
 ///////////////////////////////////////////////////////////session class//////////////////////////////////////////////////////////////
 int session::on_open(void *arg) {
 	return -1;
