@@ -2,6 +2,10 @@
 #include <Windows.h>
 
 BEGIN_CUBE_NAMESPACE
+int os::last_error_code() {
+	return ::GetLastError();
+}
+
 std::string os::last_error() {
 	return last_error(::GetLastError());
 }
@@ -15,5 +19,11 @@ std::string os::last_error(int error_code) {
 	LocalFree(LocalAddress);
 
 	return error;
+}
+
+int os::get_cpu_cores() {
+	SYSTEM_INFO si;
+	::GetSystemInfo(&si);
+	return si.dwNumberOfProcessors;
 }
 END_CUBE_NAMESPACE

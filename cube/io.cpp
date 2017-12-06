@@ -1,38 +1,42 @@
 #include "io.h"
-#include "sa.h"
-#include <Windows.h>
+#include "os.h"
 
 BEGIN_CUBE_NAMESPACE
 iocp::iocp() {
-	//current thread limit for complete port
-	static const DWORD CONCURRENT_THREADS = 0;
-
-	//create io complete port
-	_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, CONCURRENT_THREADS);
-	if (_iocp == NULL) {
-		throw sa::last_exception();
-	}
+	open();
 }
 
 iocp::~iocp() {
-	CloseHandle(_iocp);
+	close();
 }
 
-void iocp::bind(void *handle) {
-	if (CreateIoCompletionPort(handle, _iocp, (ULONG_PTR)(*&handle), 0) == NULL) {
-		throw sa::last_exception();
+void iocp::open() {
+	//create io complete port
+	_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, os::get_cpu_cores());
+	if (_iocp == NULL) {
+		throw os::last_error();
 	}
 }
 
-void iocp::unbind(void *handle) {
-
+void iocp::bind(HANDLE handle, ULONG_PTR key) {
+	if (CreateIoCompletionPort(handle, _iocp, key, 0) == NULL) {
+		throw efatal(os::last_error().c_str());
+	}
 }
 
-iocp_res iocp::pull(int waitsec/* = -1*/) {
-	iocp_res res;
-	if (!GetQueuedCompletionStatus(_iocp, &res.transfered, &res.completionkey, (LPOVERLAPPED*)&res.overlapped, waitsec)) {
+iores iocp::pull(int waitmsec/* = -1*/) {
+	iores res;
+	if (!GetQueuedCompletionStatus(_iocp, &res.transfered, &res.completionkey, (LPOVERLAPPED*)&res.overlapped, waitmsec)) {
 		res.error = WSAGetLastError();
 	}
+
 	return res;
+}
+
+void iocp::close() {
+	if (_iocp != INVALID_HANDLE_VALUE) {
+		CloseHandle(_iocp);
+		_iocp = INVALID_HANDLE_VALUE;
+	}
 }
 END_CUBE_NAMESPACE

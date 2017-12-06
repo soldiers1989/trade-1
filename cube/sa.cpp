@@ -1,5 +1,4 @@
 #include "sa.h"
-#include <WinSock2.h>
 
 BEGIN_CUBE_NAMESPACE
 std::string sa::last_error() {
@@ -17,111 +16,160 @@ std::string sa::last_error(int error_code) {
 	return error;
 }
 
-std::exception sa::last_exception() {
-	return std::exception(last_error().c_str());
+int sa::last_error_code() {
+	return WSAGetLastError();
 }
 
-std::exception sa::last_exception(int error_code) {
-	return std::exception(last_error(error_code).c_str());
+timeval sa::mktime(int msecs) {
+	struct timeval tm;
+	tm.tv_sec = msecs / 1000;
+	tm.tv_usec = (msecs % 1000) * 1000;
+	return tm;
 }
 
-int sa::set_reuse_addr(socket_t s) {
-	int on = 1;
-	if (::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) != 0)
-		return -1;
-	return 0;
+socket socket::listen(ushort port, int modes) {
+	return listen(INADDR_ANY, port, modes);
 }
 
-int sa::set_nonblock(socket_t s) {
-	unsigned long io_mode = 1;
-	if (::ioctlsocket(s, FIONBIO, &io_mode) != 0)
-		return -1;
-	return 0;
-}
+socket socket::listen(uint ip, ushort port, int modes) {
+	//create listen socket
+	socket_t sock = create(modes);
 
-int sa::bind(socket_t s, uint ip, ushort port) {
+	//set socket options and controls
+	try {
+		setmodes(sock, modes);
+	} catch (const std::exception& e) {
+		::closesocket(sock);
+		throw e;
+	}
+
+	//bind socket to listen port
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(ip);
 	addr.sin_port = htons(port);
-	int err = ::bind(s, (struct sockaddr*)&addr, sizeof(addr));
-	if (err == SOCKET_ERROR)
-		return -1; //bind socket failed.
-	return 0;
-}
-
-socket_t sa::listen(uint ip, ushort port, bool nonblk/* = true*/) {
-	/*create listen socket*/
-	socket_t sock = WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
-	if (sock == INVALID_SOCKET)
-		return INVALID_SOCKET; //create socket failed
-
-							   /*set reuse address*/
-	if (set_reuse_addr(sock) != 0) {
-		closesocket(sock);
-		return INVALID_SOCKET;
+	int err = ::bind(sock, (struct sockaddr*)&addr, sizeof(addr));
+	if (err == SOCKET_ERROR) {
+		::closesocket(sock);
+		throw efatal(sa::last_error().c_str());
 	}
 
-	/*set listen socket to nonblock mode*/
-	if (nonblk && set_nonblock(sock) != 0) {
-		closesocket(sock);
-		return INVALID_SOCKET;
-	}
-
-	/*bind socket to listen port*/
-	if (bind(sock, ip, port) == SOCKET_ERROR) {
-		closesocket(sock);
-		return INVALID_SOCKET; //bind socket failed.
-	}
-	/*listen on socket*/
+	//start listen on socket
 	if (::listen(sock, SOMAXCONN) == SOCKET_ERROR) {
-		closesocket(sock);
-		return INVALID_SOCKET; //listen on socket failed
+		::closesocket(sock);
+		throw efatal(sa::last_error().c_str());
 	}
 
-	return sock;
+	//listen on specified ip/port success, return listen socket
+	return socket(sock, ip, port);
 }
 
-socket_t sa::connect(uint ip, ushort port, bool nonblk/* = true*/) {
-	/*create socket*/
-	SOCKET sock = WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
-	if (sock == INVALID_SOCKET)
-		return INVALID_SOCKET; //create socket failed
+socket socket::connect(uint ip, ushort port, int modes) {
+	//create connect socket
+	socket_t sock = create(modes);
 
-	/*bind remote address*/
+	//connect to remote ip:port
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(ip);
 	addr.sin_port = htons(port);
-
-	/*connect to remote*/
-	if (WSAConnect(sock, (struct sockaddr*)&addr, sizeof(addr), NULL, NULL, NULL, NULL) != 0) {
-		int eno = WSAGetLastError();
-		if (eno != WSAEWOULDBLOCK) {
-			closesocket(sock);
-			return INVALID_SOCKET;
-		}
+	if (WSAConnect(sock, (struct sockaddr*)&addr, sizeof(addr), 0, 0, 0, 0) != 0) {
+		::closesocket(sock);
+		throw ewarn(sa::last_error().c_str());
 	}
 
-	// set non block
-	if (nonblk && set_nonblock(sock) != 0) {
-		closesocket(sock);
-		return INVALID_SOCKET;
+	//set socket options/controls
+	try {
+		setmodes(sock, modes);
+	} catch (const std::exception& e) {
+		::closesocket(sock);
+		throw e;
 	}
 
-	return sock;
+	//connect success, return new connected socket
+	return socket(sock, ip, port);
 }
 
-void socket::open(socket_t socket, uint ip, ushort port){
-	_socket = socket;
-	_ip = ip;
-	_port = port;
+socket socket::accept(int modes) {
+	//store for remote address
+	struct sockaddr_in remote;
+	int addrlen = sizeof(remote);
+	memset(&remote, 0, addrlen);
+	socket_t sock = WSAAccept(_socket, (struct sockaddr*)&remote, &addrlen, 0, 0);
+	if (sock == INVALID_SOCKET) {
+		if (sa::last_error_code() == WSAEWOULDBLOCK)
+			throw ewouldblock();
+		else
+			throw efatal(sa::last_error().c_str());
+	}
+
+	//set socket options/controls
+	setmodes(sock, modes);
+
+	return socket(sock, ntohl(remote.sin_addr.s_addr), ntohs(remote.sin_port));
+}
+socket socket::accept(int waitmsecs, int modes) {
+	//select new connection event
+	fd_set readfds;
+	FD_ZERO(&readfds);
+	fd_set exptfds;
+	FD_ZERO(&exptfds);
+	FD_SET(_socket, &readfds);
+	FD_SET(_socket, &exptfds);
+
+	struct timeval timeout = sa::mktime(waitmsecs);
+	int fds = select(0, &readfds, NULL, &exptfds, &timeout);
+	if (fds == 0)
+		throw etimeout();
+
+	if (FD_ISSET(_socket, &exptfds)) {
+		throw efatal("exception on listen socket.");
+	}
+
+	if (fds == SOCKET_ERROR) {
+		throw efatal(sa::last_error().c_str());
+	}
+
+	//store for remote address
+	struct sockaddr_in remote;
+	int addrlen = sizeof(remote);
+	memset(&remote, 0, addrlen);
+	socket_t sock = WSAAccept(_socket, (struct sockaddr*)&remote, &addrlen, 0, 0);
+	if (sock == INVALID_SOCKET) {
+		if (sa::last_error_code() == WSAEWOULDBLOCK)
+			throw ewouldblock();
+		else
+			throw efatal(sa::last_error().c_str());
+	}
+
+	//set socket options/controls
+	setmodes(sock, modes);
+
+	return socket(sock, ntohl(remote.sin_addr.s_addr), ntohs(remote.sin_port));
 }
 
-int socket::send(void *buf, void *overlapped, std::string *error/* = 0*/) {
-	if (WSASend(_socket, (LPWSABUF)&buf, 1, 0, 0, (LPWSAOVERLAPPED)&overlapped, 0) == SOCKET_ERROR) {
+int socket::send(const char *buf, int len, std::string *error/* = 0*/) {
+	return send(buf, len, 0, error);
+}
+
+int socket::send(const char *buf, int len, int flags, std::string *error/* = 0*/) {
+	int snd = ::send(_socket, buf, len, flags);
+	if (snd == SOCKET_ERROR) {
+		safe_assign<std::string>(error, sa::last_error());
+		return -1;
+	}
+
+	return snd;
+}
+
+int socket::send(LPWSABUF wsabuf, LPWSAOVERLAPPED overlapped, std::string *error/* = 0*/) {
+	return send(wsabuf, 1, overlapped, error);
+}
+
+int socket::send(LPWSABUF wsabufs, int bufcount, LPWSAOVERLAPPED overlapped, std::string *error/* = 0*/) {
+	if (WSASend(_socket, wsabufs, bufcount, 0, 0, overlapped, 0) == SOCKET_ERROR) {
 		int eno = WSAGetLastError();
 		if (eno != WSA_IO_PENDING) {
 			safe_assign<std::string>(error, sa::last_error(eno));
@@ -132,9 +180,27 @@ int socket::send(void *buf, void *overlapped, std::string *error/* = 0*/) {
 	return 0;
 }
 
-int socket::recv(void *buf, void *overlapped, std::string *error/* = 0*/) {
+int socket::recv(char *buf, int len, std::string *error/* = 0*/) {
+	return recv(buf, len, 0, error);
+}
+
+int socket::recv(char *buf, int len, int flags, std::string *error/* = 0*/) {
+	int rcv = ::recv(_socket, buf, len, flags);
+	if (rcv == SOCKET_ERROR) {
+		safe_assign<std::string>(error, sa::last_error());
+		return -1;
+	}
+
+	return rcv;
+}
+
+int socket::recv(LPWSABUF wsabuf, LPWSAOVERLAPPED overlapped, std::string *error/* = 0*/) {
+	return recv(wsabuf, 1, overlapped, error);
+}
+
+int socket::recv(LPWSABUF wsabufs, int bufcount, LPWSAOVERLAPPED overlapped, std::string *error/* = 0*/) {
 	DWORD flag = 0;
-	if (WSARecv(_socket, (LPWSABUF)&buf, 1, 0, &flag, (LPWSAOVERLAPPED)&overlapped, 0) == SOCKET_ERROR) {
+	if (WSARecv(_socket, wsabufs, 1, 0, &flag, overlapped, 0) == SOCKET_ERROR) {
 		int eno = WSAGetLastError();
 		if (eno != WSA_IO_PENDING) {
 			safe_assign<std::string>(error, sa::last_error(eno));
@@ -146,6 +212,45 @@ int socket::recv(void *buf, void *overlapped, std::string *error/* = 0*/) {
 }
 
 void socket::close() {
-	closesocket(_socket);
+	if (_socket != INVALID_SOCKET) {
+		::closesocket(_socket);
+		_socket = INVALID_SOCKET;
+	}
 }
+
+void socket::setmodes(socket_t s, int modes) {
+	if (modes & mode::REUSEADDR) {
+		int on = 1;
+		if (::setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) != 0)
+			throw efatal(sa::last_error().c_str());
+	}
+
+	if (modes & mode::NONBLOCK) {
+		unsigned long on = 1;
+		if (::ioctlsocket(s, FIONBIO, &on) != 0)
+			throw efatal(sa::last_error().c_str());
+	}
+}
+
+socket_t socket::create(int modes) {
+	socket_t sock = INVALID_SOCKET;
+	//create socket with specified flags
+	if (modes & mode::OVERLAPPED) {
+		//create overlapped socket
+		sock = WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
+	} else {
+		//create normal socket
+		sock = WSASocketW(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, 0);
+	}
+	if (sock == INVALID_SOCKET)
+		throw efatal(sa::last_error().c_str());
+
+	//new created socket
+	return sock;
+}
+
+socket_t socket::handle() {
+	return _socket;
+}
+
 END_CUBE_NAMESPACE

@@ -5,6 +5,7 @@
 #include "cube.h"
 #include <list>
 #include <mutex>
+
 BEGIN_CUBE_NAMESPACE
 template<class T>
 class list {
@@ -38,5 +39,4 @@ private:
 	//stl list
 	std::list<T> _list;
 };
-
 END_CUBE_NAMESPACE
