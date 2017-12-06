@@ -249,8 +249,15 @@ socket_t socket::create(int modes) {
 	return sock;
 }
 
-socket_t socket::handle() {
+socket_t socket::handle() const {
 	return _socket;
 }
 
+uint socket::ip() const {
+	return _ip;
+}
+
+ushort socket::port() const {
+	return _port;
+}
 END_CUBE_NAMESPACE

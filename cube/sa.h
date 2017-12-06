@@ -34,9 +34,7 @@ public:
 
 public:
 	socket() : _socket(INVALID_SOCKET) {}
-	virtual ~socket() {
-		close();
-	}
+	virtual ~socket() {}
 	
 	/*
 	*	listen on specified local ip/port for incoming connections
@@ -144,9 +142,15 @@ private:
 
 public:
 	/*
-	*	get the socket
+	*	get the socket handle
 	*/
-	socket_t handle();
+	socket_t handle() const;
+	
+	/*
+	*	get socket ip/port
+	*/
+	uint ip() const;
+	ushort port() const;
 
 private:
 	//socket of connection

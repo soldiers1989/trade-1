@@ -22,17 +22,12 @@ public:
 	WSABUF buf;
 
 public:
-	ioctxt(char *data, int sz, bool copydata = true) : ioctxt(0, data, sz, copydata){}
-	ioctxt(void *ptr, char *data, int sz, bool copydata = true) :  opt(IO_SEND) {
+	ioctxt(const char *data, int sz) : ioctxt(0, data, sz){}
+	ioctxt(void *ptr, const char *data, int sz) :  opt(IO_SEND) {
 		ptr = ptr;
 		buf.len = sz;
-		if (copydata) {
-			buf.buf = new char[sz];
-			memcpy(buf.buf, data, sz);
-		} else {
-			buf.buf = data;
-		}
-		
+		buf.buf = new char[sz];
+		memcpy(buf.buf, data, sz);
 		memset(&overlapped, 0, sizeof(overlapped));
 	}
 
@@ -105,7 +100,7 @@ protected:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int send(char *data, int sz, std::string *error = 0);
+	int send(const char *data, int sz, std::string *error = 0);
 
 	/*
 	*	make an asynchronize iocp receive operation with size @sz
@@ -161,6 +156,11 @@ public:
 	*	 get the socket handle
 	*/
 	socket_t handle();
+
+	/*
+	*	get remote peer socket
+	*/
+	const socket& peer();
 
 private:
 	//socket of session
@@ -304,8 +304,7 @@ public:
 	*/
 	int stop() {
 		//step1: close listen socket
-		closesocket(_sock);
-		_sock = INVALID_SOCKET;
+		_socket.close();
 
 		//step2: stop accept thread
 		_stop = true;

@@ -25,7 +25,7 @@ void session::open(socket s) {
 	_socket = s;
 }
 
-int session::send(char *data, int sz, std::string *error/* = 0*/) {
+int session::send(const char *data, int sz, std::string *error/* = 0*/) {
 	//create a new context object
 	ioctxt *context = new ioctxt(this, data, sz);
 
@@ -109,6 +109,10 @@ socket_t session::handle() {
 	return _socket.handle();
 }
 
+const socket& session::peer() {
+	return _socket;
+}
+
 ///////////////////////////////////////////////////////////service class//////////////////////////////////////////////////////////////
 
 int service::start(int workers) {
@@ -158,6 +162,9 @@ int service::dispatch(session *s) {
 
 	//notify the session with connection opened event
 	if (s->on_open(_arg) != 0) {
+		//close socket
+		s->close();
+
 		//notify the session with connection closed event
 		s->on_close();
 
