@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <direct.h>
 #include <sys/stat.h>
+
+#include "str.h"
 #include "file.h"
-#include "util.h"
 
 BEGIN_CUBE_NAMESPACE
 bool file::exist(std::string path) {
@@ -34,7 +35,7 @@ bool file::isdir(std::string path) {
 }
 
 std::string file::filename(std::string path) {
-	std::vector<std::string> subpaths = util::splits(path, "\\/");
+	std::vector<std::string> subpaths = str::splits(path, "\\/");
 	if (subpaths.size() > 0) {
 		return subpaths[subpaths.size() - 1];
 	}
@@ -43,7 +44,7 @@ std::string file::filename(std::string path) {
 }
 
 std::string dirpath(std::string path) {
-	std::vector<std::string> subpaths = util::splits(path, "\\/");
+	std::vector<std::string> subpaths = str::splits(path, "\\/");
 	if (subpaths.size() > 0) {
 		std::string filename = subpaths[subpaths.size() - 1];
 		return path.substr(0, path.length() - filename.length());

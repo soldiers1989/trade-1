@@ -1,70 +1,12 @@
 /*
-*	util - utility module
+*	mm - memory operation module
 */
 #pragma once
-#include <vector>
-#include <string>
-
 #include "cube.h"
 
 BEGIN_CUBE_NAMESPACE
-class util {
+class mm {
 public:
-	/*
-	*	split a string by character seperator
-	*@param str: string to be splited
-	*@param sep: character seperator
-	*@return:
-	*	split result
-	*/
-	static std::vector<std::string> split(const char* str, const char sep);
-
-	/*
-	*	split a string by string seperator
-	*@param str: string to be splited
-	*@param sep: character seperator
-	*@return:
-	*	split result
-	*/
-	static std::vector<std::string> split(const char* str, const char* sep);
-
-	/*
-	*	split a string by character seperator
-	*@param str: string to be splited
-	*@param sep: character seperator
-	*@return:
-	*	split result
-	*/
-	static std::vector<std::string> split(const std::string& str, const char sep);
-
-	/*
-	*	split a string by string seperator
-	*@param str: string to be splited
-	*@param sep: character seperator
-	*@return:
-	*	split result
-	*/
-	static std::vector<std::string> split(const std::string& str, const std::string& sep);
-
-	/*
-	*	split a string to table structure by row and column seperator
-	*@param str: string to be splited
-	*@param seprow: row seperator
-	*@param sepcol: column seperator
-	*@return:
-	*	split result
-	*/
-	static std::vector<std::vector<std::string>> split(const char *str, const char *seprow, const char *sepcol);
-
-	/*
-	*	split a string by specified seperator characters
-	*@param str: string to be splited
-	*@param spes: characters used to seperate
-	*@return:
-	*	split result;
-	*/
-	static std::vector<std::string> splits(const std::string& str, const std::string& seps);
-
 	/*
 	*	get the max length of the same prefix and postfix of input data sequence block.
 	*for example:
@@ -123,30 +65,5 @@ public:
 	*	place number overwrited, otherwise <0
 	*/
 	static int overwrite(char* data, int datalen, const char* src, int srclen, const char* dest, int destlen, char default = 0, bool onlyfirst = true);
-
-	/*
-	*	check if input string is empty
-	*@param str: string to check
-	*@return:
-	*	true if input string is empty, otherwise false
-	*/
-	static bool empty(const char* str);
-
-	/*
-	*	convert numberic(int, long, float, double) to string
-	*@param val: number input value
-	*@param fmt: format of input value
-	*@return:
-	*	string of value
-	*/
-	template<class T> static std::string tostr(const T val, const char* fmt);
-
-	/*
-	*	print table data to console
-	*@param table: in, table want to print
-	*@return
-	*	void
-	*/
-	static void print(const std::vector<std::vector<std::string>> &table, int colwidth = 10);
 };
 END_CUBE_NAMESPACE

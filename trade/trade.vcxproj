@@ -151,16 +151,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="error.h" />
-    <ClInclude Include="stdpub.h" />
+    <ClInclude Include="stdtrd.h" />
     <ClInclude Include="tdxdll.h" />
     <ClInclude Include="tdxexpt.h" />
-    <ClInclude Include="traders.h" />
+    <ClInclude Include="trader.h" />
     <ClInclude Include="trade.h" />
     <ClInclude Include="tdx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tdxdll.cpp" />
-    <ClCompile Include="traders.cpp" />
+    <ClCompile Include="trader.cpp" />
     <ClCompile Include="tdx.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

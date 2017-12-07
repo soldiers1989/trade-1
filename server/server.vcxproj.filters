@@ -21,12 +21,24 @@
     <ClCompile Include="sessionapi.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="sessiontrade.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sessionquote.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sessionapi.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="stdsvr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sessiontrade.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sessionquote.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

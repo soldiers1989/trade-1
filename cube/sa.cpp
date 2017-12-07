@@ -1,4 +1,5 @@
 #include "sa.h"
+#include <WS2tcpip.h>
 
 BEGIN_CUBE_NAMESPACE
 std::string sa::last_error() {
@@ -27,11 +28,71 @@ timeval sa::mktime(int msecs) {
 	return tm;
 }
 
+ulong sa::ipaddr(const char* ip) {
+	struct in_addr in;
+	int err = ::inet_pton(AF_INET, ip, &in);
+	if (err < 0) {
+		throw sa::error(sa::last_error().c_str()); //translate failed
+	}
+
+	return ntohl(in.s_addr);
+}
+
+std::string sa::ipaddr(ulong ip) {
+	struct in_addr in;
+	in.s_addr = htonl(ip);
+	char buf[64];
+	return ::inet_ntop(AF_INET, &in, buf, sizeof(buf));
+}
+
+std::list<std::string> sa::ipaddrs(const char *hostname) {
+	return ipaddrs(resolve(hostname));
+}
+
+std::list<std::string> sa::ipaddrs(const std::list<ulong> &ips) {
+	std::list<std::string> strips;
+
+	std::list<ulong>::const_iterator iter = ips.begin(), iterend = ips.end();
+	while (iter != iterend) {
+		strips.push_back(ipaddr(*iter));
+		iter++;
+	}
+
+	return strips;
+}
+
+std::list<ulong> sa::resolve(const char* hostname) {
+	std::list<ulong> ips;
+
+	//temp variable for resolve operation
+	struct addrinfo *result = 0, *ptr = 0, hints;
+	
+	//only resolve ipv4 address
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+
+	//resolve domain name
+	int err = ::getaddrinfo(hostname, 0, &hints, &result);
+	if (err != 0) {
+		throw error(last_error().c_str()); //report exception
+	}
+
+	//get ip address from result
+	for (ptr = result; ptr != 0; ptr = ptr->ai_next) {
+		ips.push_back(ntohl(((struct sockaddr_in*)ptr->ai_addr)->sin_addr.s_addr));
+	}
+
+	//free result
+	freeaddrinfo(result);
+
+	return ips;
+}
+
 socket socket::listen(ushort port, int modes) {
 	return listen(INADDR_ANY, port, modes);
 }
 
-socket socket::listen(uint ip, ushort port, int modes) {
+socket socket::listen(ulong ip, ushort port, int modes) {
 	//create listen socket
 	socket_t sock = create(modes);
 
@@ -65,7 +126,7 @@ socket socket::listen(uint ip, ushort port, int modes) {
 	return socket(sock, ip, port);
 }
 
-socket socket::connect(uint ip, ushort port, int modes) {
+socket socket::connect(ulong ip, ushort port, int modes) {
 	//create connect socket
 	socket_t sock = create(modes);
 
@@ -253,7 +314,29 @@ socket_t socket::handle() const {
 	return _socket;
 }
 
-uint socket::ip() const {
+saddr socket::peeraddr() const {
+	struct sockaddr_in addr;
+	int addrlen = sizeof(addr);
+	int err = ::getpeername(_socket, (struct sockaddr*)&addr, &addrlen);
+	if (err != 0) {
+		throw error(sa::last_error().c_str());
+	}
+
+	return saddr(ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port));
+}
+
+saddr socket::localaddr() const {
+	struct sockaddr_in addr;
+	int addrlen = sizeof(addr);
+	int err = ::getsockname(_socket, (struct sockaddr*)&addr, &addrlen);
+	if (err != 0) {
+		throw error(sa::last_error().c_str());
+	}
+
+	return saddr(ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port));
+}
+
+ulong socket::ip() const {
 	return _ip;
 }
 

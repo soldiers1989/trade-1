@@ -1,6 +1,6 @@
 #include "tdx2.h"
 #include "error.h"
-#include "cube\util.h"
+#include "cube\str.h"
 
 BEGIN_QUOTE_NAMESPACE
 tdx2::tdx2() : _quote(0)
@@ -41,7 +41,7 @@ int tdx2::connect(std::string ip, ushort port, table_t &result, std::string &err
 	}
 
 	//parse result
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -68,7 +68,7 @@ int tdx2::query_security_list(market_t market, int start, int &count, table_t &r
 	}
 
 	count = scount;
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -82,7 +82,7 @@ int tdx2::query_security_kline(kline_t line, market_t market, std::string zqdm, 
 	}
 
 	count = scount;
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -96,7 +96,7 @@ int tdx2::query_index_kline(kline_t line, market_t market, std::string zqdm, int
 	}
 
 	count = scount;
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 	return 0;
 }
 
@@ -107,7 +107,7 @@ int tdx2::query_current_time_data(market_t market, std::string zqdm, table_t &re
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -119,7 +119,7 @@ int tdx2::query_history_time_data(market_t market, std::string zqdm, std::string
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -132,7 +132,7 @@ int tdx2::query_current_deal_data(market_t market, std::string zqdm, int start, 
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -145,7 +145,7 @@ int tdx2::query_current_deal_detail(market_t market, std::string zqdm, int start
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 	return 0;
 }
 
@@ -157,7 +157,7 @@ int tdx2::query_history_deal_data(market_t market, std::string zqdm, std::string
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -170,7 +170,7 @@ int tdx2::query_current_order_data(market_t market, std::string zqdm, int start,
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -182,7 +182,7 @@ int tdx2::query_buysell_queue_data(market_t market, std::string zqdm, table_t &r
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -216,7 +216,7 @@ int tdx2::query_current_quote_data(std::vector<security_t> securities, table_t &
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -250,7 +250,7 @@ int tdx2::query_current_quote10_data(std::vector<security_t> securities, table_t
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -262,7 +262,7 @@ int tdx2::query_f10_category(market_t market, std::string zqdm, table_t &result,
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -276,7 +276,7 @@ int tdx2::query_f10_content(market_t market, std::string zqdm, std::string file,
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -288,7 +288,7 @@ int tdx2::query_xdxr_data(market_t market, std::string zqdm, table_t &result, st
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }
@@ -300,7 +300,7 @@ int tdx2::query_finance_data(market_t market, std::string zqdm, table_t &result,
 		return -1;
 	}
 
-	result = cube::util::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
 
 	return 0;
 }

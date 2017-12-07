@@ -30,7 +30,7 @@
     <ClCompile Include="cc.cpp" />
     <ClCompile Include="tsc.cpp" />
     <ClCompile Include="url.cpp" />
-    <ClCompile Include="util.cpp" />
+    <ClCompile Include="mm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ini.h" />
@@ -44,7 +44,7 @@
     <ClInclude Include="cc.h" />
     <ClInclude Include="tsc.h" />
     <ClInclude Include="url.h" />
-    <ClInclude Include="util.h" />
+    <ClInclude Include="mm.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

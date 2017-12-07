@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include "tdxdll2.h"
-#include "cube\cube.h"
+#include "cube\os.h"
 
 BEGIN_QUOTE_NAMESPACE
 int tdxdll2::load(std::string path/* = "TdxL2HqApi.dll"*/, std::string *error/* = 0*/) {
@@ -8,7 +8,7 @@ int tdxdll2::load(std::string path/* = "TdxL2HqApi.dll"*/, std::string *error/* 
 	_hmodule = LoadLibrary(path.c_str());
 	if (_hmodule == NULL) {
 		if(error != 0)
-			*error = cube::sys::getlasterror();
+			*error = cube::os::last_error();
 		return -1;
 	}
 

@@ -1,0 +1,4 @@
+#include "trader.h"
+BEGIN_TRADE_NAMESPACE
+END_TRADE_NAMESPACE
+

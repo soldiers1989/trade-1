@@ -1,5 +1,6 @@
 #pragma once
 #include "cube.h"
+#include <vector>
 
 BEGIN_CUBE_NAMESPACE
 static const char* SPACES = "\t\f\v\n\r\t ";
@@ -133,5 +134,85 @@ public:
 	*/
 	static std::string tostr(int value);
 	static std::string tostr(float value);
+	/*
+	*	convert numberic(int, long, float, double) to string
+	*@param val: number input value
+	*@param fmt: format of input value
+	*@return:
+	*	string of value
+	*/
+	template<class T> static std::string tostr(const T val, const char* fmt);
+
+
+	/*
+	*	print table data to console
+	*@param table: in, table want to print
+	*@return
+	*	void
+	*/
+	static void print(const std::vector<std::vector<std::string>> &table, int colwidth = 10);
+
+	/*
+	*	check if input string is empty
+	*@param str: string to check
+	*@return:
+	*	true if input string is empty, otherwise false
+	*/
+	static bool empty(const char* str);
+
+	/*
+	*	split a string by character seperator
+	*@param str: string to be splited
+	*@param sep: character seperator
+	*@return:
+	*	split result
+	*/
+	static std::vector<std::string> split(const char* str, const char sep);
+
+	/*
+	*	split a string by string seperator
+	*@param str: string to be splited
+	*@param sep: character seperator
+	*@return:
+	*	split result
+	*/
+	static std::vector<std::string> split(const char* str, const char* sep);
+
+	/*
+	*	split a string by character seperator
+	*@param str: string to be splited
+	*@param sep: character seperator
+	*@return:
+	*	split result
+	*/
+	static std::vector<std::string> split(const std::string& str, const char sep);
+
+	/*
+	*	split a string by string seperator
+	*@param str: string to be splited
+	*@param sep: character seperator
+	*@return:
+	*	split result
+	*/
+	static std::vector<std::string> split(const std::string& str, const std::string& sep);
+
+	/*
+	*	split a string to table structure by row and column seperator
+	*@param str: string to be splited
+	*@param seprow: row seperator
+	*@param sepcol: column seperator
+	*@return:
+	*	split result
+	*/
+	static std::vector<std::vector<std::string>> split(const char *str, const char *seprow, const char *sepcol);
+
+	/*
+	*	split a string by specified seperator characters
+	*@param str: string to be splited
+	*@param spes: characters used to seperate
+	*@return:
+	*	split result;
+	*/
+	static std::vector<std::string> splits(const std::string& str, const std::string& seps);
 };
 END_CUBE_NAMESPACE

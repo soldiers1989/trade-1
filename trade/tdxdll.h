@@ -1,5 +1,5 @@
 #pragma once
-#include "stdpub.h"
+#include "stdtrd.h"
 #include "tdxexpt.h"
 BEGIN_TRADE_NAMESPACE
 class tdxdll

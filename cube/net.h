@@ -280,7 +280,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int start(uint ip, ushort port, void *arg = 0) {
+	int start(ulong ip, ushort port, void *arg = 0) {
 		//step1: start iocp service
 		if (_service.start(arg) != 0)
 			return -1;
@@ -364,7 +364,7 @@ public:
 		return 0;
 	}
 
-	int connect(uint ip, ushort port) {
+	int connect(ulong ip, ushort port) {
 		try {
 			//connect to remote service
 			socket sock = socket::connect(ip, port);

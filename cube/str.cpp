@@ -1,6 +1,8 @@
 #include "str.h"
 #include <locale>
 #include <cstdarg>
+#include <iomanip>
+#include <iostream>
 
 BEGIN_CUBE_NAMESPACE
 bool str::isnum(const char* str) {
@@ -331,5 +333,142 @@ std::string str::tostr(float value) {
 	char buf[128] = { 0 };
 	sprintf(buf, "%f", value);
 	return std::string(buf);
+}
+
+template<class T> std::string str::tostr(const T val, const char* fmt) {
+	const int BUFSZ = 128;
+	char buf[BUFSZ] = { 0 };
+	sprintf_s(buf, BUFSZ, fmt, val);
+
+	return std::string(buf);
+}
+
+bool str::empty(const char* str) {
+	if (str != 0 && *str == 0) {
+		return true;
+	}
+	return false;
+}
+
+void str::print(const std::vector<std::vector<std::string>> &table, int colwidth) {
+	for (size_t nrow = 0; nrow < table.size(); nrow++) {
+		for (size_t ncol = 0; ncol < table[nrow].size(); ncol++) {
+			std::cout << std::setw(colwidth) << table[nrow][ncol].c_str();
+		}
+		std::cout << std::endl;
+	}
+}
+
+std::vector<std::string> str::split(const char* str, const char sep) {
+	std::vector<std::string> result;
+
+	int lenstr = strlen(str);
+	const char *start = str, *end = 0;
+	while (start < str + lenstr) {
+		end = strchr(start, sep);
+		if (end != 0) {
+			result.push_back(std::string(start, end - start));
+			start = end + 1;
+		} else
+			break;
+	}
+	if (start < str + lenstr) {
+		result.push_back(std::string(start, str + lenstr));
+	}
+
+	return result;
+}
+
+
+std::vector<std::string> str::split(const char* str, const char* sep) {
+	std::vector<std::string> result;
+
+	int lenstr = strlen(str), lensep = strlen(sep);
+	const char *start = str, *end = 0;
+	while (start < str + lenstr) {
+		end = strstr(start, sep);
+		if (end != 0) {
+			result.push_back(std::string(start, end - start));
+			start = end + lensep;
+		} else
+			break;
+	}
+	if (start < str + lenstr) {
+		result.push_back(std::string(start, str + lenstr));
+	}
+
+	return result;
+}
+
+std::vector<std::string> str::split(const std::string& str, const char sep) {
+	std::vector<std::string> result;
+
+	std::size_t startpos = 0, endpos = str.find(sep, startpos);
+	while (endpos != std::string::npos) {
+		result.push_back(str.substr(startpos, endpos - startpos));
+		startpos = endpos + 1;
+		endpos = str.find(sep, startpos);
+	}
+
+	if (startpos != std::string::npos) {
+		result.push_back(str.substr(startpos));
+	}
+
+	return result;
+}
+
+std::vector<std::string> str::split(const std::string& str, const std::string& sep) {
+	std::vector<std::string> result;
+
+	std::size_t startpos = 0, endpos = str.find(sep.c_str(), 0, sep.length());
+	while (endpos != std::string::npos) {
+		result.push_back(str.substr(startpos, endpos - startpos));
+		startpos = endpos + sep.length();
+		endpos = str.find(sep.c_str(), startpos, sep.length());
+	}
+
+	if (startpos != std::string::npos) {
+		result.push_back(str.substr(startpos));
+	}
+
+	return result;
+}
+
+std::vector<std::vector<std::string>> str::split(const char *str, const char *seprow, const char *sepcol) {
+	std::vector<std::vector<std::string>> table;
+
+	std::vector<std::string> rows = str::split(str, seprow);
+	for (int i = 0; i < (int)rows.size(); i++) {
+		std::vector<std::string> cols = str::split(rows[i], sepcol);
+		table.push_back(cols);
+	}
+
+	return table;
+}
+
+std::vector<std::string> str::splits(const std::string& str, const std::string& seps) {
+	std::vector<std::string> result;
+
+	int startpos = 0, endpos = 0, pos = 0;
+	while (pos < (int)str.size()) {
+		if (seps.find(str[pos]) != std::string::npos) {
+			result.push_back(str.substr(startpos, pos - startpos));
+			pos++;
+			while (pos < (int)str.size()) {
+				if (seps.find(str[pos] == std::string::npos)) {
+					startpos = pos;
+					break;
+				}
+				pos++;
+			}
+		} else
+			pos++;
+	}
+
+	if (startpos < (int)str.size()) {
+		result.push_back(str.substr(startpos));
+	}
+
+	return result;
 }
 END_CUBE_NAMESPACE

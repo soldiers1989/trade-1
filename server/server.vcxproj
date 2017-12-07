@@ -153,9 +153,13 @@
   <ItemGroup>
     <ClCompile Include="sessionapi.cpp" />
     <ClCompile Include="server.cpp" />
+    <ClCompile Include="sessionquote.cpp" />
+    <ClCompile Include="sessiontrade.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sessionapi.h" />
+    <ClInclude Include="sessionquote.h" />
+    <ClInclude Include="sessiontrade.h" />
     <ClInclude Include="stdsvr.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

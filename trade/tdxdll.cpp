@@ -4,8 +4,9 @@
 
 #include "error.h"
 #include "tdxdll.h"
+#include "cube\os.h"
+#include "cube\mm.h"
 #include "cube\file.h"
-#include "cube\util.h"
 
 BEGIN_TRADE_NAMESPACE
 int tdxdll::load(std::string account, std::string *error/* = 0*/) {
@@ -36,7 +37,7 @@ int tdxdll::load(std::string account, std::string *error/* = 0*/) {
 	_hmodule = LoadLibrary(newdllpath.c_str());
 	if (_hmodule == NULL) {
 		if (error != 0)
-			*error = cube::sys::getlasterror();
+			*error = cube::os::last_error();
 		return -1;
 	}
 
@@ -96,7 +97,7 @@ int tdxdll::create_newdll(const std::string& account, const std::string& rawdll,
 	std::string newkey = encrypt_account(account.c_str());
 
 	//repleace content
-	cube::util::overwrite(content, filesz, rawkey.c_str(), rawkey.length(), newkey.c_str(), newkey.length());
+	cube::mm::overwrite(content, filesz, rawkey.c_str(), rawkey.length(), newkey.c_str(), newkey.length());
 
 	//write to new dll
 	int err = cube::file::write(newdll, content, filesz);

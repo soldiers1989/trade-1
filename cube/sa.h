@@ -3,20 +3,65 @@
 */
 #pragma once
 #include "cube.h"
+#include <list>
 #include <WinSock2.h>
 
 //socket handle
 #define socket_t uint
 
 BEGIN_CUBE_NAMESPACE
+
+//socket address
+typedef struct saddr {
+	ulong ip;
+	ushort port;
+
+	saddr(ulong ip, ushort port) : ip(ip), port(port) {}
+	~saddr() {}
+} saddr_t;
+
+//socket api wrapper class
 class sa {
 public:
+	//exceptions for socket api access
+	typedef std::exception ewarn;
+	typedef std::exception error;
+	typedef std::exception efatal;
+
+public:
+	/*
+	*	get the last wsa error message
+	*/
+	static int last_error_code();
 	static std::string last_error();
 	static std::string last_error(int error_code);
-	static int last_error_code();
+
+	/*
+	*	make a time value by input million seconds
+	*/
 	static timeval mktime(int msecs);
+	
+	/*
+	*	ip network address translation between integer and ip string
+	*@param ip: in, ip string x.x.x.x or integer in host byte order
+	*@return:
+	*	integer or ip string
+	*/
+	static ulong ipaddr(const char* ip);
+	static std::string ipaddr(ulong ip);
+	static std::list<std::string> ipaddrs(const char *hostname);
+	static std::list<std::string> ipaddrs(const std::list<ulong> &ips);
+
+	/*
+	*	domain name resolution
+	*@param hostname: in, domain name
+	*@return:
+	*	ip address list with byte order
+	*/
+	static std::list<ulong> resolve(const char *hostname);
 };
 
+//socket class
 class socket {
 public:
 	//flags/options/controls for socket
@@ -27,6 +72,7 @@ public:
 	} mode_t;
 
 	//exceptions of socket operaiton
+	typedef std::exception error;
 	typedef std::exception ewarn;
 	typedef std::exception efatal;
 	typedef std::exception etimeout;
@@ -45,7 +91,7 @@ public:
 	*	new socket when succeed, otherwise throw exceptions
 	*/
 	static socket listen(ushort port, int modes);
-	static socket listen(uint ip, ushort port, int modes);
+	static socket listen(ulong ip, ushort port, int modes);
 
 	/*
 	*	connect to remote service with specified ip/port
@@ -54,7 +100,7 @@ public:
 	*@return:
 	*	new socket when succeed, otherwise throw exceptions
 	*/
-	static socket connect(uint ip, ushort port, int modes);
+	static socket connect(ulong ip, ushort port, int modes);
 
 	/*
 	*	accept new incoming connection from the listen socket
@@ -121,7 +167,7 @@ public:
 	void close();
 
 private:
-	socket(socket_t s, uint ip, ushort port) : _socket(s), _ip(ip), _port(port) {}
+	socket(socket_t s, ulong ip, ushort port) : _socket(s), _ip(ip), _port(port) {}
 
 	/*
 	*	set socket options/controls with specified modes
@@ -147,9 +193,15 @@ public:
 	socket_t handle() const;
 	
 	/*
+	*	get peer or local address connected with the socket
+	*/
+	saddr peeraddr() const;
+	saddr localaddr() const;
+
+	/*
 	*	get socket ip/port
 	*/
-	uint ip() const;
+	ulong ip() const;
 	ushort port() const;
 
 private:
@@ -157,7 +209,7 @@ private:
 	socket_t _socket;
 
 	//remote ip of socket
-	uint _ip;
+	ulong _ip;
 	//remote port of socket
 	ushort _port;
 };
