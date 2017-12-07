@@ -9,7 +9,7 @@
 
 BEGIN_CUBE_NAMESPACE
 ////////////////////////////////////////////////file/directory class//////////////////////////////////////////////////
-const char* fd::SEP = "/";
+const char* fd::SEP = "\\";
 
 bool fd::exist(const std::string &path) {
 	if (_access(path.c_str(), 0) == 0) {
@@ -54,7 +54,7 @@ std::string fd::path(const std::string &path) {
 	return "";
 }
 
-std::vector<findres> fd::find(const std::string &path, const char* spec/* = "*"*/, int attrib/* = attrib::ALL*/, bool onlyname/* = true*/) {
+std::vector<findres> fd::find(const std::string &path, const char* spec/* = "*"*/, int attrib/* = attrib::ALL*/, bool onlyvisible/* = true*/, bool onlyname/* = true*/) {
 	std::vector<findres> results;
 	struct _finddata_t fdata;
 	intptr_t hd = 0;
@@ -62,14 +62,13 @@ std::vector<findres> fd::find(const std::string &path, const char* spec/* = "*"*
 	std::string paths = path + SEP + spec;
 	if ((hd = _findfirst(paths.c_str(), &fdata)) != -1) {
 		do {
-			if (attrib == attrib::ALL || (fdata.attrib & (unsigned)attrib) != 0) {
+			if ((attrib == attrib::ALL || (fdata.attrib & (unsigned)attrib) != 0) && (onlyvisible && *fdata.name != '.')) {
 				if (onlyname) {
 					results.push_back(findres(fdata.name, fdata.size, fdata.time_create, fdata.time_access, fdata.time_write, fdata.attrib));
 				} else {
 					std::string fullpath = path + SEP + std::string(fdata.name);
-					results.push_back(findres(fullpath, fdata.size, fdata.time_create, fdata.time_access, fdata.time_write, fdata.attrib));
+					results.push_back(findres(fullpath.c_str(), fdata.size, fdata.time_create, fdata.time_access, fdata.time_write, fdata.attrib));
 				}
-				
 			}
 		} while (_findnext(hd, &fdata) == 0);
 		_findclose(hd);
@@ -78,50 +77,35 @@ std::vector<findres> fd::find(const std::string &path, const char* spec/* = "*"*
 	return results;
 }
 
-std::vector<std::string> fd::finds(const std::string &path, const char* spec/* = "*"*/, int attrib/* = attrib::ALL*/, bool onlyname/* = true*/) {
+std::vector<std::string> fd::finds(const std::string &path, const char* spec/* = "*"*/, int attrib/* = attrib::ALL*/, bool onlyvisible/* = true*/,  bool onlyname/* = true*/) {
 	std::vector<std::string> results;
 	struct _finddata_t fdata;
 	intptr_t hd = 0;
 
-	if ((hd = _findfirst(spec.c_str(), &fdata)) != -1) {
+	std::string paths = path + SEP + spec;
+	if ((hd = _findfirst(paths.c_str(), &fdata)) != -1) {
 		do {
-			if (attrib == attrib::ALL || (fdata.attrib & (unsigned)attrib) != 0)
-				results.push_back(fdata.name);
+			if ((attrib == attrib::ALL || (fdata.attrib & (unsigned)attrib) != 0) && (onlyvisible && *fdata.name != '.')) {
+				if (onlyname) {
+					results.push_back(fdata.name);
+				}
+				else {
+					std::string fullpath = path + SEP + std::string(fdata.name);
+					results.push_back(fullpath);
+				}
+			}
 		} while (_findnext(hd, &fdata) == 0);
 		_findclose(hd);
 	}
-
-	return results;
+		return results;
 }
 
-std::vector<std::string> fd::dirs(const std::string &path, bool onlyname/* = true*/) {
-	std::vector<std::string> results;
-	
-	std::vector<findres> findresults = find(path, attrib::DIR);
-	for (int i = 0; i < findresults.size(); i++) {
-		if (onlyname) {
-			results.push_back(findresults[i].name);
-		} else {
-			results.push_back(path + SEP + findresults[i].name);
-		}
-	}
-
-	return results;
+std::vector<std::string> fd::dirs(const std::string &path, bool onlyvisible/* = true*/, bool onlyname/* = true*/) {
+	return finds(path, "*", attrib::DIR, onlyvisible, onlyname);
 }
 
-std::vector<std::string> fd::files(const std::string &path, bool onlyname/* = true*/) {
-	std::vector<std::string> results;
-
-	std::vector<findres> findresults = find(path, attrib::FILE);
-	for (int i = 0; i < findresults.size(); i++) {
-		if (onlyname) {
-			results.push_back(findresults[i].name);
-		} else {
-			results.push_back(path + SEP + findresults[i].name);
-		}
-	}
-
-	return results;
+std::vector<std::string> fd::files(const std::string &path, bool onlyvisible/* = true*/, bool onlyname/* = true*/) {
+	return finds(path, "*", attrib::FILE, onlyvisible, onlyname);
 }
 
 ////////////////////////////////////////////////file class//////////////////////////////////////////////////

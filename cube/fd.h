@@ -78,8 +78,8 @@ public:
 	*@return:
 	*	find results
 	*/
-	static std::vector<findres> find(const std::string &path, const char* spec="*", attrib = attrib::ALL, bool onlyname = true);
-	static std::vector<std::string> finds(const std::string &path, const char* spec = "*", int attrib = attrib::ALL, bool onlyname = true);
+	static std::vector<findres> find(const std::string &path, const char* spec = "*", int attrib = attrib::ALL, bool onlyvisible = true, bool onlyname = true);
+	static std::vector<std::string> finds(const std::string &path, const char* spec = "*", int attrib = attrib::ALL, bool onlyvisible = true, bool onlyname = true);
 
 	/*
 	*	get the sub directories or files in the specified directory
@@ -88,8 +88,8 @@ public:
 	*@return:
 	*	file or directory path vector
 	*/
-	static std::vector<std::string> dirs(const std::string &path, bool onlyname = true);
-	static std::vector<std::string> files(const std::string &path, bool onlyname = true);
+	static std::vector<std::string> dirs(const std::string &path, bool onlyvisible = true, bool onlyname = true);
+	static std::vector<std::string> files(const std::string &path, bool onlyvisible = true, bool onlyname = true);
 };
 
 //file class
