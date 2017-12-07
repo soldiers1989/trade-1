@@ -21,7 +21,7 @@
   <ItemGroup>
     <ClCompile Include="ini.cpp" />
     <ClCompile Include="cube.cpp" />
-    <ClCompile Include="file.cpp" />
+    <ClCompile Include="fd.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="net.cpp" />
     <ClCompile Include="os.cpp" />
@@ -35,7 +35,7 @@
   <ItemGroup>
     <ClInclude Include="ini.h" />
     <ClInclude Include="cube.h" />
-    <ClInclude Include="file.h" />
+    <ClInclude Include="fd.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="net.h" />
     <ClInclude Include="os.h" />

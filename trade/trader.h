@@ -1,10 +1,10 @@
 #pragma once
 #include "stdtrd.h"
 BEGIN_TRADE_NAMESPACE
-class traders
+class trader
 {
 public:
-	traders();
-	~traders();
+	trader() {}
+	~trader() {}
 };
 END_TRADE_NAMESPACE

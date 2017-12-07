@@ -18,9 +18,6 @@
     <ClCompile Include="cube.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="file.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="str.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -51,12 +48,12 @@
     <ClCompile Include="mm.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="fd.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cube.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="file.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="str.h">
@@ -87,6 +84,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="mm.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="fd.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

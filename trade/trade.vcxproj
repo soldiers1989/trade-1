@@ -150,6 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="broker.h" />
     <ClInclude Include="error.h" />
     <ClInclude Include="stdtrd.h" />
     <ClInclude Include="tdxdll.h" />
@@ -159,6 +160,7 @@
     <ClInclude Include="tdx.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="broker.cpp" />
     <ClCompile Include="tdxdll.cpp" />
     <ClCompile Include="trader.cpp" />
     <ClCompile Include="tdx.cpp" />

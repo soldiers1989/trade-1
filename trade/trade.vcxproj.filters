@@ -36,6 +36,9 @@
     <ClInclude Include="stdtrd.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="broker.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tdx.cpp">
@@ -45,6 +48,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="trader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="broker.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

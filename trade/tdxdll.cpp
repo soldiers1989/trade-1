@@ -6,26 +6,26 @@
 #include "tdxdll.h"
 #include "cube\os.h"
 #include "cube\mm.h"
-#include "cube\file.h"
+#include "cube\fd.h"
 
 BEGIN_TRADE_NAMESPACE
 int tdxdll::load(std::string account, std::string *error/* = 0*/) {
 	//create new dll directory
-	if (!cube::file::exist(TDX_NEWDLL_PATH)) {
-		if (cube::file::mkdirs(TDX_NEWDLL_PATH) != 0) {
+	if (!cube::fd::exist(TDX_NEWDLL_PATH)) {
+		if (cube::dir::mkdirs(TDX_NEWDLL_PATH) != 0) {
 			if(error != 0)
 				*error = ERR_TDX_INIT_TDXDLL;
 			return -1;
 		}
 	}
-	if (!cube::file::isdir(TDX_NEWDLL_PATH)) {
+	if (!cube::fd::isdir(TDX_NEWDLL_PATH)) {
 		if (error != 0)
 			*error = ERR_TDX_INIT_TDXDLL;
 		return -1;
 	}
 
 	//generate the new dll path
-	std::string newdllpath = TDX_NEWDLL_PATH + cube::file::filename(TDX_RAWDLL_PATH) + "." + account + ".dll";
+	std::string newdllpath = TDX_NEWDLL_PATH + cube::fd::name(TDX_RAWDLL_PATH) + "." + account + ".dll";
 	int err = create_newdll(account, TDX_RAWDLL_PATH, newdllpath);
 	if (err != 0) {
 		if (error != 0)
@@ -72,15 +72,15 @@ int tdxdll::free() {
 
 int tdxdll::create_newdll(const std::string& account, const std::string& rawdll, const std::string& newdll) {
 	//check if new dll is exist
-	if (cube::file::exist(newdll)){
-		if (cube::file::isfile(newdll))
+	if (cube::fd::exist(newdll)){
+		if (cube::fd::isfile(newdll))
 			return 0;
 		else
 			return -1;
 	}
 
 	//check if raw dll is exist
-	if (!cube::file::exist(rawdll) || !cube::file::isfile(rawdll)) {
+	if (!cube::fd::exist(rawdll) || !cube::fd::isfile(rawdll)) {
 		return -1;
 	}
 
