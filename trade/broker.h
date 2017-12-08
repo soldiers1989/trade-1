@@ -95,16 +95,20 @@ private:
 //brokers class
 class brokers {
 public:
+	//brokers service configure directory in the working directory
+	static char* DIR;
+
+public:
 	brokers() {}
 	~brokers() {}
 
 	/*
 	*	load brokers information
-	*@param dir: in, configure directory path of brokers
+	*@param workdir: in, working directory
 	*@return:
 	*	0 for success, otherwise<0
 	*/
-	int load(const std::string &dir);
+	int load(const std::string &workdir);
 
 	/*
 	*	get broker number in vector

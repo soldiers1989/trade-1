@@ -18,6 +18,8 @@ char *broker::FILE_NAME_DEPTS = "depts";
 char *broker::FILE_NAME_QUOTES = "quotes";
 char *broker::FILE_NAME_TRADES = "trades";
 
+char *brokers::DIR = "brokers";
+
 int broker::load(const std::string &dir) {
 	//load departements
 	int err = load_depts(dir);
@@ -107,14 +109,15 @@ int broker::load_trades(const std::string &dir) {
 	return 0;
 }
 
-int brokers::load(const std::string &dir) {
+int brokers::load(const std::string &workdir) {
+	std::string brokersdir = cube::path::make(workdir, DIR);
 	//get sub directories from configure path, suppose file name is broker name
-	std::vector<std::string> names = cube::fd::dirs(dir);
+	std::vector<std::string> names = cube::fd::dirs(brokersdir);
 
 	//load each broker
 	for (size_t i = 0; i < names.size(); i++) {
 		broker broker(names[i]);
-		int err = broker.load(cube::path::make(dir, names[i]));
+		int err = broker.load(cube::path::make(brokersdir, names[i]));
 		if (err != 0) {
 			_brokers.push_back(broker);
 		}
