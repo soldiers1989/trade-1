@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <Windows.h>
 
-#include "error.h"
 #include "tdxdll.h"
 #include "cube\os.h"
 #include "cube\mm.h"
@@ -11,9 +10,9 @@
 BEGIN_TRADE_NAMESPACE
 const char* tdxdllerr::ERR_INIT_DLL = "初始化tdx动态链接库错误";
 
-const char* tdxdllcfg::RAWDLL_DIR = "raw";
+const char* tdxdllcfg::RAWDLL_DIR = "dll\\raw";
 const char* tdxdllcfg::RAWDLL_NAME = "Trade.dll";
-const char* tdxdllcfg::NEWDLL_DIR = "new";
+const char* tdxdllcfg::NEWDLL_DIR = "dll\\new";
 
 int tdxdll::load(const std::string &workdir, const std::string &account, std::string *error/* = 0*/) {
 	//get absolute dll file path
@@ -22,14 +21,12 @@ int tdxdll::load(const std::string &workdir, const std::string &account, std::st
 	//create new dll directory
 	if (!cube::fd::exist(newdlldir)) {
 		if (cube::dir::mkdirs(newdlldir) != 0) {
-			if(error != 0)
-				cube::safe_assign<std::string>(error, tdxdllerr::ERR_INIT_DLL);
+			cube::safe_assign<std::string>(error, tdxdllerr::ERR_INIT_DLL);
 			return -1;
 		}
 	}
 	if (!cube::fd::isdir(newdlldir)) {
-		if (error != 0)
-			cube::safe_assign<std::string>(error, tdxdllerr::ERR_INIT_DLL);
+		cube::safe_assign<std::string>(error, tdxdllerr::ERR_INIT_DLL);
 		return -1;
 	}
 
@@ -38,16 +35,14 @@ int tdxdll::load(const std::string &workdir, const std::string &account, std::st
 	std::string newdllfile =  cube::path::make(newdlldir, cube::fd::name(tdxdllcfg::RAWDLL_NAME) + "." + account + ".dll");
 	int err = create_newdll(account, rawdllfile, newdllfile);
 	if (err != 0) {
-		if (error != 0)
-			*error = ERR_TDX_INIT_TDXDLL;
+		cube::safe_assign<std::string>(error, tdxdllerr::ERR_INIT_DLL);
 		return -1;
 	}
 
 	//load dll module
 	_hmodule = LoadLibrary(newdllfile.c_str());
 	if (_hmodule == NULL) {
-		if (error != 0)
-			*error = cube::os::last_error();
+		cube::safe_assign<std::string>(error, cube::os::last_error());
 		return -1;
 	}
 

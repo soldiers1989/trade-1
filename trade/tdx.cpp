@@ -1,5 +1,4 @@
 #include "tdx.h"
-#include "error.h"
 #include "cube\str.h"
 
 BEGIN_TRADE_NAMESPACE

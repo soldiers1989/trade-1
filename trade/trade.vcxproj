@@ -151,7 +151,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="broker.h" />
-    <ClInclude Include="error.h" />
     <ClInclude Include="stdtrd.h" />
     <ClInclude Include="tdxdll.h" />
     <ClInclude Include="tdxexpt.h" />

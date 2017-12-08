@@ -1,17 +1,18 @@
 #pragma once
 #include <string>
-#include "stdpub.h"
+#include "quote.h"
 
 BEGIN_QUOTE_NAMESPACE
 class quote2 {
 public:
 	/*
 	*	intialize quote api service
+	*@param workdir: in, working directory
 	*@param error: out, error message when failed
 	*return:
 	*	0 for success, otherwise < 0
 	*/
-	virtual int init(std::string *error = 0) = 0;
+	virtual int init(const std::string &workdir, std::string *error = 0) = 0;
 
 	/*
 	*	connect to the quotation service, must be invoke this method before using the other quotation
@@ -23,7 +24,7 @@ public:
 	*@return:
 	*	true if success, otherwise false
 	*/
-	virtual int connect(std::string ip, ushort port, table_t &result, std::string &error) = 0;
+	virtual int connect(const std::string &ip, ushort port, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query security count by specified market
@@ -33,7 +34,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_security_count(market_t market, int &count, std::string &error) = 0;
+	virtual int query_security_count(market mkt, int &count, std::string *error = 0) = 0;
 
 	/*
 	*	query security list of specified market
@@ -45,7 +46,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_security_list(market_t market, int start, int &count, table_t &result, std::string &error) = 0;
+	virtual int query_security_list(market mkt, int start, int &count, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query k-line data of specified security
@@ -59,7 +60,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_security_kline(kline_t line, market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) = 0;
+	virtual int query_security_kline(kline line, market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query k-line data of specified index
@@ -73,7 +74,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_index_kline(kline_t line, market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) = 0;
+	virtual int query_index_kline(kline line, market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query current time-data of specified security
@@ -84,7 +85,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_current_time_data(market_t market, std::string zqdm, table_t &result, std::string &error) = 0;
+	virtual int query_current_time_data(market mkt, const std::string &zqdm, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query history time-data of specified security
@@ -96,7 +97,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_history_time_data(market_t market, std::string zqdm, std::string date, table_t &result, std::string &error) = 0;
+	virtual int query_history_time_data(market mkt, const std::string &zqdm, const std::string &date, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query currrent deal data of specified security
@@ -109,7 +110,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_current_deal_data(market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) = 0;
+	virtual int query_current_deal_data(market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query currrent deal detail of specified security
@@ -122,7 +123,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_current_deal_detail(market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) = 0;
+	virtual int query_current_deal_detail(market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query history deal data of specified security
@@ -136,7 +137,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_history_deal_data(market_t market, std::string zqdm, std::string date, int start, int &count, table_t &result, std::string &error) = 0;
+	virtual int query_history_deal_data(market mkt, const std::string &zqdm, const std::string &date, int start, int &count, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query currrent order queue detail of specified security
@@ -149,7 +150,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_current_order_data(market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) = 0;
+	virtual int query_current_order_data(market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query current buy and sell queue data of specified security
@@ -160,7 +161,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_buysell_queue_data(market_t market, std::string zqdm, table_t &result, std::string &error) = 0;
+	virtual int query_buysell_queue_data(market mkt, const std::string &zqdm, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query current quote data of specified security
@@ -171,7 +172,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_current_quote_data(market_t market, std::string zqdm, table_t &result, std::string &error) = 0;
+	virtual int query_current_quote_data(market mkt, const std::string &zqdm, table &result, std::string *error = 0) = 0;
 
 
 	/*
@@ -182,7 +183,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_current_quote_data(std::vector<security_t> securities, table_t &result, std::string &error) = 0;
+	virtual int query_current_quote_data(const std::vector<security> &securities, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query current level 2 quote data of specified security
@@ -193,7 +194,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_current_quote10_data(market_t market, std::string zqdm, table_t &result, std::string &error) = 0;
+	virtual int query_current_quote10_data(market mkt, const std::string &zqdm, table &result, std::string *error = 0) = 0;
 
 
 	/*
@@ -204,7 +205,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_current_quote10_data(std::vector<security_t> securities, table_t &result, std::string &error) = 0;
+	virtual int query_current_quote10_data(const std::vector<security> &securities, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query f10 category data of specified security
@@ -215,7 +216,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_f10_category(market_t market, std::string zqdm, table_t &result, std::string &error) = 0;
+	virtual int query_f10_category(market mkt, const std::string &zqdm, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query f10 content data of specified security
@@ -229,7 +230,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_f10_content(market_t market, std::string zqdm, std::string file, int start, int length, table_t &result, std::string &error) = 0;
+	virtual int query_f10_content(market mkt, const std::string &zqdm, const std::string &file, int start, int length, table &result, std::string *error = 0) = 0;
 
 	/*
 	*	query ex-dividend and ex-rights data of specified security
@@ -240,7 +241,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_xdxr_data(market_t market, std::string zqdm, table_t &result, std::string &error) = 0;
+	virtual int query_xdxr_data(market mkt, const std::string &zqdm, table &result, std::string *error = 0) = 0;
 
 
 	/*
@@ -252,7 +253,7 @@ public:
 	*@return:
 	*	0 if success, otherwise < 0
 	*/
-	virtual int query_finance_data(market_t market, std::string zqdm, table_t &result, std::string &error) = 0;
+	virtual int query_finance_data(market mkt, const std::string &zqdm, table &result, std::string *error = 0) = 0;
 
 
 	/*

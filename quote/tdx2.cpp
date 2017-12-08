@@ -1,21 +1,14 @@
 #include "tdx2.h"
-#include "error.h"
 #include "cube\str.h"
 
 BEGIN_QUOTE_NAMESPACE
-tdx2::tdx2() : _quote(0)
-{
-}
+const char* tdx2cfg::RESULT_ROW_SEP = "\n";
+const char* tdx2cfg::RESULT_COL_SEP = "\t";
 
-
-tdx2::~tdx2()
-{
-}
-
-int tdx2::init(std::string *error/* = 0*/) {
+int tdx2::init(const std::string &workdir, std::string *error) {
 	if (_quote == 0) {
 		_quote = new tdxdll2();
-		int err = _quote->load(TDX_QUOTE2_DLL, error);
+		int err = _quote->load(workdir, error);
 		if (err != 0) {
 			delete _quote;
 			_quote = 0;
@@ -25,18 +18,18 @@ int tdx2::init(std::string *error/* = 0*/) {
 
 	//initialize the result and error buffer holder
 	for (int i = 0; i < TDX_BATCH_LIMIT; i++) {
-		_results[i] = new char[TDX_BUFFER_SIZE_RESULT];
-		_errors[i] = new char[TDX_BUFFER_SIZE_ERROR];
+		_results[i] = new char[tdx2cfg::BUFFER_SIZE_RESULT];
+		_errors[i] = new char[tdx2cfg::BUFFER_SIZE_ERROR];
 	}
 
 	return 0;
 }
 
-int tdx2::connect(std::string ip, ushort port, table_t &result, std::string &error) {
+int tdx2::connect(const std::string &ip, ushort port, table &result, std::string *error) {
 	//connect to server
 	bool res = _quote->TdxL2Hq_Connect(ip.c_str(), port, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -46,11 +39,11 @@ int tdx2::connect(std::string ip, ushort port, table_t &result, std::string &err
 	return 0;
 }
 
-int tdx2::query_security_count(market_t market, int &count, std::string &error) {
+int tdx2::query_security_count(market mkt, int &count, std::string *error) {
 	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetSecurityCount((byte)market, scount, _errors[0]);
+	bool res = _quote->TdxL2Hq_GetSecurityCount((byte)mkt, scount, _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -59,25 +52,11 @@ int tdx2::query_security_count(market_t market, int &count, std::string &error) 
 	return 0;
 }
 
-int tdx2::query_security_list(market_t market, int start, int &count, table_t &result, std::string &error) {
+int tdx2::query_security_list(market mkt, int start, int &count, table &result, std::string *error) {
 	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetSecurityList((byte)market, (short)start, scount, _results[0], _errors[0]);
+	bool res = _quote->TdxL2Hq_GetSecurityList((byte)mkt, (short)start, scount, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
-		return -1;
-	}
-
-	count = scount;
-	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
-
-	return 0;
-}
-
-int tdx2::query_security_kline(kline_t line, market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) {
-	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetSecurityBars((byte)line, (byte)market, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
-	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -87,11 +66,25 @@ int tdx2::query_security_kline(kline_t line, market_t market, std::string zqdm, 
 	return 0;
 }
 
-int tdx2::query_index_kline(kline_t line, market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) {
+int tdx2::query_security_kline(kline line, market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error) {
 	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetIndexBars((byte)line, (byte)market, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
+	bool res = _quote->TdxL2Hq_GetSecurityBars((byte)line, (byte)mkt, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
+		return -1;
+	}
+
+	count = scount;
+	result = cube::str::split(_results[0], TDX_RESULT_ROW_SEP, TDX_RESULT_COL_SEP);
+
+	return 0;
+}
+
+int tdx2::query_index_kline(kline line, market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error) {
+	short scount = 0;
+	bool res = _quote->TdxL2Hq_GetIndexBars((byte)line, (byte)mkt, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
+	if (!res) {
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -100,10 +93,10 @@ int tdx2::query_index_kline(kline_t line, market_t market, std::string zqdm, int
 	return 0;
 }
 
-int tdx2::query_current_time_data(market_t market, std::string zqdm, table_t &result, std::string &error) {
-	bool res = _quote->TdxL2Hq_GetMinuteTimeData((byte)market, zqdm.c_str(), _results[0], _errors[0]);
+int tdx2::query_current_time_data(market mkt, const std::string &zqdm, table &result, std::string *error) {
+	bool res = _quote->TdxL2Hq_GetMinuteTimeData((byte)mkt, zqdm.c_str(), _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -112,10 +105,10 @@ int tdx2::query_current_time_data(market_t market, std::string zqdm, table_t &re
 	return 0;
 }
 
-int tdx2::query_history_time_data(market_t market, std::string zqdm, std::string date, table_t &result, std::string &error) {
-	bool res = _quote->TdxL2Hq_GetHistoryMinuteTimeData((byte)market, zqdm.c_str(), atoi(date.c_str()), _results[0], _errors[0]);
+int tdx2::query_history_time_data(market mkt, const std::string &zqdm, const std::string &date, table &result, std::string *error) {
+	bool res = _quote->TdxL2Hq_GetHistoryMinuteTimeData((byte)mkt, zqdm.c_str(), atoi(date.c_str()), _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -124,11 +117,11 @@ int tdx2::query_history_time_data(market_t market, std::string zqdm, std::string
 	return 0;
 }
 
-int tdx2::query_current_deal_data(market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) {
+int tdx2::query_current_deal_data(market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error) {
 	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetTransactionData((byte)market, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
+	bool res = _quote->TdxL2Hq_GetTransactionData((byte)mkt, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -137,11 +130,11 @@ int tdx2::query_current_deal_data(market_t market, std::string zqdm, int start, 
 	return 0;
 }
 
-int tdx2::query_current_deal_detail(market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) {
+int tdx2::query_current_deal_detail(market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error) {
 	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetDetailTransactionData((byte)market, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
+	bool res = _quote->TdxL2Hq_GetDetailTransactionData((byte)mkt, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -149,11 +142,11 @@ int tdx2::query_current_deal_detail(market_t market, std::string zqdm, int start
 	return 0;
 }
 
-int tdx2::query_history_deal_data(market_t market, std::string zqdm, std::string date, int start, int &count, table_t &result, std::string &error) {
+int tdx2::query_history_deal_data(market mkt, const std::string &zqdm, const std::string &date, int start, int &count, table &result, std::string *error) {
 	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetHistoryTransactionData((byte)market, zqdm.c_str(), (short)start, scount, atoi(date.c_str()), _results[0], _errors[0]);
+	bool res = _quote->TdxL2Hq_GetHistoryTransactionData((byte)mkt, zqdm.c_str(), (short)start, scount, atoi(date.c_str()), _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -162,11 +155,11 @@ int tdx2::query_history_deal_data(market_t market, std::string zqdm, std::string
 	return 0;
 }
 
-int tdx2::query_current_order_data(market_t market, std::string zqdm, int start, int &count, table_t &result, std::string &error) {
+int tdx2::query_current_order_data(market mkt, const std::string &zqdm, int start, int &count, table &result, std::string *error) {
 	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetDetailOrderData((byte)market, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
+	bool res = _quote->TdxL2Hq_GetDetailOrderData((byte)mkt, zqdm.c_str(), (short)start, scount, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -175,10 +168,10 @@ int tdx2::query_current_order_data(market_t market, std::string zqdm, int start,
 	return 0;
 }
 
-int tdx2::query_buysell_queue_data(market_t market, std::string zqdm, table_t &result, std::string &error) {
-	bool res = _quote->TdxL2Hq_GetBuySellQueue((byte)market, zqdm.c_str(), _results[0], _errors[0]);
+int tdx2::query_buysell_queue_data(market mkt, const std::string &zqdm, table &result, std::string *error) {
+	bool res = _quote->TdxL2Hq_GetBuySellQueue((byte)mkt, zqdm.c_str(), _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -187,17 +180,17 @@ int tdx2::query_buysell_queue_data(market_t market, std::string zqdm, table_t &r
 	return 0;
 }
 
-int tdx2::query_current_quote_data(market_t market, std::string zqdm, table_t &result, std::string &error) {
+int tdx2::query_current_quote_data(market mkt, const std::string &zqdm, table &result, std::string *error) {
 	//adapt for batch api
-	std::vector<security_t> securities;
+	std::vector<security> securities;
 
 	//set security information
-	securities.push_back(security_t(market, zqdm));
+	securities.push_back(security(mkt, zqdm));
 
 	return  query_current_quote_data(securities, result, error);
 }
 
-int tdx2::query_current_quote_data(std::vector<security_t> securities, table_t &result, std::string &error) {
+int tdx2::query_current_quote_data(const std::vector<security> &securities, table &result, std::string *error) {
 	//batch query count
 	short count = (short)securities.size();
 
@@ -205,14 +198,14 @@ int tdx2::query_current_quote_data(std::vector<security_t> securities, table_t &
 	byte markets[TDX_BATCH_LIMIT];
 	const char* codes[TDX_BATCH_LIMIT];
 	for (short i = 0; i < count; i++) {
-		markets[i] = (byte)securities[i].market;
+		markets[i] = (byte)securities[i].mkt;
 		codes[i] = securities[i].code.c_str();
 	}
 
 	// query server
 	bool res = _quote->TdxL2Hq_GetSecurityQuotes(markets, codes, count, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -221,17 +214,17 @@ int tdx2::query_current_quote_data(std::vector<security_t> securities, table_t &
 	return 0;
 }
 
-int tdx2::query_current_quote10_data(market_t market, std::string zqdm, table_t &result, std::string &error) {
+int tdx2::query_current_quote10_data(market mkt, const std::string &zqdm, table &result, std::string *error) {
 	//adapt for batch api
-	std::vector<security_t> securities;
+	std::vector<security> securities;
 
 	//set security information
-	securities.push_back(security_t(market, zqdm));
+	securities.push_back(security(mkt, zqdm));
 
 	return  query_current_quote10_data(securities, result, error);
 }
 
-int tdx2::query_current_quote10_data(std::vector<security_t> securities, table_t &result, std::string &error) {
+int tdx2::query_current_quote10_data(const std::vector<security> &securities, table &result, std::string *error) {
 	//batch query count
 	short count = (short)securities.size();
 
@@ -239,14 +232,14 @@ int tdx2::query_current_quote10_data(std::vector<security_t> securities, table_t
 	byte markets[TDX_BATCH_LIMIT];
 	const char* codes[TDX_BATCH_LIMIT];
 	for (short i = 0; i < count; i++) {
-		markets[i] = (byte)securities[i].market;
+		markets[i] = (byte)securities[i].mkt;
 		codes[i] = securities[i].code.c_str();
 	}
 
 	// query server
 	bool res = _quote->TdxL2Hq_GetSecurityQuotes10(markets, codes, count, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -255,10 +248,10 @@ int tdx2::query_current_quote10_data(std::vector<security_t> securities, table_t
 	return 0;
 }
 
-int tdx2::query_f10_category(market_t market, std::string zqdm, table_t &result, std::string &error) {
-	bool res = _quote->TdxL2Hq_GetCompanyInfoCategory((byte)market, zqdm.c_str(), _results[0], _errors[0]);
+int tdx2::query_f10_category(market mkt, const std::string &zqdm, table &result, std::string *error) {
+	bool res = _quote->TdxL2Hq_GetCompanyInfoCategory((byte)mkt, zqdm.c_str(), _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -267,12 +260,12 @@ int tdx2::query_f10_category(market_t market, std::string zqdm, table_t &result,
 	return 0;
 }
 
-int tdx2::query_f10_content(market_t market, std::string zqdm, std::string file, int start, int length, table_t &result, std::string &error) {
+int tdx2::query_f10_content(market mkt, const std::string &zqdm, const std::string &file, int start, int length, table &result, std::string *error) {
 
 	short scount = 0;
-	bool res = _quote->TdxL2Hq_GetCompanyInfoContent((byte)market, zqdm.c_str(), file.c_str(), start, length, _results[0], _errors[0]);
+	bool res = _quote->TdxL2Hq_GetCompanyInfoContent((byte)mkt, zqdm.c_str(), file.c_str(), start, length, _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -281,10 +274,10 @@ int tdx2::query_f10_content(market_t market, std::string zqdm, std::string file,
 	return 0;
 }
 
-int tdx2::query_xdxr_data(market_t market, std::string zqdm, table_t &result, std::string &error) {
-	bool res = _quote->TdxL2Hq_GetXDXRInfo((byte)market, zqdm.c_str(), _results[0], _errors[0]);
+int tdx2::query_xdxr_data(market mkt, const std::string &zqdm, table &result, std::string *error) {
+	bool res = _quote->TdxL2Hq_GetXDXRInfo((byte)mkt, zqdm.c_str(), _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 
@@ -293,10 +286,10 @@ int tdx2::query_xdxr_data(market_t market, std::string zqdm, table_t &result, st
 	return 0;
 }
 
-int tdx2::query_finance_data(market_t market, std::string zqdm, table_t &result, std::string &error) {
-	bool res = _quote->TdxL2Hq_GetFinanceInfo((byte)market, zqdm.c_str(), _results[0], _errors[0]);
+int tdx2::query_finance_data(market mkt, const std::string &zqdm, table &result, std::string *error) {
+	bool res = _quote->TdxL2Hq_GetFinanceInfo((byte)mkt, zqdm.c_str(), _results[0], _errors[0]);
 	if (!res) {
-		error = _errors[0];
+		cube::safe_assign<std::string>(error, _errors[0]);
 		return -1;
 	}
 

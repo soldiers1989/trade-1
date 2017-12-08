@@ -3,6 +3,14 @@
 #include "tdxexpt.h"
 
 BEGIN_QUOTE_NAMESPACE
+//tdx level-2 quote module configure
+class tdxdll2cfg {
+public:
+	static const char* DLLDIR; //raw dll directory
+	static const char* DLLNAME; //raw dll name
+};
+
+//tdx level-2 quote module api
 class tdxdll2
 {
 public:
@@ -11,12 +19,12 @@ public:
 
 	/*
 	*	load tdx quote dll module
-	*@param path: in, dll path
+	*@param workdir: in, working directory
 	*@param error: out, save the error message when something wrong happened and error is not null
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int load(std::string path = "TdxL2HqApi.dll", std::string *error = 0);
+	int load(const std::string &workdir, std::string *error = 0);
 
 	/*
 	*	free tdx quote dll module

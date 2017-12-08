@@ -24,22 +24,22 @@
     <ClInclude Include="quote2.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="stdpub.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="tdx1.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="tdxdll1.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="error.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="tdxdll2.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="tdx2.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="quote.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="stdqot.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

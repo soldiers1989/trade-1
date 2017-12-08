@@ -1,5 +1,5 @@
 #pragma once
-#include "stdpub.h"
+#include "stdqot.h"
 
 BEGIN_QUOTE_NAMESPACE
 

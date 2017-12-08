@@ -148,10 +148,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="error.h" />
+    <ClInclude Include="quote.h" />
     <ClInclude Include="quote1.h" />
     <ClInclude Include="quote2.h" />
-    <ClInclude Include="stdpub.h" />
+    <ClInclude Include="stdqot.h" />
     <ClInclude Include="tdx1.h" />
     <ClInclude Include="tdx2.h" />
     <ClInclude Include="tdxdll1.h" />
