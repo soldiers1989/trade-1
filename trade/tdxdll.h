@@ -2,6 +2,22 @@
 #include "stdtrd.h"
 #include "tdxexpt.h"
 BEGIN_TRADE_NAMESPACE
+//tdx dll error message
+class tdxdllerr {
+public:
+	static const char* ERR_INIT_DLL;
+};
+
+//tdx dll module configure
+class tdxdllcfg {
+public:
+	static const char* RAWDLL_DIR; //raw dll directory
+	static const char* RAWDLL_NAME; //raw dll name
+
+	static const char* NEWDLL_DIR; //new dll directory
+};
+
+//tdx dll module api
 class tdxdll
 {
 public:
@@ -10,13 +26,13 @@ public:
 
 	/*
 	*	load tdx trade dll module
+	*@param workdir: in, dll path of tdx trade module
 	*@param account: in, security account used to initialize the dll module
-	*@param path: in, dll path of tdx trade module
 	*@param error: out, save the error message when something wrong happened and error is not null
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int load(std::string account, std::string *error = 0);
+	int load(const std::string &workdir, const std::string &account, std::string *error = 0);
 
 	/*
 	*	free tdx quote dll module

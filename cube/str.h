@@ -161,13 +161,16 @@ public:
 	static bool empty(const char* str);
 
 	/*
-	*	split a string by character seperator
+	*	split a string by character/characters
 	*@param str: string to be splited
 	*@param sep: character seperator
+	*@param spes: characters used to seperate
 	*@return:
 	*	split result
 	*/
-	static std::vector<std::string> split(const char* str, const char sep);
+	static std::vector<std::string> _split(const char *str, const char ch);
+	static std::vector<std::string> split(const std::string& str, const char ch);
+	static std::vector<std::string> splits(const std::string& str, const std::string& chs);
 
 	/*
 	*	split a string by string seperator
@@ -176,25 +179,8 @@ public:
 	*@return:
 	*	split result
 	*/
-	static std::vector<std::string> split(const char* str, const char* sep);
-
-	/*
-	*	split a string by character seperator
-	*@param str: string to be splited
-	*@param sep: character seperator
-	*@return:
-	*	split result
-	*/
-	static std::vector<std::string> split(const std::string& str, const char sep);
-
-	/*
-	*	split a string by string seperator
-	*@param str: string to be splited
-	*@param sep: character seperator
-	*@return:
-	*	split result
-	*/
-	static std::vector<std::string> split(const std::string& str, const std::string& sep);
+	static std::vector<std::string> _split(const char *str, const char *sep);
+	static std::vector<std::string> split(const std::string &str, const std::string &sep);
 
 	/*
 	*	split a string to table structure by row and column seperator
@@ -204,15 +190,6 @@ public:
 	*@return:
 	*	split result
 	*/
-	static std::vector<std::vector<std::string>> split(const char *str, const char *seprow, const char *sepcol);
-
-	/*
-	*	split a string by specified seperator characters
-	*@param str: string to be splited
-	*@param spes: characters used to seperate
-	*@return:
-	*	split result;
-	*/
-	static std::vector<std::string> splits(const std::string& str, const std::string& seps);
+	static std::vector<std::vector<std::string>> split(const std::string &str, const std::string &seprow, const std::string &sepcol);
 };
 END_CUBE_NAMESPACE

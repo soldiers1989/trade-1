@@ -11,9 +11,15 @@ typedef unsigned long ulong;
 typedef __int64	int64;
 typedef unsigned __int64 uint64;
 
-template <class T> void safe_assign(T *dest, const T &val) {
+template <class V> void safe_assign(V *dest, const V &val) {
 	if (dest != 0) {
 		*dest = val;
+	}
+}
+
+template <class T, class V> void safe_push(T *dest, const V &val) {
+	if (dest != 0) {
+		dest->push_back(val);
 	}
 }
 END_CUBE_NAMESPACE

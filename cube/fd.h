@@ -8,20 +8,39 @@ BEGIN_CUBE_NAMESPACE
 //find result for find file method
 typedef class findres {
 public:
-	findres(const char* name, int64 size, int64 create_time, int64 access_time, int64 write_time, unsigned attrib) :
-		name(name), size(size), create_time(create_time), access_time(access_time), write_time(write_time), attrib(attrib) {}
+	findres(const std::string& name, int64 size, int64 ctime, int64 atime, int64 wtime, unsigned attrib) :
+		name(name), size(size), ctime(ctime), atime(atime), wtime(wtime), attrib(attrib) {}
 	~findres() {}
 
 	std::string name; //file name
-	int64     size; //file size
-	int64  create_time; // create time, -1 for FAT file systems
-	int64  access_time; // last access time, -1 for FAT file systems
-	int64  write_time; //last write time
+	int64  size; //file size
+	int64  ctime; // create time, -1 for FAT file systems
+	int64  atime; // last access time, -1 for FAT file systems
+	int64  wtime; //last write time
 	unsigned  attrib; //file attribute
 } findres_t;
 
+//file stat results
+typedef class filestat {
+public:
+	filestat() {}
+	filestat(ushort mode, int64 size, int64 ctime, int64 atime, int64 wtime) : 
+		mode(mode), size(size), ctime(ctime), atime(atime), mtime(mtime) {}
+	~filestat() {}
+
+	ushort mode; //file mode
+	int64   size; //file size
+	int64	ctime; // create time
+	int64	atime; // last access time
+	int64	mtime; //last modify time
+} filestat_t;
+
 //file/directory class
 class fd {
+public:
+	//exceptions
+	typedef std::exception error;
+
 public:
 	//seperator of path
 	static const char *SEP;
@@ -53,6 +72,27 @@ public:
 	*	true if is normal file, otherwise false
 	*/
 	static bool isfile(const std::string &path);
+
+
+	/*
+	*	get file stat
+	*@param fd: in, file descriptor
+	*@param path: in, file path
+	*@param stat: out, file stat
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	static int stat(int fd, filestat &stat);
+	static int stat(const std::string &path, filestat &stat);
+
+	/*
+	*	get specified file size
+	*@param path: in, file path
+	*@return:
+	*	size of file
+	*/
+	static int size(int fd, size_t &sz);
+	static int size(const std::string &path, size_t &sz);
 
 	/*
 	*	get file name from file path
@@ -92,6 +132,19 @@ public:
 	static std::vector<std::string> files(const std::string &path, bool onlyvisible = true, bool onlyname = true);
 };
 
+//path class
+class path {
+public:
+	/*
+	*	make full path by parent and its child path
+	*@param parent: in, parent path
+	*@param child: in, child name/path
+	*@return:
+	*	full path combined by parent and child
+	*/
+	static std::string make(const std::string &parent, const std::string &child);
+};
+
 //file class
 class file {
 public:
@@ -101,6 +154,17 @@ public:
 public:
 	/*
 	*	read all content of file by specified file path
+	*@param path: in, file path
+	*@param data: out, data in the file read
+	*@return:
+	*	0 for succcess, otherwise <0
+	*/
+	static int read(const std::string &path, std::string &data);
+
+	/*
+	*	read all content of file by specified file path.
+	*NOTES:
+	*	do not forget free the return content memory
 	*@param path: in, file path
 	*@param sz: out, data read in bytes
 	*@return:

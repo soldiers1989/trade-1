@@ -359,13 +359,13 @@ void str::print(const std::vector<std::vector<std::string>> &table, int colwidth
 	}
 }
 
-std::vector<std::string> str::split(const char* str, const char sep) {
+std::vector<std::string> str::_split(const char* str, const char ch) {
 	std::vector<std::string> result;
 
 	int lenstr = strlen(str);
 	const char *start = str, *end = 0;
 	while (start < str + lenstr) {
-		end = strchr(start, sep);
+		end = strchr(start, ch);
 		if (end != 0) {
 			result.push_back(std::string(start, end - start));
 			start = end + 1;
@@ -379,8 +379,50 @@ std::vector<std::string> str::split(const char* str, const char sep) {
 	return result;
 }
 
+std::vector<std::string> str::split(const std::string& str, const char ch) {
+	std::vector<std::string> result;
 
-std::vector<std::string> str::split(const char* str, const char* sep) {
+	std::size_t startpos = 0, endpos = str.find(ch, startpos);
+	while (endpos != std::string::npos) {
+		result.push_back(str.substr(startpos, endpos - startpos));
+		startpos = endpos + 1;
+		endpos = str.find(ch, startpos);
+	}
+
+	if (startpos != std::string::npos) {
+		result.push_back(str.substr(startpos));
+	}
+
+	return result;
+}
+
+std::vector<std::string> str::splits(const std::string& str, const std::string& chs) {
+	std::vector<std::string> result;
+
+	int startpos = 0, endpos = 0, pos = 0;
+	while (pos < (int)str.size()) {
+		if (chs.find(str[pos]) != std::string::npos) {
+			result.push_back(str.substr(startpos, pos - startpos));
+			pos++;
+			while (pos < (int)str.size()) {
+				if (chs.find(str[pos] == std::string::npos)) {
+					startpos = pos;
+					break;
+				}
+				pos++;
+			}
+		} else
+			pos++;
+	}
+
+	if (startpos < (int)str.size()) {
+		result.push_back(str.substr(startpos));
+	}
+
+	return result;
+}
+
+std::vector<std::string> str::_split(const char* str, const char* sep) {
 	std::vector<std::string> result;
 
 	int lenstr = strlen(str), lensep = strlen(sep);
@@ -395,23 +437,6 @@ std::vector<std::string> str::split(const char* str, const char* sep) {
 	}
 	if (start < str + lenstr) {
 		result.push_back(std::string(start, str + lenstr));
-	}
-
-	return result;
-}
-
-std::vector<std::string> str::split(const std::string& str, const char sep) {
-	std::vector<std::string> result;
-
-	std::size_t startpos = 0, endpos = str.find(sep, startpos);
-	while (endpos != std::string::npos) {
-		result.push_back(str.substr(startpos, endpos - startpos));
-		startpos = endpos + 1;
-		endpos = str.find(sep, startpos);
-	}
-
-	if (startpos != std::string::npos) {
-		result.push_back(str.substr(startpos));
 	}
 
 	return result;
@@ -434,7 +459,7 @@ std::vector<std::string> str::split(const std::string& str, const std::string& s
 	return result;
 }
 
-std::vector<std::vector<std::string>> str::split(const char *str, const char *seprow, const char *sepcol) {
+std::vector<std::vector<std::string>> str::split(const std::string &str, const std::string &seprow, const std::string &sepcol) {
 	std::vector<std::vector<std::string>> table;
 
 	std::vector<std::string> rows = str::split(str, seprow);
@@ -444,31 +469,5 @@ std::vector<std::vector<std::string>> str::split(const char *str, const char *se
 	}
 
 	return table;
-}
-
-std::vector<std::string> str::splits(const std::string& str, const std::string& seps) {
-	std::vector<std::string> result;
-
-	int startpos = 0, endpos = 0, pos = 0;
-	while (pos < (int)str.size()) {
-		if (seps.find(str[pos]) != std::string::npos) {
-			result.push_back(str.substr(startpos, pos - startpos));
-			pos++;
-			while (pos < (int)str.size()) {
-				if (seps.find(str[pos] == std::string::npos)) {
-					startpos = pos;
-					break;
-				}
-				pos++;
-			}
-		} else
-			pos++;
-	}
-
-	if (startpos < (int)str.size()) {
-		result.push_back(str.substr(startpos));
-	}
-
-	return result;
 }
 END_CUBE_NAMESPACE

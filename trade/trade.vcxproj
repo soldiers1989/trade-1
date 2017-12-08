@@ -162,6 +162,7 @@
   <ItemGroup>
     <ClCompile Include="broker.cpp" />
     <ClCompile Include="tdxdll.cpp" />
+    <ClCompile Include="trade.cpp" />
     <ClCompile Include="trader.cpp" />
     <ClCompile Include="tdx.cpp" />
   </ItemGroup>

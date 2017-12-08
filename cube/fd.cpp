@@ -1,4 +1,5 @@
 #include <io.h>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <direct.h>
@@ -36,6 +37,53 @@ bool fd::isfile(const std::string &path) {
 	return false;
 }
 
+int fd::stat(int fd, filestat &fstat) {
+	//get file stat
+	struct _stat st;
+	int err = _fstat(fd, &st);
+	if (err != 0)
+		return -1;
+		
+	//set return stat
+	fstat.mode = st.st_mode;
+	fstat.size = st.st_size;
+	fstat.atime = st.st_atime;
+	fstat.ctime = st.st_ctime;
+	fstat.mtime = st.st_mtime;
+
+	return 0;
+}
+
+int fd::stat(const std::string &path, filestat &fstat) {
+	int fd = ::_open(path.c_str(), 0);
+	if (fd < 0)
+		return -1;
+
+	int err = stat(fd, fstat);
+	::_close(fd);
+
+	return err;
+}
+
+int fd::size(int fd, size_t &sz) {
+	long len = _filelength(fd);
+	if (len == -1)
+		return -1;
+	sz = len;
+	return 0;
+}
+
+int fd::size(const std::string &path, size_t &sz) {
+	int fd = ::_open(path.c_str(), 0);
+	if (fd < 0)
+		return -1;
+
+	int err = size(fd, sz);
+	::_close(fd);
+
+	return err;
+}
+
 std::string fd::name(const std::string &path) {
 	std::vector<std::string> subpaths = str::splits(path, "\\/");
 	if (subpaths.size() > 0) {
@@ -59,15 +107,14 @@ std::vector<findres> fd::find(const std::string &path, const char* spec/* = "*"*
 	struct _finddata_t fdata;
 	intptr_t hd = 0;
 
-	std::string paths = path + SEP + spec;
+	std::string paths = path::make(path, spec);
 	if ((hd = _findfirst(paths.c_str(), &fdata)) != -1) {
 		do {
 			if ((attrib == attrib::ALL || (fdata.attrib & (unsigned)attrib) != 0) && (onlyvisible && *fdata.name != '.')) {
 				if (onlyname) {
 					results.push_back(findres(fdata.name, fdata.size, fdata.time_create, fdata.time_access, fdata.time_write, fdata.attrib));
 				} else {
-					std::string fullpath = path + SEP + std::string(fdata.name);
-					results.push_back(findres(fullpath.c_str(), fdata.size, fdata.time_create, fdata.time_access, fdata.time_write, fdata.attrib));
+					results.push_back(findres(path::make(path, fdata.name).c_str(), fdata.size, fdata.time_create, fdata.time_access, fdata.time_write, fdata.attrib));
 				}
 			}
 		} while (_findnext(hd, &fdata) == 0);
@@ -82,7 +129,7 @@ std::vector<std::string> fd::finds(const std::string &path, const char* spec/* =
 	struct _finddata_t fdata;
 	intptr_t hd = 0;
 
-	std::string paths = path + SEP + spec;
+	std::string paths = path::make(path, spec);
 	if ((hd = _findfirst(paths.c_str(), &fdata)) != -1) {
 		do {
 			if ((attrib == attrib::ALL || (fdata.attrib & (unsigned)attrib) != 0) && (onlyvisible && *fdata.name != '.')) {
@@ -90,8 +137,7 @@ std::vector<std::string> fd::finds(const std::string &path, const char* spec/* =
 					results.push_back(fdata.name);
 				}
 				else {
-					std::string fullpath = path + SEP + std::string(fdata.name);
-					results.push_back(fullpath);
+					results.push_back(path::make(path, fdata.name));
 				}
 			}
 		} while (_findnext(hd, &fdata) == 0);
@@ -108,7 +154,37 @@ std::vector<std::string> fd::files(const std::string &path, bool onlyvisible/* =
 	return finds(path, "*", attrib::FILE, onlyvisible, onlyname);
 }
 
+////////////////////////////////////////////////path class//////////////////////////////////////////////////
+std::string path::make(const std::string &parent, const std::string &child) {
+	//trim parent's and child's left path seperators, add seperator between them
+	return str::rstrip(str::rstrip(parent), fd::SEP) + fd::SEP + str::lstrip(str::rstrip(child), fd::SEP);
+}
+
 ////////////////////////////////////////////////file class//////////////////////////////////////////////////
+int file::read(const std::string &path, std::string &data) {
+	//read content from file
+	std::ifstream ifs(path, std::ifstream::in | std::ifstream::binary);
+	if (!ifs.is_open())
+		return -1;
+
+	//read buffer
+	const std::streamsize BUFSZ = 32*1024;
+	char buf[BUFSZ] = { 0 };
+
+	//process each file line
+	ifs.read(buf, BUFSZ);
+	while (ifs.good()) {
+		//append data
+		data.append(buf, (size_t)ifs.gcount());
+				
+		//next line
+		ifs.read(buf, BUFSZ);
+	}
+
+	return 0;
+}
+
+
 char* file::read(const std::string &path, int &sz) {
 	// open file
 	FILE * pf = fopen(path.c_str(), "rb");
