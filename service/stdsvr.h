@@ -1,10 +1,10 @@
 #pragma once
-#define BEGIN_SERVER_NAMESPACE namespace svr{
-#define END_SERVER_NAMESPACE }
+#define BEGIN_SERVICE_NAMESPACE namespace svr{
+#define END_SERVICE_NAMESPACE }
 
-BEGIN_SERVER_NAMESPACE
+BEGIN_SERVICE_NAMESPACE
 typedef unsigned char byte;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
-END_SERVER_NAMESPACE
+END_SERVICE_NAMESPACE

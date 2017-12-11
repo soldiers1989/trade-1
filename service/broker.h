@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-BEGIN_SERVER_NAMESPACE
+BEGIN_SERVICE_NAMESPACE
 //department of broker
 typedef class dept {
 public:
@@ -128,4 +128,4 @@ public:
 private:
 	std::vector<broker> _brokers; //brokers
 };
-END_SERVER_NAMESPACE
+END_SERVICE_NAMESPACE

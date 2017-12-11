@@ -22,4 +22,12 @@ template <class T, class V> void safe_push(T *dest, const V &val) {
 		dest->push_back(val);
 	}
 }
+
+template<class T> void throw_assign(std::string *dest, const std::string &val) {
+	if (dest != 0) {
+		*dest = val;
+	} else {
+		throw T(val.c_str());
+	}
+}
 END_CUBE_NAMESPACE

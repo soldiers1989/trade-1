@@ -2,7 +2,7 @@
 #include "cube\fd.h"
 #include "cube\str.h"
 
-BEGIN_SERVER_NAMESPACE
+BEGIN_SERVICE_NAMESPACE
 
 char *dept::SEPROW = "\n";
 char *dept::SEPCOL = ",";
@@ -125,4 +125,4 @@ int brokers::load(const std::string &workdir) {
 	return 0;
 }
 
-END_SERVER_NAMESPACE
+END_SERVICE_NAMESPACE

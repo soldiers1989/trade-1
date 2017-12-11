@@ -1,11 +1,4 @@
 #include "stdsvr.h"
-BEGIN_SERVER_NAMESPACE
-class service {
-public:
-	service() {}
-	virtual ~service() {}
+BEGIN_SERVICE_NAMESPACE
 
-private:
-
-};
-END_SERVER_NAMESPACE
+END_SERVICE_NAMESPACE

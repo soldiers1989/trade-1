@@ -1,12 +1,26 @@
+/*
+*	account - account module for security account
+*/
 #pragma once
 #include "stdsvr.h"
-BEGIN_SERVER_NAMESPACE
+#include "db.h"
+
+BEGIN_SERVICE_NAMESPACE
 class account {
 public:
-	account();
-	~account();
+	account() {}
+	~account() {}
 
 private:
 
 };
-END_SERVER_NAMESPACE
+
+class accountdao : public dao {
+public:
+	accountdao() {}
+	~accountdao() {}
+
+private:
+
+};
+END_SERVICE_NAMESPACE

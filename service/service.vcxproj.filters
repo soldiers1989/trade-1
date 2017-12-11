@@ -18,15 +18,6 @@
     <ClCompile Include="server.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="sessionapi.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="sessiontrade.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="sessionquote.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="account.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -42,18 +33,18 @@
     <ClCompile Include="admin.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="db.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="risker.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="session.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sessionapi.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="stdsvr.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="sessiontrade.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="sessionquote.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="account.h">
@@ -69,6 +60,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="admin.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="db.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="risker.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="session.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

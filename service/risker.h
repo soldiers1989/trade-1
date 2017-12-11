@@ -1,12 +1,12 @@
 /*
-*	admin - administrator module for service
+*	risker - risk manager module for trading
 */
 #pragma once
 #include "stdsvr.h"
 BEGIN_SERVICE_NAMESPACE
-class admin {
+class risker {
 public:
-	admin() {}
-	~admin() {}
+	risker() {}
+	~risker() {}
 };
 END_SERVICE_NAMESPACE

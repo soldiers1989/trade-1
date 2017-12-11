@@ -2,7 +2,7 @@
 #include "broker.h"
 #include "trade\trade.h"
 #include <map>
-BEGIN_SERVER_NAMESPACE
+BEGIN_SERVICE_NAMESPACE
 class trader
 {
 public:
@@ -29,4 +29,4 @@ private:
 	//online accounts, <account name, trade object>
 	std::map<std::string, trade::trade*> _accounts;
 };
-END_SERVER_NAMESPACE
+END_SERVICE_NAMESPACE

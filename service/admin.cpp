@@ -1,9 +1,5 @@
 #include "admin.h"
 
-BEGIN_SERVER_NAMESPACE
-admin::admin() {
-}
+BEGIN_SERVICE_NAMESPACE
 
-admin::~admin() {
-}
-END_SERVER_NAMESPACE
+END_SERVICE_NAMESPACE
