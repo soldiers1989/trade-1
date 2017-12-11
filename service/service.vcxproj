@@ -22,8 +22,9 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3C8E99C2-48A8-4447-9657-FAAA2B0A6699}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>server</RootNamespace>
+    <RootNamespace>service</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <ProjectName>service</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -151,16 +152,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="account.cpp" />
+    <ClCompile Include="broker.cpp" />
+    <ClCompile Include="admin.cpp" />
+    <ClCompile Include="service.cpp" />
     <ClCompile Include="sessionapi.cpp" />
     <ClCompile Include="server.cpp" />
     <ClCompile Include="sessionquote.cpp" />
     <ClCompile Include="sessiontrade.cpp" />
+    <ClCompile Include="trader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="account.h" />
+    <ClInclude Include="broker.h" />
+    <ClInclude Include="admin.h" />
+    <ClInclude Include="service.h" />
     <ClInclude Include="sessionapi.h" />
     <ClInclude Include="sessionquote.h" />
     <ClInclude Include="sessiontrade.h" />
     <ClInclude Include="stdsvr.h" />
+    <ClInclude Include="trader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

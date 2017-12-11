@@ -1,8 +1,8 @@
 #pragma once
-#include "trade.h"
 #include "broker.h"
+#include "trade\trade.h"
 #include <map>
-BEGIN_TRADE_NAMESPACE
+BEGIN_SERVER_NAMESPACE
 class trader
 {
 public:
@@ -27,6 +27,6 @@ private:
 	brokers _brokers;
 
 	//online accounts, <account name, trade object>
-	std::map<std::string, trade*> _accounts;
+	std::map<std::string, trade::trade*> _accounts;
 };
-END_TRADE_NAMESPACE
+END_SERVER_NAMESPACE

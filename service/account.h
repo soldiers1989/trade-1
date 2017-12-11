@@ -1,6 +1,6 @@
 #pragma once
-#include "stdtrd.h"
-BEGIN_TRADE_NAMESPACE
+#include "stdsvr.h"
+BEGIN_SERVER_NAMESPACE
 class account {
 public:
 	account();
@@ -9,4 +9,4 @@ public:
 private:
 
 };
-END_TRADE_NAMESPACE
+END_SERVER_NAMESPACE

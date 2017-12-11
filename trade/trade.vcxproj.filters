@@ -27,19 +27,7 @@
     <ClInclude Include="tdxexpt.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="trader.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="stdtrd.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="broker.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="account.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="manager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,19 +38,7 @@
     <ClCompile Include="tdxdll.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="trader.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="broker.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="trade.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="account.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="manager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

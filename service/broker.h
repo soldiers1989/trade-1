@@ -1,7 +1,9 @@
-#include "stdtrd.h"
+#include "stdsvr.h"
 #include "cube\cube.h"
+#include <vector>
+#include <string>
 
-BEGIN_TRADE_NAMESPACE
+BEGIN_SERVER_NAMESPACE
 //department of broker
 typedef class dept {
 public:
@@ -126,4 +128,4 @@ public:
 private:
 	std::vector<broker> _brokers; //brokers
 };
-END_TRADE_NAMESPACE
+END_SERVER_NAMESPACE

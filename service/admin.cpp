@@ -1,9 +1,9 @@
 #include "manager.h"
 
-BEGIN_TRADE_NAMESPACE
+BEGIN_SERVER_NAMESPACE
 manager::manager() {
 }
 
 manager::~manager() {
 }
-END_TRADE_NAMESPACE
+END_SERVER_NAMESPACE

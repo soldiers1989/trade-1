@@ -150,23 +150,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="account.h" />
-    <ClInclude Include="broker.h" />
-    <ClInclude Include="manager.h" />
     <ClInclude Include="stdtrd.h" />
     <ClInclude Include="tdxdll.h" />
     <ClInclude Include="tdxexpt.h" />
-    <ClInclude Include="trader.h" />
     <ClInclude Include="trade.h" />
     <ClInclude Include="tdx.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="account.cpp" />
-    <ClCompile Include="broker.cpp" />
-    <ClCompile Include="manager.cpp" />
     <ClCompile Include="tdxdll.cpp" />
     <ClCompile Include="trade.cpp" />
-    <ClCompile Include="trader.cpp" />
     <ClCompile Include="tdx.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

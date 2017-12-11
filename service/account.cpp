@@ -1,10 +1,10 @@
 #include "account.h"
 
-BEGIN_TRADE_NAMESPACE
+BEGIN_SERVER_NAMESPACE
 account::account() {
 }
 
 
 account::~account() {
 }
-END_TRADE_NAMESPACE
+END_SERVER_NAMESPACE
