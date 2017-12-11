@@ -1,9 +1,9 @@
 #pragma once
 #include "stdsvr.h"
 BEGIN_SERVER_NAMESPACE
-class manager {
+class admin {
 public:
-	manager();
-	~manager();
+	admin();
+	~admin();
 };
 END_SERVER_NAMESPACE

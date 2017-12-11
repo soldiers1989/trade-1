@@ -1,9 +1,9 @@
-#include "manager.h"
+#include "admin.h"
 
 BEGIN_SERVER_NAMESPACE
-manager::manager() {
+admin::admin() {
 }
 
-manager::~manager() {
+admin::~admin() {
 }
 END_SERVER_NAMESPACE
