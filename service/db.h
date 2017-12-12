@@ -42,6 +42,12 @@ public:
 	*/
 	int close();
 
+public:
+	/*
+	*	get connection
+	*/
+	sql::Connection *conn() { return _connection; }
+
 private:
 	//connection to database
 	sql::Connection *_connection;
@@ -53,6 +59,11 @@ public:
 	~dao() {}
 
 	/*
+	*	 set database for dao
+	*/
+	static void setdb(db *db);
+protected:
+	/*
 	*	execute a sql
 	*@param sql: in, sql to execute
 	*@param stmt: out, pointer for execute result statement
@@ -61,14 +72,16 @@ public:
 	*/
 	int execute(const std::string &sql, std::string *error = 0);
 
-public:
 	/*
-	*	set database for dao
-	*@param db: in, database for dao
-	*@return:
-	*	void
+	*	get database object
 	*/
-	static void setdb(db *db);
+	db *database() { return _db; }
+
+	/*
+	*	get database connection
+	*/
+	sql::Connection *conn() { return _db->conn(); }
+
 private:
 	//database of dao
 	static db *_db;

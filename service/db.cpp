@@ -12,7 +12,7 @@ int db::connect(const std::string &host, const std::string &user, const std::str
 
 		//connection mysql
 		sql::Driver *driver = ::get_driver_instance();
-		_connection = driver->connect(url.c_str(), user, pwd);
+		_connection = driver->connect(url.c_str(), user.c_str(), pwd.c_str());
 
 		//set database used
 		_connection->setSchema(db.c_str());
@@ -51,11 +51,17 @@ int db::close() {
 }
 //////////////////////////////////dao class//////////////////////////////////
 db *dao::_db = 0;
+
 void dao::setdb(db *db) {
 	_db = db;
 }
 
 int dao::execute(const std::string &sql, std::string *error/* = 0*/) {
+	if (_db == 0) {
+		cube::throw_assign<db::error>(error, "database not specified.");
+		return -1;
+	}
+
 	return _db->execute(sql, error);
 }
 END_SERVICE_NAMESPACE

@@ -62,6 +62,10 @@ public:
 class trade
 {
 public:
+	//trade exceptions
+	typedef std::exception error;
+
+public:
 	/*
 	*	initialize trade service
 	*@param workdir: in, working directory
@@ -229,4 +233,12 @@ public:
 	*/
 	virtual int destroy() = 0;
 };
+
+//current support trading channel
+typedef enum class channel{tdx=0} channel;
+
+//create a new trading object by specified channel
+extern channel _channel;
+extern void select(channel chnl);
+extern trade *create();
 END_TRADE_NAMESPACE
