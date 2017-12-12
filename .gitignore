@@ -34,4 +34,7 @@
 Debug
 .vs
 .gitattributes
-
+Release
+*.bak
+boost
+*.pdb
