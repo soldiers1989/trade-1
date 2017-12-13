@@ -11,10 +11,37 @@
 
 BEGIN_SERVICE_NAMESPACE
 class accountsdao;
+
+//account property class
+class account_t {
+public:
+	account_t(const account_t &acnt) : id(acnt.id), broker(acnt.broker), name(acnt.name), user(acnt.user), pwd(acnt.pwd), disable(acnt.disable), ctime(acnt.ctime), online(acnt.online) {}
+	account_t(int broker, const std::string &name, const std::string &user, const std::string &pwd, bool disable) : id(-1), broker(broker), name(name), user(user), pwd(pwd), disable(disable), ctime(0), online(false) {}
+	account_t(int id, int broker, const std::string &name, const std::string &user, const std::string &pwd, bool disable, uint ctime) : id(id), broker(broker), name(name), user(user), pwd(pwd), disable(disable), ctime(ctime), online(false) {}
+	~account_t() {}
+
+	//acccount id
+	int id;
+	//broker id
+	int broker;
+	//account name
+	std::string name;
+	//trade account
+	std::string user;
+	//trade account password
+	std::string pwd;
+	//disable status
+	bool disable;
+	//account create time
+	uint ctime;
+	//online status
+	bool online;
+};
+
 //security account class
 class account {
 public:
-	account(const std::string &user, std::string &name, const std::string &pwd, bool disable, uint ctime) : _trade(0), _online(false), _user(user), _name(name), _pwd(pwd), _disable(disable), _ctime(ctime) {}
+	account(const account_t &acnt):  _account(acnt), _trade(0) {}
 	~account() {}
 
 	/*
@@ -85,6 +112,11 @@ public:
 	*/
 	int logout();
 
+public:
+	/*
+	*	get account information
+	*/
+	const account_t &acnt() { return _account; }
 
 private:
 	/*
@@ -98,21 +130,11 @@ private:
 	void destroy();
 
 private:
+	//account property
+	account_t _account;
+
 	//trade channel object
 	trade::trade *_trade;
-	//online status
-	bool _online;
-
-	//trade account
-	std::string _user;
-	//account name
-	std::string _name;
-	//trade account password
-	std::string _pwd;
-	//disable status
-	bool _disable;
-	//account create time
-	uint _ctime;
 };
 
 //service accounts class
@@ -129,7 +151,14 @@ public:
 	*/
 	int init(std::string *error = 0);
 
-	
+	/*
+	*	add new account
+	*@param acnt: in, new account
+	*@param error: out, error message when failure happened
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int add(const account_t &acnt, std::string *error = 0);
 
 	/*
 	*	destroy account module
@@ -162,7 +191,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int select(std::map<std::string, account*> &accounts, std::string *error = 0);
+	int select(std::vector<account_t> &accounts, std::string *error = 0);
 
 	/*
 	*	insert new account to database
@@ -171,7 +200,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int insert(const account &account, std::string *error = 0);
+	int insert(const account_t &account, std::string *error = 0);
 
 };
 END_SERVICE_NAMESPACE

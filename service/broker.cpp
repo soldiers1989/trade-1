@@ -31,17 +31,17 @@ int broker::init(std::string *error) {
 	_dao = new brokerdao();
 
 	//load data from database
-	int err = _dao->select(_id, _depts, error);
+	int err = _dao->select(_broker.id, _depts, error);
 	if (err != 0) {
 		return -1;
 	}
 
-	err = _dao->select(_id, server::type::trade, _trades, error);
+	err = _dao->select(_broker.id, server::type::trade, _trades, error);
 	if (err != 0) {
 		return -1;
 	}
 
-	err = _dao->select(_id, server::type::quote, _quotes, error);
+	err = _dao->select(_broker.id, server::type::quote, _quotes, error);
 	if (err != 0) {
 		return -1;
 	}
@@ -53,21 +53,21 @@ int broker::init(const std::string &dir, std::string *error) {
 	//load departements
 	int err = load_depts(dir);
 	if (err != 0) {
-		cube::safe_assign<std::string>(error, cube::str::format("broker %s: load departments failed.", _name.c_str()));
+		cube::safe_assign<std::string>(error, cube::str::format("broker %s: load departments failed.", _broker.name.c_str()));
 		return -1;
 	}
 
 	//load quote servers
 	err = load_quotes(dir);
 	if (err != 0) {
-		cube::safe_assign<std::string>(error, cube::str::format("broker %s: load quote server failed.", _name.c_str()));
+		cube::safe_assign<std::string>(error, cube::str::format("broker %s: load quote server failed.", _broker.name.c_str()));
 		return -1;
 	}
 
 	//load trade servers
 	err = load_trades(dir);
 	if (err != 0) {
-		cube::safe_assign<std::string>(error, cube::str::format("broker %s: load trade server failed.", _name.c_str()));
+		cube::safe_assign<std::string>(error, cube::str::format("broker %s: load trade server failed.", _broker.name.c_str()));
 		return -1;
 	}
 
@@ -75,6 +75,14 @@ int broker::init(const std::string &dir, std::string *error) {
 }
 
 int broker::select(server::type type, server &server, std::string *error) {
+	return 0;
+}
+
+int broker::destroy() {
+	if (_dao != 0) {
+		delete _dao;
+		_dao = 0;
+	}
 	return 0;
 }
 
@@ -98,13 +106,6 @@ int broker::load_depts(const std::string &dir) {
 	return 0;
 }
 
-int broker::destroy() {
-	if (_dao != 0) {
-		delete _dao;
-		_dao = 0;
-	}
-	return 0;
-}
 
 int broker::load_quotes(const std::string &dir) {
 	//configure file path
@@ -163,7 +164,22 @@ int brokers::init(std::string *error ) {
 	_dao = new brokersdao();
 
 	//load data from database
-	return _dao->select(_brokers, error);
+	std::vector<broker_t> brkrs;
+	int err = _dao->select(brkrs, error);
+	if (err != 0) {
+		return -1;
+	}
+
+	for (size_t i = 0; i < brkrs.size(); i++) {
+		broker *brkr = new broker(brkrs[i]);
+		err = brkr->init();
+		if (err != 0) {
+			;//process error later
+		}
+		_brokers.insert(std::pair<int, broker*>(brkr->brkr().id, brkr));
+	}
+
+	return 0;
 }
 
 int brokers::init(const std::string &workdir, std::string *error) {
@@ -174,7 +190,7 @@ int brokers::init(const std::string &workdir, std::string *error) {
 
 	//load each broker
 	for (size_t i = 0; i < names.size(); i++) {
-		broker *brkr = new broker(names[i]);
+		broker *brkr = new broker(broker_t(names[i], names[i], "", false));
 		std::string errmsg("");
 		int err = brkr->init(cube::path::make(brokersdir, names[i]), &errmsg);
 		if (err != 0) {
@@ -239,7 +255,7 @@ int brokerdao::select(int id, std::vector<dept> &depts, std::string *error) {
 		delete res;
 	} catch (sql::SQLException &e) {
 		cube::safe_delete<sql::PreparedStatement>(stmt);
-		cube::safe_delete<sql::PreparedStatement>(stmt);
+		cube::safe_delete<sql::ResultSet>(res);
 
 		cube::throw_assign<db::error>(error, e.what());
 	}
@@ -276,7 +292,7 @@ int brokerdao::select(int id, server::type stype, std::vector<server> &servers, 
 		delete res;
 	} catch (sql::SQLException &e) {
 		cube::safe_delete<sql::PreparedStatement>(stmt);
-		cube::safe_delete<sql::PreparedStatement>(stmt);
+		cube::safe_delete<sql::ResultSet>(res);
 
 		cube::throw_assign<db::error>(error, e.what());
 	}
@@ -286,7 +302,7 @@ int brokerdao::select(int id, server::type stype, std::vector<server> &servers, 
 
 
 //////////////////////////////////////brokersdao class////////////////////////////////////////////
-int brokersdao::select(std::map<int, broker*> &brokers, std::string *error) {
+int brokersdao::select(std::vector<broker_t> &brokers, std::string *error) {
 	//sql to execute
 	const char* sql = "select broker_id, code, name, version, disable, ctime from tb_broker;";
 
@@ -305,20 +321,14 @@ int brokersdao::select(std::map<int, broker*> &brokers, std::string *error) {
 			bool disable = res->getBoolean("disable");
 			uint ctime = res->getUInt("ctime");
 
-			broker *brkr = new broker(id, code, name, version, disable, ctime);
-			int err = brkr->init();
-			if (err != 0) {
-				brokers.insert(std::pair<int, broker*>(id, brkr));
-			} else {
-				delete brkr;
-			}
+			brokers.push_back(broker_t(id, code, name, version, disable, ctime));
 		}
 
 		delete stmt;
 		delete res;
 	} catch (sql::SQLException &e) {
 		cube::safe_delete<sql::Statement>(stmt);
-		cube::safe_delete<sql::Statement>(stmt);
+		cube::safe_delete<sql::ResultSet>(res);
 
 		cube::throw_assign<db::error>(error, e.what());
 	}

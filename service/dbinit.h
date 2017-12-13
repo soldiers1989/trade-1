@@ -3,7 +3,7 @@
 BEGIN_SERVICE_NAMESPACE
 class dbinit {
 public:
-	dbinit();
-	~dbinit();
+	dbinit() {}
+	~dbinit() {}
 };
 END_SERVICE_NAMESPACE

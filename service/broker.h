@@ -62,11 +62,26 @@ public:
 
 };
 
+//broker property class
+class broker_t {
+public:
+	broker_t(const broker_t &brkr) : id(brkr.id), code(brkr.code), name(brkr.name), version(brkr.version), disable(brkr.disable), ctime(brkr.ctime) {}
+	broker_t(const std::string &code, const std::string &name, const std::string &version, bool disable) : id(-1), code(code), name(name), version(version), disable(disable), ctime(0) {}
+	broker_t(int id, const std::string &code, const std::string &name, const std::string &version, bool disable, uint ctime) : id(id), code(code), name(name), version(version), disable(disable), ctime(ctime) {}
+	~broker_t() {}
+
+	int id; //broker id
+	std::string code; //broker code
+	std::string name; //broker name
+	std::string version; //client version
+	bool disable; //disable flag
+	uint ctime; //create time
+};
+
 //broker class
 class broker {
 public:
-	broker(int id, const std::string &code, const std::string &name, const std::string &version, bool disable, uint ctime) : _id(id), _code(code), _name(name), _version(version), _disable(disable), _ctime(ctime), _dao(0) {}
-	broker(const std::string &name) : _name(name), _dao(0) {}
+	broker(const broker_t &brkr) : _broker(brkr), _dao(0) {}
 	~broker() {}
 
 	/*
@@ -105,10 +120,7 @@ public:
 	/*
 	*	get broker informations
 	*/
-	const std::string& name() { return _name; }
-	const dept& depts(int no) { return _depts[no]; }
-	const server& quotes(int no) { return _quotes[no]; }
-	const server& trades(int no) { return _trades[no]; }
+	const broker_t &brkr() { return _broker; }
 	const std::vector<dept>& depts() { return _depts; }
 	const std::vector<server>& quotes() { return _quotes; }
 	const std::vector<server>& trades() { return _trades; }
@@ -131,12 +143,7 @@ private:
 	int load_trades(const std::string &dir);
 
 private:
-	int _id; //broker id
-	std::string _code; //broker code
-	std::string _name; //broker name
-	std::string _version; //client version
-	bool _disable; //disable flag
-	uint _ctime; //create time
+	broker_t _broker; //broker property
 
 	std::vector<dept> _depts; //broker's departments
 	std::vector<server> _quotes; //quote servers
@@ -241,7 +248,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int select(std::map<int, broker*> &brokers, std::string *error = 0);
+	int select(std::vector<broker_t> &brokers, std::string *error = 0);
 };
 
 END_SERVICE_NAMESPACE
