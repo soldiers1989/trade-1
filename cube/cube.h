@@ -19,7 +19,7 @@ template <class V> void safe_assign(V *dest, const V &val) {
 
 template <class V> void safe_append(V *dest, const V &val) {
 	if (dest != 0) {
-		*dest.append(val);
+		dest->append(val);
 	}
 }
 

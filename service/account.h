@@ -10,6 +10,7 @@
 #include <mutex>
 
 BEGIN_SERVICE_NAMESPACE
+class accountsdao;
 //security account class
 class account {
 public:
@@ -137,7 +138,7 @@ public:
 
 private:
 	//accounts managed
-	std::map<std::string, account> _accounts;
+	std::map<std::string, account*> _accounts;
 	//mutex for accounts
 	std::mutex _mutex;
 
@@ -145,23 +146,23 @@ private:
 	brokers *_brokers;
 
 	//database access
-	accountdao *_dao;
+	accountsdao *_dao;
 };
 
 //account database access
-class accountdao : public dao {
+class accountsdao : public dao {
 public:
-	accountdao(db *db) : dao(db) {}
-	~accountdao() {}
+	accountsdao() {}
+	~accountsdao() {}
 
 	/*
 	*	select all accounts from database
-	*@param results: in/out, accounts selected
+	*@param accounts: in/out, accounts selected
 	*@param error: in/out, error message when failure happened
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int select(std::vector<account> &results, std::string *error = 0);
+	int select(std::map<std::string, account*> &accounts, std::string *error = 0);
 
 	/*
 	*	insert new account to database

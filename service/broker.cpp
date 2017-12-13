@@ -27,17 +27,21 @@ char *broker::FILE_NAME_TRADES = "trades";
 char *brokers::DIR = "brokers";
 
 int broker::init(std::string *error) {
-	int err = _dao.select(_id, _depts, error);
+	//create dao object
+	_dao = new brokerdao();
+
+	//load data from database
+	int err = _dao->select(_id, _depts, error);
 	if (err != 0) {
 		return -1;
 	}
 
-	err = _dao.select(_id, server::trade, _trades, error);
+	err = _dao->select(_id, server::type::trade, _trades, error);
 	if (err != 0) {
 		return -1;
 	}
 
-	err = _dao.select(_id, server::quote, _quotes, error);
+	err = _dao->select(_id, server::type::quote, _quotes, error);
 	if (err != 0) {
 		return -1;
 	}
@@ -95,6 +99,10 @@ int broker::load_depts(const std::string &dir) {
 }
 
 int broker::destroy() {
+	if (_dao != 0) {
+		delete _dao;
+		_dao = 0;
+	}
 	return 0;
 }
 
@@ -149,17 +157,19 @@ int broker::load_trades(const std::string &dir) {
 }
 
 //////////////////////////////////////brokers class////////////////////////////////////////////
-int brokers::init(std::string *error = 0) {
+int brokers::init(std::string *error ) {
 	std::lock_guard<std::mutex> lock(_mutex);
-	
-	return _dao.select(_brokers, error);
+	//create dao
+	_dao = new brokersdao();
+
+	//load data from database
+	return _dao->select(_brokers, error);
 }
 
 int brokers::init(const std::string &workdir, std::string *error) {
 	std::lock_guard<std::mutex> lock(_mutex);
-
-	std::string brokersdir = cube::path::make(workdir, DIR);
 	//get sub directories from configure path, suppose file name is broker name
+	std::string brokersdir = cube::path::make(workdir, DIR);
 	std::vector<std::string> names = cube::fd::dirs(brokersdir);
 
 	//load each broker
@@ -199,6 +209,8 @@ int brokers::destroy() {
 		delete iter->second;
 	}
 	_brokers.clear();
+
+	return 0;
 }
 //////////////////////////////////////brokerdao class////////////////////////////////////////////
 int brokerdao::select(int id, std::vector<dept> &depts, std::string *error) {

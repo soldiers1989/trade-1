@@ -12,7 +12,7 @@ int account::login(const std::string &ip, ushort port, const std::string &versio
 	return _trade->login(ip, port, version, deptid, _user, _user, _pwd, _pwd, error);
 }
 
-int account::query(trade::query::type category, trade::table &result, std::string *error = 0) {
+int account::query(trade::query::type category, trade::table &result, std::string *error) {
 	return _trade->query(category, result, error);
 }
 
@@ -34,7 +34,7 @@ int account::logout() {
 
 int account::init(std::string *error) {
 	if (_trade == 0) {
-		_trade = trade::create();
+		_trade = trade::trade::create();
 		return _trade->init(".", error);
 	}
 	return 0;
@@ -50,28 +50,36 @@ void account::destroy() {
 
 //////////////////////////////////////////accounts class/////////////////////////////////////
 int accounts::init(std::string *error) {
+	std::lock_guard<std::mutex> lock(_mutex);
+	//create dao
+	_dao = new accountsdao();
+
 	//load all accounts
-	std::vector<account> results;
-	int err = _dao->select(results, error);
+	int err = _dao->select(_accounts, error);
 	if (err != 0)
 		return -1;
-
-	//login to trade server
-
 
 	return 0;
 }
 
 int accounts::destroy() {
+	std::lock_guard<std::mutex> lock(_mutex);
+	std::map<std::string, account*>::iterator iter = _accounts.begin(), iterend = _accounts.end();
+	while (iter != iterend) {
+		delete iter->second;
+		iter++;
+	}
+	_accounts.clear();
 
+	return 0;
 }
 
 //////////////////////////////////////////accountdao class/////////////////////////////////////
-int accountdao::select(std::vector<account> &results, std::string *error) {
-
+int accountsdao::select(std::map<std::string, account*> &accounts, std::string *error) {
+	return 0;
 }
 
-int accountdao::insert(const account &account, std::string *error) {
-
+int accountsdao::insert(const account &account, std::string *error) {
+	return 0;
 }
 END_SERVICE_NAMESPACE

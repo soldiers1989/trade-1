@@ -232,13 +232,14 @@ public:
 	*	always 0
 	*/
 	virtual int destroy() = 0;
+
+public:
+	//current support trading channel
+	typedef enum class channel { tdx = 0 } channel;
+
+	//create a new trading object by specified channel
+	static channel _channel;
+	static void select(channel chnl);
+	static trade * __stdcall create();
 };
-
-//current support trading channel
-typedef enum class channel{tdx=0} channel;
-
-//create a new trading object by specified channel
-extern channel _channel;
-extern void select(channel chnl);
-extern trade *create();
 END_TRADE_NAMESPACE

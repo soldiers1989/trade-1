@@ -6,15 +6,15 @@ char* exchange::SHANGHAI = "1";
 char* exchange::SHENZHENZS = "2";
 
 //current selected channel
-channel _channel = channel::tdx;
+trade::channel trade::_channel = channel::tdx;
 
 //select trading channel
-void select(channel chnl) {
+void trade::select(channel chnl) {
 	_channel = chnl;
 }
 
 //create a new trade object
-trade *create() {
+trade * trade::create() {
 	switch (_channel) {
 	case channel::tdx:
 		return new tdx();

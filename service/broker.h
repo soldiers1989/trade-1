@@ -6,6 +6,9 @@
 #include <mutex>
 
 BEGIN_SERVICE_NAMESPACE
+class brokerdao;
+class brokersdao;
+
 //department of broker
 class dept {
 public:
@@ -62,8 +65,8 @@ public:
 //broker class
 class broker {
 public:
-	broker(int id, const std::string &code, const std::string &name, const std::string &version, bool disable, uint ctime) : _id(id), _code(code), _name(name), _version(version), _disable(disable), _ctime(ctime) {}
-	broker(const std::string &name) : _name(name) {}
+	broker(int id, const std::string &code, const std::string &name, const std::string &version, bool disable, uint ctime) : _id(id), _code(code), _name(name), _version(version), _disable(disable), _ctime(ctime), _dao(0) {}
+	broker(const std::string &name) : _name(name), _dao(0) {}
 	~broker() {}
 
 	/*
@@ -139,7 +142,7 @@ private:
 	std::vector<server> _quotes; //quote servers
 	std::vector<server> _trades; //trade servers
 
-	brokerdao _dao; //broker dao
+	brokerdao *_dao; //broker dao
 };
 
 //brokers class
@@ -149,7 +152,7 @@ public:
 	//brokers service configure directory in the working directory
 	static char* DIR;
 public:
-	brokers() {}
+	brokers() : _dao(0){}
 	~brokers() {}
 
 	/*
@@ -194,7 +197,7 @@ private:
 	std::map<int, broker*> _brokers; //brokers, <id, broker*>
 	std::mutex _mutex; //mutex for brokers
 
-	brokersdao _dao; //brokers dao
+	brokersdao *_dao; //brokers dao
 };
 
 //broker dao class
