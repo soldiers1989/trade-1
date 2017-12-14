@@ -172,9 +172,10 @@ int brokers::init(std::string *error ) {
 
 	for (size_t i = 0; i < brkrs.size(); i++) {
 		broker *brkr = new broker(brkrs[i]);
-		err = brkr->init();
+		err = brkr->init(error);
 		if (err != 0) {
-			;//process error later
+			delete brkr;
+			return -1;//process error later
 		}
 		_brokers.insert(std::pair<std::string, broker*>(brkr->brkr().code, brkr));
 	}
@@ -298,7 +299,7 @@ int brokerdao::select(int id, std::vector<dept> &depts, std::string *error) {
 
 int brokerdao::select(int id, server::type stype, std::vector<server> &servers, std::string *error) {
 	//sql to execute
-	const char* sql = "select server_id, name, host, port, type, disable, unix_timestamp(ctime) as ctime from tb_server where broker=? and type=?";
+	const char* sql = "select server_id, name, host, port, type, disable, unix_timestamp(ctime) as ctime from tb_server where brokerd=? and type=?";
 
 	//query variables
 	sql::PreparedStatement *stmt = 0;
@@ -342,8 +343,6 @@ int brokersdao::insert(const broker_t &brkr, std::string *error) {
 
 	//query variables
 	sql::PreparedStatement *stmt = 0;
-	sql::ResultSet *res = 0;
-
 	try {
 		stmt = conn()->prepareStatement(sql);
 
@@ -411,7 +410,7 @@ int brokersdao::select(const std::string &code, broker_t &brkr, std::string *err
 		stmt = conn()->prepareStatement(sql);
 		stmt->setString(1, code.c_str());
 
-		res = stmt->executeQuery(sql);
+		res = stmt->executeQuery();
 		if (res->next()) {
 			int id = res->getInt("broker_id");
 			std::string code = res->getString("code").c_str();

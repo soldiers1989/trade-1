@@ -25,6 +25,10 @@ int dbinit::init(const std::string &sqlfile, const std::string &name, db* db, st
 	}
 	std::vector<std::string> sqls = cube::str::split(content, ';');
 	for (int i = 0; i < sqls.size(); i++) {
+		sql = cube::str::strip(sqls[i]);
+		if (sql.empty())
+			continue;
+
 		err = db->execute(sqls[i], error);
 		if (err != 0) {
 			return -1;

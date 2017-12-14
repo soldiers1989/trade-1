@@ -246,6 +246,7 @@ public:
 	*/
 	int select(std::vector<account_t> &accounts, std::string *error = 0);
 
+
 	/*
 	*	insert new account to database
 	*@param account: in, new account to insert
@@ -254,6 +255,5 @@ public:
 	*	0 for success, otherwise <0
 	*/
 	int insert(const account_t &account, std::string *error = 0);
-
 };
 END_SERVICE_NAMESPACE

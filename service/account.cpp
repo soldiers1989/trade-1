@@ -105,10 +105,14 @@ int accounts::destroy() {
 	}
 	_accounts.clear();
 
+	if (_dao != 0) {
+		delete _dao;
+		_dao = 0;
+	}
 	return 0;
 }
 
-//////////////////////////////////////////accountdao class/////////////////////////////////////
+//////////////////////////////////////////accountsdao class/////////////////////////////////////
 int accountsdao::select(std::vector<account_t> &accounts, std::string *error) {
 	//sql to execute
 	const char* sql = "select account_id, broker, admin, name, user, pwd, cfrate, cflimit, bfrate, sfrate, disable, unix_timestamp(ctime) as ctime from tb_account;";

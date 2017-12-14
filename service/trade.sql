@@ -3,30 +3,29 @@
 /* Created on:     2017/12/14 16:24:21                          */
 /*==============================================================*/
 
+drop table if exists tb_sub_account_trade;
 
-drop table if exists tb_account;
+drop table if exists tb_sub_account_asset;
+
+drop table if exists tb_sub_account;
+
+drop table if exists tb_trade;
+
+drop table if exists tb_trader_asset;
+
+drop table if exists tb_trader;
 
 drop table if exists tb_account_asset;
 
-drop table if exists tb_admin;
-
-drop table if exists tb_broker;
+drop table if exists tb_account;
 
 drop table if exists tb_dept;
 
 drop table if exists tb_server;
 
-drop table if exists tb_sub_account;
+drop table if exists tb_broker;
 
-drop table if exists tb_sub_account_asset;
-
-drop table if exists tb_sub_account_trade;
-
-drop table if exists tb_trade;
-
-drop table if exists tb_trader;
-
-drop table if exists tb_trader_asset;
+drop table if exists tb_admin;
 
 /*==============================================================*/
 /* Table: tb_account                                            */
@@ -78,6 +77,7 @@ create table tb_admin
    user                 char(32) not null,
    pwd                  char(32) not null,
    role                 integer not null comment '0 - admin, 1 - risker, 2 - trader',
+   disable              boolean not null default false,
    ctime                timestamp not null default CURRENT_TIMESTAMP,
    primary key (admin_id)
 );
