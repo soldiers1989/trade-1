@@ -176,7 +176,7 @@ int brokers::init(std::string *error ) {
 		if (err != 0) {
 			;//process error later
 		}
-		_brokers.insert(std::pair<int, broker*>(brkr->brkr().id, brkr));
+		_brokers.insert(std::pair<std::string, broker*>(brkr->brkr().code, brkr));
 	}
 
 	return 0;
@@ -194,7 +194,7 @@ int brokers::init(const std::string &workdir, std::string *error) {
 		std::string errmsg("");
 		int err = brkr->init(cube::path::make(brokersdir, names[i]), &errmsg);
 		if (err != 0) {
-			_brokers.insert(std::pair<int, broker*>(i, brkr));
+			_brokers.insert(std::pair<std::string, broker*>(names[i], brkr));
 		} else {
 			delete brkr;
 			cube::safe_append<std::string>(error, errmsg);
@@ -203,14 +203,40 @@ int brokers::init(const std::string &workdir, std::string *error) {
 	return 0;
 }
 
-int brokers::select(int id, server::type type, server &server, std::string *error) {
+int brokers::add(const broker_t &brkr, std::string *error) {
+	std::lock_guard<std::mutex> lock(_mutex);
+	std::map<std::string, broker*>::iterator iter = _brokers.find(brkr.code);
+	if (iter != _brokers.end()) {
+		return 0; //broker exists
+	}
+
+	//insert new broker to database
+	int err = _dao->insert(brkr, error);
+	if (err != 0) {
+		return -1;
+	}
+
+	//get complete broker from database
+	broker_t newbrkr;
+	err = _dao->select(brkr.code, newbrkr, error);
+	if (err != 0) {
+		return -1;
+	}
+
+	//add new broker to brokers
+	_brokers.insert(std::pair<std::string, broker*>(newbrkr.code, new broker(newbrkr)));
+
+	return 0;
+}
+
+int brokers::select(const std::string &code, server::type type, server &server, std::string *error) {
 	std::lock_guard<std::mutex> lock(_mutex);
 
-	std::map<int, broker*>::iterator iter = _brokers.find(id);
+	std::map<std::string, broker*>::iterator iter = _brokers.find(code);
 	if (iter != _brokers.end()) {
 		return iter->second->select(type, server, error);
 	} else {
-		cube::throw_assign<brokers::error>(error, cube::str::format("broker %d not exist.", id));
+		cube::throw_assign<brokers::error>(error, cube::str::format("broker %s not exist.", code.c_str()));
 	}
 
 	return -1;
@@ -220,18 +246,24 @@ int brokers::destroy() {
 	std::lock_guard<std::mutex> lock(_mutex);
 	
 	//free all brokers
-	std::map<int, broker*>::iterator iter = _brokers.begin(), iterend = _brokers.end();
+	std::map<std::string, broker*>::iterator iter = _brokers.begin(), iterend = _brokers.end();
 	while (iter != iterend) {
 		delete iter->second;
 	}
 	_brokers.clear();
+
+	//free dao
+	if (_dao != 0) {
+		delete _dao;
+		_dao = 0;
+	}
 
 	return 0;
 }
 //////////////////////////////////////brokerdao class////////////////////////////////////////////
 int brokerdao::select(int id, std::vector<dept> &depts, std::string *error) {
 	//sql to execute
-	const char* sql = "select dept_id, code, name, disable, ctime from tb_dept where broker_id=?";
+	const char* sql = "select dept_id, code, name, disable, unix_timestamp(ctime) as ctime from tb_dept where broker=?";
 
 	//query variables
 	sql::PreparedStatement *stmt = 0;
@@ -258,6 +290,7 @@ int brokerdao::select(int id, std::vector<dept> &depts, std::string *error) {
 		cube::safe_delete<sql::ResultSet>(res);
 
 		cube::throw_assign<db::error>(error, e.what());
+		return -1;
 	}
 
 	return 0;
@@ -265,7 +298,7 @@ int brokerdao::select(int id, std::vector<dept> &depts, std::string *error) {
 
 int brokerdao::select(int id, server::type stype, std::vector<server> &servers, std::string *error) {
 	//sql to execute
-	const char* sql = "select server_id, name, host, port, type, disable, ctime from tb_server where broker_id=? and type=?";
+	const char* sql = "select server_id, name, host, port, type, disable, unix_timestamp(ctime) as ctime from tb_server where broker=? and type=?";
 
 	//query variables
 	sql::PreparedStatement *stmt = 0;
@@ -295,6 +328,7 @@ int brokerdao::select(int id, server::type stype, std::vector<server> &servers, 
 		cube::safe_delete<sql::ResultSet>(res);
 
 		cube::throw_assign<db::error>(error, e.what());
+		return -1;
 	}
 
 	return 0;
@@ -302,9 +336,37 @@ int brokerdao::select(int id, server::type stype, std::vector<server> &servers, 
 
 
 //////////////////////////////////////brokersdao class////////////////////////////////////////////
+int brokersdao::insert(const broker_t &brkr, std::string *error) {
+	//sql to execute
+	const char* sql = "insert into tb_broker(code, name, version, disable) values(?, ?, ?, ?)";
+
+	//query variables
+	sql::PreparedStatement *stmt = 0;
+	sql::ResultSet *res = 0;
+
+	try {
+		stmt = conn()->prepareStatement(sql);
+
+		stmt->setString(1, brkr.code.c_str());
+		stmt->setString(2, brkr.name.c_str());
+		stmt->setString(3, brkr.version.c_str());
+		stmt->setBoolean(4, brkr.disable);
+		stmt->executeUpdate();
+
+		delete stmt;
+
+	} catch (sql::SQLException &e) {
+		cube::safe_delete<sql::PreparedStatement>(stmt);
+		cube::throw_assign<db::error>(error, e.what());
+		return -1;
+	}
+
+	return 0;
+}
+
 int brokersdao::select(std::vector<broker_t> &brokers, std::string *error) {
 	//sql to execute
-	const char* sql = "select broker_id, code, name, version, disable, ctime from tb_broker;";
+	const char* sql = "select broker_id, code, name, version, disable, unix_timestamp(ctime) as ctime from tb_broker;";
 
 	//query variables
 	sql::Statement *stmt = 0;
@@ -331,8 +393,46 @@ int brokersdao::select(std::vector<broker_t> &brokers, std::string *error) {
 		cube::safe_delete<sql::ResultSet>(res);
 
 		cube::throw_assign<db::error>(error, e.what());
+		return -1;
 	}
 		
+	return 0;
+}
+
+int brokersdao::select(const std::string &code, broker_t &brkr, std::string *error) {
+	//sql to execute
+	const char* sql = "select broker_id, code, name, version, disable, unix_timestamp(ctime) as ctime from tb_broker where code=?";
+
+	//query variables
+	sql::PreparedStatement *stmt = 0;
+	sql::ResultSet *res = 0;
+
+	try {
+		stmt = conn()->prepareStatement(sql);
+		stmt->setString(1, code.c_str());
+
+		res = stmt->executeQuery(sql);
+		if (res->next()) {
+			int id = res->getInt("broker_id");
+			std::string code = res->getString("code").c_str();
+			std::string name = res->getString("name").c_str();
+			std::string version = res->getString("version").c_str();
+			bool disable = res->getBoolean("disable");
+			uint ctime = res->getUInt("ctime");			
+
+			brkr = broker_t(id, code, name, version, disable, ctime);
+		}
+
+		delete stmt;
+		delete res;
+	} catch (sql::SQLException &e) {
+		cube::safe_delete<sql::PreparedStatement>(stmt);
+		cube::safe_delete<sql::ResultSet>(res);
+
+		cube::throw_assign<db::error>(error, e.what());
+		return -1;
+	}
+
 	return 0;
 }
 END_SERVICE_NAMESPACE

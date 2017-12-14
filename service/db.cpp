@@ -5,7 +5,7 @@
 #include "cppconn\exception.h"
 BEGIN_SERVICE_NAMESPACE
 //////////////////////////////////db class//////////////////////////////////
-int db::connect(const std::string &host, const std::string &user, const std::string &pwd, const std::string &db, ushort port/* = 3306*/, std::string *error/* = 0*/) {
+int db::connect(const std::string &host, const std::string &user, const std::string &pwd, ushort port/* = 3306*/, std::string *error/* = 0*/) {
 	try {
 		//mysql url
 		std::string url = cube::str::format("tcp://%s:%d/", host.c_str(), port);
@@ -14,9 +14,6 @@ int db::connect(const std::string &host, const std::string &user, const std::str
 		sql::Driver *driver = ::get_driver_instance();
 		_connection = driver->connect(url.c_str(), user.c_str(), pwd.c_str());
 
-		//set database used
-		_connection->setSchema(db.c_str());
-
 		//connect success
 		return 0;
 
@@ -24,6 +21,20 @@ int db::connect(const std::string &host, const std::string &user, const std::str
 		cube::throw_assign<db::error>(error, e.what());
 		return -1;
 	}
+}
+
+int db::use(const std::string &db, std::string *error/* = 0*/) {
+	try {
+
+		//set database used
+		_connection->setSchema(db.c_str());
+
+	} catch (sql::SQLException &e) {
+		cube::throw_assign<db::error>(error, e.what());
+		return -1;
+	}
+
+	return 0;
 }
 
 int db::execute(const std::string &sql, std::string *error/* = 0*/) {

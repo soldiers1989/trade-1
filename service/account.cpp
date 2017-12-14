@@ -111,7 +111,7 @@ int accounts::destroy() {
 //////////////////////////////////////////accountdao class/////////////////////////////////////
 int accountsdao::select(std::vector<account_t> &accounts, std::string *error) {
 	//sql to execute
-	const char* sql = "select account_id, broker_id, name, user, pwd, disable, ctime from tb_account;";
+	const char* sql = "select account_id, broker, admin, name, user, pwd, cfrate, cflimit, bfrate, sfrate, disable, unix_timestamp(ctime) as ctime from tb_account;";
 
 	//query variables
 	sql::Statement *stmt = 0;
@@ -121,15 +121,23 @@ int accountsdao::select(std::vector<account_t> &accounts, std::string *error) {
 		stmt = conn()->createStatement();
 		res = stmt->executeQuery(sql);
 		while (res->next()) {
-			int id = res->getInt("account_id");
-			int broker = res->getInt("broker_id");
-			std::string name = res->getString("name").c_str();
-			std::string user = res->getString("user").c_str();
-			std::string pwd = res->getString("pwd").c_str();
-			bool disable = res->getBoolean("disable");
-			uint ctime = res->getUInt("ctime");
+			account_t acnt;
+			acnt.id = res->getInt("account_id");
+			acnt.broker = res->getInt("broker");
+			acnt.admin = res->getInt("admin");
+			acnt.name = res->getString("name").c_str();
+			acnt.user = res->getString("user").c_str();
+			acnt.pwd = res->getString("pwd").c_str();
 
-			accounts.push_back(account_t(id, broker, name, user, pwd, disable, ctime));
+			acnt.cfrate = (float)res->getDouble("cfrate");
+			acnt.cflimit = (float)res->getDouble("cflimit");
+			acnt.bfrate = (float)res->getDouble("bfrate");
+			acnt.sfrate = (float)res->getDouble("sfrate");
+
+			acnt.disable = res->getBoolean("disable");
+			acnt.ctime = res->getUInt("ctime");
+
+			accounts.push_back(acnt);
 		}
 
 		delete stmt;
@@ -139,6 +147,7 @@ int accountsdao::select(std::vector<account_t> &accounts, std::string *error) {
 		cube::safe_delete<sql::ResultSet>(res);
 
 		cube::throw_assign<db::error>(error, e.what());
+		return -1;
 	}
 
 	return 0;
@@ -146,7 +155,7 @@ int accountsdao::select(std::vector<account_t> &accounts, std::string *error) {
 
 int accountsdao::insert(const account_t &account, std::string *error) {
 	//sql to execute
-	const char* sql = "insert into tb_account(broker_id, name, user, pwd, disable) values(?, ?, ?, ?, ?)";
+	const char* sql = "insert into tb_account(broker, admin, name, user, pwd, cfrate, cflimit, bfrate, sfrate, disable) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 	//query variables
 	sql::PreparedStatement *stmt = 0;
@@ -156,10 +165,15 @@ int accountsdao::insert(const account_t &account, std::string *error) {
 		stmt = conn()->prepareStatement(sql);
 		
 		stmt->setInt(1, account.broker);
-		stmt->setString(2, account.name.c_str());
-		stmt->setString(3, account.user.c_str());
-		stmt->setString(4, account.pwd.c_str());
-		stmt->setBoolean(5, account.disable);
+		stmt->setInt(2, account.admin);
+		stmt->setString(3, account.name.c_str());
+		stmt->setString(4, account.user.c_str());
+		stmt->setString(5, account.pwd.c_str());
+		stmt->setDouble(6, account.cfrate);
+		stmt->setDouble(7, account.cflimit);
+		stmt->setDouble(8, account.bfrate);
+		stmt->setDouble(9, account.sfrate);
+		stmt->setBoolean(10, account.disable);
 		stmt->executeUpdate();
 		
 		delete stmt;
@@ -167,6 +181,7 @@ int accountsdao::insert(const account_t &account, std::string *error) {
 	} catch (sql::SQLException &e) {
 		cube::safe_delete<sql::PreparedStatement>(stmt);
 		cube::throw_assign<db::error>(error, e.what());
+		return -1;
 	}
 
 	return 0;

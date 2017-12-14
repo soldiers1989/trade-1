@@ -162,6 +162,9 @@ std::string path::make(const std::string &parent, const std::string &child) {
 
 ////////////////////////////////////////////////file class//////////////////////////////////////////////////
 int file::read(const std::string &path, std::string &data) {
+	//clear out data first
+	data.clear();
+
 	//read content from file
 	std::ifstream ifs(path, std::ifstream::in | std::ifstream::binary);
 	if (!ifs.is_open())
@@ -173,10 +176,14 @@ int file::read(const std::string &path, std::string &data) {
 
 	//process each file line
 	ifs.read(buf, BUFSZ);
-	while (ifs.good()) {
+	while (ifs.gcount() > 0) {
 		//append data
 		data.append(buf, (size_t)ifs.gcount());
-				
+		
+		//check file
+		if (!ifs.good())
+			break;
+
 		//next line
 		ifs.read(buf, BUFSZ);
 	}

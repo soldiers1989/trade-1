@@ -158,7 +158,6 @@
     <ClCompile Include="config.cpp" />
     <ClCompile Include="db.cpp" />
     <ClCompile Include="dbinit.cpp" />
-    <ClCompile Include="risker.cpp" />
     <ClCompile Include="service.cpp" />
     <ClCompile Include="session.cpp" />
     <ClCompile Include="server.cpp" />
@@ -171,7 +170,6 @@
     <ClInclude Include="config.h" />
     <ClInclude Include="db.h" />
     <ClInclude Include="dbinit.h" />
-    <ClInclude Include="risker.h" />
     <ClInclude Include="service.h" />
     <ClInclude Include="session.h" />
     <ClInclude Include="stdsvr.h" />

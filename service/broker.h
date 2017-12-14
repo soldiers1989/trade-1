@@ -65,6 +65,7 @@ public:
 //broker property class
 class broker_t {
 public:
+	broker_t() {}
 	broker_t(const broker_t &brkr) : id(brkr.id), code(brkr.code), name(brkr.name), version(brkr.version), disable(brkr.disable), ctime(brkr.ctime) {}
 	broker_t(const std::string &code, const std::string &name, const std::string &version, bool disable) : id(-1), code(code), name(name), version(version), disable(disable), ctime(0) {}
 	broker_t(int id, const std::string &code, const std::string &name, const std::string &version, bool disable, uint ctime) : id(id), code(code), name(name), version(version), disable(disable), ctime(ctime) {}
@@ -180,15 +181,24 @@ public:
 	int init(const std::string &workdir, std::string *error = 0);
 
 	/*
+	*	add new broker
+	*@param brkr: in, new broker
+	*@param error: out, error message when failure happened
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int add(const broker_t &brkr, std::string *error = 0);
+
+	/*
 	*	select a server
-	*@param id: in, broker id
+	*@param code: in, broker code
 	*@param type: in, server type
 	*@param server: in/out, server selected
 	*@param error: in/out, error message when failure happened
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int select(int id, server::type type, server &server, std::string *error = 0);
+	int select(const std::string &code, server::type type, server &server, std::string *error = 0);
 
 	/*
 	*	destroy brokers
@@ -201,7 +211,7 @@ public:
 	int num() { return _brokers.size(); }
 
 private:
-	std::map<int, broker*> _brokers; //brokers, <id, broker*>
+	std::map<std::string, broker*> _brokers; //brokers, <id, broker*>
 	std::mutex _mutex; //mutex for brokers
 
 	brokersdao *_dao; //brokers dao
@@ -242,13 +252,32 @@ public:
 	~brokersdao() {}
 
 	/*
-	*	 select brokers from database
+	*	insert new broker
+	*@param brkr: new broker
+	*@param error: in/out, error message when failure happened
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int insert(const broker_t &brkr, std::string *error = 0);
+
+	/*
+	*	 select all brokers
 	*@param brokers: in/out, brokers selected
 	*@param error: in/out, error message when failure happened
 	*@return:
 	*	0 for success, otherwise <0
 	*/
 	int select(std::vector<broker_t> &brokers, std::string *error = 0);
+
+	/*
+	*	select specified broker by code
+	*@param code: in, broker code
+	*@param brkr: in/out, broker selected
+	*@param error: in/out, error message when failure happened
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int select(const std::string &code, broker_t &brkr, std::string *error = 0);
 };
 
 END_SERVICE_NAMESPACE

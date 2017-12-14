@@ -19,12 +19,17 @@ public:
 	*@param host: in, host of database
 	*@param user: in, user name of database
 	*@param pwd: in, password for user
-	*@param db: in, database name
 	*@param port: in, service port of database
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int connect(const std::string &host, const std::string &user, const std::string &pwd, const std::string &db, ushort port = 3306, std::string *error = 0);
+	int connect(const std::string &host, const std::string &user, const std::string &pwd, ushort port = 3306, std::string *error = 0);
+
+	/*
+	*	set current database
+	*
+	*/
+	int use(const std::string &db, std::string *error = 0);
 
 	/*
 	*	execute a sql
