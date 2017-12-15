@@ -23,6 +23,7 @@
     <ClCompile Include="cube.cpp" />
     <ClCompile Include="fd.cpp" />
     <ClCompile Include="io.cpp" />
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="net.cpp" />
     <ClCompile Include="os.cpp" />
     <ClCompile Include="sa.cpp" />
@@ -37,6 +38,7 @@
     <ClInclude Include="cube.h" />
     <ClInclude Include="fd.h" />
     <ClInclude Include="io.h" />
+    <ClInclude Include="log.h" />
     <ClInclude Include="net.h" />
     <ClInclude Include="os.h" />
     <ClInclude Include="sa.h" />
