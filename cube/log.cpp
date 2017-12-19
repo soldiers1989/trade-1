@@ -1,5 +1,7 @@
 #include "log.h"
 #include "fd.h"
+#include "tm.h"
+#include "str.h"
 #include <stdarg.h>
 #include <iostream>
 BEGIN_CUBE_NAMESPACE
@@ -115,7 +117,7 @@ void log::set(level lvl) {
 	_level = lvl;
 }
 
-void log::set(out out, const char *dir = ".", const char *name = "log", cut ct = cut::none, uint fszlimit = -1) {
+void log::set(out out, const char *dir/* = "."*/, const char *name/* = "log"*/, cut ct/* = cut::none*/, uint fszlimit/* = -1*/) {
 	std::lock_guard<std::mutex> lock(_mutex);
 	//free old printer
 	if (_printer != 0) {
@@ -124,10 +126,10 @@ void log::set(out out, const char *dir = ".", const char *name = "log", cut ct =
 
 	//create new printer
 	switch (out) {
-	case cube::log::console:
+	case log::out::console:
 		_printer = new console_printer();
 		break;
-	case cube::log::file:
+	case log::out::file:
 		_printer = new file_printer(dir, name, ct, fszlimit);
 		break;
 	default:
@@ -140,20 +142,8 @@ void console_printer::print(const char *msg) {
 	std::cout << msg;
 }
 
-file_printer::file_printer(const std::string &dir, const std::string &name, log::cut ct = log::cut::none, uint fszlimit = -1) : _dir(dir), _name(name), _cutopt(ct), _fszlimit(fszlimit), _num(-1) {
-	switch (ct) {
-	case cube::log::none:
-		open_normal_file();
-		break;
-	case cube::log::size:
-		open_sized_file();
-		break;
-	case cube::log::daily:
-		open_daily_file();
-		break;
-	default:
-		break;
-	}
+file_printer::file_printer(const std::string &dir, const std::string &name, log::cut ct, uint fszlimit) : _dir(dir), _name(name), _cutopt(ct), _currday(0), _fszlimit(fszlimit), _currnum(0), _currfsz(fszlimit) {
+
 }
 
 file_printer::~file_printer() {
@@ -164,8 +154,10 @@ file_printer::~file_printer() {
 }
 
 void file_printer::print(const char *msg) {
-	//check if need to cut file
+	//get new message size
 	int sz = (int)strlen(msg);
+
+	//check if need to cut file
 	check_and_cut(sz);
 
 	//write to file
@@ -175,18 +167,52 @@ void file_printer::print(const char *msg) {
 }
 
 void file_printer::check_and_cut(int msgsz) {
-
+	switch (_cutopt) {
+	case log::cut::none:
+		if (!_file.good()) {
+			_file.open(next_normal_file(), std::ios::out | std::ios::app);
+		}
+		break;
+	case log::cut::sized:
+		if (!_file.good() || !(_currfsz + msgsz < _fszlimit)) {
+			_file.open(next_sized_file(msgsz), std::ios::out | std::ios::app);
+		}
+		break;
+	case log::cut::daily:
+		if (!_file.good() || _currday != tm::now(tm::unit::day)) {
+			_file.open(next_daily_file(), std::ios::out | std::ios::app);
+		}
+		break;
+	default:
+		break;
+	}
 }
 
-void file_printer::open_sized_file() {
-
+std::string file_printer::next_normal_file() {
+	return path::make(_dir, _name);
 }
 
-void file_printer::open_daily_file() {
-
+std::string file_printer::next_daily_file()	{
+	return path::make(_dir, _name + "." + tm::now("%Y%m%d"));
 }
 
-void file_printer::open_normal_file() {
-	_file.open(cube::path::make(_dir, _name+".log"), std::ios::out);
+std::string file_printer::next_sized_file(int msgsz) {
+	_currnum++;
+	std::string fpath = path::make(_dir, str::format("%s.%d", _name.c_str(), _currnum));
+	while (true) {
+		if (fd::exist(fpath)) {
+			size_t sz = 0;
+			if (fd::size(fpath, sz) == 0 && sz + msgsz < _fszlimit) {
+				_currfsz = sz;
+				break;
+			}
+		} else
+			break;
+		
+		_currnum++;
+		fpath = path::make(_dir, str::format("%s.%d", _name.c_str(), _currnum));
+	}
+
+	return fpath;
 }
 END_CUBE_NAMESPACE

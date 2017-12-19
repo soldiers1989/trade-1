@@ -9,12 +9,12 @@ class printer;
 class log {
 public:
 	//log output option
-	typedef enum out { console = 0, file = 1 } out;
+	typedef enum class out { console = 0, file = 1 } out;
 	//cut option for file output 
-	typedef enum cut { none = 0, size = 1, daily = 2 } cut;
+	typedef enum class cut { none = 0, sized = 1, daily = 2 } cut;
 
 	//log level option
-	typedef enum level { debug = 0, info = 1, warn = 2, error = 3, fatal = 4 } level;
+	typedef enum class level { debug = 0, info = 1, warn = 2, error = 3, fatal = 4 } level;
 
 public:
 	/*
@@ -89,14 +89,18 @@ public:
 	void print(const char *msg);
 
 private:
-	//cut file if need
+	/*
+	*	check and cut file when need
+	*/
 	void check_and_cut(int msgsz);
 
-	void open_sized_file();
+	/*
+	*	get next print file
+	*/
+	std::string next_normal_file();
+	std::string next_daily_file();
+	std::string next_sized_file(int msgsz);
 
-	void open_daily_file();
-
-	void open_normal_file();
 private:
 	//output file
 	std::ofstream _file;
@@ -107,9 +111,16 @@ private:
 	std::string _name;
 	//cut option
 	log::cut _cutopt;
-	//file size limit for cutting file
-	uint _fszlimit;
+
+	//current day for daily cutting file
+	int _currday;
+
 	//file number for sized cutting file
-	int _num;
+	int _currnum;
+	//current file size for sized cutting file
+	uint _currfsz;
+	//file size limit for sized cutting file
+	uint _fszlimit;
+
 };
 END_CUBE_NAMESPACE

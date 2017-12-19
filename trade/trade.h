@@ -11,7 +11,6 @@ public:
 	//当前信息查询：0-资金 1-股份 2-当日委托 3-当日成交 4-可撤委托 5-股东代码 6-融资余额 7-融券余额 8-可融证券
 	//历史信息查询：0 - 历史委托 1 - 历史成交 2 - 交割单
 	typedef enum type{ zj = 0, gf = 1, drwt = 2, drcj = 3, kcwt = 4, gddm = 5, rzye = 6, rqye = 7, krzq = 8, lswt = 0, lscj = 1, jgd = 2, other = -1 } type;
-
 };
 
 class price {
