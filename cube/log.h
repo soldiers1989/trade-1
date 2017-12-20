@@ -15,6 +15,11 @@ public:
 
 	//log level option
 	typedef enum class level { debug = 0, info = 1, warn = 2, error = 3, fatal = 4 } level;
+	//log level string
+	static const char *levelstr[];
+private:
+	log();
+	~log();
 
 public:
 	/*
@@ -49,7 +54,7 @@ public:
 	*@return:
 	*	void
 	*/
-	static void set(out out, const char *dir = 0, const char *name = 0, cut ct = cut::none, uint fszlimit = -1);
+	static void set(out out, const char *dir = ".", const char *name = "log", cut ct = cut::none, uint fszlimit = -1);
 
 private:
 	/*
@@ -71,6 +76,9 @@ private:
 //printer class
 class printer {
 public:
+	printer() {}
+	virtual ~printer() {}
+
 	virtual void print(const char *msg) = 0;
 };
 
