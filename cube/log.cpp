@@ -127,7 +127,7 @@ void log::print(level lvl, const char *msg) {
 	//add level and time to message
 	const int BUFSZ = 1024;
 	char buf[BUFSZ] = { 0 };
-	int pos = sprintf(buf, "[%s][%s]%s", tm::now("%Y%m%d%H%M%S").c_str(), levelstr[(int)lvl], msg);
+	int pos = sprintf(buf, "%s[%s]%s\n", tm::now("[%Y%m%d][%H:%M:%S]").c_str(), levelstr[(int)lvl], msg);
 	if (pos > 0 && pos<BUFSZ) {
 		buf[pos] = 0;
 		msg = buf;

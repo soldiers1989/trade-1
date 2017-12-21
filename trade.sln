@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "client", "client\client.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "admin", "admin\admin.csproj", "{F063E71C-8717-4FBB-9109-40BF823FAC5B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "stcp", "stcp\stcp.vcxproj", "{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -120,6 +122,16 @@ Global
 		{F063E71C-8717-4FBB-9109-40BF823FAC5B}.Release|x64.Build.0 = Release|Any CPU
 		{F063E71C-8717-4FBB-9109-40BF823FAC5B}.Release|x86.ActiveCfg = Release|Any CPU
 		{F063E71C-8717-4FBB-9109-40BF823FAC5B}.Release|x86.Build.0 = Release|Any CPU
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Debug|x64.ActiveCfg = Debug|x64
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Debug|x64.Build.0 = Debug|x64
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Debug|x86.ActiveCfg = Debug|Win32
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Debug|x86.Build.0 = Debug|Win32
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Release|Any CPU.ActiveCfg = Release|Win32
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Release|x64.ActiveCfg = Release|x64
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Release|x64.Build.0 = Release|x64
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Release|x86.ActiveCfg = Release|Win32
+		{27D8ABCA-7AC8-47CC-9DBE-D8961A0C5D77}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
