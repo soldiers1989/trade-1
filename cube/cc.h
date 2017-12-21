@@ -157,7 +157,6 @@ public:
 	using milliseconds = std::chrono::milliseconds;
 	//time point in million seconds
 	using timepoint = std::chrono::time_point<clock, milliseconds>;
-
 	//timer item
 	class item {
 	public:
@@ -178,6 +177,8 @@ public:
 		milliseconds interval; //interval in milliseconds
 	};
 
+	//item pointer
+	using itemptr = std::shared_ptr<item>;
 public:
 	timer();
 	~timer();
@@ -206,14 +207,14 @@ private:
 	//mutex for waiting expire items
 	std::mutex _wmutex;
 	//timer item list waiting for expire
-	std::list<item> _witems;
+	std::list<itemptr> _witems;
 	//condition variable for waiting expire
 	std::condition_variable _wcond;
 
 	//mutex for expired items
 	std::mutex _emutex;
 	//timer item expired waiting for execute
-	std::list<item> _eitems;
+	std::list<itemptr> _eitems;
 	//condition variable for waiting execute
 	std::condition_variable _econd;
 
