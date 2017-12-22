@@ -1,4 +1,5 @@
 #include "cc.h"
+#include <algorithm>
 
 BEGIN_CUBE_NAMESPACE
 thread::thread() : _runnable(0) {
@@ -103,7 +104,7 @@ std::vector<std::thread::id> threads::getids() {
 }
 
 ///////////////////////////////////////timer class/////////////////////////////////////////
-timer::timer() : _stop(false){
+timer::timer() : _stop(false), _nextid(0){
 
 }
 
@@ -111,157 +112,77 @@ timer::~timer() {
 
 }
 
-void timer::init(int executors/* = 1*/) {
+void timer::start() {
 	//set stop flag
-	_stop = false;
-
-	//start executors
-	for (int i = 0; i < executors; i++) {
-		_executors.push_back(std::thread(execute, this));
-	}
+	_stop.store(false);
 
 	//start monitor
 	_monitor = std::thread(monitor, this);
 }
 
-int timer::set(int delay, task t) {
-	std::lock_guard<std::mutex> lck(_wmutex);
-	//create new item
-	item *newitem = new item(_nextid, delay, t);
-
-	//insert to proper position to wait list by expire timepoint
-	std::list<itemptr>::iterator iter = _witems.begin(), iterend = _witems.end();
-	while (iter != iterend) {
-		if (newitem->expire > (*iter)->expire) {
-			break;
-		} else {
-			iter++;
-		}
-	}
-	_witems.insert(iter, itemptr(newitem));
-
-	//new item coming wake up monitor
-	_wcond.notify_all();
-
+int timer::setup(int delay, task *t) {
+	std::unique_lock<std::mutex> lck(_mutex);
+	std::shared_ptr<timertask> newtask(new timertask(_nextid, delay, t));
+	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [newtask](std::shared_ptr<timertask> currtask) {return newtask->expire > currtask->expire; });
+	_tasks.insert(iter, newtask);
+	_cond.notify_one();
 	return _nextid++;
 }
 
-int timer::set(int delay, int interval, task t) {
-	std::lock_guard<std::mutex> lck(_wmutex);
-	//create new item
-	item *newitem = new item(_nextid, delay, interval, t);
-
-	//insert to proper position to wait list by expire timepoint
-	std::list<itemptr>::iterator iter = _witems.begin(), iterend = _witems.end();
-	while (iter != iterend) {
-		if (newitem->expire > (*iter)->expire) {
-			break;
-		} else {
-			iter++;
-		}
-	}
-	_witems.insert(iter, itemptr(newitem));
-	
-	//new item coming wake up monitor
-	_wcond.notify_all();
-
-	return _nextid++;
+int timer::setup(int delay, int interval, task *t) {
+	std::unique_lock<std::mutex> lck(_mutex);
+	std::shared_ptr<timertask> newtask(new timertask(_nextid, delay, interval, t));
+	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [newtask](std::shared_ptr<timertask> currtask) {return newtask->expire > currtask->expire; });
+	_tasks.insert(iter, newtask);
+	_cond.notify_one();
+	return 0;
 }
 
 void timer::cancel(int id) {
-	{
-		std::lock_guard<std::mutex> lck(_wmutex);
-		std::list<itemptr>::iterator iter = _witems.begin(), iterend = _witems.end();
-		while (iter != iterend) {
-			if ((*iter)->id == id) {
-				_witems.erase(iter);
-				return;
-			} else {
-				iter++;
-			}
-		}
-	}
-
-	{
-		std::lock_guard<std::mutex> lck(_emutex);
-		std::list<itemptr>::iterator iter = _eitems.begin(), iterend = _eitems.end();
-		while (iter != iterend) {
-			if ((*iter)->id == id) {
-				_eitems.erase(iter);
-				return;
-			} else {
-				iter++;
-			}
-		}
-	}
+	std::unique_lock<std::mutex> lck(_mutex);
+	_tasks.remove_if([id](std::shared_ptr<timertask> currtask) {return currtask->id == id; });
+	_cond.notify_one();
 }
 
-void timer::destroy() {
+void timer::stop() {
 	//set stop flag
-	_stop = true;
+	_stop.store(true);
 
 	//wait for monitor to stop
-	_wcond.notify_all();
+	_cond.notify_all();
 	_monitor.join();
 
-	//wait for executors to stop
-	_econd.notify_all();
-	for (size_t i = 0; i < _executors.size(); i++) {
-		_executors[i].join();
-	}
-
-	//free all item tasks
-	_witems.clear();
-	_eitems.clear();
+	//clear tasks
+	_tasks.clear();
 }
 
-void timer::wait_expire() {
-	while (_stop) {
-		itemptr pitem = nullptr;
-		{
-			std::unique_lock<std::mutex> lck(_wmutex);
-			if (_witems.size() == 0) {
-				_wcond.wait(lck);
-			} else {
-				std::cv_status status = _wcond.wait_for(lck, _witems.back()->expire - clock::now());
-				if (status == std::cv_status::timeout) {
-					pitem = _witems.back();
-					_witems.pop_back();
-				}
-			}
-		}
-
-		{
-			if (pitem != nullptr) {
-				std::unique_lock<std::mutex> lck(_emutex);
-				_eitems.push_back(pitem);
-				_econd.notify_one();
-			}
-		}
-	}
-}
-
-void timer::run_expired() {
-	while (_stop) {
-		itemptr pitem = nullptr;
-		{
-			std::unique_lock<std::mutex> lck(_emutex);
-			if (_eitems.size() == 0) {
-				_econd.wait(lck);
-			} else {
-				pitem = _eitems.front();
-				_eitems.pop_front();
+void timer::expire() {
+	while (!_stop.load()) {
+		std::unique_lock<std::mutex> lck(_mutex);
+		if (_tasks.size() == 0) {
+			_cond.wait(lck);
+		} else {
+			std::shared_ptr<timertask> latest = _tasks.back();
+			std::chrono::milliseconds ms = std::chrono::duration_cast<milliseconds>(latest->expire - clock::now());
+			std::cv_status status = _cond.wait_for(lck, ms);
+			if (status == std::cv_status::timeout) {
+				//run expired task
+				latest->run();
+				//remove from task list
+				_tasks.pop_back();
+				//reset if cycle timer task
+				if (latest->cycle) {
+					latest->reset();
+					std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [latest](std::shared_ptr<timertask> currtask) {return latest->expire > currtask->expire; });
+					_tasks.insert(iter, latest);
+				}			
 			}
 		}
 	}
 }
 
 void timer::monitor(timer *tmr) {
-	tmr->wait_expire();
-}
-
-void timer::execute(timer *tmr) {
-	tmr->run_expired();
+	tmr->expire();
 }
 
 END_CUBE_NAMESPACE

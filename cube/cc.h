@@ -146,86 +146,125 @@ private:
 	runnable *_runnable;
 };
 
+//runnable task
+class task {
+public:
+	task() {}
+	virtual ~task() {}
+
+	virtual void run() = 0;
+};
+
+//clock using for timer
+using clock = std::chrono::system_clock;
+//million seconds
+using milliseconds = std::chrono::milliseconds;
+//time point in million seconds
+using timepoint = std::chrono::time_point<clock, milliseconds>;
+
+//timer task
+class timertask : public task {
+public:
+	timertask(int id, int delayms, task *t) : id(id), delay(delayms), task(t), cycle(false), interval(0) {
+		expire = std::chrono::time_point_cast<milliseconds>(clock::now() + delay);
+	}
+	timertask(int id, int delayms, int intervalms, task *t) : id(id), delay(delayms), task(t), cycle(true), interval(intervalms) {
+		expire = std::chrono::time_point_cast<milliseconds>(clock::now() + delay);
+	}
+	~timertask() {}
+
+	virtual void run() {
+		task->run();
+	}
+
+	/*
+	*	reset timer item
+	*/
+	void reset() {
+		if (cycle) {
+			expire = std::chrono::time_point_cast<milliseconds>(clock::now() + interval);
+		}
+	}
+
+public:
+	int id; //item id
+	bool cycle; //cycle task flag
+	task *task; //item's task
+	timepoint expire; //expire time point
+
+	milliseconds delay; //delay in milliseconds
+	milliseconds interval; //interval in milliseconds
+};
+
+
 //timer class
 class timer {
-public:
-	//task definiation
-	using task = std::function<void(...)>;
-	//clock using for timer
-	using clock = std::chrono::system_clock;
-	//million seconds
-	using milliseconds = std::chrono::milliseconds;
-	//time point in million seconds
-	using timepoint = std::chrono::time_point<clock, milliseconds>;
-	//timer item
-	class item {
-	public:
-		item(int id, int delayms, task t) : id(id), delay(delayms), task(t), interval(-1), expire(std::chrono::time_point_cast<milliseconds>(std::chrono::system_clock::now()) + delay) {}
-		item(int id, int delayms, int intervalms, task t) : id(id), delay(delayms), task(t), interval(intervalms), expire(std::chrono::time_point_cast<milliseconds>(std::chrono::system_clock::now()) + delay) {}
-		~item() {}
-
-		void update() {
-		}
-
-
-
-		int id; //item id
-		task task; //item's task
-		timepoint expire; //expire time point
-
-		milliseconds delay; //delay in milliseconds
-		milliseconds interval; //interval in milliseconds
-	};
-
-	//item pointer
-	using itemptr = std::shared_ptr<item>;
 public:
 	timer();
 	~timer();
 
-	void init(int executors = 1);
+	/*
+	*	start timer
+	*@return:
+	*	void
+	*/
+	void start();
 
-	int set(int delay, task t);
+	/*
+	*	setup timer task
+	*@param delay: in, delay milliseconds for expire
+	*@param task: in, timer task
+	*@param interval: in, cycle timer task interval
+	*@return:
+	*	timer task id
+	*/
+	int setup(int delay, task *t);
+	int setup(int delay, int interval, task *t);
 
-	int set(int delay, int interval, task t);
-
+	/*
+	*	cancel timer task by timer task id
+	*@param id: in, timer task id
+	*@return:
+	*	void
+	*/
 	void cancel(int id);
 
-	void destroy();
+	/*
+	*	stop timer
+	*@return:
+	*	void
+	*/
+	void stop();
 
 private:
-	void wait_expire();
-	void run_expired();
+	/*
+	*	expire the timer task
+	*@return:
+	*	void
+	*/
+	void expire();
 
+	/*
+	*	timer task monitor thread function
+	*@param tmr: in, timer object to monitor
+	*@return:
+	*	void
+	*/
 	static void monitor(timer *tmr);
-	static void execute(timer *tmr);
-
 private:
 	//next task item id
 	int _nextid;
 	
-	//mutex for waiting expire items
-	std::mutex _wmutex;
-	//timer item list waiting for expire
-	std::list<itemptr> _witems;
-	//condition variable for waiting expire
-	std::condition_variable _wcond;
-
-	//mutex for expired items
-	std::mutex _emutex;
-	//timer item expired waiting for execute
-	std::list<itemptr> _eitems;
-	//condition variable for waiting execute
-	std::condition_variable _econd;
-
 	//stop flag for timer
 	std::atomic<bool> _stop;
-
 	//timer task wait monitor
 	std::thread _monitor;
 
-	//timer task expired executors
-	std::vector<std::thread> _executors;
-
+	//mutex for waiting expire items
+	std::mutex _mutex;
+	//timer item list waiting for expire
+	std::list<std::shared_ptr<timertask>> _tasks;
+	//condition variable for waiting expire
+	std::condition_variable _cond;
 };
 END_CUBE_NAMESPACE
