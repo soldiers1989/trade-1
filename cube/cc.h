@@ -165,10 +165,10 @@ using timepoint = std::chrono::time_point<clock, milliseconds>;
 //timer task
 class timertask : public task {
 public:
-	timertask(int id, int delayms, task *t) : id(id), delay(delayms), task(t), cycle(false), interval(0) {
+	timertask(int id, int delayms, task *t) : id(id), delay(delayms), task(t), cycle(false), interval(0), waited(false), canceled(false) {
 		expire = std::chrono::time_point_cast<milliseconds>(clock::now() + delay);
 	}
-	timertask(int id, int delayms, int intervalms, task *t) : id(id), delay(delayms), task(t), cycle(true), interval(intervalms) {
+	timertask(int id, int delayms, int intervalms, task *t) : id(id), delay(delayms), task(t), cycle(true), interval(intervalms), waited(false), canceled(false) {
 		expire = std::chrono::time_point_cast<milliseconds>(clock::now() + delay);
 	}
 	~timertask() {}
@@ -178,12 +178,37 @@ public:
 	}
 
 	/*
+	*	get expire latency time
+	*/
+	inline milliseconds latency(std::chrono::time_point<clock> now = clock::now()) {
+		return std::chrono::duration_cast<milliseconds>(expire - now);
+	}
+
+	/*
 	*	reset timer item
 	*/
-	void reset() {
+	inline void reset(std::chrono::time_point<clock> now = clock::now()) {
 		if (cycle) {
-			expire = std::chrono::time_point_cast<milliseconds>(clock::now() + interval);
+			waited = false;
+			expire = std::chrono::time_point_cast<milliseconds>(now + interval);
 		}
+	}
+
+	/*
+	*	set wait flag, so we known it has waited by monitor when canceled
+	*/
+	inline void wait() {
+		waited = true;
+	}
+	inline void wait(bool flag) {
+		waited = flag;
+	}
+
+	/*
+	*	set cancel timer task flag, so we can cancel the task when monitor wake up
+	*/
+	inline void cancel() {
+		canceled = true;
 	}
 
 public:
@@ -194,6 +219,9 @@ public:
 
 	milliseconds delay; //delay in milliseconds
 	milliseconds interval; //interval in milliseconds
+
+	volatile bool waited; //waited flag by monitor
+	volatile bool canceled; //cancel flag
 };
 
 
@@ -204,11 +232,11 @@ public:
 	~timer();
 
 	/*
-	*	start timer
+	*	start timer with specified thread, default 1 thread
 	*@return:
 	*	void
 	*/
-	void start();
+	void start(int nthread = 1);
 
 	/*
 	*	setup timer task
@@ -258,7 +286,7 @@ private:
 	//stop flag for timer
 	std::atomic<bool> _stop;
 	//timer task wait monitor
-	std::thread _monitor;
+	std::list<std::shared_ptr<std::thread>> _monitors;
 
 	//mutex for waiting expire items
 	std::mutex _mutex;
