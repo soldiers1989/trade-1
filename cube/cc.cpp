@@ -124,7 +124,7 @@ void timer::start(int nthread) {
 int timer::setup(int delay, task *t) {
 	std::unique_lock<std::mutex> lck(_mutex);
 	std::shared_ptr<timertask> newtask(new timertask(_nextid, delay, t));
-	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [newtask](std::shared_ptr<timertask> currtask) {return newtask->expire < currtask->expire; });
+	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [newtask](std::shared_ptr<timertask> currtask) {return newtask->expire() < currtask->expire(); });
 	_tasks.insert(iter, newtask);
 	_cond.notify_all();
 	return _nextid++;
@@ -133,7 +133,7 @@ int timer::setup(int delay, task *t) {
 int timer::setup(int delay, int interval, task *t) {
 	std::unique_lock<std::mutex> lck(_mutex);
 	std::shared_ptr<timertask> newtask(new timertask(_nextid, delay, interval, t));
-	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [newtask](std::shared_ptr<timertask> currtask) {return newtask->expire < currtask->expire; });
+	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [newtask](std::shared_ptr<timertask> currtask) {return newtask->expire() < currtask->expire(); });
 	_tasks.insert(iter, newtask);
 	_cond.notify_all();
 	return _nextid++;
@@ -141,14 +141,20 @@ int timer::setup(int delay, int interval, task *t) {
 
 void timer::cancel(int id) {
 	std::unique_lock<std::mutex> lck(_mutex);
-	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [id](std::shared_ptr<timertask> task) {return id == task->id; });
+	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [id](std::shared_ptr<timertask> task) {return id == task->id(); });
 	if (iter != _tasks.end()) {
-		if (!(*iter)->waited) {
+		if ((*iter)->waiting() ||(*iter)->runned()) {
 			_tasks.erase(iter);
 		}
 		else {
 			(*iter)->cancel();
-			_cond.notify_all();
+			if ((*iter)->waited()) {
+				_cond.notify_all();
+			} else {
+				while ((*iter)-> running()){
+					std::this_thread::yield();
+				}
+			}
 		}
 	}
 }
@@ -166,45 +172,57 @@ void timer::stop() {
 	_tasks.clear();
 }
 
+std::shared_ptr<timertask> timer::wait() {
+	std::unique_lock<std::mutex> lck(_mutex);
+	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [](std::shared_ptr<timertask> task) {return task->waiting(); });
+	if (iter != _tasks.end()) {
+		std::chrono::time_point<clock> now = clock::now();
+		//get the latest and not waited task
+		std::shared_ptr<timertask> latest = *iter;
+		//wait for the task to expired
+		latest->wait();
+		std::cv_status status = _cond.wait_for(lck, latest->latency(now));
+		if (status == std::cv_status::timeout) {
+			if (!latest->canceled()) {
+				latest->prerun();
+				return latest;
+			} else {
+				_tasks.remove_if([latest](std::shared_ptr<timertask> task) {return task->id() == latest->id(); });
+			}
+		} else {
+			latest->rewaiting();
+		}
+	} else {
+		_cond.wait_for(lck, std::chrono::milliseconds(100));
+	}
+
+	return nullptr;
+}
+
+void timer::exec(std::shared_ptr<timertask> t) {
+	t->run();
+}
+
+void timer::plan(std::shared_ptr<timertask> t) {
+	std::unique_lock<std::mutex> lck(_mutex);
+	//remove from task list
+	_tasks.remove_if([t](std::shared_ptr<timertask> task) {return task->id() == t->id(); });
+	//reset if cycle timer task
+	if (t->reset()) {
+		std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [t](std::shared_ptr<timertask> task) {return t->expire() < task->expire(); });
+		_tasks.insert(iter, t);
+	}
+}
+
 void timer::expire() {
 	while (!_stop.load()) {
-		std::unique_lock<std::mutex> lck(_mutex);
-		std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [](std::shared_ptr<timertask> task) {return !task->waited; });
-		if (iter == _tasks.end()) {
-			_cond.wait(lck);
-		} else {
-			//get the latest and not waited task
-			std::shared_ptr<timertask> latest = *iter;
-			latest->wait();
+		std::shared_ptr<timertask> t = wait();
+		if (t == nullptr)
+			continue;
+		
+		exec(t);
 
-			//wait for the task to expired
-			std::chrono::time_point<clock> now = clock::now();
-			std::cv_status status = _cond.wait_for(lck, latest->latency(now));
-
-			//execute the task if it is not canceled
-			if (status == std::cv_status::timeout && !latest->canceled) {
-				now = clock::now();
-				//run expired task
-				latest->run();
-				//remove from task list
-				_tasks.remove_if([latest](std::shared_ptr<timertask> task) {return task->id == latest->id; });
-				//reset if cycle timer task
-				if (latest->cycle) {
-					latest->reset(now);
-					std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [latest](std::shared_ptr<timertask> task) {return latest->expire < task->expire; });
-					_tasks.insert(iter, latest);
-				}			
-			}
-			else {
-				//remove the task if it is canceled
-				if (latest->canceled) {
-					_tasks.remove_if([latest](std::shared_ptr<timertask> task) {return task->id == latest->id; });
-				}
-				else {
-					latest->wait(false);
-				}
-			}
-		}
+		plan(t);
 	}
 }
 

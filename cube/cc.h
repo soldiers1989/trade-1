@@ -165,63 +165,113 @@ using timepoint = std::chrono::time_point<clock, milliseconds>;
 //timer task
 class timertask : public task {
 public:
-	timertask(int id, int delayms, task *t) : id(id), delay(delayms), task(t), cycle(false), interval(0), waited(false), canceled(false) {
-		expire = std::chrono::time_point_cast<milliseconds>(clock::now() + delay);
+	typedef enum class status{waiting = 0, waited =1, running = 2, runned = 3}status;
+
+public:
+	timertask(int id, int delayms, task *t) : _id(id), _delay(delayms), _task(t), _cycle(false), _interval(0), _status((int)status::waiting), _canceled(false) {
+		_expire = std::chrono::time_point_cast<milliseconds>(clock::now() + _delay);
 	}
-	timertask(int id, int delayms, int intervalms, task *t) : id(id), delay(delayms), task(t), cycle(true), interval(intervalms), waited(false), canceled(false) {
-		expire = std::chrono::time_point_cast<milliseconds>(clock::now() + delay);
+	timertask(int id, int delayms, int intervalms, task *t) : _id(id), _delay(delayms), _task(t), _cycle(true), _interval(intervalms), _status((int)status::waiting), _canceled(false) {
+		_expire = std::chrono::time_point_cast<milliseconds>(clock::now() + _delay);
 	}
 	~timertask() {}
 
+	/*
+	*	run timer task
+	*/
 	virtual void run() {
-		task->run();
+		if (_canceled)
+			return;
+
+		//run the task
+		_task->run();
+
+		_status.store((int)status::runned);
+	}
+	
+	inline int id() {
+		return _id;
+	}
+
+	inline const timepoint& expire() {
+		return _expire;
+	}
+	/*
+	*	reset timer item
+	*/
+	inline bool reset() {
+		if (!_cycle || _canceled.load())
+			return false;
+
+		//reset task flag to waiting
+		_status.store((int)status::waiting);
+
+		//reset next expire time
+		_expire = std::chrono::time_point_cast<milliseconds>(_expire + _interval);
+
+		return true;
+	}
+
+	/*
+	*	set task to waited status
+	*/
+	inline void wait() {
+		_status.store((int)status::waited);
+	}
+
+	inline bool waited() {
+		return _status.load() == (int)status::waited;
+	}
+
+	inline bool waiting() {
+		return _status.load() == (int)status::waiting;
+	}
+
+	inline void rewaiting() {
+		return _status.store((int)status::waiting);;
+	}
+
+	inline void prerun() {
+		//set task to running status
+		_status.store((int)status::running);
+	}
+
+	inline bool runned() {
+		return _status.load() == (int)status::runned;
+	}
+
+	inline bool running() {
+		return _status.load() == (int)status::running;
+	}
+
+	/*
+	*	set task to canceled status
+	*/
+	inline void cancel() {
+		_canceled.store(true);
+	}
+	inline bool canceled() {
+		return _canceled.load();
 	}
 
 	/*
 	*	get expire latency time
 	*/
 	inline milliseconds latency(std::chrono::time_point<clock> now = clock::now()) {
-		return std::chrono::duration_cast<milliseconds>(expire - now);
+		return std::chrono::duration_cast<milliseconds>(_expire - now);
 	}
 
-	/*
-	*	reset timer item
-	*/
-	inline void reset(std::chrono::time_point<clock> now = clock::now()) {
-		if (cycle) {
-			waited = false;
-			expire = std::chrono::time_point_cast<milliseconds>(now + interval);
-		}
-	}
+private:
+	int _id; //item id
+	bool _cycle; //cycle task flag
+	task *_task; //item's task
+	timepoint _expire; //expire time point
 
-	/*
-	*	set wait flag, so we known it has waited by monitor when canceled
-	*/
-	inline void wait() {
-		waited = true;
-	}
-	inline void wait(bool flag) {
-		waited = flag;
-	}
+	milliseconds _delay; //delay in milliseconds
+	milliseconds _interval; //interval in milliseconds
 
-	/*
-	*	set cancel timer task flag, so we can cancel the task when monitor wake up
-	*/
-	inline void cancel() {
-		canceled = true;
-	}
-
-public:
-	int id; //item id
-	bool cycle; //cycle task flag
-	task *task; //item's task
-	timepoint expire; //expire time point
-
-	milliseconds delay; //delay in milliseconds
-	milliseconds interval; //interval in milliseconds
-
-	volatile bool waited; //waited flag by monitor
-	volatile bool canceled; //cancel flag
+	std::atomic<int> _status; //task status
+	std::atomic<bool> _canceled; //cancel flag
 };
 
 
@@ -265,6 +315,12 @@ public:
 	void stop();
 
 private:
+	std::shared_ptr<timertask> wait();
+	
+	void exec(std::shared_ptr<timertask> t);
+
+	void plan(std::shared_ptr<timertask> t);
+
 	/*
 	*	expire the timer task
 	*@return:
