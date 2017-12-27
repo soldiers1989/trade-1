@@ -1,6 +1,5 @@
 #include "cc.h"
 #include <algorithm>
-
 BEGIN_CUBE_NAMESPACE
 thread::thread() : _runnable(0) {
 
@@ -104,9 +103,158 @@ std::vector<std::thread::id> threads::getids() {
 }
 
 ///////////////////////////////////////timer class/////////////////////////////////////////
-timer::timer() : _nextid(0) {
+
+timer::mitem::mitem(int id, int delay, task *task) : _id(id), _delay(delay), _task(task), _cycle(false), _interval(-1) {
+	_expire = clock::now() + _delay;
 }
 
+timer::mitem::mitem(int id, int delay, int interval, task *task) : _id(id), _delay(delay), _interval(interval), _task(task), _cycle(true) {
+	_expire = clock::now() + _delay;
+}
+
+timer::mitem::~mitem() {
+
+}
+
+int timer::mitem::id() {
+	return _id;
+}
+
+bool timer::mitem::cycled() {
+	return _cycle;
+}
+
+timer::task* timer::mitem::gettask() {
+	return _task;
+}
+
+void timer::mitem::reset() {
+	_expire = _expire + _interval;
+}
+
+const timer::timepoint& timer::mitem::expire() {
+	return _expire;
+}
+
+bool timer::mitem::expired(std::chrono::time_point<clock> now/* = clock::now()*/) {
+	return !(_expire > now);
+}
+
+timer::milliseconds timer::mitem::latency(std::chrono::time_point<clock> now/* = clock::now()*/) {
+	return std::chrono::duration_cast<milliseconds>(_expire - now);
+}
+
+timer::eitem::eitem(int id, task *task) : _id(id), _task(task) {
+	_status.store((int)status::pending);
+	_dummy = new char[1024];
+}
+
+timer::eitem::~eitem() {
+	delete _dummy;
+}
+
+void timer::eitem::run() {
+	_status.store((int)status::running);
+	_task->run();
+	_status.store((int)status::finished);
+}
+
+void timer::eitem::join() {
+	while (_status.load() != (int)status::finished)
+		std::this_thread::yield();
+}
+
+bool timer::eitem::pending() {
+	return _status.load() == (int)status::pending;
+}
+
+void timer::eitem::waiting() {
+	_status.store((int)status::waiting);
+}
+
+int timer::eitem::id() {
+	return _id;
+}
+
+timer::executor::executor() {
+}
+
+timer::executor::~executor() {
+}
+
+int timer::executor::start(int maxthreads/* = 1*/) {
+	_maxthreads = maxthreads;
+	_stop.store(false);
+	std::lock_guard<std::mutex> lck(_mutex);
+	for (int i = 0; i<maxthreads; i++)
+		_threads.push_back(std::shared_ptr<std::thread>(new std::thread(executor_thread_func, this)));
+	return 0;
+}
+
+void timer::executor::execute(int id, task *task) {
+	std::lock_guard<std::mutex> lck(_mutex);
+	_items.push_back(std::shared_ptr<eitem>(new eitem(id, task)));
+}
+
+void timer::executor::cancel(int id) {
+	std::lock_guard<std::mutex> lck(_mutex);
+	std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<eitem> item) {return id == item->id(); });
+	if (iter != _items.end()) {
+		if ((*iter)->pending()) {
+			_items.erase(iter);
+		} else {
+			(*iter)->join();
+		}
+	}
+}
+
+void timer::executor::stop() {
+	_stop.store(true);
+	std::lock_guard<std::mutex> lck(_mutex);
+	std::for_each(_threads.begin(), _threads.end(), [](std::shared_ptr<std::thread> thd) {thd->join(); });
+	_threads.clear();
+}
+
+void timer::executor::balance() {
+
+}
+
+void timer::executor::execute() {
+	int yield = 0;
+	while (!_stop.load()) {
+		std::shared_ptr<eitem> nextitem = nullptr;
+		{
+			std::lock_guard<std::mutex> lck(_mutex);
+			std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [](std::shared_ptr<eitem> item) {return item->pending(); });
+			if (iter != _items.end()) {
+				nextitem = *iter;
+				nextitem->waiting();
+			}
+		}
+
+		if (nextitem != nullptr) {
+			nextitem->run();
+			{
+				int id = nextitem->id();
+				std::lock_guard<std::mutex> lck(_mutex);
+				std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<eitem> item) {return id == item->id(); });
+				if (iter != _items.end()) {
+					_items.erase(iter);
+				}
+			}
+		} else {
+			std::this_thread::yield();
+		}
+	}
+}
+
+void timer::executor::executor_thread_func(executor *e) {
+	e->execute();
+}
+
+
+timer::timer() : _nextid(0) {
+}
 
 timer::~timer() {
 }

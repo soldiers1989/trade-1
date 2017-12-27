@@ -57,9 +57,6 @@
     <ClCompile Include="tm.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="tmr.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cube.h">
@@ -102,9 +99,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="tm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="tmr.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

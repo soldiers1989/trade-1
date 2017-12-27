@@ -166,45 +166,18 @@ private:
 	//timer monitor item
 	class mitem {
 	public:
-		mitem(int id, int delay, task *task) : _id(id), _delay(delay), _task(task), _cycle(false), _interval(-1) {
-			_expire = clock::now() + _delay;
-		}
+		mitem(int id, int delay, task *task);
+		mitem(int id, int delay, int interval, task *task);
+		~mitem();
 
-		mitem(int id, int delay, int interval, task *task) : _id(id), _delay(delay), _interval(interval), _task(task), _cycle(true) {
-			_expire = clock::now() + _delay;
-		}
-
-		~mitem() {
-
-		}
-
-		inline int id() {
-			return _id;
-		}
-
-		inline bool cycled() {
-			return _cycle;
-		}
-
-		inline task* gettask() {
-			return _task;
-		}
-
-		inline void reset() {
-			_expire = _expire + _interval;
-		}
-
-		inline const timepoint& expire() {
-			return _expire;
-		}
-
-		bool expired(std::chrono::time_point<clock> now = clock::now()) {
-			return !(_expire > now);
-		}
-
-		inline milliseconds latency(std::chrono::time_point<clock> now = clock::now()) {
-			return std::chrono::duration_cast<milliseconds>(_expire - now);
-		}
+		int id();
+		bool cycled();
+		task* gettask();
+		
+		void reset();
+		const timepoint& expire();
+		bool expired(std::chrono::time_point<clock> now = clock::now());
+		milliseconds latency(std::chrono::time_point<clock> now = clock::now());
 
 	private:
 		int _id; //item id
@@ -222,117 +195,46 @@ private:
 		typedef enum class status { pending = 0, waiting = 1, running = 2, finished = 3 }status;
 
 	public:
-		eitem(int id, task *task) : _id(id), _task(task) {
-			_status.store((int)status::pending);
-		}
-		~eitem() {}
+		eitem(int id, task *task);
+		~eitem();
 
-		void run() {
-			_status.store((int)status::running);
-			_task->run();
-			_status.store((int)status::finished);
-		}
+		int id();
 
-		void join() {
-			while (_status.load() != (int)status::finished)
-				std::this_thread::yield();
-		}
+		void run();
+		void join();
 
-		bool pending() {
-			return _status.load() == (int)status::pending;
-		}
-
-		void waiting() {
-			_status.store((int)status::waiting);
-		}
-
-		inline int id() {
-			return _id;
-		}
+		bool pending();
+		void waiting();
 
 	private:
 		int _id;
 		task *_task;
-
+		char *_dummy;
 		std::atomic<int> _status; //item status
 	};
 
 	//timer task executor
 	class executor {
 	public:
-		executor() {}
-		~executor() {}
+		executor();
+		~executor();
 
-		int start(int maxthreads = 1) {
-			_stop.store(false);
-			for (int i = 0; i<maxthreads; i++)
-				_threads.push_back(std::shared_ptr<std::thread>(new std::thread(executor_thread_func, this)));
-			return 0;
-		}
-
-		void execute(int id, task *task) {
-			std::lock_guard<std::mutex> lck(_mutex);
-			_items.push_back(std::shared_ptr<eitem>(new eitem(id, task)));
-		}
-
-		void cancel(int id) {
-			std::lock_guard<std::mutex> lck(_mutex);
-			std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<eitem> item) {return id == item->id(); });
-			if (iter != _items.end()) {
-				if ((*iter)->pending()) {
-					_items.erase(iter);
-				} else {
-					(*iter)->join();
-				}
-			}
-		}
-
-		void balance() {
-
-		}
-
-		void stop() {
-			_stop.store(true);
-			std::for_each(_threads.begin(), _threads.end(), [](std::shared_ptr<std::thread> thd) {thd->join(); });
-			_threads.clear();
-		}
+		int start(int maxthreads = 1);
+		void execute(int id, task *task);
+		void cancel(int id);
+		void stop();
 
 	private:
+		//balance exector threads
+		void balance();
 		//execute timer tasks
-		void execute() {
-			while (!_stop.load()) {
-				std::shared_ptr<eitem> nextitem = nullptr;
-				{
-					std::lock_guard<std::mutex> lck(_mutex);
-					std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [](std::shared_ptr<eitem> item) {return item->pending(); });
-					if (iter != _items.end()) {
-						nextitem = *iter;
-						nextitem->waiting();
-					}
-				}
-
-				if (nextitem != nullptr) {
-					nextitem->run();
-					{
-						int id = nextitem->id();
-						std::lock_guard<std::mutex> lck(_mutex);
-						std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<eitem> item) {return id == item->id(); });
-						if (iter != _items.end()) {
-							_items.erase(iter);
-						}
-					}
-				} else {
-					std::this_thread::yield();
-				}
-			}
-		}
-
+		void execute();
 		//executor thread function
-		static void executor_thread_func(executor *e) {
-			e->execute();
-		}
+		static void executor_thread_func(executor *e);
 
 	private:
+		//max threads of executor limit
+		int _maxthreads;
 		//stop flag for executor
 		std::atomic<bool> _stop;
 		//task execute threads

@@ -30,7 +30,6 @@
     <ClCompile Include="str.cpp" />
     <ClCompile Include="cc.cpp" />
     <ClCompile Include="tm.cpp" />
-    <ClCompile Include="tmr.cpp" />
     <ClCompile Include="tsc.cpp" />
     <ClCompile Include="url.cpp" />
     <ClCompile Include="mm.cpp" />
@@ -47,7 +46,6 @@
     <ClInclude Include="str.h" />
     <ClInclude Include="cc.h" />
     <ClInclude Include="tm.h" />
-    <ClInclude Include="tmr.h" />
     <ClInclude Include="tsc.h" />
     <ClInclude Include="url.h" />
     <ClInclude Include="mm.h" />
