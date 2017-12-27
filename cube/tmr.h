@@ -8,18 +8,20 @@
 #include <algorithm>
 BEGIN_CUBE_NAMESPACE
 class timer {
+public:
+	//timer task
+	class task {
+	public:
+		virtual void run() {}
+	};
+
+private:
 	//clock using for timer
 	using clock = std::chrono::system_clock;
 	//million seconds
 	using milliseconds = std::chrono::milliseconds;
 	//time point in million seconds
 	using timepoint = std::chrono::time_point<clock>;
-
-	//timer task
-	class task {
-	public:
-		virtual void run() {}
-	};
 
 	//timer monitor item
 	class mitem {
@@ -36,12 +38,28 @@ class timer {
 
 		}
 		
+		inline int id() {
+			return _id;
+		}
+
 		inline bool cycled() {
 			return _cycle;
 		}
 		
+		inline task* gettask() {
+			return _task;
+		}
+
 		inline void reset() {
 			_expire = _expire + _interval;
+		}
+
+		inline const timepoint& expire() {
+			return _expire;
+		}
+
+		bool expired(std::chrono::time_point<clock> now = clock::now()) {
+			return !(_expire > now);
 		}
 
 		inline milliseconds latency(std::chrono::time_point<clock> now = clock::now()) {
@@ -125,7 +143,7 @@ class timer {
 					_items.erase(iter);
 				} else {
 					(*iter)->join();
-				}				
+				}
 			}
 		}
 
@@ -188,72 +206,67 @@ class timer {
 		std::condition_variable _cond;
 	};
 
-	//timer item monitor
-	class monitor {
-	public:
-		monitor(executor *executor);
-		~monitor();
-
-		/*
-		*	start monitor
-		*/
-		int start();
-
-		/*
-		*	setup timer task
-		*@param delay: in, delay milliseconds for expire
-		*@param task: in, timer task
-		*@param interval: in, cycle timer task interval
-		*@return:
-		*	timer task id
-		*/
-		int setup(int delay, task *t);
-		int setup(int delay, int interval, task *t);
-
-		/*
-		*	cancel timer task by timer task id
-		*@param id: in, timer task id
-		*@return:
-		*	void
-		*/
-		void cancel(int id);
-
-		/*
-		*	stop monitor
-		*/
-		void stop();
-
-	private:
-		//expire timer items
-		void expire();
-
-		//monitor thread function
-		static void monitor_thread_func(monitor *m);
-
-	private:
-		//relate timer
-		timer *_timer;
-
-		//stop flag for monitor
-		std::atomic<bool> _stop;
-		//task expire monitor
-		std::shared_ptr<std::thread> _thread;
-
-		//mutex for item list
-		std::mutex _mutex;
-		//timer item list of monitor
-		std::list<std::shared_ptr<mitem>> _items;
-		//condition variable of monitor
-		std::condition_variable _cond;
-	};
-
 public:
 	timer();
 	~timer();
 
-	monitor _monitor;
+	/*
+	*	start timer with max executor threads
+	*@param maxethreads: in, max executor threads
+	*@return:
+	*	void
+	*/
+	void start(int maxethreads = 1);
 
+	/*
+	*	setup timer task
+	*@param delay: in, delay milliseconds for expire
+	*@param task: in, timer task
+	*@param interval: in, cycle timer task interval
+	*@return:
+	*	timer task id
+	*/
+	int setup(int delay, task *t);
+	int setup(int delay, int interval, task *t);
+
+	/*
+	*	cancel timer task by timer task id
+	*@param id: in, timer task id
+	*@return:
+	*	void
+	*/
+	void cancel(int id);
+
+	/*
+	*	stop monitor
+	*/
+	void stop();
+
+private:
+	//expire timer items
+	void expire();
+
+	//monitor thread function
+	static void monitor_thread_func(timer *m);
+
+private:
+	//next task item id
+	int _nextid;
+
+	//relate timer
 	executor _executor;
+
+	//stop flag for timer
+	std::atomic<bool> _stop;
+	//task expire monitor
+	std::shared_ptr<std::thread> _monitor;
+
+	//mutex for item list
+	std::mutex _mutex;
+	//timer item list of monitor
+	std::list<std::shared_ptr<mitem>> _items;
+	//condition variable of monitor
+	std::condition_variable _cond;
 };
 
 END_CUBE_NAMESPACE

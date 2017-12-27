@@ -146,147 +146,217 @@ private:
 	runnable *_runnable;
 };
 
-//runnable task
-class task {
-public:
-	task() {}
-	virtual ~task() {}
-
-	virtual void run() = 0;
-};
-
-//clock using for timer
-using clock = std::chrono::system_clock;
-//million seconds
-using milliseconds = std::chrono::milliseconds;
-//time point in million seconds
-using timepoint = std::chrono::time_point<clock, milliseconds>;
-
-//timer task
-class timertask : public task {
-public:
-	typedef enum class status{waiting = 0, waited =1, running = 2, runned = 3}status;
-
-public:
-	timertask(int id, int delayms, task *t) : _id(id), _delay(delayms), _task(t), _cycle(false), _interval(0), _status((int)status::waiting), _canceled(false) {
-		_expire = std::chrono::time_point_cast<milliseconds>(clock::now() + _delay);
-	}
-	timertask(int id, int delayms, int intervalms, task *t) : _id(id), _delay(delayms), _task(t), _cycle(true), _interval(intervalms), _status((int)status::waiting), _canceled(false) {
-		_expire = std::chrono::time_point_cast<milliseconds>(clock::now() + _delay);
-	}
-	~timertask() {}
-
-	/*
-	*	run timer task
-	*/
-	virtual void run() {
-		if (_canceled)
-			return;
-
-		//run the task
-		_task->run();
-
-		_status.store((int)status::runned);
-	}
-	
-	inline int id() {
-		return _id;
-	}
-
-	inline const timepoint& expire() {
-		return _expire;
-	}
-	/*
-	*	reset timer item
-	*/
-	inline bool reset() {
-		if (!_cycle || _canceled.load())
-			return false;
-
-		//reset task flag to waiting
-		_status.store((int)status::waiting);
-
-		//reset next expire time
-		_expire = std::chrono::time_point_cast<milliseconds>(_expire + _interval);
-
-		return true;
-	}
-
-	/*
-	*	set task to waited status
-	*/
-	inline void wait() {
-		_status.store((int)status::waited);
-	}
-
-	inline bool waited() {
-		return _status.load() == (int)status::waited;
-	}
-
-	inline bool waiting() {
-		return _status.load() == (int)status::waiting;
-	}
-
-	inline void rewaiting() {
-		return _status.store((int)status::waiting);;
-	}
-
-	inline void prerun() {
-		//set task to running status
-		_status.store((int)status::running);
-	}
-
-	inline bool runned() {
-		return _status.load() == (int)status::runned;
-	}
-
-	inline bool running() {
-		return _status.load() == (int)status::running;
-	}
-
-	/*
-	*	set task to canceled status
-	*/
-	inline void cancel() {
-		_canceled.store(true);
-	}
-	inline bool canceled() {
-		return _canceled.load();
-	}
-
-	/*
-	*	get expire latency time
-	*/
-	inline milliseconds latency(std::chrono::time_point<clock> now = clock::now()) {
-		return std::chrono::duration_cast<milliseconds>(_expire - now);
-	}
-
-private:
-	int _id; //item id
-	bool _cycle; //cycle task flag
-	task *_task; //item's task
-	timepoint _expire; //expire time point
-
-	milliseconds _delay; //delay in milliseconds
-	milliseconds _interval; //interval in milliseconds
-
-	std::atomic<int> _status; //task status
-	std::atomic<bool> _canceled; //cancel flag
-};
-
-
 //timer class
 class timer {
+public:
+	//timer task
+	class task {
+	public:
+		virtual void run() {}
+	};
+
+private:
+	//clock using for timer
+	using clock = std::chrono::system_clock;
+	//million seconds
+	using milliseconds = std::chrono::milliseconds;
+	//time point in million seconds
+	using timepoint = std::chrono::time_point<clock>;
+
+	//timer monitor item
+	class mitem {
+	public:
+		mitem(int id, int delay, task *task) : _id(id), _delay(delay), _task(task), _cycle(false), _interval(-1) {
+			_expire = clock::now() + _delay;
+		}
+
+		mitem(int id, int delay, int interval, task *task) : _id(id), _delay(delay), _interval(interval), _task(task), _cycle(true) {
+			_expire = clock::now() + _delay;
+		}
+
+		~mitem() {
+
+		}
+
+		inline int id() {
+			return _id;
+		}
+
+		inline bool cycled() {
+			return _cycle;
+		}
+
+		inline task* gettask() {
+			return _task;
+		}
+
+		inline void reset() {
+			_expire = _expire + _interval;
+		}
+
+		inline const timepoint& expire() {
+			return _expire;
+		}
+
+		bool expired(std::chrono::time_point<clock> now = clock::now()) {
+			return !(_expire > now);
+		}
+
+		inline milliseconds latency(std::chrono::time_point<clock> now = clock::now()) {
+			return std::chrono::duration_cast<milliseconds>(_expire - now);
+		}
+
+	private:
+		int _id; //item id
+		bool _cycle; //cycle task flag
+		task *_task; //item's task
+
+		timepoint _expire; //next expire time point
+
+		milliseconds _delay; //delay in milliseconds
+		milliseconds _interval; //interval in milliseconds
+	};
+
+	//timer executor item
+	class eitem {
+		typedef enum class status { pending = 0, waiting = 1, running = 2, finished = 3 }status;
+
+	public:
+		eitem(int id, task *task) : _id(id), _task(task) {
+			_status.store((int)status::pending);
+		}
+		~eitem() {}
+
+		void run() {
+			_status.store((int)status::running);
+			_task->run();
+			_status.store((int)status::finished);
+		}
+
+		void join() {
+			while (_status.load() != (int)status::finished)
+				std::this_thread::yield();
+		}
+
+		bool pending() {
+			return _status.load() == (int)status::pending;
+		}
+
+		void waiting() {
+			_status.store((int)status::waiting);
+		}
+
+		inline int id() {
+			return _id;
+		}
+
+	private:
+		int _id;
+		task *_task;
+
+		std::atomic<int> _status; //item status
+	};
+
+	//timer task executor
+	class executor {
+	public:
+		executor() {}
+		~executor() {}
+
+		int start(int maxthreads = 1) {
+			_stop.store(false);
+			for (int i = 0; i<maxthreads; i++)
+				_threads.push_back(std::shared_ptr<std::thread>(new std::thread(executor_thread_func, this)));
+			return 0;
+		}
+
+		void execute(int id, task *task) {
+			std::lock_guard<std::mutex> lck(_mutex);
+			_items.push_back(std::shared_ptr<eitem>(new eitem(id, task)));
+		}
+
+		void cancel(int id) {
+			std::lock_guard<std::mutex> lck(_mutex);
+			std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<eitem> item) {return id == item->id(); });
+			if (iter != _items.end()) {
+				if ((*iter)->pending()) {
+					_items.erase(iter);
+				} else {
+					(*iter)->join();
+				}
+			}
+		}
+
+		void balance() {
+
+		}
+
+		void stop() {
+			_stop.store(true);
+			std::for_each(_threads.begin(), _threads.end(), [](std::shared_ptr<std::thread> thd) {thd->join(); });
+			_threads.clear();
+		}
+
+	private:
+		//execute timer tasks
+		void execute() {
+			while (!_stop.load()) {
+				std::shared_ptr<eitem> nextitem = nullptr;
+				{
+					std::lock_guard<std::mutex> lck(_mutex);
+					std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [](std::shared_ptr<eitem> item) {return item->pending(); });
+					if (iter != _items.end()) {
+						nextitem = *iter;
+						nextitem->waiting();
+					}
+				}
+
+				if (nextitem != nullptr) {
+					nextitem->run();
+					{
+						int id = nextitem->id();
+						std::lock_guard<std::mutex> lck(_mutex);
+						std::list<std::shared_ptr<eitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<eitem> item) {return id == item->id(); });
+						if (iter != _items.end()) {
+							_items.erase(iter);
+						}
+					}
+				} else {
+					std::this_thread::yield();
+				}
+			}
+		}
+
+		//executor thread function
+		static void executor_thread_func(executor *e) {
+			e->execute();
+		}
+
+	private:
+		//stop flag for executor
+		std::atomic<bool> _stop;
+		//task execute threads
+		std::list<std::shared_ptr<std::thread>> _threads;
+
+		//mutex for item list
+		std::mutex _mutex;
+		//timer item to be executing
+		std::list<std::shared_ptr<eitem>> _items;
+		//condition variable of executor
+		std::condition_variable _cond;
+	};
+
 public:
 	timer();
 	~timer();
 
 	/*
-	*	start timer with specified thread, default 1 thread
+	*	start timer with max executor threads
+	*@param maxethreads: in, max executor threads
 	*@return:
 	*	void
 	*/
-	void start(int nthread = 1);
+	void start(int maxethreads = 1);
 
 	/*
 	*	setup timer task
@@ -308,47 +378,34 @@ public:
 	void cancel(int id);
 
 	/*
-	*	stop timer
-	*@return:
-	*	void
+	*	stop monitor
 	*/
 	void stop();
 
 private:
-	std::shared_ptr<timertask> wait();
-	
-	void exec(std::shared_ptr<timertask> t);
-
-	void plan(std::shared_ptr<timertask> t);
-
-	/*
-	*	expire the timer task
-	*@return:
-	*	void
-	*/
+	//expire timer items
 	void expire();
 
-	/*
-	*	timer task monitor thread function
-	*@param tmr: in, timer object to monitor
-	*@return:
-	*	void
-	*/
-	static void monitor(timer *tmr);
+	//monitor thread function
+	static void monitor_thread_func(timer *m);
+
 private:
 	//next task item id
 	int _nextid;
-	
+
+	//relate timer
+	executor _executor;
+
 	//stop flag for timer
 	std::atomic<bool> _stop;
-	//timer task wait monitor
-	std::list<std::shared_ptr<std::thread>> _monitors;
+	//task expire monitor
+	std::shared_ptr<std::thread> _monitor;
 
-	//mutex for waiting expire items
+	//mutex for item list
 	std::mutex _mutex;
-	//timer item list waiting for expire
-	std::list<std::shared_ptr<timertask>> _tasks;
-	//condition variable for waiting expire
+	//timer item list of monitor
+	std::list<std::shared_ptr<mitem>> _items;
+	//condition variable of monitor
 	std::condition_variable _cond;
 };
 END_CUBE_NAMESPACE

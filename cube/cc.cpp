@@ -104,130 +104,104 @@ std::vector<std::thread::id> threads::getids() {
 }
 
 ///////////////////////////////////////timer class/////////////////////////////////////////
-timer::timer() : _stop(false), _nextid(0){
-
+timer::timer() : _nextid(0) {
 }
+
 
 timer::~timer() {
-
 }
 
-void timer::start(int nthread) {
+void timer::start(int maxethreads) {
 	//set stop flag
 	_stop.store(false);
 
+
 	//start monitor
-	for(int i=0; i<nthread; i++)
-		_monitors.push_back(std::shared_ptr<std::thread>(new std::thread(monitor, this)));
+	_monitor = std::shared_ptr<std::thread>(new std::thread(monitor_thread_func, this));
+
+	//start executor
+	_executor.start(maxethreads);
 }
 
 int timer::setup(int delay, task *t) {
 	std::unique_lock<std::mutex> lck(_mutex);
-	std::shared_ptr<timertask> newtask(new timertask(_nextid, delay, t));
-	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [newtask](std::shared_ptr<timertask> currtask) {return newtask->expire() < currtask->expire(); });
-	_tasks.insert(iter, newtask);
+
+	std::shared_ptr<mitem> newitem(new mitem(_nextid, delay, t));
+	std::list<std::shared_ptr<mitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [newitem](std::shared_ptr<mitem> item) {return newitem->expire() < item->expire(); });
+	_items.insert(iter, newitem);
 	_cond.notify_all();
+
 	return _nextid++;
 }
 
 int timer::setup(int delay, int interval, task *t) {
 	std::unique_lock<std::mutex> lck(_mutex);
-	std::shared_ptr<timertask> newtask(new timertask(_nextid, delay, interval, t));
-	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [newtask](std::shared_ptr<timertask> currtask) {return newtask->expire() < currtask->expire(); });
-	_tasks.insert(iter, newtask);
+
+	std::shared_ptr<mitem> newitem(new mitem(_nextid, delay, interval, t));
+	std::list<std::shared_ptr<mitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [newitem](std::shared_ptr<mitem> item) {return newitem->expire() < item->expire(); });
+	_items.insert(iter, newitem);
 	_cond.notify_all();
+
 	return _nextid++;
 }
 
 void timer::cancel(int id) {
+	//cancel task in moniter
 	std::unique_lock<std::mutex> lck(_mutex);
-	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [id](std::shared_ptr<timertask> task) {return id == task->id(); });
-	if (iter != _tasks.end()) {
-		if ((*iter)->waiting() ||(*iter)->runned()) {
-			_tasks.erase(iter);
-		}
-		else {
-			(*iter)->cancel();
-			if ((*iter)->waited()) {
-				_cond.notify_all();
-			} else {
-				while ((*iter)-> running()){
-					std::this_thread::yield();
-				}
-			}
-		}
+	std::list<std::shared_ptr<mitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<mitem> item) {return id == item->id(); });
+	if (iter != _items.end()) {
+		_items.erase(iter);
+		_cond.notify_all();
 	}
+
+	//cancel task in executor
+	_executor.cancel(id);
 }
 
 void timer::stop() {
 	//set stop flag
 	_stop.store(true);
 
-	//wait for monitor to stop
+	//stop monitor
 	_cond.notify_all();
-	std::for_each(_monitors.begin(), _monitors.end(), [](std::shared_ptr<std::thread> thd) {thd->join(); });
-	_monitors.clear();
+	_monitor->join();
 
-	//clear tasks
-	_tasks.clear();
-}
+	//stop executor
+	_executor.stop();
 
-std::shared_ptr<timertask> timer::wait() {
-	std::unique_lock<std::mutex> lck(_mutex);
-	std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [](std::shared_ptr<timertask> task) {return task->waiting(); });
-	if (iter != _tasks.end()) {
-		std::chrono::time_point<clock> now = clock::now();
-		//get the latest and not waited task
-		std::shared_ptr<timertask> latest = *iter;
-		//wait for the task to expired
-		latest->wait();
-		std::cv_status status = _cond.wait_for(lck, latest->latency(now));
-		if (status == std::cv_status::timeout) {
-			if (!latest->canceled()) {
-				latest->prerun();
-				return latest;
-			} else {
-				_tasks.remove_if([latest](std::shared_ptr<timertask> task) {return task->id() == latest->id(); });
-			}
-		} else {
-			latest->rewaiting();
-		}
-	} else {
-		_cond.wait_for(lck, std::chrono::milliseconds(100));
-	}
-
-	return nullptr;
-}
-
-void timer::exec(std::shared_ptr<timertask> t) {
-	t->run();
-}
-
-void timer::plan(std::shared_ptr<timertask> t) {
-	std::unique_lock<std::mutex> lck(_mutex);
-	//remove from task list
-	_tasks.remove_if([t](std::shared_ptr<timertask> task) {return task->id() == t->id(); });
-	//reset if cycle timer task
-	if (t->reset()) {
-		std::list<std::shared_ptr<timertask>>::iterator iter = std::find_if(_tasks.begin(), _tasks.end(), [t](std::shared_ptr<timertask> task) {return t->expire() < task->expire(); });
-		_tasks.insert(iter, t);
-	}
+	//clear items
+	_items.clear();
 }
 
 void timer::expire() {
 	while (!_stop.load()) {
-		std::shared_ptr<timertask> t = wait();
-		if (t == nullptr)
-			continue;
-		
-		exec(t);
+		std::unique_lock<std::mutex> lck(_mutex);
+		if (_items.empty()) {
+			_cond.wait_for(lck, std::chrono::milliseconds(100));
+		} else {
+			milliseconds waitms = _items.front()->latency();
+			std::cv_status status = _cond.wait_for(lck, waitms);
+			if (status == std::cv_status::timeout) {
+				if (!_items.empty() && _items.front()->expired()) {
+					std::shared_ptr<mitem> expireditem = _items.front();
+					//generate executor item
+					_executor.execute(expireditem->id(), expireditem->gettask());
 
-		plan(t);
+					//remove expired item from items list
+					_items.remove_if([expireditem](std::shared_ptr<mitem> item) {return item->id() == expireditem->id(); });
+					//setup the expired item if it is cycled
+					if (expireditem->cycled()) {
+						expireditem->reset();
+						std::list<std::shared_ptr<mitem>>::iterator iter = std::find_if(_items.begin(), _items.end(), [expireditem](std::shared_ptr<mitem> item) {return expireditem->expire() < item->expire(); });
+						_items.insert(iter, expireditem);
+					}
+				}
+			}
+		}
 	}
 }
 
-void timer::monitor(timer *tmr) {
+void timer::monitor_thread_func(timer *tmr) {
 	tmr->expire();
 }
-
 END_CUBE_NAMESPACE
