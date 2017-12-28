@@ -182,39 +182,45 @@ void reactor::items::add(int id, task *task) {
 void reactor::items::del(int id) {
 	std::lock_guard<std::mutex> lck(_mutex);
 	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<item> item) {return item->id() == id; });
-	if (iter != _items.end()) {
-		if (!(*iter)->pending() && !(*iter)->finished()) {
+	while (iter != _items.end()) {
+		if (!(*iter)->pending()) {
 			(*iter)->join();
 		}
 		_items.erase(iter);
+
+		iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<item> item) {return item->id() == id; });
 	}
 }
 
-bool reactor::items::run_next(int &id) {
-	std::shared_ptr<item> nextitem = nullptr;
+void reactor::items::del(std::shared_ptr<item> &itm) {
+	std::lock_guard<std::mutex> lck(_mutex);
+	_items.remove(itm);
+}
+
+bool reactor::items::run_next(std::shared_ptr<item> &itm) {
+	itm = nullptr;
 	{
 		std::lock_guard<std::mutex> lck(_mutex);
 		std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [](std::shared_ptr<item> item) {return item->pending(); });
 		if (iter != _items.end()) {
-			nextitem = *iter;
-			nextitem->waiting();
+			itm = *iter;
+			itm->waiting();
 		}
 	}
 
-	if (nextitem != nullptr) {
-		nextitem->run();
-		id = nextitem->id();
+	if (itm != nullptr) {
+		itm->run();
 		return true;
 	}
 
 	return false;
 }
 
-bool reactor::items::busy() {
+bool reactor::items::busy(int waitms) {
 	std::lock_guard<std::mutex> lck(_mutex);
 	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [](std::shared_ptr<item> item) {return item->pending(); });
 	if (iter != _items.end()) {
-		if (clock::now() - (*iter)->ctime() > milliseconds(1000)) {
+		if (clock::now() - (*iter)->ctime() > milliseconds(waitms)) {
 			return true;
 		}
 	}
@@ -240,15 +246,15 @@ void reactor::executor::stop() {
 }
 
 void reactor::executor::run() {
-	int id = -1;
-	bool res = _items->run_next(id);
+	std::shared_ptr<item> itm = nullptr;
+	bool res = _items->run_next(itm);
 	if (res) {
-		_items->del(id);
+		_items->del(itm);
 		if (_idle_flag) {
 			_idle_flag = false;
 		}
 	} else {
-		std::this_thread::sleep_for(milliseconds(100));
+		std::this_thread::sleep_for(milliseconds(10));
 		if (!_idle_flag) {
 			_idle_flag = true;
 			_last_idle_time = clock::now();
@@ -256,8 +262,8 @@ void reactor::executor::run() {
 	}
 }
 
-bool reactor::executor::idle() {
-	if (_idle_flag && clock::now() - _last_idle_time > milliseconds(1000)) {
+bool reactor::executor::idle(int idlems) {
+	if (_idle_flag && clock::now() - _last_idle_time > milliseconds(idlems)) {
 		return true;
 	}
 	return false;
@@ -292,11 +298,14 @@ void reactor::executors::stop() {
 
 void reactor::executors::balance() {
 	log::info("balance......");
+	const static int max_idle_ms = 5000;
+	const static int max_wait_ms = 1000;
+
 	std::lock_guard<std::mutex> lck(_mutex);
 	bool decreased = false;
 	int current_executors = (int)_executors.size();
 	if (current_executors > 1) {
-		std::list<std::shared_ptr<executor>>::iterator iter = std::find_if(_executors.begin(), _executors.end(), [](std::shared_ptr<executor> extr) {return extr->idle(); });
+		std::list<std::shared_ptr<executor>>::iterator iter = std::find_if(_executors.begin(), _executors.end(), [](std::shared_ptr<executor> extr) {return extr->idle(max_idle_ms); });
 		if (iter != _executors.end()) {
 			//decrease 1 executor
 			(*iter)->stop();
@@ -307,7 +316,7 @@ void reactor::executors::balance() {
 	}
 
 	if (!decreased && current_executors < _max_executors) {
-		if (_items->busy()) {
+		if (_items->busy(max_wait_ms)) {
 			//increase 1 executor
 			executor *extr = new executor();
 			extr->start(_items);
@@ -339,6 +348,10 @@ void reactor::cancel(int id) {
 }
 
 void reactor::stop() {
+	//stop monitor
+	_monitor.stop();
+
+	//stop executors
 	_executors.stop();
 }
 

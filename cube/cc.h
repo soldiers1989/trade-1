@@ -217,8 +217,9 @@ class reactor : task {
 
 		void add(int id, task *task);
 		void del(int id);
-		bool run_next(int &id);
-		bool busy();
+		void del(std::shared_ptr<item> &itm);
+		bool run_next(std::shared_ptr<item> &itm);
+		bool busy(int waitms);
 	private:
 		//mutex for items
 		std::mutex _mutex;
@@ -238,7 +239,7 @@ class reactor : task {
 
 		void run();
 
-		bool idle();
+		bool idle(int idlems);
 
 	private:
 		//looper
