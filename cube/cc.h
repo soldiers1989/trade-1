@@ -2,55 +2,102 @@
 *	cc - concurrence module
 */
 #pragma once
+#include <map>
 #include <list>
 #include <mutex>
 #include <thread>
 #include <atomic>
 #include <chrono>
-#include <vector>
-#include <functional>
 #include "cube.h"
 
 BEGIN_CUBE_NAMESPACE
-//runnable class for thread/threads
-class runnable {
+//runnable task
+class task {
 public:
-	runnable() {}
-	virtual ~runnable() {}
-
-	/*
-	*	thread function to do something
-	*/
 	virtual void run() = 0;
 };
 
-//thread 
+//looper for task
+class looper{
+public:
+	looper();
+	virtual ~looper();
+
+	/*
+	*	start loop a task
+	*@param task: in, loop task
+	*@return:
+	*	void
+	*/
+	void start(task *task);
+
+	/*
+	*	stop loop task
+	*@return:
+	*	void
+	*/
+	void stop();
+
+private:
+	//loop for task
+	void loop();
+	//thread function of looper
+	static void loop_thread_func(looper *looper);
+
+private:
+	//loop task
+	task *_task;
+
+	//stop flag for loop task
+	volatile bool _stop;
+	//thread to execute loop task
+	std::shared_ptr<std::thread> _thread;
+};
+
+//loopers to run task
+class loopers {
+public:
+	loopers();
+	virtual ~loopers();
+
+	/*
+	*	start loopers to run a task
+	*@param task: in, loop task
+	*@return:
+	*	void
+	*/
+	void start(task *task, int nloopers);
+
+	/*
+	*	stop loopers
+	*@return:
+	*	void
+	*/
+	void stop();
+
+private:
+	//loopers
+	std::list<std::shared_ptr<looper>> _loopers;
+};
+
+//thread to run task
 class thread {
 public:
 	/*
-	*	create a new thread object by a runnable object
-	*@param runnable: in, runnable object, it can be delay passed at @start method
+	*	create a new thread object by a looper object
+	*@param looper: in, looper object, it can be delay passed at @start method
 	*/
 	thread();
-	thread(runnable *runnable);
 	virtual ~thread();
 
 	/*
 	*	start thread
-	*@param error: out, error message when start thread failed.
+	*@param task: in, task object to run
 	*@return:
-	*	0 for success, otherwise <0
+	*	void
 	*/
-	int start(std::string *error = 0);
+	void start(task *task);
 
-	/*
-	*	start thread
-	*@param runnable: in, runnable object
-	*@param error: out, error message when start thread failed.
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int start(runnable *runnable, std::string *error = 0);
 
 	/*
 	*	detach thread from create thread
@@ -74,48 +121,34 @@ public:
 	std::thread::id getid();
 
 private:
-	/*
-	*	thread function
-	*/
-	static unsigned __stdcall thread_func(void *arg);
+	//run task
+	void run();
+
+	//thread function to run task
+	static void thread_func(thread *thd);
 
 private:
-	//thread object
-	std::thread _thread;
+	//task object to run
+	task *_task;
 
-	//runnable object
-	runnable *_runnable;
+	//thread object
+	std::shared_ptr<std::thread> _thread;
 };
 
-//thread pool
+//threads to run task
 class threads {
 public:
-	/*
-	*	create a new threads object by a runnable object
-	*@param runnable: in, runnable object, it can be delay passed at @start method
-	*/
 	threads();
-	threads(runnable *runnable);
 	virtual ~threads();
 
 	/*
-	*	start thread pool
+	*	start threads to run a task
+	*@param task: in, task object to run
 	*@param nthread: in, thread number want to create
-	*@param error: out, error message when start threads failed.
 	*@return:
-	*	0 for success, otherwise <0
+	*	void
 	*/
-	int start(int nthread, std::string *error = 0);
-
-	/*
-	*	start thread pool
-	*@param runnable: in, runnable object, replace object passed by constructor if not null
-	*@param nthread: in, thread number want to create
-	*@param error: out, error message when start threads failed.
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int start(runnable *runnable, int nthread, std::string *error = 0);
+	void start(task *task, int nthread = 1);
 
 	/*
 	*	detach threads from create thread
@@ -136,25 +169,136 @@ public:
 	*@return:
 	*	thread id
 	*/
-	std::vector<std::thread::id> getids();
+	std::list<std::thread::id> getids();
 
 private:
-	//thread objects
-	std::vector<thread*> _threads;
+	//threads to run the task
+	std::list<std::shared_ptr<thread>> _threads;
+};
 
-	//runnable object
-	runnable *_runnable;
+//reactor class
+class reactor : task {
+	//clock using for timer
+	using clock = std::chrono::system_clock;
+	//million seconds
+	using milliseconds = std::chrono::milliseconds;
+	//time point in million seconds
+	using timepoint = std::chrono::time_point<clock>;
+
+	//reactor item
+	class item {
+		typedef enum class status { pending = 0, waiting = 1, running = 2, finished = 3 }status;
+	public:
+		item(int id, task *task);
+		~item();
+
+		int id();
+		void run();
+		void join();
+
+		void waiting();
+		bool pending();
+		bool finished();
+
+		const timepoint& ctime();
+	private:
+		int _id;
+		task *_task;
+		timepoint _ctime;
+
+		std::atomic<int> _status; //item status
+	};
+
+	//reactor items
+	class items {
+	public:
+		items();
+		~items();
+
+		void add(int id, task *task);
+		void del(int id);
+		bool run_next(int &id);
+		bool busy();
+	private:
+		//mutex for items
+		std::mutex _mutex;
+		//current items in reactor
+		std::list<std::shared_ptr<item>> _items;
+	};
+
+	//executor of reactor
+	class executor : task{
+	public:
+		executor();
+		~executor();
+
+		void start(items *items);
+
+		void stop();
+
+		void run();
+
+		bool idle();
+
+	private:
+		//looper
+		looper _looper;
+		//items
+		items *_items;
+		//idle flag
+		volatile bool _idle_flag;
+		//idle timepoint
+		timepoint _last_idle_time;
+	};
+
+	class executors {
+	public:
+		executors();
+		~executors();
+
+		void start(int max_executors, items *items);
+
+		void stop();
+
+		void balance();
+
+	private:
+		//items
+		items *_items;
+		//max executors limit
+		int _max_executors;
+		//mutex for executors
+		std::mutex _mutex;
+		//current executors in reactor
+		std::list<std::shared_ptr<executor>> _executors;
+	};
+
+public:
+	reactor();
+	virtual ~reactor();
+
+	void start(int max_executors = 1);
+
+	void react(int id, task *task);
+
+	void cancel(int id);
+
+	void stop();
+
+	void balance();
+
+	void run();
+private:
+	//reactor items
+	items _items;
+	//reactor executors
+	executors _executors;
+	//monitor of reactor
+	looper _monitor;
 };
 
 //timer class
-class timer {
-public:
-	//timer task
-	class task {
-	public:
-		virtual void run() {}
-	};
-
+class timer : task {
 private:
 	//clock using for timer
 	using clock = std::chrono::system_clock;
@@ -163,16 +307,16 @@ private:
 	//time point in million seconds
 	using timepoint = std::chrono::time_point<clock>;
 
-	//timer monitor item
-	class mitem {
+	//timer item
+	class item {
 	public:
-		mitem(int id, int delay, task *task);
-		mitem(int id, int delay, int interval, task *task);
-		~mitem();
+		item(int id, int delay, task *task);
+		item(int id, int delay, int interval, task *task);
+		~item();
 
 		int id();
 		bool cycled();
-		task* gettask();
+		task* task();
 		
 		void reset();
 		const timepoint& expire();
@@ -182,70 +326,12 @@ private:
 	private:
 		int _id; //item id
 		bool _cycle; //cycle task flag
-		task *_task; //item's task
+		cube::task *_task; //item's task
 
 		timepoint _expire; //next expire time point
 
 		milliseconds _delay; //delay in milliseconds
 		milliseconds _interval; //interval in milliseconds
-	};
-
-	//timer executor item
-	class eitem {
-		typedef enum class status { pending = 0, waiting = 1, running = 2, finished = 3 }status;
-
-	public:
-		eitem(int id, task *task);
-		~eitem();
-
-		int id();
-
-		void run();
-		void join();
-
-		bool pending();
-		void waiting();
-
-	private:
-		int _id;
-		task *_task;
-		char *_dummy;
-		std::atomic<int> _status; //item status
-	};
-
-	//timer task executor
-	class executor {
-	public:
-		executor();
-		~executor();
-
-		int start(int maxthreads = 1);
-		void execute(int id, task *task);
-		void cancel(int id);
-		void stop();
-
-	private:
-		//balance exector threads
-		void balance();
-		//execute timer tasks
-		void execute();
-		//executor thread function
-		static void executor_thread_func(executor *e);
-
-	private:
-		//max threads of executor limit
-		int _maxthreads;
-		//stop flag for executor
-		std::atomic<bool> _stop;
-		//task execute threads
-		std::list<std::shared_ptr<std::thread>> _threads;
-
-		//mutex for item list
-		std::mutex _mutex;
-		//timer item to be executing
-		std::list<std::shared_ptr<eitem>> _items;
-		//condition variable of executor
-		std::condition_variable _cond;
 	};
 
 public:
@@ -258,7 +344,7 @@ public:
 	*@return:
 	*	void
 	*/
-	void start(int maxethreads = 1);
+	void start(int max_executors = 1);
 
 	/*
 	*	setup timer task
@@ -284,29 +370,25 @@ public:
 	*/
 	void stop();
 
+	void run();
 private:
 	//expire timer items
 	void expire();
-
-	//monitor thread function
-	static void monitor_thread_func(timer *m);
 
 private:
 	//next task item id
 	int _nextid;
 
 	//relate timer
-	executor _executor;
+	reactor _reactor;
 
-	//stop flag for timer
-	std::atomic<bool> _stop;
-	//task expire monitor
-	std::shared_ptr<std::thread> _monitor;
+	//monitor
+	looper _monitor;
 
 	//mutex for item list
 	std::mutex _mutex;
 	//timer item list of monitor
-	std::list<std::shared_ptr<mitem>> _items;
+	std::list<std::shared_ptr<item>> _items;
 	//condition variable of monitor
 	std::condition_variable _cond;
 };

@@ -172,7 +172,7 @@ private:
 };
 
 //iocp service class
-class service : public runnable {
+class service : public task {
 	//service exceptions
 	typedef std::exception ewarn;
 	typedef std::exception efatal;
@@ -227,7 +227,7 @@ public:
 	/*
 	*	worker to do the queued complete events
 	*/
-	virtual void run();
+	void run();
 
 private:
 	/*

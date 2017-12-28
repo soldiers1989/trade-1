@@ -125,8 +125,7 @@ int service::start(void *arg, int workers) {
 
 	//start worker threads
 	_stop = false;
-	if (_threads.start(this, workers) != 0)
-		return -1;
+	_threads.start(this, workers);
 	_stopped = false;
 
 	return 0;
