@@ -1,5 +1,6 @@
 #include "cc.h"
-#include "log.h"
+#include <time.h>
+#include <future>
 #include <algorithm>
 BEGIN_CUBE_NAMESPACE
 ////////////////////////////////looper class//////////////////////////////
@@ -297,7 +298,6 @@ void reactor::executors::stop() {
 }
 
 void reactor::executors::balance() {
-	log::info("balance......");
 	const static int max_idle_ms = 5000;
 	const static int max_wait_ms = 1000;
 
@@ -311,7 +311,6 @@ void reactor::executors::balance() {
 			(*iter)->stop();
 			_executors.erase(iter);
 			decreased = true;
-			log::info("decrease 1 thread.");
 		}
 	}
 
@@ -321,7 +320,6 @@ void reactor::executors::balance() {
 			executor *extr = new executor();
 			extr->start(_items);
 			_executors.push_back(std::shared_ptr<executor>(extr));
-			log::info("increase 1 thread.");
 		}
 	}
 }
@@ -498,4 +496,124 @@ void timer::expire() {
 void timer::run() {
 	expire();
 }
+
+//////////////////////////////////crontab class///////////////////////////////////
+crontab::ctime::ctime(int min, int hour, int day, int month, int week) : _min(min), _hour(hour), _day(day), _month(month), _week(week) {
+
+}
+
+crontab::ctime::~ctime() {
+
+}
+
+crontab::ctime crontab::ctime::now() {
+	time_t t = ::time(0);
+	struct tm* now = ::localtime(&t);
+
+	return crontab::ctime(now->tm_min, now->tm_hour, now->tm_mday, now->tm_mon+1, now->tm_wday+1);
+}
+
+bool crontab::ctime::operator==(const ctime &t) {
+	bool res = true;
+
+	res = res && (_min < 0 || t._min < 0 || _min == t._min);
+	res = res && (_hour < 0 || t._hour < 0 || _hour == t._hour);
+	res = res && (_day < 0 || t._day < 0 || _day == t._day);
+	res = res && (_month < 0 || t._month < 0 || _month == t._month);
+	res = res && (_week < 0 || t._week < 0 || _week == t._week);
+
+	return res;
+}
+
+crontab::item::item(int id, task *task, int min, int hour, int day, int month, int week) : _id(id), _task(task), _time(min, hour, day, month, week), _status((int)status::pending) {
+
+}
+
+crontab::item::~item() {
+
+}
+
+int crontab::item::id() {
+	return _id;
+}
+
+void crontab::item::run() {
+	_status = (int)status::running;
+	_task->run();
+	_status = (int)status::pending;
+}
+
+void crontab::item::join() {
+	while (_status != (int)status::pending) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
+}
+
+void crontab::item::expiring() {
+
+}
+
+bool crontab::item::expired(const ctime &now) {
+	return _time == now;
+}
+
+crontab::crontab() : _nextid(0){
+
+}
+
+crontab::~crontab() {
+	stop();
+}
+
+void crontab::start() {
+	_monitor.start(this);
+}
+
+int crontab::setup(task *t, int min, int hour, int day, int month, int week) {
+	std::lock_guard<std::mutex> lck(_mutex);
+	_items.push_back(std::shared_ptr<item>(new item(_nextid, t, min, hour, day, month, week)));
+	return _nextid++;
+}
+
+void crontab::cancel(int id) {
+	std::lock_guard<std::mutex> lck(_mutex);
+	std::list<std::shared_ptr<item>>::iterator iter= std::find_if(_items.begin(), _items.end(), ([id](std::shared_ptr<item> item) {return item->id() == id; }));
+	if (iter != _items.end()) {
+		(*iter)->join();
+		_items.erase(iter);
+	}
+}
+
+void crontab::stop() {
+	if (_stopped)
+		return;
+
+	//stop monitor
+	_monitor.stop();
+
+	//
+}
+
+void crontab::execute(std::shared_ptr<item> &item) {
+
+}
+void crontab::expire() {
+	{
+		std::lock_guard<std::mutex> lck(_mutex);
+		ctime now = ctime::now();
+		std::for_each(_items.begin(), _items.end(), [now](std::shared_ptr<item> &item) {
+			if (item->expired(now)) {
+				item->expiring();
+				std::async(execute, item);
+			}
+		});
+	}
+
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+}
+
+void crontab::run() {
+	expire();
+}
+
 END_CUBE_NAMESPACE
