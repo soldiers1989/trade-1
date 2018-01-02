@@ -192,10 +192,13 @@ class reactor : private task {
 	class item {
 		typedef enum class status { pending = 0, waiting = 1, running = 2, finished = 3 }status;
 	public:
-		item(task *task);
+		item(int id, task *task);
 		~item();
 		
 		bool operator ==(task *task);
+		bool operator ==(int id);
+		
+		int id();
 
 		void run();
 		void join();
@@ -204,7 +207,9 @@ class reactor : private task {
 		void subref();
 		bool pending();
 		const timepoint& ctime();
+
 	private:
+		int _id;
 		task *_task;
 		timepoint _ctime;
 
@@ -219,8 +224,10 @@ class reactor : private task {
 		~items();
 		
 		bool run();
-		void add(task *task);
-		void del(task *task);
+		int add(task *task);
+		void cancel(int id);
+		void cancel(task *task);
+
 		bool busy(int waitms);
 	private:
 		//mutex for items
@@ -295,7 +302,7 @@ public:
 	*@return:
 	*	void
 	*/
-	void react(task *task);
+	int react(task *task);
 
 	/*
 	*	cancel task by task id
@@ -303,6 +310,7 @@ public:
 	*@return:
 	*	void
 	*/
+	void cancel(int id);
 	void cancel(task *task);
 
 	/*

@@ -138,7 +138,7 @@ std::list<std::thread::id> threads::getids() {
 
 ///////////////////////////////////////reactor class/////////////////////////////////////////
 
-reactor::item::item(task *task) : _task(task), _ctime(clock::now()), _refcnt(0) {
+reactor::item::item(int id, task *task) : _id(id), _task(task), _ctime(clock::now()), _refcnt(0) {
 
 }
 
@@ -150,6 +150,13 @@ bool reactor::item::operator ==(task *task) {
 	return _task == task;
 }
 
+bool reactor::item::operator ==(int id) {
+	return _id == id;
+}
+
+int reactor::item::id() {
+	return _id;
+}
 
 void reactor::item::run() {
 	_task->run();
@@ -185,12 +192,30 @@ reactor::items::~items() {
 	_items.clear();
 }
 
-void reactor::items::add(task *task) {
+int reactor::items::add(task *task) {
+	static int gID = 0;
 	std::lock_guard<std::mutex> lck(_mutex);
-	_items.push_back(new item(task));
+	_items.push_back(new item(gID, task));
+	return gID++;
 }
 
-void reactor::items::del(task *task) {
+void reactor::items::cancel(int id) {
+	std::lock_guard<std::mutex> lck(_mutex);
+	std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](item *item) {return *item == id; });
+	while (iter != _items.end()) {
+		//delete current match task
+		(*iter)->join();
+		delete *iter;
+
+		//erase the task from item list
+		_items.erase(iter);
+
+		//find next task
+		iter = std::find_if(_items.begin(), _items.end(), [id](item *item) {return *item == id; });
+	}
+}
+
+void reactor::items::cancel(task *task) {
 	std::lock_guard<std::mutex> lck(_mutex);
 	std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [task](item *item) {return *item == task; });
 	while (iter != _items.end()) {
@@ -218,11 +243,13 @@ bool reactor::items::run() {
 	}
 
 	if (itm != 0) {
+		int id = itm->id();
 		//run item
 		itm->run();
+
 		//remove finished item
 		std::lock_guard<std::mutex> lck(_mutex);
-		std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [itm](item *item) {return item == itm; });
+		std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](item *item) {return *item == id; });
 		if (iter != _items.end()) {
 			delete *iter;
 			_items.erase(iter);
@@ -353,12 +380,16 @@ void reactor::start(int max_executors) {
 	_monitor.start(this);
 }
 
-void reactor::react(task *task) {
-	_items.add(task);
+int reactor::react(task *task) {
+	return _items.add(task);
+}
+
+void reactor::cancel(int id) {
+	return _items.cancel(id);
 }
 
 void reactor::cancel(task *task) {
-	_items.del(task);
+	_items.cancel(task);
 }
 
 void reactor::stop() {
