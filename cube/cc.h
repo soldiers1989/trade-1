@@ -19,6 +19,7 @@ public:
 
 //looper for task
 class looper{
+	typedef enum class status {starting = 0, runing = 1, stopped = 2} status;
 public:
 	looper();
 	virtual ~looper();
@@ -50,6 +51,8 @@ private:
 
 	//stop flag for loop task
 	volatile bool _stop;
+	//loopper status
+	volatile status _status;
 	//thread to execute loop task
 	std::shared_ptr<std::thread> _thread;
 };
@@ -177,7 +180,7 @@ private:
 };
 
 //reactor class
-class reactor : task {
+class reactor : private task {
 	//clock using for timer
 	using clock = std::chrono::system_clock;
 	//million seconds
@@ -189,24 +192,24 @@ class reactor : task {
 	class item {
 		typedef enum class status { pending = 0, waiting = 1, running = 2, finished = 3 }status;
 	public:
-		item(int id, task *task);
+		item(task *task);
 		~item();
+		
+		bool operator ==(task *task);
 
-		int id();
 		void run();
 		void join();
 
-		void waiting();
+		void addref();
+		void subref();
 		bool pending();
-		bool finished();
-
 		const timepoint& ctime();
 	private:
-		int _id;
 		task *_task;
 		timepoint _ctime;
 
 		std::atomic<int> _status; //item status
+		std::atomic_int _refcnt; //item reference count
 	};
 
 	//reactor items
@@ -214,17 +217,16 @@ class reactor : task {
 	public:
 		items();
 		~items();
-
-		void add(int id, task *task);
-		void del(int id);
-		void del(std::shared_ptr<item> &itm);
-		bool run_next(std::shared_ptr<item> &itm);
+		
+		bool run();
+		void add(task *task);
+		void del(task *task);
 		bool busy(int waitms);
 	private:
 		//mutex for items
 		std::mutex _mutex;
 		//current items in reactor
-		std::list<std::shared_ptr<item>> _items;
+		std::list<item*> _items;
 	};
 
 	//executor of reactor
@@ -252,6 +254,7 @@ class reactor : task {
 		timepoint _last_idle_time;
 	};
 
+	//executors for rector
 	class executors {
 	public:
 		executors();
@@ -288,20 +291,19 @@ public:
 
 	/*
 	*	process task
-	*@param id: in, id of task
 	*@param task: in, react task
 	*@return:
 	*	void
 	*/
-	void react(int id, task *task);
+	void react(task *task);
 
 	/*
 	*	cancel task by task id
-	*param id: in, task id
+	*param task: in, task
 	*@return:
 	*	void
 	*/
-	void cancel(int id);
+	void cancel(task *task);
 
 	/*
 	*	stop reactor
@@ -310,26 +312,52 @@ public:
 	*/
 	void stop();
 
+private:
+	/*
+	*	run by looper monitor
+	*/
+	void run();
+
 	/*
 	*	balance executors of reactor
 	*/
 	void balance();
 
-	/*
-	*	run by looper monitor
-	*/
-	void run();
 private:
 	//reactor items
 	items _items;
-	//reactor executors
-	executors _executors;
 	//monitor of reactor
 	looper _monitor;
+	//reactor executors
+	executors _executors;
+
+public:
+	class default{
+	public:
+		/*
+		*	process task
+		*@param task: in, react task
+		*@return:
+		*	void
+		*/
+		static void react(task *task);
+
+		/*
+		*	cancel task by task id
+		*param task: in, task
+		*@return:
+		*	void
+		*/
+		static void cancel(task *task);
+
+	public:
+		default();
+		~default();
+	};
 };
 
 //timer class
-class timer : task {
+class timer : private task {
 	//clock using for timer
 	using clock = std::chrono::system_clock;
 	//million seconds
@@ -400,14 +428,14 @@ public:
 	*/
 	void stop();
 
-	/*
-	*	run by looper monitor
-	*/
-	void run();
 private:
 	//expire timer items
 	void expire();
 
+	/*
+	*	run by looper monitor
+	*/
+	void run();
 private:
 	//next task item id
 	int _nextid;
@@ -424,19 +452,68 @@ private:
 	std::list<std::shared_ptr<item>> _items;
 	//condition variable of monitor
 	std::condition_variable _cond;
+
+public:
+	class default{
+	public:
+		/*
+		*	setup timer task
+		*@param delay: in, delay milliseconds for expire
+		*@param interval: in, cycle interval in milliseonds
+		*@param task: in, timer task
+		*@return:
+		*	timer task id
+		*/
+		static int setup(int delay, task *t);
+		static int setup(int delay, int interval, task *t);
+
+		/*
+		*	cancel timer task by timer task id
+		*@param id: in, timer task id
+		*@return:
+		*	void
+		*/
+		static void cancel(int id);
+
+	public:
+		default();
+		~default();
+	};
 };
 
 //crontab class
-class crontab : task {
+class crontab : private task {
+	//local time
+	class ltime {
+	public:
+		ltime();
+		~ltime();
+
+		//get current crontab time
+		static ltime now();
+
+		bool operator !=(const ltime &t);
+
+	private:
+		ltime(int sec, int min, int hour, int day, int month, int week);
+
+	public:
+		int sec;
+		int min;
+		int hour;
+		int day;
+		int month;
+		int week;
+	};
+
+	//crontab time
 	class ctime {
 	public:
 		ctime(int min, int hour, int day, int month, int week);
 		~ctime();
 
-		//get current crontab time
-		static ctime now();
 		//compare with another crontab time
-		bool operator ==(const ctime &t);
+		bool operator ==(const ltime &t);
 
 	private:
 		int _min;
@@ -448,7 +525,6 @@ class crontab : task {
 
 	//crontab task item
 	class item {
-		typedef enum class status { pending = 0, expiring = 1, running = 2}status;
 	public:
 		item(int id, task *task, int min, int hour, int day, int month, int week);
 		~item();
@@ -456,19 +532,24 @@ class crontab : task {
 		int id();
 		void run();
 		void join();
-		void expiring();
-		bool expired(const ctime &now);
+		void addref();
+		void subref();
+		bool expired(const ltime &now);
+		void last_expire_time(const ltime &tm);
 
 	private:
 		int _id;
 		task *_task;
 		ctime _time;
-		volatile int _status;
+		ltime _last_expire_time;
+		std::atomic_int _refcnt;
 	};
 
 public:
 	crontab();
 	virtual ~crontab();
+
+	static crontab * global();
 
 	/*
 	*	start crontab
@@ -505,11 +586,6 @@ public:
 	*/
 	void stop();
 
-	/*
-	*	run for monitor
-	*/
-	void run();
-
 private:
 	/*
 	*	execute expired task
@@ -521,6 +597,12 @@ private:
 	*/
 	void expire();
 
+
+	/*
+	*	run for monitor
+	*/
+	void run();
+
 private:
 	//next crontab task id
 	int _nextid;
@@ -528,12 +610,38 @@ private:
 	//monitor
 	looper _monitor;
 
-	//stopped flag
-	bool _stopped;
-
 	//mutex for item list
 	std::mutex _mutex;
 	//timer item list of monitor
 	std::list<std::shared_ptr<item>> _items;
+
+public:
+	class default{
+	public:
+		/*
+		*	setup a crontab task
+		*@param t: in, crontab task
+		*@param min: in, minitue, [0~59]
+		*@param hour: in, hour, [0~23]
+		*@param day: in, day, [1~31]
+		*@param month: in, month, [1~12]
+		*@param week: in, week, [1~7]
+		*@return:
+		*	crontab task id
+		*/
+		static int setup(task *t, int min, int hour, int day, int month, int week);
+
+		/*
+		*	cancel a crontab task by task id
+		*@param id: in, crontab task id
+		*@return:
+		*	void
+		*/
+		static void cancel(int id);
+
+	public:
+		default();
+		~default();
+	};
 };
 END_CUBE_NAMESPACE

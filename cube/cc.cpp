@@ -1,10 +1,11 @@
 #include "cc.h"
+#include "log.h"
 #include <time.h>
 #include <future>
 #include <algorithm>
 BEGIN_CUBE_NAMESPACE
 ////////////////////////////////looper class//////////////////////////////
-looper::looper() : _task(0), _stop(false), _thread(nullptr) {
+looper::looper() : _task(0), _stop(false), _status(status::stopped), _thread(nullptr) {
 
 }
 
@@ -18,6 +19,7 @@ void looper::start(task *task) {
 
 	//start loop thread
 	_stop = false;
+	_status = status::starting;
 	_thread = std::shared_ptr<std::thread>(new std::thread(loop_thread_func, this));
 }
 
@@ -26,14 +28,22 @@ void looper::stop() {
 	//set stop flag
 	_stop = true;
 
+	//wait until thread started
+	while (_status == status::starting)
+		std::this_thread::yield();
+
 	//wait for thread to exit
-	_thread->join();
+	if(_thread->joinable())
+		_thread->join();
 }
 
 void looper::loop() {
+	_status = status::runing;
+
 	while (!_stop) {
 		_task->run();
 	}
+	_status = status::stopped;
 }
 
 void looper::loop_thread_func(looper *looper) {
@@ -56,7 +66,7 @@ void loopers::start(task *task, int nloopers) {
 }
 
 void loopers::stop() {
-	std::for_each(_loopers.begin(), _loopers.end(), [](std::shared_ptr<looper> looper) {looper->stop(); });
+	std::for_each(_loopers.begin(), _loopers.end(), [](std::shared_ptr<looper> &looper) {looper->stop(); });
 }
 
 ////////////////////////////////thread class//////////////////////////////
@@ -113,22 +123,22 @@ void threads::start(task *task, int nthread) {
 }
 
 void threads::detach() {
-	std::for_each(_threads.begin(), _threads.end(), [](std::shared_ptr<thread> thd) {thd->detach(); });
+	std::for_each(_threads.begin(), _threads.end(), [](std::shared_ptr<thread> &thd) {thd->detach(); });
 }
 
 void threads::join() {
-	std::for_each(_threads.begin(), _threads.end(), [](std::shared_ptr<thread> thd) {thd->join(); });
+	std::for_each(_threads.begin(), _threads.end(), [](std::shared_ptr<thread> &thd) {thd->join(); });
 }
 
 std::list<std::thread::id> threads::getids() {
 	std::list<std::thread::id> ids;
-	std::for_each(_threads.begin(), _threads.end(), [&ids](std::shared_ptr<thread> thd) { ids.push_back(thd->getid()); });
+	std::for_each(_threads.begin(), _threads.end(), [&ids](std::shared_ptr<thread> &thd) { ids.push_back(thd->getid()); });
 	return ids;
 }
 
 ///////////////////////////////////////reactor class/////////////////////////////////////////
 
-reactor::item::item(int id, task *task) : _id(id), _task(task), _ctime(clock::now()) {
+reactor::item::item(task *task) : _task(task), _ctime(clock::now()), _refcnt(0) {
 
 }
 
@@ -136,31 +146,30 @@ reactor::item::~item() {
 
 }
 
-int reactor::item::id() {
-	return _id;
+bool reactor::item::operator ==(task *task) {
+	return _task == task;
 }
 
+
 void reactor::item::run() {
-	_status.store((int)status::running);
 	_task->run();
-	_status.store((int)status::finished);
+	subref();
 }
 
 void reactor::item::join() {
-	while (_status.load() != (int)status::finished)
+	while (_refcnt.load() != 0)
 		std::this_thread::yield();
 }
 
-void reactor::item::waiting() {
-	_status.store((int)status::waiting);
+void reactor::item::addref() {
+	_refcnt.fetch_add(1);
+}
+void reactor::item::subref() {
+	_refcnt.fetch_sub(1);
 }
 
 bool reactor::item::pending() {
-	return _status.load() == (int)status::pending;
-}
-
-bool reactor::item::finished() {
-	return _status.load() == (int)status::finished;
+	return _refcnt.load() == 0;
 }
 
 const reactor::timepoint& reactor::item::ctime() {
@@ -172,45 +181,54 @@ reactor::items::items() {
 }
 
 reactor::items::~items() {
-
+	std::for_each(_items.begin(), _items.end(), [](item *item) {item->join(); delete item; });
+	_items.clear();
 }
 
-void reactor::items::add(int id, task *task) {
+void reactor::items::add(task *task) {
 	std::lock_guard<std::mutex> lck(_mutex);
-	_items.push_back(std::shared_ptr<item>(new item(id, task)));
+	_items.push_back(new item(task));
 }
 
-void reactor::items::del(int id) {
+void reactor::items::del(task *task) {
 	std::lock_guard<std::mutex> lck(_mutex);
-	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<item> item) {return item->id() == id; });
+	std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [task](item *item) {return *item == task; });
 	while (iter != _items.end()) {
-		if (!(*iter)->pending()) {
-			(*iter)->join();
-		}
+		//delete current match task
+		(*iter)->join();
+		delete *iter;
+		
+		//erase the task from item list
 		_items.erase(iter);
 
-		iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<item> item) {return item->id() == id; });
+		//find next task
+		iter = std::find_if(_items.begin(), _items.end(), [task](item *item) {return *item == task; });
 	}
 }
 
-void reactor::items::del(std::shared_ptr<item> &itm) {
-	std::lock_guard<std::mutex> lck(_mutex);
-	_items.remove(itm);
-}
-
-bool reactor::items::run_next(std::shared_ptr<item> &itm) {
-	itm = nullptr;
+bool reactor::items::run() {
+	item *itm = 0;
 	{
 		std::lock_guard<std::mutex> lck(_mutex);
-		std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [](std::shared_ptr<item> item) {return item->pending(); });
+		std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [](item *item) {return item->pending(); });
 		if (iter != _items.end()) {
 			itm = *iter;
-			itm->waiting();
+			itm->addref();
 		}
 	}
 
-	if (itm != nullptr) {
+	if (itm != 0) {
+		//run item
 		itm->run();
+		//remove finished item
+		std::lock_guard<std::mutex> lck(_mutex);
+		std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [itm](item *item) {return item == itm; });
+		if (iter != _items.end()) {
+			delete *iter;
+			_items.erase(iter);
+		}
+
+		//true means run an item
 		return true;
 	}
 
@@ -219,7 +237,8 @@ bool reactor::items::run_next(std::shared_ptr<item> &itm) {
 
 bool reactor::items::busy(int waitms) {
 	std::lock_guard<std::mutex> lck(_mutex);
-	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [](std::shared_ptr<item> item) {return item->pending(); });
+	log::info("items: %d", _items.size());
+	std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [](item *item) {return item->pending(); });
 	if (iter != _items.end()) {
 		if (clock::now() - (*iter)->ctime() > milliseconds(waitms)) {
 			return true;
@@ -247,15 +266,13 @@ void reactor::executor::stop() {
 }
 
 void reactor::executor::run() {
-	std::shared_ptr<item> itm = nullptr;
-	bool res = _items->run_next(itm);
+	bool res = _items->run();
 	if (res) {
-		_items->del(itm);
 		if (_idle_flag) {
 			_idle_flag = false;
 		}
 	} else {
-		std::this_thread::sleep_for(milliseconds(10));
+		std::this_thread::sleep_for(milliseconds(50));
 		if (!_idle_flag) {
 			_idle_flag = true;
 			_last_idle_time = clock::now();
@@ -269,7 +286,6 @@ bool reactor::executor::idle(int idlems) {
 	}
 	return false;
 }
-
 
 reactor::executors::executors() {
 
@@ -293,7 +309,7 @@ void reactor::executors::start(int max_executors, items *items) {
 
 void reactor::executors::stop() {
 	std::lock_guard<std::mutex> lck(_mutex);
-	std::for_each(_executors.begin(), _executors.end(), [](std::shared_ptr<executor> extr) {extr->stop(); });
+	std::for_each(_executors.begin(), _executors.end(), [](std::shared_ptr<executor> &extr) {extr->stop(); });
 	_executors.clear();
 }
 
@@ -305,7 +321,7 @@ void reactor::executors::balance() {
 	bool decreased = false;
 	int current_executors = (int)_executors.size();
 	if (current_executors > 1) {
-		std::list<std::shared_ptr<executor>>::iterator iter = std::find_if(_executors.begin(), _executors.end(), [](std::shared_ptr<executor> extr) {return extr->idle(max_idle_ms); });
+		std::list<std::shared_ptr<executor>>::iterator iter = std::find_if(_executors.begin(), _executors.end(), [](std::shared_ptr<executor> &extr) {return extr->idle(max_idle_ms); });
 		if (iter != _executors.end()) {
 			//decrease 1 executor
 			(*iter)->stop();
@@ -337,12 +353,12 @@ void reactor::start(int max_executors) {
 	_monitor.start(this);
 }
 
-void reactor::react(int id, task *task) {
-	_items.add(id, task);
+void reactor::react(task *task) {
+	_items.add(task);
 }
 
-void reactor::cancel(int id) {
-	_items.del(id);
+void reactor::cancel(task *task) {
+	_items.del(task);
 }
 
 void reactor::stop() {
@@ -363,14 +379,36 @@ void reactor::run() {
 	std::this_thread::sleep_for(milliseconds(1000));
 }
 
+
+///////////////////////global reactor object///////////////////
+static reactor _g_reactor;
+
+reactor::default::default() {
+	_g_reactor.start(10);
+}
+
+reactor::default::~default() {
+	_g_reactor.stop();
+}
+
+void reactor::default::react(task *task) {
+	static reactor::default _g_reactor_default;
+	_g_reactor.react(task);
+}
+
+void reactor::default::cancel(task *task) {
+	_g_reactor.cancel(task);
+}
+
 ///////////////////////////////////////timer class/////////////////////////////////////////
 
 timer::item::item(int id, int delay, cube::task *task) : _id(id), _delay(delay), _task(task), _cycle(false), _interval(-1) {
 	_expire = clock::now() + _delay;
 }
 
-timer::item::item(int id, int delay, int interval, cube::task *task) : _id(id), _delay(delay), _interval(interval), _task(task), _cycle(true) {
+timer::item::item(int id, int delay, int interval, cube::task *task) : _id(id), _delay(delay), _interval(interval), _task(task) {
 	_expire = clock::now() + _delay;
+	_cycle = interval > 0 ? true : false;
 }
 
 timer::item::~item() {
@@ -423,7 +461,7 @@ int timer::setup(int delay, task *t) {
 	std::unique_lock<std::mutex> lck(_mutex);
 
 	std::shared_ptr<item> newitem(new item(_nextid, delay, t));
-	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [newitem](std::shared_ptr<item> item) {return newitem->expire() < item->expire(); });
+	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [newitem](std::shared_ptr<item> &item) {return newitem->expire() < item->expire(); });
 	_items.insert(iter, newitem);
 	_cond.notify_all();
 
@@ -434,7 +472,7 @@ int timer::setup(int delay, int interval, task *t) {
 	std::unique_lock<std::mutex> lck(_mutex);
 
 	std::shared_ptr<item> newitem(new item(_nextid, delay, interval, t));
-	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [newitem](std::shared_ptr<item> item) {return newitem->expire() < item->expire(); });
+	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [newitem](std::shared_ptr<item> &item) {return newitem->expire() < item->expire(); });
 	_items.insert(iter, newitem);
 	_cond.notify_all();
 
@@ -444,14 +482,16 @@ int timer::setup(int delay, int interval, task *t) {
 void timer::cancel(int id) {
 	//cancel task in moniter
 	std::unique_lock<std::mutex> lck(_mutex);
-	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<item> item) {return id == item->id(); });
+	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [id](std::shared_ptr<item> &item) {return id == item->id(); });
 	if (iter != _items.end()) {
+		//cancel task in executor
+		_reactor.cancel((*iter)->task());
+		
+		//remove from timer items
 		_items.erase(iter);
 		_cond.notify_all();
 	}
 
-	//cancel task in executor
-	_reactor.cancel(id);
 }
 
 void timer::stop() {
@@ -478,14 +518,14 @@ void timer::expire() {
 			if (!_items.empty() && _items.front()->expired()) {
 				std::shared_ptr<item> expireditem = _items.front();
 				//generate executor item
-				_reactor.react(expireditem->id(), expireditem->task());
+				_reactor.react(expireditem->task());
 
 				//remove expired item from items list
-				_items.remove_if([expireditem](std::shared_ptr<item> item) {return item->id() == expireditem->id(); });
+				_items.remove_if([expireditem](std::shared_ptr<item> &item) {return item->id() == expireditem->id(); });
 				//setup the expired item if it is cycled
 				if (expireditem->cycled()) {
 					expireditem->reset();
-					std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [expireditem](std::shared_ptr<item> item) {return expireditem->expire() < item->expire(); });
+					std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [expireditem](std::shared_ptr<item> &item) {return expireditem->expire() < item->expire(); });
 					_items.insert(iter, expireditem);
 				}
 			}
@@ -497,7 +537,62 @@ void timer::run() {
 	expire();
 }
 
+///////////////////////global timer object///////////////////
+static timer _g_timer;
+
+timer::default::default() {
+	_g_timer.start(10);
+}
+
+timer::default::~default() {
+	_g_timer.stop();
+}
+
+int timer::default::setup(int delay, task *t) {
+	return setup(delay, -1, t);
+}
+
+int timer::default::setup(int delay, int interval, task *t) {
+	static timer::default _g_timer_default;
+	return _g_timer.setup(delay, interval, t);
+}
+
+void timer::default::cancel(int id) {
+	_g_timer.cancel(id);
+}
+
 //////////////////////////////////crontab class///////////////////////////////////
+crontab::ltime::ltime() {
+
+}
+
+crontab::ltime::ltime(int sec, int min, int hour, int day, int month, int week) : sec(sec), min(min), hour(hour), day(day), month(month), week(week) {
+
+}
+
+crontab::ltime::~ltime() {
+
+}
+
+crontab::ltime crontab::ltime::now() {
+	time_t t = ::time(0);
+	struct tm* now = ::localtime(&t);
+
+	return crontab::ltime(now->tm_sec, now->tm_min, now->tm_hour, now->tm_mday, now->tm_mon + 1, now->tm_wday == 0 ? 7 : now->tm_wday);
+}
+
+bool crontab::ltime::operator!=(const ltime &t) {
+	bool res = false;
+
+	res = res || (min != t.min);
+	res = res || (hour != t.hour);
+	res = res || (day != t.day);
+	res = res || (month != t.month);
+	res = res || (week != t.week);
+
+	return res;
+}
+
 crontab::ctime::ctime(int min, int hour, int day, int month, int week) : _min(min), _hour(hour), _day(day), _month(month), _week(week) {
 
 }
@@ -506,26 +601,19 @@ crontab::ctime::~ctime() {
 
 }
 
-crontab::ctime crontab::ctime::now() {
-	time_t t = ::time(0);
-	struct tm* now = ::localtime(&t);
-
-	return crontab::ctime(now->tm_min, now->tm_hour, now->tm_mday, now->tm_mon+1, now->tm_wday+1);
-}
-
-bool crontab::ctime::operator==(const ctime &t) {
+bool crontab::ctime::operator==(const ltime &t) {
 	bool res = true;
 
-	res = res && (_min < 0 || t._min < 0 || _min == t._min);
-	res = res && (_hour < 0 || t._hour < 0 || _hour == t._hour);
-	res = res && (_day < 0 || t._day < 0 || _day == t._day);
-	res = res && (_month < 0 || t._month < 0 || _month == t._month);
-	res = res && (_week < 0 || t._week < 0 || _week == t._week);
+	res = res && (_min < 0 || _min == t.min);
+	res = res && (_hour < 0 || _hour == t.hour);
+	res = res && (_day < 0 || _day == t.day);
+	res = res && (_month < 0 || _month == t.month);
+	res = res && (_week < 0 || _week == t.week);
 
 	return res;
 }
 
-crontab::item::item(int id, task *task, int min, int hour, int day, int month, int week) : _id(id), _task(task), _time(min, hour, day, month, week), _status((int)status::pending) {
+crontab::item::item(int id, task *task, int min, int hour, int day, int month, int week) : _id(id), _task(task), _time(min, hour, day, month, week), _refcnt(0), _last_expire_time(ltime::now()) {
 
 }
 
@@ -538,31 +626,36 @@ int crontab::item::id() {
 }
 
 void crontab::item::run() {
-	_status = (int)status::running;
 	_task->run();
-	_status = (int)status::pending;
+	subref();
 }
 
 void crontab::item::join() {
-	while (_status != (int)status::pending) {
+	while (_refcnt.load() != 0) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
 }
 
-void crontab::item::expiring() {
-
+void crontab::item::addref() {
+	_refcnt.fetch_add(1);
 }
 
-bool crontab::item::expired(const ctime &now) {
-	return _time == now;
+void crontab::item::subref() {
+	_refcnt.fetch_sub(1);
+}
+
+bool crontab::item::expired(const ltime &now) {
+	return _time == now && _last_expire_time != now;
+}
+
+void crontab::item::last_expire_time(const ltime &tm) {
+	_last_expire_time = tm;
 }
 
 crontab::crontab() : _nextid(0){
-
 }
 
 crontab::~crontab() {
-	stop();
 }
 
 void crontab::start() {
@@ -577,7 +670,7 @@ int crontab::setup(task *t, int min, int hour, int day, int month, int week) {
 
 void crontab::cancel(int id) {
 	std::lock_guard<std::mutex> lck(_mutex);
-	std::list<std::shared_ptr<item>>::iterator iter= std::find_if(_items.begin(), _items.end(), ([id](std::shared_ptr<item> item) {return item->id() == id; }));
+	std::list<std::shared_ptr<item>>::iterator iter= std::find_if(_items.begin(), _items.end(), ([id](std::shared_ptr<item> &item) {return item->id() == id; }));
 	if (iter != _items.end()) {
 		(*iter)->join();
 		_items.erase(iter);
@@ -585,26 +678,32 @@ void crontab::cancel(int id) {
 }
 
 void crontab::stop() {
-	if (_stopped)
-		return;
-
 	//stop monitor
 	_monitor.stop();
 
-	//
+	//wait all running items to stop
+	std::for_each(_items.begin(), _items.end(), [](std::shared_ptr<item> &item) { item->join();	});
+	_items.clear();
 }
 
 void crontab::execute(std::shared_ptr<item> &item) {
-
+	item->run();
 }
+
 void crontab::expire() {
 	{
 		std::lock_guard<std::mutex> lck(_mutex);
-		ctime now = ctime::now();
+		ltime now = ltime::now();
 		std::for_each(_items.begin(), _items.end(), [now](std::shared_ptr<item> &item) {
 			if (item->expired(now)) {
-				item->expiring();
+				//add new thread reference
+				item->addref();
+
+				//start new thread to execute task
 				std::async(execute, item);
+				
+				//set last expired time point
+				item->last_expire_time(now);
 			}
 		});
 	}
@@ -614,6 +713,26 @@ void crontab::expire() {
 
 void crontab::run() {
 	expire();
+}
+
+///////////////////////global crontab object///////////////////
+static crontab _g_crontab;
+
+crontab::default::default() {
+	_g_crontab.start();
+}
+
+crontab::default::~default() {
+	_g_crontab.stop();
+}
+
+int crontab::default::setup(task *t, int min, int hour, int day, int month, int week) {
+	static crontab::default _g_crontab_default;
+	return _g_crontab.setup(t, min, hour, day, month, week);
+}
+
+void crontab::default::cancel(int id) {
+	_g_crontab.cancel(id);
 }
 
 END_CUBE_NAMESPACE
