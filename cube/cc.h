@@ -190,7 +190,6 @@ class reactor : private task {
 
 	//reactor item
 	class item {
-		typedef enum class status { pending = 0, waiting = 1, running = 2, finished = 3 }status;
 	public:
 		item(int id, task *task);
 		~item();
@@ -206,6 +205,7 @@ class reactor : private task {
 		void addref();
 		void subref();
 		bool pending();
+		void pending(bool flag);
 		const timepoint& ctime();
 
 	private:
@@ -213,7 +213,7 @@ class reactor : private task {
 		task *_task;
 		timepoint _ctime;
 
-		std::atomic<int> _status; //item status
+		volatile bool _pending;
 		std::atomic_int _refcnt; //item reference count
 	};
 

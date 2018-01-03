@@ -1,5 +1,4 @@
 #include "cc.h"
-#include "log.h"
 #include <time.h>
 #include <future>
 #include <algorithm>
@@ -138,7 +137,7 @@ std::list<std::thread::id> threads::getids() {
 
 ///////////////////////////////////////reactor class/////////////////////////////////////////
 
-reactor::item::item(int id, task *task) : _id(id), _task(task), _ctime(clock::now()), _refcnt(0) {
+reactor::item::item(int id, task *task) : _id(id), _task(task), _ctime(clock::now()), _pending(true), _refcnt(0) {
 
 }
 
@@ -176,7 +175,11 @@ void reactor::item::subref() {
 }
 
 bool reactor::item::pending() {
-	return _refcnt.load() == 0;
+	return _pending;
+}
+
+void reactor::item::pending(bool flag) {
+	_pending = flag;
 }
 
 const reactor::timepoint& reactor::item::ctime() {
@@ -238,6 +241,7 @@ bool reactor::items::run() {
 		std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [](item *item) {return item->pending(); });
 		if (iter != _items.end()) {
 			itm = *iter;
+			itm->pending(false);
 			itm->addref();
 		}
 	}
@@ -264,7 +268,6 @@ bool reactor::items::run() {
 
 bool reactor::items::busy(int waitms) {
 	std::lock_guard<std::mutex> lck(_mutex);
-	log::info("items: %d", _items.size());
 	std::list<item*>::iterator iter = std::find_if(_items.begin(), _items.end(), [](item *item) {return item->pending(); });
 	if (iter != _items.end()) {
 		if (clock::now() - (*iter)->ctime() > milliseconds(waitms)) {
