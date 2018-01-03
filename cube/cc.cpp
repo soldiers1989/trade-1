@@ -491,10 +491,10 @@ void timer::start(int max_executors) {
 	_monitor.start(this);
 }
 
-int timer::setup(int delay, task *t) {
+int timer::setup(int delayms, task *t) {
 	std::unique_lock<std::mutex> lck(_mutex);
 
-	std::shared_ptr<item> newitem(new item(_nextid, delay, t));
+	std::shared_ptr<item> newitem(new item(_nextid, delayms, t));
 	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [newitem](std::shared_ptr<item> &item) {return newitem->expire() < item->expire(); });
 	_items.insert(iter, newitem);
 	_cond.notify_all();
@@ -502,10 +502,10 @@ int timer::setup(int delay, task *t) {
 	return _nextid++;
 }
 
-int timer::setup(int delay, int interval, task *t) {
+int timer::setup(int delayms, int intervalms, task *t) {
 	std::unique_lock<std::mutex> lck(_mutex);
 
-	std::shared_ptr<item> newitem(new item(_nextid, delay, interval, t));
+	std::shared_ptr<item> newitem(new item(_nextid, delayms, intervalms, t));
 	std::list<std::shared_ptr<item>>::iterator iter = std::find_if(_items.begin(), _items.end(), [newitem](std::shared_ptr<item> &item) {return newitem->expire() < item->expire(); });
 	_items.insert(iter, newitem);
 	_cond.notify_all();

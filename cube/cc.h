@@ -414,14 +414,14 @@ public:
 
 	/*
 	*	setup timer task
-	*@param delay: in, delay milliseconds for expire
-	*@param interval: in, cycle interval in milliseonds
+	*@param delayms: in, delay milliseconds for expire
+	*@param intervalms: in, cycle interval in milliseonds
 	*@param task: in, timer task
 	*@return:
 	*	timer task id
 	*/
-	int setup(int delay, task *t);
-	int setup(int delay, int interval, task *t);
+	int setup(int delayms, task *t);
+	int setup(int delayms, int intervalms, task *t);
 
 	/*
 	*	cancel timer task by timer task id
