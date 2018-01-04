@@ -1,12 +1,12 @@
 /*
-*	config - configure access module
+*	quote - quote data access module
 */
 #pragma once
 #include "stdsvr.h"
 BEGIN_SERVICE_NAMESPACE
-class config {
+class quote {
 public:
-	config() {}
-	~config() {}
+	quote();
+	~quote();
 };
 END_SERVICE_NAMESPACE

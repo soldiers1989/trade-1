@@ -1,33 +1,12 @@
 /*
-*	admin - administrator module for service
+*	admin - administrator data access module
 */
 #pragma once
-#include "stdsvr.h"
-#include "db.h"
+#include "dao.h"
 #include <mutex>
 #include <vector>
 
 BEGIN_SERVICE_NAMESPACE
-class admindao;
-class adminsdao;
-
-//admin property
-class admin_t {
-public:
-	admin_t() {}
-	admin_t(const std::string &name, const std::string &user, const std::string &pwd, int role, bool disable) : id(-1), name(name), user(user), pwd(pwd), role(role), disable(disable), ctime(ctime), online(false) {}
-	~admin_t() {}
-
-	int id; //admin id
-	std::string name; //admin name
-	std::string user; //admin account
-	std::string pwd; //admin password
-	int role; //admin role
-	bool disable;//disable status
-	uint ctime; //create time
-	bool online; //online status
-};
-
 //admin class
 class admin {
 public:
@@ -140,53 +119,5 @@ private:
 	std::mutex _mutex; //mutex for admins
 
 	adminsdao *_dao; //dao for database
-};
-
-//admin dao
-
-class admindao : public dao {
-public:
-	/*
-	*	enable or disable user in database
-	*@param user: in, admin user
-	*@param error, out, error message when failure happened
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int enable(const std::string &user, std::string *error = 0);
-	int disable(const std::string &user, std::string *error = 0);
-};
-
-//admins dao
-class adminsdao : public dao {
-public:
-	/*
-	*	select all administrators from database
-	*@param admins: in/out, admins select from database
-	*@param error: in/out, error message when failure happened
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int select(std::vector<admin_t> &admins, std::string *error = 0);
-
-	/*
-	*	select specified admin user
-	*@param user: in, admin user
-	*@param admin: in/out, admin data selected
-	*@param error: in/out, error message when failure happened
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int select(const std::string &user, admin_t &admin, std::string *error = 0);
-
-
-	/*
-	*	insert new admin to database
-	*@param admin: in, new admin to insert
-	*@param error: in/out, error message when failure happened
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int insert(const admin_t &admin, std::string *error = 0);
 };
 END_SERVICE_NAMESPACE

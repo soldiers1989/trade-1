@@ -1,3 +1,6 @@
+/*
+*	trader - trade data access module
+*/
 #pragma once
 #include "broker.h"
 #include "trade\trade.h"

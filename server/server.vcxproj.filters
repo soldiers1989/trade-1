@@ -45,6 +45,15 @@
     <ClCompile Include="dbinit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="quote.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="dao.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ds.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdsvr.h">
@@ -75,6 +84,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="dbinit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="quote.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="dao.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ds.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

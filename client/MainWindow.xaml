@@ -7,6 +7,10 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        
-    </Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="152*"/>
+			<ColumnDefinition Width="21*"/>
+		</Grid.ColumnDefinitions>
+
+	</Grid>
 </Window>

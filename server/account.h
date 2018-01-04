@@ -1,100 +1,17 @@
 /*
-*	account - account module for security account
+*	account - security account data access module
 */
 #pragma once
-#include "stdsvr.h"
-#include "db.h"
+#include "dao.h"
 #include "broker.h"
 #include "trade\tdx.h"
-
 #include <mutex>
 
 BEGIN_SERVICE_NAMESPACE
-class accountsdao;
-
-//account's fee property
-class fee_t {
-public:
-	fee_t() {}
-	fee_t(float cfrate, float cflimit, float bfrate, float sfrate) : cfrate(cfrate), cflimit(cflimit), bfrate(bfrate), sfrate(sfrate) {}
-	~fee_t() {}
-
-	//commission fee rate
-	float cfrate;
-	//commission fee lower limit
-	float cflimit;
-	//buy in fee rate
-	float bfrate;
-	//sell out fee rate
-	float sfrate;
-};
-
-//account's money property
-class money_t {
-public:
-	money_t() {}
-	money_t(float smoney, float lmoney) : smoney(smoney), lmoney(lmoney) {}
-	~money_t() {}
-
-	//start money
-	float smoney;
-	//left money
-	float lmoney;
-};
-
-//account property class
-class account_t {
-public:
-	account_t() {}
-	account_t(const account_t &acnt) : 
-		id(acnt.id), broker(acnt.broker), admin(acnt.admin), name(acnt.name), user(acnt.user), pwd(acnt.pwd), 
-		smoney(acnt.smoney), lmoney(acnt.smoney), cfrate(acnt.cfrate), cflimit(acnt.cflimit), bfrate(acnt.bfrate), 
-		sfrate(acnt.sfrate), disable(acnt.disable), ctime(acnt.ctime), online(acnt.online) {}
-
-	account_t(int broker, int admin, const std::string &name, const std::string &user, const std::string &pwd, float smoney, float lmoney, float cfrate, float cflimit, float bfrate, float sfrate, bool disable) : 
-		id(-1), broker(broker), admin(admin), name(name), user(user), pwd(pwd), smoney(smoney), lmoney(lmoney), cfrate(cfrate), cflimit(cflimit), bfrate(bfrate), sfrate(sfrate), disable(disable), ctime(0), online(false) {}
-
-	account_t(int id, int broker, const std::string &name, const std::string &user, const std::string &pwd, float smoney, float lmoney, float cfrate, float cflimit, float bfrate, float sfrate, bool disable, uint ctime) :
-		id(id), broker(broker), name(name), user(user), pwd(pwd), smoney(smoney), lmoney(lmoney), cfrate(cfrate), cflimit(cflimit), bfrate(bfrate), sfrate(sfrate), disable(disable), ctime(ctime), online(false) {}
-	
-	~account_t() {}
-
-	//acccount id
-	int id;
-	//broker id
-	int broker;
-	//admin id
-	int admin;
-	//account name
-	std::string name;
-	//trade account
-	std::string user;
-	//trade account password
-	std::string pwd;
-	//start money
-	float smoney;
-	//left money
-	float lmoney;
-	//commission fee rate
-	float cfrate;
-	//commission fee lower limit
-	float cflimit;
-	//buy in fee rate
-	float bfrate;
-	//sell out fee rate
-	float sfrate;
-	//disable status
-	bool disable;
-	//account create time
-	uint ctime;
-	//online status
-	bool online;
-};
-
 //security account class
 class account {
 public:
-	account(const account_t &acnt):  _account(acnt), _trade(0) {}
+	account(const account_t &acnt) : _account(acnt), _trade(0) {}
 	~account() {}
 
 	/*
@@ -190,7 +107,7 @@ private:
 	trade::trade *_trade;
 };
 
-//service accounts class
+//sercurity accounts class
 class accounts {
 public:
 	accounts(brokers *brokers) : _brokers(brokers) {}
@@ -214,6 +131,15 @@ public:
 	int add(const account_t &acnt, std::string *error = 0);
 
 	/*
+	*	delete account by account id
+	*@param id: in, account id
+	*@param error: out, error message when failure happened
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int del(int id, std::string *error = 0);
+
+	/*
 	*	destroy account module
 	*/
 	int destroy();
@@ -229,31 +155,5 @@ private:
 
 	//database access
 	accountsdao *_dao;
-};
-
-//account database access
-class accountsdao : public dao {
-public:
-	accountsdao() {}
-	~accountsdao() {}
-
-	/*
-	*	select all accounts from database
-	*@param accounts: in/out, accounts selected
-	*@param error: in/out, error message when failure happened
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int select(std::vector<account_t> &accounts, std::string *error = 0);
-
-
-	/*
-	*	insert new account to database
-	*@param account: in, new account to insert
-	*@param error: in/out, error message when failure happened
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int insert(const account_t &account, std::string *error = 0);
 };
 END_SERVICE_NAMESPACE
