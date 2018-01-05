@@ -4,7 +4,7 @@
 #define END_CUBE_NAMESPACE }
 
 #define BEGIN_HTTP_NAMESPACE namespace http{
-#define END_HTTP_NAMESPACE}
+#define END_HTTP_NAMESPACE }
 
 BEGIN_CUBE_NAMESPACE
 typedef unsigned char byte;

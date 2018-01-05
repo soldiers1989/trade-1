@@ -20,6 +20,7 @@ public:
 	*	parse uri from string
 	*@param str: in, uri string
 	*@param sz: in, size of string
+	*@param error: out, error message when failed
 	*@return:
 	*	0 for success, otherwise <0
 	*/
@@ -29,10 +30,11 @@ public:
 	/*
 	*	encode uri to string
 	*@param str: out, uri string
+	*@param error: out, error message when failed
 	*return:
 	*	0 for success, otherwise <0
 	*/
-	int pack(std::string &str);
+	int pack(std::string &str, std::string *error = 0);
 
 private:
 	std::string _scheme; //uri scheme string
@@ -45,8 +47,32 @@ private:
 //header class
 class header {
 public:
+	header();
+	virtual ~header();
+
+	/*
+	*	parse header items from string
+	*@param str: in, header string
+	*@param sz: in, size of string
+	*@param error: out, error message when failed
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int parse(const std::string &str, std::string *error = 0);
+	int parse(const char *str, int sz, std::string *error = 0);
+
+	/*
+	*	pack header items to string
+	*@param str: out, header string
+	*@param error: out, error message when failed
+	*return:
+	*	0 for success, otherwise <0
+	*/
+	int pack(std::string &str, std::string *error = 0);
 
 private:
+	//header items
+	std::multimap<std::string, std::string> _items;
 };
 
 /*data type to save http request parse results*/
@@ -55,6 +81,24 @@ public:
 	request();
 	virtual ~request();
 
+	/*
+	*	parse header items from string
+	*@param str: in, header string
+	*@param sz: in, size of string
+	*@param error: out, error message when failed
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int parse(const std::string &str, std::string *error = 0);
+	int parse(const char *str, int sz, std::string *error = 0);
+
+	/*
+	*	pack header items to string
+	*@param str: out, header string
+	*return:
+	*	0 for success, otherwise <0
+	*/
+	int pack(std::string &str, std::string *error = 0);
 
 private:
 	//request method
@@ -64,10 +108,8 @@ private:
 	//http version
 	std::string _version;
 
-	//request headers
-	std::multimap<std::string, std::string> _headers;
-	//request cookies, !!current not used!!
-	std::multimap<std::string, std::string> _cookies;
+	//request header
+	header _header;
 };
 
 /*data type to save http response results*/
@@ -76,37 +118,61 @@ public:
 	response();
 	virtual ~response();
 
+	/*
+	*	parse response items from string
+	*@param str: in, header string
+	*@param sz: in, size of string
+	*@param error: out, error message when failed
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int parse(const std::string &str, std::string *error = 0);
+	int parse(const char *str, int sz, std::string *error = 0);
+
+	/*
+	*	pack reasponse items to string
+	*@param str: out, header string
+	*@param error: out, error message when failed
+	*return:
+	*	0 for success, otherwise <0
+	*/
+	int pack(std::string &str, std::string *error = 0);
+
 private:
+	//scheme->http
+	std::string _scheme;
 	//http version
 	std::string _version;
 	//response code
 	std::string _code;
-	//response code info
-	std::string _code_info;
-	//response header parameters
-	std::multimap<std::string, std::string> _map_headers;
-	//response content
-	std::string _content;
+	//response description
+	std::string _reason;
+	
+	//response header
+	header _header;
 };
 
-//response encode types
-typedef enum encode_type {
-	NONE = 0,
-	GZIP = 1,
-	DEFLATE = 2
-}encode_type;
+//seperator used for parsing and packing
+class sep {
+public:
+	const char *AUTH = "//";
+	const char *REQUEST = "\r\n";
+	const char *STATUS = "\r\n";
+	const char *HEADER = "\r\n\r\n";
 
-#define SEP_LINE				"\r\n"
-#define HEADER_END				"\r\n\r\n"
-#define SEP_GET					' '
-#define SEP_URL					' '
-#define SEP_SPACE				' '
-#define SEP_QM					'?'
-#define SEP_EQ					'='
-#define SEP_AND					'&'
-#define SEP_VERSION				'/'
-#define SEP_HEADER				':'
-#define MIN_HTTP_LEN				18 //"GET / HTTP/1.1\r\n\r\n"
+	const char SCHEME = ':';
+	const char SPACE = ' ';
+	const char VERSION = '/';
 
+	const char PATH = '/';
+	const char QUERY = '?';
+	const char FRAGMENT = '#';
+
+	const char PARAM = '&';
+	const char VALUE = '=';
+
+	const char ITEM = ':';
+
+};
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE
