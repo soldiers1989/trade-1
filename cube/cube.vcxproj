@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="http.cpp" />
     <ClCompile Include="ini.cpp" />
     <ClCompile Include="cube.cpp" />
     <ClCompile Include="fd.cpp" />
@@ -35,6 +36,7 @@
     <ClCompile Include="mm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="http.h" />
     <ClInclude Include="ini.h" />
     <ClInclude Include="cube.h" />
     <ClInclude Include="fd.h" />

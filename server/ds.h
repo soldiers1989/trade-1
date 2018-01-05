@@ -116,15 +116,6 @@ public:
 	std::string name; //department name
 	bool disable; //disable flag
 	uint ctime; //create time
-
-public:
-	/*
-	*	variable for parsing configure file
-	*/
-	static char* SEPROW;
-	static char* SEPCOL;
-	static int SKIPROWS;
-	static int SKIPCOLS;
 };
 
 //broker's server class
@@ -145,16 +136,6 @@ public:
 	type stype; //server type;
 	bool disable; //disable flag
 	uint ctime; //create time
-
-public:
-	/*
-	*	variable for parsing configure file
-	*/
-	static char* SEPROW;
-	static char* SEPCOL;
-	static int SKIPROWS;
-	static int SKIPCOLS;
-
 };
 
 //broker property class
