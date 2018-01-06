@@ -163,23 +163,26 @@ public:
 	/*
 	*	split a string by character/characters
 	*@param str: string to be splited
-	*@param sep: character seperator
-	*@param spes: characters used to seperate
+	*@param sz: in, size in string to splited
+	*@param ch: character seperator
+	*@param chs: characters used to seperate
 	*@return:
 	*	split result
 	*/
-	static std::vector<std::string> _split(const char *str, const char ch);
-	static std::vector<std::string> split(const std::string& str, const char ch);
+	static std::vector<std::string> split(const char *str, int sz, char ch);
+	static std::vector<std::string> split(const std::string& str, char ch);
 	static std::vector<std::string> splits(const std::string& str, const std::string& chs);
 
 	/*
 	*	split a string by string seperator
-	*@param str: string to be splited
-	*@param sep: character seperator
+	*@param str: in, string to be splited
+	*@param sz: in, size in string to splited
+	*@param ssz: in, size of seperator
+	*@param sep: in, character seperator
 	*@return:
 	*	split result
 	*/
-	static std::vector<std::string> _split(const char *str, const char *sep);
+	static std::vector<std::string> split(const char *str, int sz, const char *sep, int ssz);
 	static std::vector<std::string> split(const std::string &str, const std::string &sep);
 
 	/*

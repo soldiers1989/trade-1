@@ -1,5 +1,6 @@
 #include "http.h"
 #include "str.h"
+#include <algorithm>
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
 
@@ -61,12 +62,13 @@ params* params::parse(const char* str, int sz) {
 	return new params(str, sz);
 }
 
-void params::_parse(const char *str, int sz) {
-	return _parse(std::string(str, sz));
+void params::_parse(const std::string &str) {
+	return _parse(str.c_str(), str.length());
 }
 
-void params::_parse(const std::string &str) {
-	std::vector<std::string> items = cube::str::split(str, '&');
+void params::_parse(const char *str, int sz) {
+	const char SEP = '&';
+	std::vector<std::string> items = cube::str::split(str, sz, SEP);
 	for (std::size_t i = 0; i < items.size(); i++) {
 		std::size_t sep = items[i].find('=');
 		if (sep != std::string::npos) {
@@ -122,7 +124,12 @@ header* header::parse(const char *str, int sz) {
 }
 
 void header::_parse(const std::string &str) {
-	std::vector<std::string> items = cube::str::split(str,"\r\n");
+	_parse(str.c_str(), str.length());
+}
+
+void header::_parse(const char *str, int sz) {
+	const char *SEP = "\r\n";
+	std::vector<std::string> items = cube::str::split(str, sz, SEP, strlen(SEP));
 	for (std::size_t i = 0; i < items.size(); i++) {
 		std::size_t sep = items[i].find(':');
 		if (sep != std::string::npos) {
@@ -137,10 +144,6 @@ void header::_parse(const std::string &str) {
 			}
 		}
 	}
-}
-
-void header::_parse(const char *str, int sz) {
-	_parse(std::string(str, sz));
 }
 
 //////////////////////////////////////////uri class/////////////////////////////////////////
@@ -271,5 +274,41 @@ std::string uri::description() {
 	return cube::str::format("scheme:%s\nauthority:%s\npath:%s\nquery:%s\nfragment:%s\n", _scheme.c_str(), _auth.c_str(), _path.c_str(), _query.c_str(), _fragment.c_str());
 }
 
+//////////////////////////////////////////request class/////////////////////////////////////////
+bool request::feed(const char *data, int sz) {
+	//seperator strings
+	static const char *SEP_HEADER_END = "\r\n\r\n";
+	static const int LEN_SEP_HEADER_END = 4;
+	static const char *SEP_LINE = "\r\n";
+	static const int LEN_SEP_LINE = 2;
+
+	//append new data
+	_data.append(data, sz);
+
+	//check if header completed
+	std::size_t pos_header_end = _data.find(SEP_HEADER_END);
+	if (pos_header_end == std::string::npos)
+		return false;
+	
+	/////header completed, try to parse request////
+	//parse request line//
+	std::size_t pos_request_line_end = _data.find(SEP_LINE);
+	std::vector<std::string> reqs = cube::str::split(_data.c_str(), pos_request_line_end, ' ');
+	if (reqs.size() != 3) {
+		throw ebad("invalid request line");
+	}
+	_method = cube::str::strip(reqs[0]);
+	_query = cube::str::strip(reqs[1]);
+	_version = cube::str::strip(reqs[2]);
+	
+	//parse request uri//
+	_uri._parse(_query);
+
+	//parse header items//
+	std::size_t pos_header_start = pos_request_line_end + LEN_SEP_LINE;
+	_header._parse(_data.c_str() + pos_header_start, pos_header_end - pos_header_start);
+	
+	return true;
+}
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE

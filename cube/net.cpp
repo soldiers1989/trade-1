@@ -1,4 +1,5 @@
 #include "net.h"
+#include "log.h"
 
 BEGIN_CUBE_NAMESPACE
 //for initialize the windows socket environment
@@ -107,6 +108,10 @@ int session::on_recv(ioctxt *context, int transfered) {
 
 socket_t session::handle() {
 	return _socket.handle();
+}
+
+std::string session::name() {
+	return _socket.peeraddr().name();
 }
 
 const socket& session::peer() {
@@ -284,5 +289,64 @@ void service::run() {
 		}
 	}
 }
+
+BEGIN_HTTP_NAMESPACE
+//////////////////////////////////////http servlets class///////////////////////////////////////
+void servlets::add(const std::string &path, servlet *servlet) {
+	_servlets.insert(std::pair<std::string, std::shared_ptr<cube::http::servlet>>(path, std::shared_ptr<cube::http::servlet>(servlet)));
+}
+
+void servlets::del(const std::string &path) {
+	std::map<std::string, std::shared_ptr<cube::http::servlet>>::iterator iter = _servlets.find(path);
+	if (iter != _servlets.end()) {
+		_servlets.erase(iter);
+	}
+}
+
+//////////////////////////////////////http session class///////////////////////////////////////
+int session::on_open(void *arg) {
+	cube::log::info("[http][%s] open session", name().c_str());
+	//save servlets
+	_servlets = (servlets*)arg;
+	
+	//receive data from client
+	std::string errmsg("");
+	int err = recv(BUFSZ, &errmsg);
+	if (err != 0) {
+		cube::log::error("[http][%s]%s", name().c_str(), errmsg.c_str());
+		return -1;
+	}
+
+	return 0;
+}
+
+int session::on_send(int transfered) {
+	cube::log::info("[http][%s] send data: %d bytes", name().c_str(), transfered);
+
+	return 0;
+}
+
+int session::on_recv(char *data, int transfered) {
+	cube::log::info("[http][%s] recv data: %d bytes", name().c_str(), transfered);
+
+	return 0;
+}
+
+int session::on_close() {
+	cube::log::info("[http][%s] close session", name().c_str());
+
+	return 0;
+}
+
+//////////////////////////////////////http server class///////////////////////////////////////
+int server::start(ushort port, servlets *servlets) {
+	return _server.start(port, servlets);
+}
+
+void server::stop() {
+	_server.stop();
+}
+END_HTTP_NAMESPACE
+
 END_CUBE_NAMESPACE
 

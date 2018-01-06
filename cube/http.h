@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <memory>
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
 
@@ -33,7 +34,7 @@ public:
 	const std::string& host() { return _host; }
 	ushort port() { return _port; }
 
-private:
+public:
 	/*
 	*	parse network address from string
 	*@param str: in, address string
@@ -78,7 +79,7 @@ public:
 	std::string get(const std::string &key);
 	std::vector<std::string> gets(const std::string &key);
 
-private:
+public:
 	/*
 	*	parse parameters from string
 	*@param str: in, parameters string
@@ -89,6 +90,7 @@ private:
 	void _parse(const std::string &str);
 	void _parse(const char* str, int sz);
 
+private:
 	//parameters
 	std::map<std::string, std::vector<std::string>> _params;
 };
@@ -130,7 +132,8 @@ public:
 	*	description of uri
 	*/
 	std::string description();
-private:
+
+public:
 	/*
 	*	parse uri from string
 	*@param str: in, uri string
@@ -189,28 +192,50 @@ private:
 
 /*data type to save http request parse results*/
 class request {
+	//bad request execption
+	typedef std::exception ebad;
+
 public:
 	request() {}
 	virtual ~request() {}
 
-
+	/*
+	*	feed data to request, and try to parse request in the same time
+	*@param data: in, new data
+	*@param sz: in, data size
+	*@return:
+	*	true if request data completed and parsed, otherwise return false
+	*/
+	bool feed(const char *data, int sz);
+	
+	/*
+	*	get request data items
+	*/
+	const std::string& data() { return _data; }
+	const std::string& method() { return _method; }
+	const std::string& path() { return _uri.path(); }
+	const std::string& query() { return _query; }
+	const std::string& version() { return _version; }
+	const params& params() { return _uri.params(); }
+	const std::string& fragment() { return _uri.fragment(); }
+	const header& header() { return _header; }
+	const std::string& content() { return _content; }
 	
 private:
+	//original request data
+	std::string _data;
+
 	//request method
 	std::string _method;
-
-	//request path string
-	std::string _path;
 	//request query string
 	std::string _query;
-	//request fragment string
-	std::string _fragment;
-
 	//request http version
 	std::string _version;
 
+	//request uri
+	http::uri _uri;
 	//request header
-	header _header;
+	http::header _header;
 	
 	//request content
 	std::string _content;

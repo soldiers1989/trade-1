@@ -1,7 +1,12 @@
 #include "sa.h"
+#include "str.h"
 #include <WS2tcpip.h>
 
 BEGIN_CUBE_NAMESPACE
+std::string saddr::name() {
+	return str::format("%s:%d", sa::ipaddr(ip).c_str(), port);
+}
+
 std::string sa::last_error() {
 	return last_error(WSAGetLastError());
 }

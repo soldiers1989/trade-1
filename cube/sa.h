@@ -12,13 +12,16 @@
 BEGIN_CUBE_NAMESPACE
 
 //socket address
-typedef struct saddr {
-	ulong ip;
-	ushort port;
-
+class saddr {
+public:
 	saddr(ulong ip, ushort port) : ip(ip), port(port) {}
 	~saddr() {}
-} saddr_t;
+
+	std::string name();
+
+	ulong ip;
+	ushort port;
+};
 
 //socket api wrapper class
 class sa {

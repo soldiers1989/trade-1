@@ -8,6 +8,7 @@
 #include "sa.h"
 #include "io.h"
 #include "os.h"
+#include "http.h"
 
 BEGIN_CUBE_NAMESPACE
 //iocp operation
@@ -158,10 +159,14 @@ public:
 	socket_t handle();
 
 	/*
+	*	get peer name: ip:port
+	*/
+	std::string name();
+
+	/*
 	*	get remote peer socket
 	*/
 	const socket& peer();
-
 private:
 	//socket of session
 	socket _socket;
@@ -253,9 +258,9 @@ private:
 BEGIN_TCP_NAMESPACE
 //tcp server class
 template<class sessionimpl>
-class server : public runnable {
+class server : public task {
 public:
-	server() : _stopped(true), _stop(true) {}
+	server(){}
 	virtual ~server() {}
 
 	/*
@@ -285,11 +290,8 @@ public:
 		//step2: start listen on the port
 		_socket = socket::listen(ip, port, socket::mode::OVERLAPPED | socket::mode::REUSEADDR);
 
-		//step3: start accept thread
-		_stop = false;
-		if (_thread.start(this) != 0)
-			return -1;
-		_stopped = false;
+		//step3: start accept looper thread
+		_looper.start(this);
 
 		return 0;
 	}
@@ -303,10 +305,8 @@ public:
 		//step1: close listen socket
 		_socket.close();
 
-		//step2: stop accept thread
-		_stop = true;
-		_thread.join();
-		_stopped = true;
+		//step2: stop accept looper thread
+		_looper.stop();
 
 		//step3: stop iocp service
 		_service.stop();
@@ -319,28 +319,25 @@ public:
 	*	accept new connections
 	*/
 	void run() {
-		while (!_stop) {
-			try {
-				//wait for new connection
-				socket sock = _socket.accept(50, 0);
+		try {
+			//wait for new connection
+			socket sock = _socket.accept(50, 0);
 
-				//create new session for connection
-				session *s = new sessionimpl();
+			//create new session for connection
+			session *s = new sessionimpl();
 
-				//dispatch new session to iocp service
-				_service.dispatch(sock, s);
+			//dispatch new session to iocp service
+			_service.dispatch(sock, s);
 
-			} catch (const socket::ewouldblock& ) {}
-		}
+		} catch (const socket::ewouldblock& ) {}
 	}
+
 private:
 	//listen socket
 	socket _socket;
 
-	//accept thread
-	bool _stopped;
-	volatile bool _stop;
-	thread _thread;
+	//thread looper
+	looper _looper;
 
 	//service for server
 	service _service;
@@ -398,9 +395,9 @@ public:
 	servlet() {}
 	virtual ~servlet() {}
 
-	virtual int do_get();
-	virtual int do_post();
-	virtual int do_request();
+	virtual int do_get() = 0;
+	virtual int do_post() = 0;
+	virtual int do_request() = 0;
 };
 
 //http servlets class
@@ -433,8 +430,9 @@ private:
 
 //http session class
 class session : public cube::session {
+	const int BUFSZ = 4096;
 public:
-	session() {}
+	session() : _servlets(0) {}
 	virtual ~session() {}
 
 	int on_open(void *arg);
@@ -443,7 +441,13 @@ public:
 	int on_close();
 
 private:
+	//relate servlets
+	servlets *_servlets;
 
+	//session request
+	request _request;
+	//session response
+	response _response;
 };
 
 //http server class
@@ -455,10 +459,11 @@ public:
 	/*
 	*	start http server on specified port
 	*@param port: in, local http service port
+	*@param servlets: in, servlets for processing request
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int start(ushort port);
+	int start(ushort port, servlets *servlets);
 
 	/*
 	*	stop http server
@@ -468,8 +473,6 @@ public:
 	void stop();
 	
 private:
-	//servlet registered
-	servlets _servlets;
 	//http server
 	tcp::server<session> _server;
 };
