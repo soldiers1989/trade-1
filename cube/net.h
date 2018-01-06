@@ -423,6 +423,15 @@ public:
 	*/
 	void del(const std::string &path);
 
+	/*
+	*	process request, set response with process result
+	*@param req: in, request object
+	*@param resp: in/out, response object
+	*@return:
+	*	void
+	*/
+	void process(const request &req, response &resp);
+
 private:
 	//registered servlets
 	std::map<std::string, std::shared_ptr<servlet>> _servlets;

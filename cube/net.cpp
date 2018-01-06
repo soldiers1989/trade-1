@@ -303,6 +303,10 @@ void servlets::del(const std::string &path) {
 	}
 }
 
+void servlets::process(const request &req, response &resp) {
+
+}
+
 //////////////////////////////////////http session class///////////////////////////////////////
 int session::on_open(void *arg) {
 	cube::log::info("[http][%s] open session", name().c_str());
@@ -328,7 +332,14 @@ int session::on_send(int transfered) {
 
 int session::on_recv(char *data, int transfered) {
 	cube::log::info("[http][%s] recv data: %d bytes", name().c_str(), transfered);
-
+	try {
+		if (_request.feed(data, transfered)) {
+			_servlets->process(_request, _response);
+		}
+	} catch (std::exception &e) {
+		cube::log::error("[http][%s] recv data: %s", name().c_str(), e.what());
+		return -1;
+	}
 	return 0;
 }
 
