@@ -3,6 +3,9 @@
 #define BEGIN_CUBE_NAMESPACE namespace cube{
 #define END_CUBE_NAMESPACE }
 
+#define BEGIN_TCP_NAMESPACE namespace tcp{
+#define END_TCP_NAMESPACE }
+
 #define BEGIN_HTTP_NAMESPACE namespace http{
 #define END_HTTP_NAMESPACE }
 

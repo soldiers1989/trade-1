@@ -178,7 +178,7 @@ class service : public task {
 	typedef std::exception efatal;
 
 public:
-	service() : _stopped(true), _stop(true), _arg(0) {
+	service() : _arg(0) {
 
 	}
 
@@ -239,13 +239,9 @@ private:
 	//iocp of service
 	iocp _iocp;
 
-	//service worker threads
-	threads _threads;
-	//stopped flag for service
-	bool _stopped;
-	//stop flag for thread
-	volatile bool _stop;
-
+	//loopers of service
+	loopers _loopers;
+	
 	//argument for new session
 	void *_arg;
 
@@ -254,6 +250,7 @@ private:
 	std::map<socket_t, session*> _sessions;
 };
 
+BEGIN_TCP_NAMESPACE
 //tcp server class
 template<class sessionimpl>
 class server : public runnable {
@@ -354,7 +351,6 @@ template<class sessionimpl>
 class client {
 public:
 	client() {}
-
 	virtual ~client() {}
 
 	int start(void *arg = 0) {
@@ -393,6 +389,92 @@ private:
 	//service for client
 	service _service;
 };
+END_TCP_NAMESPACE
+
+BEGIN_HTTP_NAMESPACE
+//http servlet class
+class servlet {
+public:
+	servlet() {}
+	virtual ~servlet() {}
+
+	virtual int do_get();
+	virtual int do_post();
+	virtual int do_request();
+};
+
+//http servlets class
+class servlets {
+public:
+	servlets() {}
+	virtual ~servlets() {}
+
+	/*
+	*	add a new servlet
+	*@param path: in, servlet relate path
+	*@param servlet: in, servlet for path
+	*@return:
+	*	void
+	*/
+	void add(const std::string &path, servlet *servlet);
+
+	/*
+	*	delete a servlet
+	*@param path: in, servlet relate path
+	*@return:
+	*	void
+	*/
+	void del(const std::string &path);
+
+private:
+	//registered servlets
+	std::map<std::string, std::shared_ptr<servlet>> _servlets;
+};
+
+//http session class
+class session : public cube::session {
+public:
+	session() {}
+	virtual ~session() {}
+
+	int on_open(void *arg);
+	int on_send(int transfered);
+	int on_recv(char *data, int transfered);
+	int on_close();
+
+private:
+
+};
+
+//http server class
+class server {
+public:
+	server() {}
+	virtual ~server() {}
+
+	/*
+	*	start http server on specified port
+	*@param port: in, local http service port
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int start(ushort port);
+
+	/*
+	*	stop http server
+	*@return:
+	*	void
+	*/
+	void stop();
+	
+private:
+	//servlet registered
+	servlets _servlets;
+	//http server
+	tcp::server<session> _server;
+};
+
+END_HTTP_NAMESPACE
 
 //class for initialize windows socket everiment
 class netinit {
@@ -414,5 +496,4 @@ public:
 		WSACleanup();
 	}
 };
-
 END_CUBE_NAMESPACE

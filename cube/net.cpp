@@ -124,9 +124,7 @@ int service::start(void *arg, int workers) {
 	_arg = arg;
 
 	//start worker threads
-	_stop = false;
-	_threads.start(this, workers);
-	_stopped = false;
+	_loopers.start(this, workers);
 
 	return 0;
 }
@@ -230,10 +228,8 @@ int service::stop() {
 	//close iocp
 	_iocp.close();
 
-	//stop worker threads
-	_stop = true;
-	_threads.join();
-	_stopped = true;
+	//stop loopers
+	_loopers.stop();
 
 	return 0;
 }
@@ -250,41 +246,40 @@ void service::free() {
 
 void service::run() {
 	//process complete io request until stop
-	while (!_stop) {
-		iores res = _iocp.pull(50);
-		if (res.error == 0) {
-			//get sepcial data from completion data
-			session *s = (session*)res.completionkey;
-			ioctxt *context = (ioctxt*)res.overlapped;
+	iores res = _iocp.pull(50);
+	if (res.error == 0) {
+		//get sepcial data from completion data
+		session *s = (session*)res.completionkey;
+		ioctxt *context = (ioctxt*)res.overlapped;
 
-			//notify session with completed events
-			int err = 0;
-			switch (context->opt) {
-			case IO_SEND:
-				err = s->on_send(context, res.transfered);
-				break;
-			case IO_RECV:
-				err = s->on_recv(context, res.transfered);
-				break;
-			default:
-				err = 0;
-				break;
-			}
+		//notify session with completed events
+		int err = 0;
+		switch (context->opt) {
+		case IO_SEND:
+			err = s->on_send(context, res.transfered);
+			break;
+		case IO_RECV:
+			err = s->on_recv(context, res.transfered);
+			break;
+		default:
+			err = 0;
+			break;
+		}
 
-			//process error recall result
-			if (err != 0) {
-				//close session
-				s->close();
-				//discard session from service
-				discard(s);
-			}
-		} else {
-			if (res.error == ERROR_ABANDONED_WAIT_0)
-				break; // iocp handle closed
-			else {
-				if (res.error != WAIT_TIMEOUT) {
-					throw efatal(os::last_error(res.error).c_str());
-				}
+		//process error recall result
+		if (err != 0) {
+			//close session
+			s->close();
+			//discard session from service
+			discard(s);
+		}
+	} else {
+		if (res.error == ERROR_ABANDONED_WAIT_0)
+			; // iocp handle closed
+		else {
+			if (res.error != WAIT_TIMEOUT) {
+				//fatal error with iocp
+				throw efatal(os::last_error(res.error).c_str());
 			}
 		}
 	}
