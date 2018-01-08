@@ -208,7 +208,7 @@ std::string str::strip(const char* str, const char* packs/* = SPACES*/) {
 	const char* lpos = 0, *rpos = 0, *pos = str;
 	//strip left packs
 	while (*pos != 0) {
-		if (strchr(packs, *pos) == 0)
+		if (::strchr(packs, *pos) == 0)
 			break;
 		pos++;
 	}
@@ -219,7 +219,7 @@ std::string str::strip(const char* str, const char* packs/* = SPACES*/) {
 	//strip right packs
 	pos++;
 	while (*pos != 0) {
-		if (strchr(packs, *pos) == 0)
+		if (::strchr(packs, *pos) == 0)
 			rpos = pos;
 		pos++;
 	}
@@ -235,7 +235,7 @@ std::string str::strip(const std::string &str, const char* packs/* = SPACES*/) {
 std::string str::strip(const char *str, int len, const char* packs/* = SPACES*/) {
 	int lpos = 0, rpos = len - 1;
 	while (lpos < len) {//strip left packs
-		if (strchr(packs, *(str + lpos)) != 0)
+		if (::strchr(packs, *(str + lpos)) != 0)
 			lpos++;
 		else
 			break;
@@ -244,7 +244,7 @@ std::string str::strip(const char *str, int len, const char* packs/* = SPACES*/)
 		return "";
 
 	while (rpos > -1) {//strip right packs
-		if (strchr(packs, *(str + rpos)) != 0)
+		if (::strchr(packs, *(str + rpos)) != 0)
 			rpos--;
 		else
 			break;
@@ -256,7 +256,7 @@ std::string str::strip(const char *str, int len, const char* packs/* = SPACES*/)
 std::string str::lstrip(const char* str, const char* packs/* = SPACES*/) {
 	//strip left packs
 	while (*str != 0) {
-		if (strchr(packs, *str) != 0)
+		if (::strchr(packs, *str) != 0)
 			str++;
 		else
 			break;
@@ -272,7 +272,7 @@ std::string str::lstrip(const std::string &str, const char* packs/* = SPACES*/) 
 std::string str::lstrip(const char *str, int len, const char* packs/* = SPACES*/) {
 	int lpos = 0;
 	while (lpos < len) {//strip left packs
-		if (strchr(packs, *(str + lpos)) != 0)
+		if (::strchr(packs, *(str + lpos)) != 0)
 			lpos++;
 		else
 			break;
@@ -287,7 +287,7 @@ std::string str::lstrip(const char *str, int len, const char* packs/* = SPACES*/
 std::string str::rstrip(const char* str, const char* packs/* = SPACES*/) {
 	const char* pos = str, *rpos = 0;
 	while (*pos != 0) {//strip right packs
-		if (strchr(packs, *pos) == 0)
+		if (::strchr(packs, *pos) == 0)
 			rpos = pos;
 		pos++;
 	}
@@ -301,13 +301,21 @@ std::string str::rstrip(const std::string &str, const char* packs/* = SPACES*/) 
 std::string str::rstrip(const char *str, int len, const char* packs/* = SPACES*/) {
 	int rpos = len - 1;
 	while (rpos > -1) {//strip right packs
-		if (strchr(packs, *(str + rpos)) != 0)
+		if (::strchr(packs, *(str + rpos)) != 0)
 			rpos--;
 		else
 			break;
 	}
 
 	return std::string(str, rpos + 1);
+}
+
+char * str::strchr(char *str, int sz, int ch) {
+	return (char*)::memchr(str, ch, sz);
+}
+
+const char * str::strchr(const char *str, int sz, int ch) {
+	return (const char*)::memchr(str, ch, sz);
 }
 
 std::string str::format(const char *format, ...) {
@@ -359,20 +367,20 @@ void str::print(const std::vector<std::vector<std::string>> &table, int colwidth
 	}
 }
 
-std::vector<std::string> str::split(const char* str, int sz, char ch) {
+std::vector<std::string> str::split(const char* str, int sz, char ch, bool keepempty) {
 	std::vector<std::string> result;
 
 	const char *start = str, *end = 0;
 	while (start < str + sz) {
-		end = strchr(start, ch);
-		if (end != 0) {
+		end = strchr(start, sz - (start - str), ch);
+		if (end != 0 && (keepempty || end != start)) {
 			result.push_back(std::string(start, end - start));
 			start = end + 1;
 		} else
 			break;
 	}
 	if (start < str + sz) {
-		result.push_back(std::string(start, str + sz));
+		result.push_back(std::string(start, sz - (start - str)));
 	}
 
 	return result;

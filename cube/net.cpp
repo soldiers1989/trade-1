@@ -164,11 +164,11 @@ int service::dispatch(session *s) {
 
 	//notify the session with connection opened event
 	if (s->on_open(_arg) != 0) {
-		//close socket
-		s->close();
-
 		//notify the session with connection closed event
 		s->on_close();
+
+		//close socket
+		s->close();
 
 		//free session object
 		delete s;
@@ -190,6 +190,9 @@ int service::discard(socket_t s) {
 
 		//notify session close
 		s->on_close();
+
+		//close socket
+		s->close();
 		
 		//free session
 		delete s;
@@ -203,6 +206,9 @@ int service::discard(session *s) {
 	//notify the session with connection closed event
 	s->on_close();
 	
+	//close socket
+	s->close();
+
 	//remove session from sessions
 	_sessions.erase(s->handle());
 
@@ -273,8 +279,6 @@ void service::run() {
 
 		//process error recall result
 		if (err != 0) {
-			//close session
-			s->close();
 			//discard session from service
 			discard(s);
 		}
@@ -292,19 +296,21 @@ void service::run() {
 
 BEGIN_HTTP_NAMESPACE
 //////////////////////////////////////http servlets class///////////////////////////////////////
-void servlets::add(const std::string &path, servlet *servlet) {
+void servlets::mount(const std::string &path, servlet *servlet) {
 	_servlets.insert(std::pair<std::string, std::shared_ptr<cube::http::servlet>>(path, std::shared_ptr<cube::http::servlet>(servlet)));
 }
 
-void servlets::del(const std::string &path) {
-	std::map<std::string, std::shared_ptr<cube::http::servlet>>::iterator iter = _servlets.find(path);
+int servlets::handle(const request &req, response &resp) {
+	std::map<std::string, std::shared_ptr<servlet>>::iterator iter = _servlets.find(req.path());
 	if (iter != _servlets.end()) {
-		_servlets.erase(iter);
+		if (req.method() == "get")
+			return iter->second->handle_get(req, resp);
+		else if (req.method() == "post")
+			return iter->second->handle_post(req, resp);
+		else
+			return -1;
 	}
-}
-
-void servlets::process(const request &req, response &resp) {
-
+	return -1;
 }
 
 //////////////////////////////////////http session class///////////////////////////////////////
@@ -332,9 +338,21 @@ int session::on_send(int transfered) {
 
 int session::on_recv(char *data, int transfered) {
 	cube::log::info("[http][%s] recv data: %d bytes", name().c_str(), transfered);
+	//peer shutdown
+	if (transfered == 0)
+		return -1;
+
 	try {
+		//new request data coming
 		if (_request.feed(data, transfered)) {
-			_servlets->process(_request, _response);
+			int err = _servlets->handle(_request, _response);
+			if (err != 0) {
+				//interval error, close connection
+				return -1;
+			} else {
+				//response content
+				;
+			}
 		}
 	} catch (std::exception &e) {
 		cube::log::error("[http][%s] recv data: %s", name().c_str(), e.what());

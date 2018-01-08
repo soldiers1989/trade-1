@@ -68,7 +68,7 @@ void params::_parse(const std::string &str) {
 
 void params::_parse(const char *str, int sz) {
 	const char SEP = '&';
-	std::vector<std::string> items = cube::str::split(str, sz, SEP);
+	std::vector<std::string> items = cube::str::split(str, sz, SEP, false);
 	for (std::size_t i = 0; i < items.size(); i++) {
 		std::size_t sep = items[i].find('=');
 		if (sep != std::string::npos) {
@@ -91,19 +91,20 @@ void params::_parse(const char *str, int sz) {
 	}
 }
 
-std::string params::get(const std::string &key) {
-	std::string val("");
-	if (_params.find(key) == _params.end() || _params[key].empty())
-		return val;
+std::string params::get(const std::string &key) const {
+	std::map<std::string, std::vector<std::string>>::const_iterator citer = _params.find(key);
+	if (citer == _params.end() || citer->second.empty())
+		return "";
 
-	return _params[key][0];
+	return citer->second[0];
 }
 
-std::vector<std::string> params::gets(const std::string &key) {
-	if (_params.find(key) == _params.end())
+std::vector<std::string> params::gets(const std::string &key) const {
+	std::map<std::string, std::vector<std::string>>::const_iterator citer = _params.find(key);
+	if (citer == _params.end())
 		return std::vector<std::string>();
 
-	return _params[key];
+	return citer->second;
 }
 
 //////////////////////////////////////////header class/////////////////////////////////////////
@@ -293,11 +294,11 @@ bool request::feed(const char *data, int sz) {
 	/////header completed, try to parse request////
 	//parse request line//
 	std::size_t pos_request_line_end = _data.find(SEP_LINE);
-	std::vector<std::string> reqs = cube::str::split(_data.c_str(), pos_request_line_end, ' ');
+	std::vector<std::string> reqs = cube::str::split(_data.c_str(), pos_request_line_end, ' ', false);
 	if (reqs.size() != 3) {
 		throw ebad("invalid request line");
 	}
-	_method = cube::str::strip(reqs[0]);
+	_method = cube::str::lower(cube::str::strip(reqs[0]));
 	_query = cube::str::strip(reqs[1]);
 	_version = cube::str::strip(reqs[2]);
 	

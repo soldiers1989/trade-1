@@ -395,9 +395,27 @@ public:
 	servlet() {}
 	virtual ~servlet() {}
 
-	virtual int do_get() = 0;
-	virtual int do_post() = 0;
-	virtual int do_request() = 0;
+	/*
+	*	handle http get request
+	*@param req: in, client request
+	*@param resp: in/out, service response
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	virtual int handle_get(const request &req, response &resp) {
+		return -1;
+	}
+
+	/*
+	*	handle http post request
+	*@param req: in, client request
+	*@param resp: in/out, service response
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	virtual int handle_post(const request &req, response &resp) {
+		return -1;
+	}
 };
 
 //http servlets class
@@ -407,30 +425,22 @@ public:
 	virtual ~servlets() {}
 
 	/*
-	*	add a new servlet
+	*	mount path with relate servlet
 	*@param path: in, servlet relate path
 	*@param servlet: in, servlet for path
 	*@return:
 	*	void
 	*/
-	void add(const std::string &path, servlet *servlet);
+	void mount(const std::string &path, servlet *servlet);
 
 	/*
-	*	delete a servlet
-	*@param path: in, servlet relate path
-	*@return:
-	*	void
-	*/
-	void del(const std::string &path);
-
-	/*
-	*	process request, set response with process result
+	*	handle request, set response with process result
 	*@param req: in, request object
 	*@param resp: in/out, response object
 	*@return:
-	*	void
+	*	0 for success, otherwise <0 means interval error
 	*/
-	void process(const request &req, response &resp);
+	int handle(const request &req, response &resp);
 
 private:
 	//registered servlets

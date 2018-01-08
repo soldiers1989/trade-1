@@ -118,6 +118,13 @@ public:
 	static std::string rstrip(const std::string &str, const char* packs = SPACES);
 	static std::string rstrip(const char *str, int len, const char* packs = SPACES);
 
+	/*
+	*	locate first occurrence of character in string
+	*@param str: in, string to locate the character
+	*@param sz: in, size
+	*/
+	static char *strchr(char *str, int sz, int ch);
+	static const char *strchr(const char *str, int sz, int ch);
 
 	/*
 	*	format string
@@ -166,10 +173,11 @@ public:
 	*@param sz: in, size in string to splited
 	*@param ch: character seperator
 	*@param chs: characters used to seperate
+	*@param keepempty: keep empty split string
 	*@return:
 	*	split result
 	*/
-	static std::vector<std::string> split(const char *str, int sz, char ch);
+	static std::vector<std::string> split(const char *str, int sz, char ch, bool keepempty);
 	static std::vector<std::string> split(const std::string& str, char ch);
 	static std::vector<std::string> splits(const std::string& str, const std::string& chs);
 
@@ -179,6 +187,7 @@ public:
 	*@param sz: in, size in string to splited
 	*@param ssz: in, size of seperator
 	*@param sep: in, character seperator
+	*@param keepempty: keep empty split string
 	*@return:
 	*	split result
 	*/

@@ -160,6 +160,7 @@
     <ClCompile Include="db.cpp" />
     <ClCompile Include="dbinit.cpp" />
     <ClCompile Include="ds.cpp" />
+    <ClCompile Include="svcmgr.cpp" />
     <ClCompile Include="quote.cpp" />
     <ClCompile Include="service.cpp" />
     <ClCompile Include="session.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="db.h" />
     <ClInclude Include="dbinit.h" />
     <ClInclude Include="ds.h" />
+    <ClInclude Include="svcmgr.h" />
     <ClInclude Include="quote.h" />
     <ClInclude Include="service.h" />
     <ClInclude Include="session.h" />

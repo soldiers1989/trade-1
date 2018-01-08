@@ -76,8 +76,8 @@ public:
 	*@return:
 	*	value of parameter
 	*/
-	std::string get(const std::string &key);
-	std::vector<std::string> gets(const std::string &key);
+	std::string get(const std::string &key) const;
+	std::vector<std::string> gets(const std::string &key) const;
 
 public:
 	/*
@@ -118,13 +118,13 @@ public:
 	/*
 	*	get uri items
 	*/
-	const std::string& protocol() { return _scheme; }
-	const std::string& scheme() { return _scheme; }
-	const std::string& auth() { return _auth; }
-	const std::string& path() { return _path; }
-	const std::string& query() { return _query; }
-	const std::string& fragment() { return _fragment; }
-	const params& params() { return _params; }
+	const std::string& protocol() const { return _scheme; }
+	const std::string& scheme() const { return _scheme; }
+	const std::string& auth() const { return _auth; }
+	const std::string& path() const { return _path; }
+	const std::string& query() const { return _query; }
+	const std::string& fragment() const { return _fragment; }
+	const params& params() const { return _params; }
 
 	/*
 	*	get description of uri
@@ -211,15 +211,15 @@ public:
 	/*
 	*	get request data items
 	*/
-	const std::string& data() { return _data; }
-	const std::string& method() { return _method; }
-	const std::string& path() { return _uri.path(); }
-	const std::string& query() { return _query; }
-	const std::string& version() { return _version; }
-	const params& params() { return _uri.params(); }
-	const std::string& fragment() { return _uri.fragment(); }
-	const header& header() { return _header; }
-	const std::string& content() { return _content; }
+	const std::string& data() const{ return _data; }
+	const std::string& method() const { return _method; }
+	const std::string& path() const { return _uri.path(); }
+	const std::string& query() const { return _query; }
+	const std::string& version() const { return _version; }
+	const params& params() const { return _uri.params(); }
+	const std::string& fragment() const { return _uri.fragment(); }
+	const header& header() const { return _header; }
+	const std::string& content() const { return _content; }
 	
 private:
 	//original request data
