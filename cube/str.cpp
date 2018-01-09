@@ -318,6 +318,43 @@ const char * str::strchr(const char *str, int sz, int ch) {
 	return (const char*)::memchr(str, ch, sz);
 }
 
+char *str::strstr(char *str, int sz, const char *substr) {
+	char *pos = str;
+	while (pos - str < sz) {
+		char *ppos = pos;
+		const char *spos = substr;
+		while (*spos != 0 && ppos - str < sz && *ppos == *spos) {
+			spos++;
+			ppos++;
+		}
+
+		if (*spos == 0)
+			return pos;
+		else
+			pos++;
+	}
+
+	return 0;
+}
+
+const char *str::strstr(const char *str, int sz, const char *substr) {
+	const char *pos = str;
+	while (pos - str < sz) {
+		const char *spos = substr, *ppos = pos;
+		while (*spos != 0 && ppos - str < sz && *ppos == *spos) {
+			spos++;
+			ppos++;
+		}
+
+		if (*spos == 0)
+			return pos;
+		else
+			pos++;
+	}
+
+	return 0;
+}
+
 std::string str::format(const char *format, ...) {
 	/*this buffer is properly not safe*/
 	static const int BUFSZ = 1024;
@@ -371,7 +408,7 @@ std::vector<std::string> str::split(const char *str, char ch) {
 	std::vector<std::string> result;
 
 	const char *start = str, *pos = str;
-	while (*pos) {
+	while (*pos != 0) {
 		if (*pos == ch) {
 			result.push_back(std::string(start, pos - start));
 			pos++;
@@ -405,133 +442,102 @@ std::vector<std::string> str::split(const char *str, int sz, char ch) {
 	return result;
 }
 
+std::vector<std::string> str::split(const char *str, const char *sep) {
+	std::vector<std::string> result;
+	
+	int seplen = (int)::strlen(sep);
+	const char *start = str, *end = ::strstr(start, sep);
+	while (end != 0) {
+		result.push_back(std::string(start, end - start));
+		start = end + seplen;
+		end = ::strstr(start, sep);
+	}
+	//last split string
+	result.push_back(std::string(start));
+
+	return result;
+}
+
+std::vector<std::string> str::split(const char *str, int sz, const char *sep) {
+	std::vector<std::string> result;
+
+	int seplen = (int)::strlen(sep);
+	const char *start = str, *end = strstr(start, sz, sep);
+	while (end != 0) {
+		result.push_back(std::string(start, end - start));
+		start = end + seplen;
+		end = strstr(start, sz-(start-str), sep);
+	}
+	//last split string
+	result.push_back(std::string(start));
+
+	return result;
+}
+
 std::vector<std::string> str::splits(const char *str, const char *chs) {
 	std::vector<std::string> result;
 
-	const char *start = str, *pos = str;
-	while (*pos) {
-		if (*pos == ch) {
-			result.push_back(std::string(start, pos - start));
-			pos++;
-			start = pos;
-		} else {
-			pos++;
+	const char *start = str;
+	while (true) {
+		//find first split start pos
+		while (*start != 0 && ::strchr(chs, *start) != 0)
+			start++;
+
+		//find first split end pos
+		if (*start != 0) {
+			const char *end = start + 1;
+			while (*end != 0 && ::strchr(chs, *end) == 0)
+				end++;
+			result.push_back(std::string(start, end - start));
+
+			//continue next split
+			if (*end != 0)
+				start = end + 1;
+			else
+				break;
+		}
+		else {
+			break;
 		}
 	}
-
-	result.push_back(std::string(start, pos - start));
-
 	return result;
 }
 
 std::vector<std::string> str::splits(const char *str, int sz, const char *chs) {
-
-}
-
-std::vector<std::string> str::split(const char* str, int sz, char ch, bool keepempty) {
 	std::vector<std::string> result;
 
-	const char *start = str, *end = 0;
-	while (start < str + sz) {
-		end = strchr(start, sz - (start - str), ch);
-		if (end != 0 && (keepempty || end != start)) {
+	const char *start = str;
+	while (true) {
+		//find first split start pos
+		while (start - str < sz && ::strchr(chs, *start) != 0)
+			start++;
+
+		//find first split end pos
+		if (start - str < sz) {
+			const char *end = start + 1;
+			while (end - str < sz && ::strchr(chs, *end) == 0)
+				end++;
 			result.push_back(std::string(start, end - start));
-			start = end + 1;
-		} else
+
+			//continue next split
+			if (end - str < sz)
+				start = end + 1;
+			else
+				break;
+		}
+		else {
 			break;
+		}
 	}
-	if (start < str + sz) {
-		result.push_back(std::string(start, sz - (start - str)));
-	}
-
-	return result;
-}
-
-std::vector<std::string> str::split(const std::string& str, char ch) {
-	std::vector<std::string> result;
-
-	std::size_t startpos = 0, endpos = str.find(ch, startpos);
-	while (endpos != std::string::npos) {
-		result.push_back(str.substr(startpos, endpos - startpos));
-		startpos = endpos + 1;
-		endpos = str.find(ch, startpos);
-	}
-
-	if (startpos != std::string::npos) {
-		result.push_back(str.substr(startpos));
-	}
-
-	return result;
-}
-
-std::vector<std::string> str::splits(const std::string& str, const std::string& chs) {
-	std::vector<std::string> result;
-
-	int startpos = 0, endpos = 0, pos = 0;
-	while (pos < (int)str.size()) {
-		if (chs.find(str[pos]) != std::string::npos) {
-			result.push_back(str.substr(startpos, pos - startpos));
-			pos++;
-			while (pos < (int)str.size()) {
-				if (chs.find(str[pos] == std::string::npos)) {
-					startpos = pos;
-					break;
-				}
-				pos++;
-			}
-		} else
-			pos++;
-	}
-
-	if (startpos < (int)str.size()) {
-		result.push_back(str.substr(startpos));
-	}
-
-	return result;
-}
-
-std::vector<std::string> str::split(const char* str, int sz, const char* sep, int ssz) {
-	std::vector<std::string> result;
-
-	const char *start = str, *end = 0;
-	while (start < str + sz) {
-		end = strstr(start, sep);
-		if (end != 0) {
-			result.push_back(std::string(start, end - start));
-			start = end + ssz;
-		} else
-			break;
-	}
-	if (start < str + sz) {
-		result.push_back(std::string(start, str + sz));
-	}
-
-	return result;
-}
-
-std::vector<std::string> str::split(const std::string& str, const std::string& sep) {
-	std::vector<std::string> result;
-
-	std::size_t startpos = 0, endpos = str.find(sep.c_str(), 0, sep.length());
-	while (endpos != std::string::npos) {
-		result.push_back(str.substr(startpos, endpos - startpos));
-		startpos = endpos + sep.length();
-		endpos = str.find(sep.c_str(), startpos, sep.length());
-	}
-
-	if (startpos != std::string::npos) {
-		result.push_back(str.substr(startpos));
-	}
-
 	return result;
 }
 
 std::vector<std::vector<std::string>> str::split(const std::string &str, const std::string &seprow, const std::string &sepcol) {
 	std::vector<std::vector<std::string>> table;
 
-	std::vector<std::string> rows = str::split(str, seprow);
+	std::vector<std::string> rows = str::split(str.c_str(), seprow.c_str());
 	for (int i = 0; i < (int)rows.size(); i++) {
-		std::vector<std::string> cols = str::split(rows[i], sepcol);
+		std::vector<std::string> cols = str::split(rows[i].c_str(), sepcol.c_str());
 		table.push_back(cols);
 	}
 

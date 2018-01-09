@@ -125,6 +125,8 @@ public:
 	*/
 	static char *strchr(char *str, int sz, int ch);
 	static const char *strchr(const char *str, int sz, int ch);
+	static char *strstr(char *str, int sz, const char *substr);
+	static const char *strstr(const char *str, int sz, const char *substr);
 
 	/*
 	*	format string

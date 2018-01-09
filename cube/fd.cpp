@@ -85,7 +85,7 @@ int fd::size(const std::string &path, size_t &sz) {
 }
 
 std::string fd::name(const std::string &path) {
-	std::vector<std::string> subpaths = str::splits(path, "\\/");
+	std::vector<std::string> subpaths = str::splits(path.c_str(), "\\/");
 	if (subpaths.size() > 0) {
 		return subpaths[subpaths.size() - 1];
 	}
@@ -94,7 +94,7 @@ std::string fd::name(const std::string &path) {
 }
 
 std::string fd::path(const std::string &path) {
-	std::vector<std::string> subpaths = str::splits(path, "\\/");
+	std::vector<std::string> subpaths = str::splits(path.c_str(), "\\/");
 	if (subpaths.size() > 0) {
 		std::string filename = subpaths[subpaths.size() - 1];
 		return path.substr(0, path.length() - filename.length());

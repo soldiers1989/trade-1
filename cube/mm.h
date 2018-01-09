@@ -29,6 +29,7 @@ public:
 	*	pointer to the first occurence of @target in the @content block, or 0 if target not found.
 	*/
 	static char* fast_search(char* content, int content_length, const char* target, int target_length);
+	static const char* fast_search(const char* content, int content_length, const char* target, int target_length);
 
 	/*
 	*	slow search, search a target data block in the content data block, return the position of the first ocurrence in the content
@@ -40,6 +41,7 @@ public:
 	*	pointer to the first occurence of @target in the @content block, or 0 if target not found.
 	*/
 	static char* slow_search(char* content, int content_length, const char* target, int target_length);
+	static const char* slow_search(const char* content, int content_length, const char* target, int target_length);
 
 	/*
 	*	search wrapper, search a target data block in the content data block, return the position of the first ocurrence in the content
@@ -51,6 +53,7 @@ public:
 	*	pointer to the first occurence of @target in the @content block, or 0 if target not found.
 	*/
 	static char* search(char* content, int content_length, const char* target, int target_length, bool fast = true);
+	static const char* search(const char* content, int content_length, const char* target, int target_length, bool fast = true);
 
 	/*
 	*	overwrite source with destination in the given data, use default value if destinaiton length is less than source length

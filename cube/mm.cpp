@@ -35,11 +35,17 @@ char* mm::fast_search(char* content, int content_length, const char* target, int
 		}
 	}
 
+	delete []next;
+
 	if (i < content_length - target_length) {
 		return (char*)content + i;
 	}
 
 	return 0;
+}
+
+const char* mm::fast_search(const char* content, int content_length, const char* target, int target_length) {
+	return fast_search((char*)content, content_length, target, target_length);
 }
 
 char* mm::slow_search(char* content, int content_length, const char* target, int target_length) {
@@ -61,12 +67,20 @@ char* mm::slow_search(char* content, int content_length, const char* target, int
 	return 0;
 }
 
+const char* mm::slow_search(const char* content, int content_length, const char* target, int target_length) {
+	return slow_search((char*)content, content_length, target, target_length);
+}
+
 char* mm::search(char* content, int content_length, const char* target, int target_length, bool fast/* = true*/) {
 	if (fast) {
 		return mm::fast_search(content, content_length, target, target_length);
 	} else {
 		return mm::slow_search(content, content_length, target, target_length);
 	}
+}
+
+const char* mm::search(const char* content, int content_length, const char* target, int target_length, bool fast/* = true*/) {
+	return search((char*)content, content_length, target, target_length, fast);
 }
 
 int mm::overwrite(char* data, int datalen, const char* src, int srclen, const char* dest, int destlen, char default/* = 0*/, bool onlyfirst/* = true*/) {

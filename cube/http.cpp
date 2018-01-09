@@ -67,8 +67,8 @@ void params::_parse(const std::string &str) {
 }
 
 void params::_parse(const char *str, int sz) {
-	const char SEP = '&';
-	std::vector<std::string> items = cube::str::split(str, sz, SEP, false);
+	const char *SEP = "&";
+	std::vector<std::string> items = cube::str::splits(str, sz, SEP);
 	for (std::size_t i = 0; i < items.size(); i++) {
 		std::size_t sep = items[i].find('=');
 		if (sep != std::string::npos) {
@@ -130,7 +130,7 @@ void header::_parse(const std::string &str) {
 
 void header::_parse(const char *str, int sz) {
 	const char *SEP = "\r\n";
-	std::vector<std::string> items = cube::str::split(str, sz, SEP, strlen(SEP));
+	std::vector<std::string> items = cube::str::split(str, sz, SEP);
 	for (std::size_t i = 0; i < items.size(); i++) {
 		std::size_t sep = items[i].find(':');
 		if (sep != std::string::npos) {
@@ -294,7 +294,7 @@ bool request::feed(const char *data, int sz) {
 	/////header completed, try to parse request////
 	//parse request line//
 	std::size_t pos_request_line_end = _data.find(SEP_LINE);
-	std::vector<std::string> reqs = cube::str::split(_data.c_str(), pos_request_line_end, ' ', false);
+	std::vector<std::string> reqs = cube::str::splits(_data.c_str(), pos_request_line_end, " ");
 	if (reqs.size() != 3) {
 		throw ebad("invalid request line");
 	}
