@@ -367,6 +367,67 @@ void str::print(const std::vector<std::vector<std::string>> &table, int colwidth
 	}
 }
 
+std::vector<std::string> str::split(const char *str, char ch) {
+	std::vector<std::string> result;
+
+	const char *start = str, *pos = str;
+	while (*pos) {
+		if (*pos == ch) {
+			result.push_back(std::string(start, pos - start));
+			pos++;
+			start = pos;
+		} else {
+			pos++;
+		}
+	}
+	
+	result.push_back(std::string(start, pos - start));
+	
+	return result;
+}
+
+std::vector<std::string> str::split(const char *str, int sz, char ch) {
+	std::vector<std::string> result;
+
+	const char *start = str, *pos = str;
+	while (pos - str < sz) {
+		if (*pos == ch) {
+			result.push_back(std::string(start, pos - start));
+			pos++;
+			start = pos;
+		} else {
+			pos++;
+		}
+	}
+
+	result.push_back(std::string(start, pos - start));
+
+	return result;
+}
+
+std::vector<std::string> str::splits(const char *str, const char *chs) {
+	std::vector<std::string> result;
+
+	const char *start = str, *pos = str;
+	while (*pos) {
+		if (*pos == ch) {
+			result.push_back(std::string(start, pos - start));
+			pos++;
+			start = pos;
+		} else {
+			pos++;
+		}
+	}
+
+	result.push_back(std::string(start, pos - start));
+
+	return result;
+}
+
+std::vector<std::string> str::splits(const char *str, int sz, const char *chs) {
+
+}
+
 std::vector<std::string> str::split(const char* str, int sz, char ch, bool keepempty) {
 	std::vector<std::string> result;
 

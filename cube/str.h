@@ -177,9 +177,8 @@ public:
 	*@return:
 	*	split result
 	*/
-	static std::vector<std::string> split(const char *str, int sz, char ch, bool keepempty);
-	static std::vector<std::string> split(const std::string& str, char ch);
-	static std::vector<std::string> splits(const std::string& str, const std::string& chs);
+	static std::vector<std::string> split(const char *str, char ch);
+	static std::vector<std::string> split(const char *str, int sz, char ch);
 
 	/*
 	*	split a string by string seperator
@@ -191,8 +190,11 @@ public:
 	*@return:
 	*	split result
 	*/
-	static std::vector<std::string> split(const char *str, int sz, const char *sep, int ssz);
-	static std::vector<std::string> split(const std::string &str, const std::string &sep);
+	static std::vector<std::string> split(const char *str, const char *sep);
+	static std::vector<std::string> split(const char *str, int sz, const char *sep);
+
+	static std::vector<std::string> splits(const char *str, const char *chs);
+	static std::vector<std::string> splits(const char *str, int sz, const char *chs);
 
 	/*
 	*	split a string to table structure by row and column seperator
