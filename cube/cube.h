@@ -49,4 +49,17 @@ template<class T> void safe_delete(T *&ptr) {
 		ptr = 0;
 	}
 }
+
+//cube exception
+class cexception : public std::exception{
+public:
+	cexception() : _msg("unkown exception") {}
+	explicit cexception(const char *format, ...);
+	virtual ~cexception() {}
+
+	char const* what() const;
+
+public:
+	std::string _msg;
+};
 END_CUBE_NAMESPACE

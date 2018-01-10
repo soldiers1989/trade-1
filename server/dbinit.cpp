@@ -23,7 +23,7 @@ int dbinit::init(const std::string &sqlfile, const std::string &name, db* db, st
 		cube::safe_assign<std::string>(error, cube::str::format("dbinit: read sql file %s failed.", sqlfile.c_str()));
 		return -1;
 	}
-	std::vector<std::string> sqls = cube::str::split(content, ';');
+	std::vector<std::string> sqls = cube::str::split(content.c_str(), ';');
 	for (int i = 0; i < sqls.size(); i++) {
 		sql = cube::str::strip(sqls[i]);
 		if (sql.empty())

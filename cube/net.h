@@ -402,7 +402,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	virtual int handle_get(const request &req, response &resp) {
+	virtual int handle_get(request &req, response &resp) {
 		return -1;
 	}
 
@@ -413,7 +413,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	virtual int handle_post(const request &req, response &resp) {
+	virtual int handle_post(request &req, response &resp) {
 		return -1;
 	}
 };
@@ -440,7 +440,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0 means interval error
 	*/
-	int handle(const request &req, response &resp);
+	int handle(request &req, response &resp);
 
 private:
 	//registered servlets

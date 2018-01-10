@@ -300,12 +300,12 @@ void servlets::mount(const std::string &path, servlet *servlet) {
 	_servlets.insert(std::pair<std::string, std::shared_ptr<cube::http::servlet>>(path, std::shared_ptr<cube::http::servlet>(servlet)));
 }
 
-int servlets::handle(const request &req, response &resp) {
-	std::map<std::string, std::shared_ptr<servlet>>::iterator iter = _servlets.find(req.path());
+int servlets::handle(request &req, response &resp) {
+	std::map<std::string, std::shared_ptr<servlet>>::iterator iter = _servlets.find(req.query().path());
 	if (iter != _servlets.end()) {
-		if (req.method() == "get")
+		if (req.query().method() == "get")
 			return iter->second->handle_get(req, resp);
-		else if (req.method() == "post")
+		else if (req.query().method() == "post")
 			return iter->second->handle_post(req, resp);
 		else
 			return -1;
