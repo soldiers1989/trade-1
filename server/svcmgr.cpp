@@ -2,7 +2,7 @@
 BEGIN_SERVICE_NAMESPACE
 /////////////////////////////servlet class///////////////////////////////////
 int servlet_login::handle_get(const cube::http::request &req, cube::http::response &resp) {
-	return -1;
+	return 0;
 }
 
 int servlet_login::handle_post(const cube::http::request &req, cube::http::response &resp) {

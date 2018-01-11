@@ -77,8 +77,6 @@ private:
 class uri {
 public:
 	uri() : _scheme(""), _auth(""), _path(""), _query(""), _fragment("") {}
-	uri(const std::string &str);
-	uri(const char *str, int sz);
 	virtual ~uri() {}
 
 	/*
@@ -86,10 +84,10 @@ public:
 	*@param str: in, uri string
 	*@param sz: in, size of string
 	*@return:
-	*	uri object parsed
+	*	0 for success, otherwise <0
 	*/
-	static uri* parse(const std::string &str);
-	static uri* parse(const char *str, int sz);
+	int parse(const std::string &str);
+	int parse(const char *str, int sz);
 
 	/*
 	*	get uri items
@@ -108,17 +106,6 @@ public:
 	*	description of uri
 	*/
 	std::string description();
-
-public:
-	/*
-	*	parse uri from string
-	*@param str: in, uri string
-	*@param sz: in, size of string
-	*@return:
-	*	uri object or 0(null) means parse failed
-	*/
-	void _parse(const std::string &str);
-	void _parse(const char *str, int sz);
 
 private:
 	std::string _scheme; //uri scheme string
@@ -265,13 +252,14 @@ private:
 	std::string _method;
 	//request path
 	std::string _path;
-	//request params
-	http::params _params;
 	//request fragment
 	std::string _fragment;
 	//request http version
 	std::string _version;
-	
+
+	//get params
+	http::params _params;
+
 	//streamer for holding feeded data
 	tagstreamer _streamer;
 };
@@ -355,8 +343,13 @@ private:
 //post content
 class content {
 public:
-	content() : _streamer(){}
+	content() : _streamer(0){}
 	virtual ~content() {}
+
+	/*
+	*	set content size
+	*/
+	void want(int sz) { _streamer.want(sz); }
 
 	/*
 	*	feed data to header
@@ -375,6 +368,9 @@ public:
 	bool completed() { return _streamer.completed(); }
 
 private:
+	//post params
+	http::params _params;
+
 	//streamer to hold content
 	datastreamer _streamer;
 };
@@ -420,31 +416,11 @@ private:
 	http::content _content;
 };
 
-/*data type to save http response results*/
-class response {
+//response status class
+class status {
 public:
-	response() {}
-	virtual ~response() {}
-
-	/*
-	*	parse response items from string
-	*@param str: in, header string
-	*@param sz: in, size of string
-	*@param error: out, error message when failed
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	int parse(const std::string &str, std::string *error = 0);
-	int parse(const char *str, int sz, std::string *error = 0);
-
-	/*
-	*	pack reasponse items to string
-	*@param str: out, header string
-	*@param error: out, error message when failed
-	*return:
-	*	0 for success, otherwise <0
-	*/
-	int pack(std::string &str, std::string *error = 0);
+	status() {}
+	virtual ~status() {}
 
 private:
 	//scheme->http
@@ -455,9 +431,40 @@ private:
 	std::string _code;
 	//response description
 	std::string _reason;
-	
+};
+
+
+/*data type to save http response results*/
+class response {
+public:
+	response() {}
+	virtual ~response() {}
+
+	/*
+	*	feed data to response
+	*@param data: in, data to feed
+	*@param sz: in, data size
+	*@return:
+	*	size feeded
+	*/
+	int feed(const char *data, int sz);
+
+	/*
+	*	read data from response
+	*@param data: in/out, data read to
+	*@param sz: in, data size wang to read
+	*@return:
+	*	data read
+	*/
+	int read(char *data, int sz);
+
+private:
+	//response status
+	status _status;
 	//response header
 	header _header;
+	//response content
+	content _content;
 };
 
 END_HTTP_NAMESPACE

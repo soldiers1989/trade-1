@@ -80,27 +80,11 @@ std::vector<std::string> params::gets(const std::string &key) const {
 }
 
 //////////////////////////////////////////uri class/////////////////////////////////////////
-uri::uri(const std::string &str) : _scheme(""), _auth(""), _path(""), _query(""), _fragment("") {
-	_parse(str);
+int uri::parse(const std::string &str) {
+	return parse(str.c_str(), (int)str.length());
 }
 
-uri::uri(const char *str, int sz) : _scheme(""), _auth(""), _path(""), _query(""), _fragment("") {
-	_parse(str, sz);
-}
-
-uri* uri::parse(const std::string &str) {
-	return new uri(str);
-}
-
-uri* uri::parse(const char *str, int sz) {
-	return new uri(str, sz);
-}
-
-void uri::_parse(const std::string &str) {
-	return _parse(str.c_str(), (int)str.length());
-}
-
-void uri::_parse(const char *str, int sz) {
+int uri::parse(const char *str, int sz) {
 	const char *start = str, *end = str+sz;
 
 	//skip head spaces
@@ -113,7 +97,7 @@ void uri::_parse(const char *str, int sz) {
 
 	//input is spaces
 	if (start > end) {
-		return;
+		return 0;
 	}
 
 	const char *pos = start;
@@ -129,7 +113,6 @@ void uri::_parse(const char *str, int sz) {
 	} else {
 		pos = start;
 	}
-
 
 	////parse authority////
 	//find authority start flag
@@ -193,6 +176,11 @@ void uri::_parse(const char *str, int sz) {
 		_query = std::string(start, pos - start);
 	}
 
+	////parse params////
+	if (!_query.empty()) {
+		_params.parse(_query);
+	}
+
 	////parse fragment////
 	if (*pos == '#' && pos < end) {
 		//skip fragment start flag
@@ -201,6 +189,8 @@ void uri::_parse(const char *str, int sz) {
 		//save fragment
 		_fragment = std::string(start, end - start);
 	}
+
+	return 0;
 }
 
 std::string uri::description() {
@@ -274,7 +264,7 @@ int query::feed(const char *data, int sz) {
 	int szeat = _streamer.feed(data, sz);
 
 	//query data feed completed
-	if (szeat < sz && _streamer.completed()) {
+	if (_streamer.completed()) {
 		std::vector<std::string> reqs = cube::str::splits(_streamer.data().c_str(), _streamer.data().length(), " ");
 		if (reqs.size() != 3) {
 			throw edata("invalid query: %s", _streamer.data().c_str());
@@ -323,7 +313,7 @@ int header::feed(const char *data, int sz) {
 	int szeat = _streamer.feed(data, sz);
 
 	//query data feed completed
-	if (szeat < sz && _streamer.completed()) {
+	if (_streamer.completed()) {
 		int err = parse(_streamer.data().c_str(), _streamer.data().size());
 		if (err != 0) {
 			throw error("invalid header: %s, parse failed", _streamer.data().c_str());
@@ -410,6 +400,9 @@ int request::feed(const char *data, int sz) {
 	//second: feed header if it is not completed
 	if (sz - szfeed > 0 && !_header.completed()) {
 		szfeed += _header.feed(data + szfeed, sz - szfeed);
+
+		//try to get content length from header
+		_content.want(_header.geti("content-length", 0));
 	}
 
 	//third: feed content if it is not completed
@@ -418,6 +411,17 @@ int request::feed(const char *data, int sz) {
 	}
 
 	return szfeed;
+}
+
+/////////////////////////////////////////response class///////////////////////////////////////////
+int response::feed(const char *data, int sz) {
+	return 0;
+}
+
+int response::read(char *data, int sz) {
+	const char *resp = "HTTP/1.1 200 OK";
+	memcpy(data, resp, strlen(resp));
+	return 0;
 }
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE
