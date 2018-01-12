@@ -344,7 +344,7 @@ int session::on_recv(char *data, int transfered) {
 			return -1;
 		} else {
 			//feed data to request
-			_request.feed(data, transfered);
+			_request.write(data, transfered);
 
 			//request data has completed
 			if (_request.completed()) {

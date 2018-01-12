@@ -3,15 +3,17 @@
 */
 #pragma once
 #include "cube.h"
+#include "stream.h"
 #include <map>
 #include <vector>
-#include <string>
 #include <memory>
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
 
 //network address class
 class addr {
+	//address parse error
+	typedef cexception error;
 public:
 	addr() : _host(""), _port(0){}
 	addr(const std::string &host, ushort port) : _host(host), _port(port) {}
@@ -22,10 +24,10 @@ public:
 	*@param str: in, address string
 	*@param sz: in, size of string
 	*@return:
-	*	0 for parse success, otherwise <0
+	*	void
 	*/
-	int parse(const std::string &str);
-	int parse(const char* str, int sz);
+	void parse(const std::string &str, const char *default_port = "80");
+	void parse(const char* str, int sz, const char *default_port = "80");
 
 	/*
 	*	get address information
@@ -51,11 +53,10 @@ public:
 	*@param str: in, parameters string
 	*@param sz: in, size of string
 	*@return:
-	*	0 for parse success, otherwise <0
+	*	void
 	*/
-	int parse(const std::string &str);
-	int parse(const char* str, int sz);
-
+	void parse(const std::string &str);
+	void parse(const char* str, int sz);
 
 	/*
 	*	get parameter value by specfied key
@@ -84,10 +85,10 @@ public:
 	*@param str: in, uri string
 	*@param sz: in, size of string
 	*@return:
-	*	0 for success, otherwise <0
+	*	void
 	*/
-	int parse(const std::string &str);
-	int parse(const char *str, int sz);
+	void parse(const std::string &str);
+	void parse(const char *str, int sz);
 
 	/*
 	*	get uri items
@@ -117,86 +118,36 @@ private:
 	cube::http::params _params; //parameters in query string
 };
 
-//streamer class
-class tagstreamer {
+//http version class
+//format: HTTP/xxx
+class version {
+	//version parse error
+	typedef cexception error;
 public:
-	tagstreamer(const std::string &endtag) : _data(""), _endtag(endtag), _completed(false), _mtpos(0) {}
-	virtual ~tagstreamer() {}
+	version() {}
+	version(const std::string &protocol, const std::string &version) : _protocol(protocol), _version(version) {}
+	virtual ~version() {}
 
 	/*
-	*	feed data to query
-	*@param data: in, data feed to query
-	*@param sz: in, data size want to feed
+	*	pack version data
+	*/
+	std::string pack();
+
+	/*
+	*	parse version from string
+	*@param str: in, version string
+	*@param sz: in, size of string
 	*@return:
-	*	data size took by query object
+	*	0 for success, otherwise <0
 	*/
-	int feed(const char *data, int sz);
-
-	/*
-	*	check if streamer is full feed(end tag in the last)
-	*@return:
-	*	true for full, false if not
-	*/
-	bool completed() { return _completed; }
-
-	/*
-	*	get stream data
-	*/
-	std::string &data() { return _data; }
-	const std::string &cdata() const{ return _data; }
+	void parse(const std::string &str);
+	void parse(const char *str, int sz);
 
 private:
-	//data has taken
-	std::string _data;
-	//end tag for feeding
-	std::string _endtag;
-
-	//stream completed flag
-	bool _completed;
-	//current match pos in end tag
-	int _mtpos;
-};
-
-//data streamer
-class datastreamer {
-public:
-	datastreamer() : _szwant(INT_MAX) {}
-	datastreamer(int sz) : _szwant(sz) {}
-	virtual ~datastreamer() {}
-
-	/*
-	*	set stream want data size
-	*/
-	void want(int szwant) { _szwant = szwant; }
-
-	/*
-	*	feed data to query
-	*@param data: in, data feed to query
-	*@param sz: in, data size want to feed
-	*@return:
-	*	data size took by query object
-	*/
-	int feed(const char *data, int sz);
-
-	/*
-	*	check if streamer is full feed(end tag in the last)
-	*@return:
-	*	true for full, false if not
-	*/
-	bool completed() { return _data.length() == _szwant; }
-
-	/*
-	*	get stream data
-	*/
-	std::string &data() { return _data; }
-	const std::string &cdata() const { return _data; }
-
-private:
-	//data has taken
-	std::string _data;
-
-	//stream want size
-	int _szwant;
+	//protocol, must be "http"
+	std::string _protocol;
+	//http version
+	std::string _version;
 };
 
 //method class
@@ -214,29 +165,34 @@ class query {
 	//error query data exception
 	typedef cexception edata;
 public:
-	query() : _method(""), _path(""), _fragment(""), _version(""), _streamer("\r\n") {}
+	query() : _method(""), _path(""), _fragment(""), _version(""), _stream("\r\n") {}
 	virtual ~query() {}
 
 	/*
-	*	feed data to query
-	*@param data: in, data feed to query
-	*@param sz: in, data size want to feed
+	*	write data to query
+	*@param data: in, write feed to query
+	*@param sz: in, data size want to write
 	*@return:
-	*	data size took by query object
+	*	data size written
 	*/
-	int feed(const char *data, int sz);
+	int write(const char *data, int sz);
 
 	/*
 	*	check if query is completed
 	*@return:
 	*	true for completed, false if not
 	*/
-	bool completed() { return _streamer.completed(); }
+	bool completed() { return _stream.completed(); }
 
 	/*
 	*	get query items parsed from data
 	*/
 	const std::string &method() { return _method; }
+	const std::string &version() { return _version; }
+
+	/*
+	*	request uri data
+	*/
 	const std::string &path() { return _path; }
 	const params &params() { return _params; }
 	const std::string &fragment() { return _fragment; }
@@ -244,24 +200,25 @@ public:
 	/*
 	*	get original query data
 	*/
-	std::string &data() { return _streamer.data(); }
-	const std::string &cdata() const { return _streamer.cdata(); }
-	
+	std::string str() { return _stream.str(); }
+
 private:
 	//request method
 	std::string _method;
-	//request path
-	std::string _path;
-	//request fragment
-	std::string _fragment;
+	//request uri
+	std::string _uri;
 	//request http version
 	std::string _version;
 
+	//request path
+	std::string _path;
 	//get params
 	http::params _params;
+	//request fragment
+	std::string _fragment;
 
-	//streamer for holding feeded data
-	tagstreamer _streamer;
+	//query stream
+	delimitedstream _stream;
 };
 
 //header class
@@ -270,7 +227,7 @@ class header {
 	//bad header execption
 	typedef cexception error;
 public:
-	header() : _streamer("\r\n\r\n") {}
+	header() : _stream("\r\n\r\n") {}
 	virtual ~header() {}
 
 	/*
@@ -280,14 +237,14 @@ public:
 	*@return:
 	*	data size took by header object
 	*/
-	int feed(const char *data, int sz);
+	int write(const char *data, int sz);
 
 	/*
 	*	check if header is completed
 	*@return:
 	*	true for completed, false if not
 	*/
-	bool completed() { return _streamer.completed(); }
+	bool completed() { return _stream.completed(); }
 
 	/*
 	*	parse header items from string
@@ -336,43 +293,43 @@ private:
 	std::map<std::string, std::vector<std::string>> _items;
 
 	//streamer for holding feeded data
-	tagstreamer _streamer;
+	delimitedstream _stream;
 };
 
 //content class
 //post content
 class content {
 public:
-	content() : _streamer(0){}
+	content() : _stream(0){}
 	virtual ~content() {}
 
 	/*
 	*	set content size
 	*/
-	void want(int sz) { _streamer.want(sz); }
+	void size(int sz) { _stream.size(sz); }
 
 	/*
-	*	feed data to header
-	*@param data: in, data to feed
-	*@param sz: in, data size want to feed
+	*	write data to header
+	*@param data: in, data to write
+	*@param sz: in, data size want to write
 	*@return:
-	*	data size took by header object
+	*	data size written
 	*/
-	int feed(const char *data, int sz);
+	int write(const char *data, int sz);
 
 	/*
 	*	check if header is completed
 	*@return:
 	*	true for completed, false if not
 	*/
-	bool completed() { return _streamer.completed(); }
+	bool completed() { return _stream.completed(); }
 
 private:
 	//post params
 	http::params _params;
 
-	//streamer to hold content
-	datastreamer _streamer;
+	//stream to hold content
+	sizedstream _stream;
 };
 
 /*data type to save http request parse results*/
@@ -385,14 +342,14 @@ public:
 	virtual ~request() {}
 
 	/*
-	*	feed data to request, and try to parse request in the same time
+	*	write data to request, and try to parse request in the same time
 	*@param data: in, new data
 	*@param sz: in, data size
 	*@return:
-	*	true if request data completed and parsed, otherwise return false
+	*	data size written
 	*/
-	int feed(const char *data, int sz);
-	
+	int write(const char *data, int sz);
+
 	/*
 	*	check if request has completed
 	*@return:
@@ -418,36 +375,84 @@ private:
 
 //response status class
 class status {
+	//status error
+	typedef cexception error;
 public:
-	status() {}
+	status() : _stream("\r\n") {}
+	status(const std::string &version, const std::string &code, const std::string &reason) : _version(version), _code(code), _reason(reason), _stream("\r\n"){}
 	virtual ~status() {}
 
+	/*
+	*	make status stream data
+	*/
+	void make();
+
+	/*
+	*	read status to data
+	*@param data: in/out, data output
+	*@param sz: in, input data buffer size
+	*@return:
+	*	size read
+	*/
+	int read(char *data, int sz);
+
+	/*
+	*	feed data to response status
+	*@param data: in, data to feed
+	*@param sz: in, data size to feed
+	*@return:
+	*	data size taked
+	*/
+	int write(const char *data, int sz);
+
+	/*
+	*	check if query is completed
+	*@return:
+	*	true for completed, false if not
+	*/
+	bool completed() { return _stream.completed(); }
 private:
-	//scheme->http
-	std::string _scheme;
 	//http version
 	std::string _version;
 	//response code
 	std::string _code;
 	//response description
 	std::string _reason;
+
+	//stream status data
+	delimitedstream _stream;
 };
 
+//response status specification
+class statuss {
+	//status error
+	typedef cexception error;
+public:
+	//register status
+	class setter {
+	public:
+		setter(const std::string &version, const std::string &code, const std::string &reason) {
+			statuss::set(code, status(version, code, reason));
+		}
+		virtual ~setter() {}
+	};
+
+public:
+	/*
+	*	get & set status specification
+	*/
+	static const status &get(const std::string &code);
+	static void set(const std::string &code, const status &status);
+
+private:
+	static std::map<std::string, status> _statuss;
+};
 
 /*data type to save http response results*/
 class response {
 public:
 	response() {}
 	virtual ~response() {}
-
-	/*
-	*	feed data to response
-	*@param data: in, data to feed
-	*@param sz: in, data size
-	*@return:
-	*	size feeded
-	*/
-	int feed(const char *data, int sz);
 
 	/*
 	*	read data from response
@@ -457,6 +462,15 @@ public:
 	*	data read
 	*/
 	int read(char *data, int sz);
+
+	/*
+	*	feed data to response
+	*@param data: in, data to feed
+	*@param sz: in, data size
+	*@return:
+	*	size feeded
+	*/
+	int write(const char *data, int sz);
 
 private:
 	//response status
