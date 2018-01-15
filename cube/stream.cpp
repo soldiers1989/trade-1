@@ -1,26 +1,41 @@
 #include "stream.h"
 BEGIN_CUBE_NAMESPACE
-//////////////////////////////////////////sized stream stream class//////////////////////////////////////
-int sizedstream::read(char *data, int sz) {
+//////////////////////////////////////////string stream class//////////////////////////////////////
+int sstream::read(char *data, int sz) {
+	if (_rpos < _wpos) {
+		//get read size
+		int rsz = _wpos - _rpos > sz ? sz : _wpos - _rpos;
+		//copy to destination data buffer
+		memcpy(data, _data.c_str(), rsz);
+		//reset current read pos
+		_rpos += rsz;
+		//return read size
+		return rsz;
+	}
+
+	//read nothing
 	return 0;
 }
 
+//////////////////////////////////////////sized stream class//////////////////////////////////////
 int sizedstream::write(const char *data, int sz) {
-	//check if stream has completed
+	//stream has completed
 	if (completed()) {
 		return 0;
 	}
 
 	//get want size
-	int want = _size - _str.length();
+	int want = _size - _data.length();
 	want = sz > want ? want : sz;
 
-	//stream has completed
+	//need more data
 	if (want > 0) {
-		_str.append(data, want);
+		//append more data
+		_data.append(data, want);
+		_wpos = _data.length();
 
 		//set flag if completed
-		if (_str.length() == _size) {
+		if (_wpos == _size) {
 			complete(true);
 		}
 	}
@@ -28,11 +43,7 @@ int sizedstream::write(const char *data, int sz) {
 	return want;
 }
 
-//////////////////////////////////////////streamer class////////////////////////////////////////
-int delimitedstream::read(char *data, int sz) {
-	return 0;
-}
-
+//////////////////////////////////////////delimited stream class////////////////////////////////////////
 int delimitedstream::write(const char *data, int sz) {
 	//streamer is full
 	if (completed()) {
@@ -63,7 +74,7 @@ int delimitedstream::write(const char *data, int sz) {
 		complete(true);
 		//write data
 		int wsz = pdata - data;
-		_str.append(data, wsz);
+		_data.append(data, wsz);
 		//return write size
 		return wsz;
 	}
@@ -72,7 +83,7 @@ int delimitedstream::write(const char *data, int sz) {
 	_currpos = pdelimiter - delimiter;
 
 	//write all data
-	_str.append(data, sz);
+	_data.append(data, sz);
 
 	//all data feeded
 	return sz;

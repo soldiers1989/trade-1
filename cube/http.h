@@ -15,19 +15,23 @@ class addr {
 	//address parse error
 	typedef cexception error;
 public:
-	addr() : _host(""), _port(0){}
-	addr(const std::string &host, ushort port) : _host(host), _port(port) {}
+	addr() : _data(""), _host(""), _port(0){ }
+	addr(const std::string &str) : _data(str), _host(""), _port(80) { parse(); }
+	addr(const std::string &host, ushort port) : _host(host), _port(port) { pack(); }
 	virtual ~addr() {}
 
 	/*
-	*	parse network address from string
-	*@param str: in, address string
-	*@param sz: in, size of string
+	*	parse network address from data string
 	*@return:
 	*	void
 	*/
-	void parse(const std::string &str, const char *default_port = "80");
-	void parse(const char* str, int sz, const char *default_port = "80");
+	void parse();
+	void parse(const std::string &str);
+
+	/*
+	*	pack network address to data string
+	*/
+	void pack();
 
 	/*
 	*	get address information
@@ -35,60 +39,94 @@ public:
 	const std::string& host() { return _host; }
 	ushort port() { return _port; }
 
+	const std::string& data() { return _data; }
+
 private:
 	//host address in url
 	std::string _host;
 	//port in url
 	ushort _port;
+
+	//original data
+	std::string _data;
 };
 
 //parameters structure
 class params {
 public:
-	params() {}
+	params() : _data("") {}
+	params(const std::string &str) : _data(str) { parse(); }
 	virtual ~params(){}
 
 	/*
-	*	parse parameters from string
-	*@param str: in, parameters string
-	*@param sz: in, size of string
+	*	parse params from data string
 	*@return:
 	*	void
 	*/
+	void parse();
 	void parse(const std::string &str);
-	void parse(const char* str, int sz);
 
 	/*
-	*	get parameter value by specfied key
-	*@param key: in, parameter key
-	*@return:
-	*	value of parameter
+	*	pack params to data string
 	*/
-	std::string get(const std::string &key) const;
-	std::vector<std::string> gets(const std::string &key) const;
+	void pack();
+
+	/*
+	*	get param value by specfied key
+	*@param key: in, param key
+	*@param val: in/out, value of specified key
+	*@return:
+	*	value of param
+	*/
+	void get(const std::string &key, std::string &val);
+	std::string get(const std::string &key, const char *default = "");
+
+	/*
+	*	get param values by specified key
+	*@param key: in, param key
+	*@param vals: in/out, values of specified key
+	*@return:
+	*	values of param
+	*/
+	std::vector<std::string> gets(const std::string &key);
+	void gets(const std::string &key, std::vector<std::string> &vals);
+	
+
+	const std::string& data() { return _data; }
 
 private:
-	//parameters
+	//params
 	std::map<std::string, std::vector<std::string>> _params;
+
+	//params data
+	std::string _data;
 };
 
 //uri structure
 //uri->[scheme:][//authority][/path][?query][#fragment]
 //authority->[host:port]
 class uri {
+	//uri parse error
+	typedef cexception error;
 public:
-	uri() : _scheme(""), _auth(""), _path(""), _query(""), _fragment("") {}
+	uri() : _scheme(""), _auth(""), _path(""), _query(""), _fragment(""), _data("") {}
+	uri(const std::string &str) : _scheme(""), _auth(""), _path(""), _query(""), _fragment(""), _data(str) { parse(); }
 	virtual ~uri() {}
 
 	/*
-	*	parse uri from string
-	*@param str: in, uri string
-	*@param sz: in, size of string
+	*	parse uri from data string
 	*@return:
 	*	void
 	*/
+	void parse();
 	void parse(const std::string &str);
-	void parse(const char *str, int sz);
+
+	/*
+	*	pack uri to data string
+	*@return:
+	*	void
+	*/
+	void pack();
 
 	/*
 	*	get uri items
@@ -101,12 +139,7 @@ public:
 	const std::string& fragment() const { return _fragment; }
 	const params& params() const { return _params; }
 
-	/*
-	*	get description of uri
-	*@return:
-	*	description of uri
-	*/
-	std::string description();
+	const std::string &data() { return _data; }
 
 private:
 	std::string _scheme; //uri scheme string
@@ -115,107 +148,178 @@ private:
 	std::string _query; //uri query string
 	std::string _fragment; //uri fragment string
 
+	std::string _data; //original uri data string
+	
 	cube::http::params _params; //parameters in query string
 };
 
 //http version class
-//format: HTTP/xxx
+//format: HTTP/1.1
 class version {
 	//version parse error
 	typedef cexception error;
 public:
-	version() {}
-	version(const std::string &protocol, const std::string &version) : _protocol(protocol), _version(version) {}
+	static version DEFAULT;
+
+public:
+	version() : _name("HTTP"), _code("1.1"), _data("HTTP/1.1") {}
+	version(const std::string &str) : _name(""), _code(""), _data(str) { parse(); }
+	version(const std::string &name, const std::string &code) : _name(name), _code(code), _data("") { pack(); }
 	virtual ~version() {}
 
 	/*
-	*	pack version data
+	*	parse version from data string
+	*@return:
+	*	void
 	*/
-	std::string pack();
+	void parse();
+	void parse(const std::string &str);
 
 	/*
-	*	parse version from string
-	*@param str: in, version string
-	*@param sz: in, size of string
+	*	pack version to data string
 	*@return:
-	*	0 for success, otherwise <0
+	*	void
 	*/
-	void parse(const std::string &str);
-	void parse(const char *str, int sz);
+	void pack();
+
+	const std::string& name() { return _name; }
+	const std::string& code() { return _code; }
+	const std::string& data() { return _data; }
 
 private:
-	//protocol, must be "http"
-	std::string _protocol;
-	//http version
-	std::string _version;
+	//version name, must be "http"
+	std::string _name;
+	//http version code
+	std::string _code;
+
+	//original version data
+	std::string _data;
 };
 
 //method class
 class method {
+	//error request method
+	typedef cexception error;
+public:
+	//support http method
+	static method GET;
+	static method POST;
+
 public:
 	method() {}
+	method(const std::string &str) : _data(str) { parse(); }
 	virtual ~method() {}
 
-	static bool support(const std::string &mtd);
+	/*
+	*	parse method from data string
+	*@return:
+	*	void
+	*/
+	void parse();
+	void parse(const std::string &str);
+
+	/*
+	*	pack method to data string
+	*@return:
+	*	void
+	*/
+	void pack();
+
+	/*
+	*	get method name
+	*/
+	const std::string &name() { return _name; }
+	const std::string &data() { return _data; }
+
+private:
+	bool support(const std::string &mtd);
+private:
+	//method name
+	std::string _name;
+
+	//original data
+	std::string _data;
 };
 
 //query class
 //data: GET /path?param HTTP/1.1\r\n
 class query {
 	//error query data exception
-	typedef cexception edata;
+	typedef cexception error;
 public:
-	query() : _method(""), _path(""), _fragment(""), _version(""), _stream("\r\n") {}
+	query() : _stream("\r\n") {}
 	virtual ~query() {}
 
 	/*
-	*	write data to query
+	* make query data
+	*@return
+	*	void
+	*/
+	void make();
+
+	/*
+	*	read query data
+	*@param data: in/out, data output
+	*@param sz: in, input data buffer size
+	*@return:
+	*	size read
+	*/
+	int read(char *data, int sz);
+
+	/*
+	*	feed data to query
 	*@param data: in, write feed to query
 	*@param sz: in, data size want to write
 	*@return:
 	*	data size written
 	*/
-	int write(const char *data, int sz);
+	int feed(const char *data, int sz);
 
 	/*
 	*	check if query is completed
 	*@return:
 	*	true for completed, false if not
 	*/
-	bool completed() { return _stream.completed(); }
+	bool full() { return _stream.completed(); }
+
+	/*
+	*	
+	*/
+	void get(const char *uri_format, ...);
+	void post(const char *uri_format, ...);
 
 	/*
 	*	get query items parsed from data
 	*/
-	const std::string &method() { return _method; }
-	const std::string &version() { return _version; }
+	const std::string &method() { return _method.name(); }
+	const std::string &version() { return _version.code(); }
 
 	/*
 	*	request uri data
 	*/
-	const std::string &path() { return _path; }
-	const params &params() { return _params; }
-	const std::string &fragment() { return _fragment; }
+	const std::string &path() { return _uri.path(); }
+	const params &params() { return _uri.params(); }
+	const std::string &fragment() { return _uri.fragment(); }
 
 	/*
 	*	get original query data
 	*/
-	std::string str() { return _stream.str(); }
+	std::string &data() { return _stream.data(); }
+private:
+	/*
+	*	parse query from stream data
+	*@return:
+	*	void
+	*/
+	void parse();
 
 private:
 	//request method
-	std::string _method;
+	http::method _method;
 	//request uri
-	std::string _uri;
+	http::uri _uri;
 	//request http version
-	std::string _version;
-
-	//request path
-	std::string _path;
-	//get params
-	http::params _params;
-	//request fragment
-	std::string _fragment;
+	http::version _version;
 
 	//query stream
 	delimitedstream _stream;
@@ -229,6 +333,22 @@ class header {
 public:
 	header() : _stream("\r\n\r\n") {}
 	virtual ~header() {}
+
+	/*
+	* make header data
+	*@return
+	*	void
+	*/
+	void make();
+
+	/*
+	*	read status to data
+	*@param data: in/out, data output
+	*@param sz: in, input data buffer size
+	*@return:
+	*	size read
+	*/
+	int read(char *data, int sz);
 
 	/*
 	*	feed data to header
@@ -247,6 +367,38 @@ public:
 	bool completed() { return _stream.completed(); }
 
 	/*
+	*	check if item exist and get item value
+	*/
+	bool has(const std::string &item);
+
+	/*
+	*	set string value of specified item
+	*@param item: in, item key
+	*@param replace: in, replace item value if exist
+	*@param format: in, format string
+	*@return:
+	*	self
+	*/
+	header &set(const std::string &item, bool replace, const char *format, ...);
+
+	/*
+	*	get string value of specified item
+	*@param item: in, item key
+	*@param default: in, default value if item not exist
+	*@return:
+	*	item string value or default value
+	*/
+	std::string get(const std::string &item, const char *default = "");
+
+	/*
+	*	get string values of specified item
+	*@param item: in, item key
+	*@return:
+	*	values in vector of specfied item
+	*/
+	std::vector<std::string> gets(const std::string &item);
+
+	/*
 	*	parse header items from string
 	*@param str: in, header string
 	*@param sz: in, size of string
@@ -257,40 +409,12 @@ public:
 	int parse(const std::string &str);
 	int parse(const char *str, int sz);
 
-	/*
-	*	check if item exist and get item value
-	*/
-	bool has(const std::string &item);
-
-	/*
-	*	get int value of specified item
-	*@param item: in, item key
-	*@param default: in, default value if item not exist
-	*@return:
-	*	item int value or default value
-	*/
-	int geti(const std::string &item, int default = 0);
-
-	/*
-	*	get string value of specified item
-	*@param item: in, item key
-	*@param default: in, default value if item not exist
-	*@return:
-	*	item string value or default value
-	*/
-	std::string gets(const std::string &item, const char *default = "");
-
-	/*
-	*	get string values of specified item
-	*@param item: in, item key
-	*@return:
-	*	values in vector of specfied item
-	*/
-	std::vector<std::string> gets(const std::string &item);
-
 private:
 	//header items
 	std::map<std::string, std::vector<std::string>> _items;
+
+	//empty value for not exist header item
+	std::string _empty;
 
 	//streamer for holding feeded data
 	delimitedstream _stream;
@@ -307,6 +431,20 @@ public:
 	*	set content size
 	*/
 	void size(int sz) { _stream.size(sz); }
+
+	/*
+	*	make status stream data
+	*/
+	void make();
+
+	/*
+	*	read status to data
+	*@param data: in/out, data output
+	*@param sz: in, input data buffer size
+	*@return:
+	*	size read
+	*/
+	int read(char *data, int sz);
 
 	/*
 	*	write data to header
@@ -342,6 +480,20 @@ public:
 	virtual ~request() {}
 
 	/*
+	*	make status stream data
+	*/
+	void make();
+
+	/*
+	*	read status to data
+	*@param data: in/out, data output
+	*@param sz: in, input data buffer size
+	*@return:
+	*	size read
+	*/
+	int read(char *data, int sz);
+
+	/*
 	*	write data to request, and try to parse request in the same time
 	*@param data: in, new data
 	*@param sz: in, data size
@@ -355,7 +507,7 @@ public:
 	*@return:
 	*	true if completed, otherwise return false
 	*/
-	bool completed() { return _query.completed() && _header.completed() && _content.completed(); }
+	bool completed() { return _query.full() && _header.completed() && _content.completed(); }
 	
 	/*
 	*	get request query/header/content
@@ -411,6 +563,25 @@ public:
 	*	true for completed, false if not
 	*/
 	bool completed() { return _stream.completed(); }
+
+	/*
+	*	get & set status code
+	*/
+	const std::string &code() { return _code; }
+	void code(const std::string &code) { _code = code; }
+
+	/*
+	*	get & set http version
+	*/
+	const std::string &version() { return _version; }
+	void version(const std::string &version) { _version = version; }
+
+	/*
+	*	get & set status reason phrase
+	*/
+	const std::string &reason() { return _reason; }
+	void reason(const std::string &reason) { _reason = reason; }
+
 private:
 	//http version
 	std::string _version;
@@ -455,6 +626,29 @@ public:
 	virtual ~response() {}
 
 	/*
+	*	get / set status code
+	*/
+	const std::string& status() { return _status.code(); }
+	void status(const std::string &code) {}
+	
+	/*
+	*	get / set response header
+	*/
+	std::string header(const std::string &key, const char *default = "");
+	void header(const std::string &key, bool replace, const char *format, ...);
+	
+	/*
+	*	get / set response content
+	*/
+	const std::string &content();
+	void content(const std::string &type, char *data, int sz);
+
+	/*
+	*	make response stream data after set response values
+	*/
+	void make();
+
+	/*
 	*	read data from response
 	*@param data: in/out, data read to
 	*@param sz: in, data size wang to read
@@ -474,11 +668,11 @@ public:
 
 private:
 	//response status
-	status _status;
+	http::status _status;
 	//response header
-	header _header;
+	http::header _header;
 	//response content
-	content _content;
+	http::content _content;
 };
 
 END_HTTP_NAMESPACE

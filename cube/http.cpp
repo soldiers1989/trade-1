@@ -1,16 +1,13 @@
 #include "http.h"
 #include "str.h"
+#include <stdarg.h>
 #include <algorithm>
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
 
 //////////////////////////////////////////address class/////////////////////////////////////////
-void addr::parse(const std::string &str, const char *default_port) {
-	parse(str.c_str(), (int)str.length());
-}
-
-void addr::parse(const char *str, int sz, const char *default_port) {
-	const char *start = str, *end = str + sz;
+void addr::parse() {
+	const char *start = _data.c_str(), *end = _data.c_str() + _data.length();
 	
 	//find seperator of host and port
 	const char *pos = start;
@@ -18,13 +15,13 @@ void addr::parse(const char *str, int sz, const char *default_port) {
 		pos++;
 
 	//parse host and port
-	std::string host(""), port(default_port);
+	std::string host(""), port("80");
 	if (*pos == ':') {
 		host = cube::str::strip(start, pos - start);
 		port = cube::str::strip(pos + 1, end - pos - 1);
 	} else {
 		//only host found
-		host = cube::str::strip(str);
+		host = cube::str::strip(_data);
 	}
 
 	//check host and port
@@ -41,14 +38,32 @@ void addr::parse(const char *str, int sz, const char *default_port) {
 	_port = (ushort)::atoi(port.c_str());
 }
 
-//////////////////////////////////////////parameters class/////////////////////////////////////////
-void params::parse(const std::string &str) {
-	parse(str.c_str(), str.length());
+void addr::parse(const std::string &str) {
+	//set data
+	_data = str;
+
+	//parse data
+	parse();
 }
 
-void params::parse(const char *str, int sz) {
+void addr::pack() {
+	//ignore default port
+	if (_port == 80) {
+		_data = _host;
+	}
+
+	//pack host & port
+	cube::str::format(_data, "%s:%d", _host.c_str(), _port);
+}
+
+//////////////////////////////////////////parameters class/////////////////////////////////////////
+void params::parse() {
 	const char *SEP = "&";
-	std::vector<std::string> items = cube::str::splits(str, sz, SEP);
+	//split params
+	std::vector<std::string> items;
+	cube::str::strtok(_data.c_str(), _data.length(), SEP, items);
+
+	//parse each param
 	for (std::size_t i = 0; i < items.size(); i++) {
 		std::size_t sep = items[i].find('=');
 		if (sep != std::string::npos) {
@@ -57,29 +72,59 @@ void params::parse(const char *str, int sz) {
 			if (!key.empty()) {
 				//unescape key
 				key = cube::str::unescape(key);
-
 				if (_params.find(key) == _params.end()) {
 					_params.insert(std::pair<std::string, std::vector<std::string>>(key, std::vector<std::string>()));
 				}
-				
+
 				//unescape value
 				val = cube::str::unescape(val);
-
 				_params[key].push_back(val);
 			}
 		}
 	}
 }
 
-std::string params::get(const std::string &key) const {
+void params::parse(const std::string &str) {
+	//clear old params
+	_params.clear();
+
+	//set params data
+	_data = str;
+
+	//parse data
+	parse();
+}
+
+void params::pack() {
+	bool first = true;
+	std::map<std::string, std::vector<std::string>>::iterator iter = _params.begin(), iterend = _params.end();
+	while (iter != iterend) {
+		for (size_t i = 0; i < iter->second.size(); i++) {
+			if (first) {
+				_data.append(iter->first + "=" + iter->second[i]);
+				first = false;
+			} else {
+				_data.append("&"+iter->first + "=" + iter->second[i]);
+			}
+		}
+	}
+}
+
+void params::get(const std::string &key, std::string &val) {
+	std::map<std::string, std::vector<std::string>>::const_iterator citer = _params.find(key);
+	if (citer != _params.end() && !citer->second.empty())
+		val = citer->second[0];
+}
+
+std::string params::get(const std::string &key, const char *default) {
 	std::map<std::string, std::vector<std::string>>::const_iterator citer = _params.find(key);
 	if (citer == _params.end() || citer->second.empty())
-		return "";
+		return default;
 
 	return citer->second[0];
 }
 
-std::vector<std::string> params::gets(const std::string &key) const {
+std::vector<std::string> params::gets(const std::string &key) {
 	std::map<std::string, std::vector<std::string>>::const_iterator citer = _params.find(key);
 	if (citer == _params.end())
 		return std::vector<std::string>();
@@ -87,14 +132,15 @@ std::vector<std::string> params::gets(const std::string &key) const {
 	return citer->second;
 }
 
-//////////////////////////////////////////uri class/////////////////////////////////////////
-void uri::parse(const std::string &str) {
-	parse(str.c_str(), (int)str.length());
+void params::gets(const std::string &key, std::vector<std::string> &vals) {
+	std::map<std::string, std::vector<std::string>>::const_iterator citer = _params.find(key);
+	if (citer != _params.end())
+		vals = citer->second;
 }
 
-void uri::parse(const char *str, int sz) {
-	const char *start = str, *end = str+sz;
-
+//////////////////////////////////////////uri class/////////////////////////////////////////
+void uri::parse() {
+	const char *start = _data.c_str(), *end = _data.c_str()+_data.length();
 	//skip head spaces
 	while (::isspace(*start))
 		start++;
@@ -105,7 +151,7 @@ void uri::parse(const char *str, int sz) {
 
 	//input is spaces
 	if (start > end) {
-		return;
+		throw error("uri: empty uri data.");
 	}
 
 	const char *pos = start;
@@ -199,43 +245,119 @@ void uri::parse(const char *str, int sz) {
 	}
 }
 
-std::string uri::description() {
-	return cube::str::format("scheme:%s\nauthority:%s\npath:%s\nquery:%s\nfragment:%s\n", _scheme.c_str(), _auth.c_str(), _path.c_str(), _query.c_str(), _fragment.c_str());
+void uri::parse(const std::string &str) {
+	//set uri data
+	_data = str;
+
+	//parse data
+	parse();
 }
 
-//////////////////////////////////////////version class/////////////////////////////////////////
-std::string version::pack() {
-	return _protocol + "/" + _version;
+void uri::pack() {
+	//clear data first
+	_data.clear();
+
+	//add scheme
+	if (!_scheme.empty()) {
+		_data.append(_scheme + ":");
+	}
+
+	//add auth string
+	if (!_auth.empty()) {
+		_data.append("//" + _auth);
+	}
+
+	//add path string
+	if (!_path.empty()) {
+		_data.append("/" + _path);
+	}
+
+	//add query string
+	if (!_query.empty()) {
+		_data.append("?" + _query);
+	}
+
+	//add fragment string
+	if (!_fragment.empty()) {
+		_data.append("#" + _fragment);
+	}
 }
 
-void version::parse(const std::string &str) {
-	parse(str.c_str(), str.length());
-}
+//////////////////////////////////////////http version class/////////////////////////////////////////
+//default http version
+version version::DEFAULT("HTTP/1.1");
 
-void version::parse(const char *str, int sz) {
-	std::vector<std::string> items = cube::str::split(str, sz, '/');
+void version::parse() {
+	std::vector<std::string> items = cube::str::split(_data.c_str(), _data.length(), '/');
 	if (items.size() != 2) {
-		throw error("http version: %s, invalid http version", std::string(str, sz).c_str());
+		throw error("http version: %s, invalid http version", _data.c_str());
 	}
 
 	//parse protocol
-	std::string protocol = cube::str::lower(cube::str::strip(items[0]));
-	if (protocol != "http") {
-		throw error("http version: %s, protocol not supported", protocol.c_str());
+	std::string name = cube::str::lower(cube::str::strip(items[0]));
+	if (name != "http") {
+		throw error("http version: %s, protocol not supported", name.c_str());
 	}
 
-	//set protocol & version
-	_protocol = protocol;
-	_version = cube::str::strip(items[1]);
+	//set protocol name & version code
+	_name = name;
+	_code = cube::str::strip(items[1]);
+}
+
+void version::parse(const std::string &str) {
+	//set data
+	_data = str;
+
+	//parse http version
+	parse();
+}
+
+void version::pack() {
+	_data = _name + "/" + _code;
 }
 
 //////////////////////////////////////////method class///////////////////////////////////////////
+method method::GET("GET");
+method method::POST("POST");
+
+void method::parse() {
+	_name = cube::str::lower(cube::str::strip(_data));
+	if (!support(_name)) {
+		throw error("request: %s, method not support", _data.c_str());
+	}
+}
+
+void method::parse(const std::string &str) {
+	//set data
+	_data = str;
+
+	//parse method
+	parse();
+}
+
+void method::pack() {
+	_data = cube::str::upper(_name);
+}
+
 bool method::support(const std::string &mtd) {
 	return mtd == "get" || mtd == "post";
 }
 
 //////////////////////////////////////////query class///////////////////////////////////////////
-int query::write(const char *data, int sz) {
+void query::make() {
+	//make query data
+	std::string data("");
+	cube::str::format(data, "%s %s %s\r\n", _method.data().c_str(), _uri.data().c_str(), _version.data().c_str());
+	
+	//initialize stream
+	_stream.data(data);
+}
+
+int query::read(char *data, int sz) {
+	return _stream.read(data, sz);
+}
+
+int query::feed(const char *data, int sz) {
 	//query data has completed, need no more data
 	if (_stream.completed()) {
 		return 0;
@@ -244,53 +366,78 @@ int query::write(const char *data, int sz) {
 	//feed data to stream
 	int szeat = _stream.write(data, sz);
 
-	//parse query if it is completed
+	//parse query if completed
 	if (_stream.completed()) {
-		std::vector<std::string> reqs = cube::str::splits(_stream.str().c_str(), _stream.str().length(), " ");
-		if (reqs.size() != 3) {
-			throw edata("request: %s, invalid request line", _stream.str().c_str());
-		}
-		//parse method
-		std::string method = cube::str::lower(cube::str::strip(reqs[0]));
-		if (!http::method::support(method)) {
-			throw edata("request: %s, method not support", _stream.str().c_str());
-		}
-
-		//parse query
-		std::string struri = cube::str::strip(reqs[1]);
-		uri tmpuri;
-		tmpuri.parse(struri);
-
-		//parse protocol & version
-		std::string strpv = cube::str::strip(reqs[2]);
-		std::vector<std::string> pv = cube::str::splits(strpv.c_str(), strpv.length(), "/");
-		if (pv.size() != 2) {
-			throw edata("request: %s, invalid protocol/version", _stream.str().c_str());
-		}
-		std::string protocol = cube::str::lower(cube::str::strip(pv[0]));
-		std::string version = cube::str::strip(pv[1]);
-
-		if (protocol != "http") {
-			throw edata("request: %s, invalid protocol", _stream.str().c_str());
-		}
-
-		//parse query success, save query items
-		_method = method;
-		_uri = struri;
-		_version = version;
-
-		//uri parse result
-		_path = tmpuri.path();
-		_params = tmpuri.params();
-		_fragment = tmpuri.fragment();
+		parse();
 	}
 
 	//return size feeded
 	return szeat;
 }
 
+void query::parse() {
+	std::vector<std::string> reqs;
+	cube::str::strtok(_stream.data().c_str(), _stream.data().length(), " ", 3);
+	if (reqs.size() != 3) {
+		throw error("request: %s, invalid request", _stream.data().c_str());
+	}
+	//parse method
+	_method.parse((reqs[0]));
+	
+	//parse query
+	_uri.parse(reqs[1]);
+	
+	//parse protocol & version
+	_version.parse(reqs[2]);
+}
+
+void query::get(const char *uri_format, ...) {
+	//set method
+	_method = method::GET;
+
+	//format uri string
+	static const int BUFSZ = 2048;
+	char buf[BUFSZ] = { 0 };
+	va_list va;
+	va_start(va, uri_format);
+	vsnprintf(buf, BUFSZ, uri_format, va);
+	va_end(va);
+	
+	//set uri
+	_uri.parse(buf);
+
+	//set version
+	_version = version::DEFAULT;
+}
+
+void query::post(const char *uri_format, ...) {
+	//set method
+	_method = method::POST;
+	
+	//format uri string
+	static const int BUFSZ = 2048;
+	char buf[BUFSZ] = { 0 };
+	va_list va;
+	va_start(va, uri_format);
+	vsnprintf(buf, BUFSZ, uri_format, va);
+	va_end(va);
+
+	//set uri
+	_uri.parse(buf);
+
+	//set version
+	_version = version::DEFAULT;
+}
 
 //////////////////////////////////////////header class/////////////////////////////////////////
+void header::make() {
+
+}
+
+int header::read(char *data, int sz) {
+	return _stream.read(data, sz);
+}
+
 int header::write(const char *data, int sz) {
 	//header has completed, can not take more
 	if (_stream.completed()) {
@@ -302,9 +449,9 @@ int header::write(const char *data, int sz) {
 
 	//parse header if completed
 	if (_stream.completed()) {
-		int err = parse(_stream.str().c_str(), _stream.str().length());
+		int err = parse(_stream.data().c_str(), _stream.data().length());
 		if (err != 0) {
-			throw error("invalid header: %s, parse failed", _stream.str().c_str());
+			throw error("invalid header: %s, parse failed", _stream.data().c_str());
 		}
 	}
 
@@ -346,16 +493,13 @@ bool header::has(const std::string &item) {
 	return false;
 }
 
-int header::geti(const std::string &item, int default) {
-	std::map<std::string, std::vector<std::string>>::iterator iter = _items.find(cube::str::lower(item));
-	if (iter != _items.end() && iter->second.size() > 0) {
-		return ::atoi(iter->second[0].c_str());
-	} else {
-		return default;
-	}
+header& header::set(const std::string &item, bool replace, const char *format, ...) {
+	std::map<std::string, std::vector<std::string>>::iterator iter = _items.find(item);
+
+	return *this;
 }
 
-std::string header::gets(const std::string &item, const char *default) {
+std::string header::get(const std::string &item, const char *default) {
 	std::map<std::string, std::vector<std::string>>::iterator iter = _items.find(cube::str::lower(item));
 	if (iter != _items.end() && iter->second.size() > 0) {
 		return iter->second[0];
@@ -381,8 +525,8 @@ int content::write(const char *data, int sz) {
 int request::write(const char *data, int sz) {
 	int wsz = 0;
 	//first: feed query if it is not completed
-	if (!_query.completed()) {
-		wsz += _query.write(data, sz);
+	if (!_query.full()) {
+		wsz += _query.feed(data, sz);
 	}
 
 	//second: feed header if it is not completed
@@ -390,7 +534,7 @@ int request::write(const char *data, int sz) {
 		wsz += _header.write(data + wsz, sz - wsz);
 
 		//try to get content length from header
-		_content.size(_header.geti("content-length", 0));
+		_content.size(::atoi(_header.get("content-length", "0").c_str()));
 	}
 
 	//third: feed content if it is not completed
@@ -407,7 +551,7 @@ void status::make() {
 }
 
 int status::read(char *data, int sz) {
-
+	return 0;
 }
 
 int status::write(const char *data, int sz) {
@@ -419,9 +563,9 @@ int status::write(const char *data, int sz) {
 		//parse status line if it is completed
 		if (_stream.completed()) {
 			//split status line
-			std::vector<std::string> items = cube::str::splits(_stream.str().c_str(), " ");
+			std::vector<std::string> items = cube::str::strtok(_stream.data().c_str(), " ");
 			if (items.size() != 3) {
-				throw error("response: %s, invalid status line", _stream.str().c_str());
+				throw error("response: %s, invalid status line", _stream.data().c_str());
 			}
 
 			//parse http version

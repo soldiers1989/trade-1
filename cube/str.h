@@ -136,6 +136,7 @@ public:
 	*	formated string
 	*/
 	static std::string format(const char *format, ...);
+	static void format(std::string &result, const char *format, ...);
 
 	/*
 	*	convert numeric value to string
@@ -180,7 +181,9 @@ public:
 	*	split result
 	*/
 	static std::vector<std::string> split(const char *str, char ch);
+	static void split(const char *str, char ch, std::vector<std::string> &result);
 	static std::vector<std::string> split(const char *str, int sz, char ch);
+	static void split(const char *str, int sz, char ch, std::vector<std::string> &result);
 
 	/*
 	*	split a string by string seperator
@@ -193,10 +196,25 @@ public:
 	*	split result
 	*/
 	static std::vector<std::string> split(const char *str, const char *sep);
+	static void split(const char *str, const char *sep, std::vector<std::string> &result);
+	
 	static std::vector<std::string> split(const char *str, int sz, const char *sep);
+	static void split(const char *str, int sz, const char *sep, std::vector<std::string> &result);
 
-	static std::vector<std::string> splits(const char *str, const char *chs);
-	static std::vector<std::string> splits(const char *str, int sz, const char *chs);
+	/*
+	*	split a string by delimiter characters
+	*@param str: in, string to be splited
+	*@param sz: in, size in string to splited
+	*@param delimiters: in, delimiter characters
+	*@param result: in/out, split result
+	*@param maxwant: in, max split unit wanted
+	*@return:
+	*	split result
+	*/
+	static std::vector<std::string> strtok(const char *str, const char *delimiters, int maxwant = INT_MAX);
+	static void strtok(const char *str, const char *delimiters, std::vector<std::string> &result, int maxwant = INT_MAX);
+	static std::vector<std::string> strtok(const char *str, int sz, const char *delimiters, int maxwant = INT_MAX);
+	static void strtok(const char *str, int sz, const char *delimiters, std::vector<std::string> &result, int maxwant = INT_MAX);
 
 	/*
 	*	split a string to table structure by row and column seperator
@@ -207,6 +225,7 @@ public:
 	*	split result
 	*/
 	static std::vector<std::vector<std::string>> split(const std::string &str, const std::string &seprow, const std::string &sepcol);
+	static void split(const std::string &str, const std::string &seprow, const std::string &sepcol, std::vector<std::vector<std::string>> &result);
 
 	/*
 	*	escape a charater to format "%XY" string
