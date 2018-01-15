@@ -431,7 +431,21 @@ void query::post(const char *uri_format, ...) {
 
 //////////////////////////////////////////header class/////////////////////////////////////////
 void header::make() {
+	std::string data("");
 
+	//process each item
+	header::items::iterator iter = _items.begin(), iterend = _items.end();
+	while (iter != iterend) {
+		for (size_t i = 0; i < iter->second.size(); i++) {
+			data.append(iter->second[i].first + ": " + iter->second[i].second + "\r\n");
+		}
+	}
+
+	//add last "\r\n"
+	data.append("\r\n");
+
+	//set stream data
+	_stream.data(data);
 }
 
 int header::read(char *data, int sz) {
@@ -538,12 +552,12 @@ std::vector<std::string> header::gets(const std::string &item) {
 	std::vector<std::string> result;
 	header::items::iterator iter = _items.find(cube::str::lower(item));
 	if (iter != _items.end()) {
-		for (int i = 0; i < iter->second.size(); i++) {
+		for (size_t i = 0; i < iter->second.size(); i++) {
 			result.push_back(iter->second[i].second);
 		}
 	}
-	else
-		return result;
+	
+	return result;
 }
 
 //////////////////////////////////////////content class/////////////////////////////////////////
