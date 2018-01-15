@@ -471,12 +471,14 @@ int header::parse(const char *str, int sz) {
 		if (sep != std::string::npos) {
 			std::string key = cube::str::lower(cube::str::strip(items[i].substr(0, sep)));
 			std::string val = cube::str::strip(items[i].substr(sep + 1));
-			if (!key.empty()) {
-				if (_items.find(key) == _items.end()) {
-					_items.insert(std::pair<std::string, std::vector<std::string>>(key, std::vector<std::string>()));
-				}
-
-				_items[key].push_back(val);
+			
+			header::items::iterator iter = _items.find(key);
+			if (iter != _items.end()) {
+				iter->second.push_back(header::keyval(key, val));
+			} else {
+				header::keyvals kvs;
+				kvs.push_back(header::keyval(key, val));
+				_items.insert(std::pair<std::string, header::keyvals>(key, kvs));
 			}
 		}
 	}
@@ -484,8 +486,8 @@ int header::parse(const char *str, int sz) {
 	return 0;
 }
 
-bool header::has(const std::string &item) {
-	std::map<std::string, std::vector<std::string>>::const_iterator iter = _items.find(cube::str::lower(item));
+bool header::has(const std::string &key) {
+	header::items::const_iterator iter = _items.find(cube::str::lower(key));
 	if (iter != _items.end() && iter->second.size() > 0) {
 		return true;
 	}
@@ -493,27 +495,55 @@ bool header::has(const std::string &item) {
 	return false;
 }
 
-header& header::set(const std::string &item, bool replace, const char *format, ...) {
-	std::map<std::string, std::vector<std::string>>::iterator iter = _items.find(item);
+header& header::set(const std::string &key, bool replace, const char *format, ...) {
+	//format value string
+	static const int BUFSZ = 2048;
+	char buf[BUFSZ] = { 0 };
+	va_list va;
+	va_start(va, format);
+	vsnprintf(buf, BUFSZ, format, va);
+	va_end(va);
+
+	//formatted value
+	std::string val(buf);
+
+	//set header value
+	header::items::iterator iter = _items.find(key);
+	if (iter != _items.end()) {
+		if (replace) {
+			iter->second.clear();
+			iter->second.push_back(header::keyval(key, val));
+		} else {
+			iter->second.push_back(header::keyval(key, val));
+		}
+	} else {
+		header::keyvals kvs;
+		kvs.push_back(header::keyval(key, val));
+		_items.insert(std::pair<std::string, header::keyvals>(key, kvs));
+	}
 
 	return *this;
 }
 
 std::string header::get(const std::string &item, const char *default) {
-	std::map<std::string, std::vector<std::string>>::iterator iter = _items.find(cube::str::lower(item));
+	header::items::iterator iter = _items.find(cube::str::lower(item));
 	if (iter != _items.end() && iter->second.size() > 0) {
-		return iter->second[0];
+		return iter->second[0].second;
 	} else {
 		return default;
 	}
 }
 
 std::vector<std::string> header::gets(const std::string &item) {
-	std::map<std::string, std::vector<std::string>>::iterator iter = _items.find(cube::str::lower(item));
-	if (iter != _items.end())
-		return iter->second;
+	std::vector<std::string> result;
+	header::items::iterator iter = _items.find(cube::str::lower(item));
+	if (iter != _items.end()) {
+		for (int i = 0; i < iter->second.size(); i++) {
+			result.push_back(iter->second[i].second);
+		}
+	}
 	else
-		return std::vector<std::string>();
+		return result;
 }
 
 //////////////////////////////////////////content class/////////////////////////////////////////

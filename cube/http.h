@@ -330,6 +330,11 @@ private:
 class header {
 	//bad header execption
 	typedef cexception error;
+	
+	typedef std::pair<std::string, std::string> keyval;
+	typedef std::vector<keyval> keyvals;
+	typedef std::map<std::string, keyvals> items;
+
 public:
 	header() : _stream("\r\n\r\n") {}
 	virtual ~header() {}
@@ -369,7 +374,7 @@ public:
 	/*
 	*	check if item exist and get item value
 	*/
-	bool has(const std::string &item);
+	bool has(const std::string &key);
 
 	/*
 	*	set string value of specified item
@@ -379,7 +384,7 @@ public:
 	*@return:
 	*	self
 	*/
-	header &set(const std::string &item, bool replace, const char *format, ...);
+	header &set(const std::string &key, bool replace, const char *format, ...);
 
 	/*
 	*	get string value of specified item
@@ -388,7 +393,7 @@ public:
 	*@return:
 	*	item string value or default value
 	*/
-	std::string get(const std::string &item, const char *default = "");
+	std::string get(const std::string &key, const char *default = "");
 
 	/*
 	*	get string values of specified item
@@ -410,8 +415,8 @@ public:
 	int parse(const char *str, int sz);
 
 private:
-	//header items
-	std::map<std::string, std::vector<std::string>> _items;
+	//header items, map<lower key, vector<<original key, value>>>
+	header::items _items;
 
 	//empty value for not exist header item
 	std::string _empty;
