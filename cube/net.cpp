@@ -341,26 +341,39 @@ int session::on_recv(char *data, int transfered) {
 	try {
 		//peer shutdown
 		if (transfered == 0) {
-			return -1;
+			//try to handle request
+			int err = _servlets->handle(_request, _response);
+			if (err != 0) {
+				_response.status(http::status::BAD);
+			}
+
+			//make response
+			_response.make();
+
+			//send response
+			
 		} else {
 			//feed data to request
-			_request.write(data, transfered);
+			_request.feed(data, transfered);
 
 			//request data has completed
-			if (_request.completed()) {
+			if (_request.full()) {
 				int err = _servlets->handle(_request, _response);
 				if (err != 0) {
 					//send interval error
-					
-				} else {
-					//send response content
-					char buf[1024] = { 0 };
-					int sz = _response.read(buf, 1024);
-					err = send(buf, sz);
-					if (err != 0) {
-						return -1;
-					}
-				}				
+					_response.status(http::status::ERR);
+				}
+
+				//make response
+				_response.make();
+
+				//send response content
+				char buf[1024] = { 0 };
+				int sz = _response.read(buf, 1024);
+				err = send(buf, sz);
+				if (err != 0) {
+					return -1;
+				}
 			}
 		}
 	} catch (std::exception &e) {

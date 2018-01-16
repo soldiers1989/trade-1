@@ -359,7 +359,7 @@ int query::read(char *data, int sz) {
 
 int query::feed(const char *data, int sz) {
 	//query data has completed, need no more data
-	if (_stream.completed()) {
+	if (_stream.full()) {
 		return 0;
 	}
 
@@ -367,7 +367,7 @@ int query::feed(const char *data, int sz) {
 	int szeat = _stream.write(data, sz);
 
 	//parse query if completed
-	if (_stream.completed()) {
+	if (_stream.full()) {
 		parse();
 	}
 
@@ -429,6 +429,61 @@ void query::post(const char *uri_format, ...) {
 	_version = version::DEFAULT;
 }
 
+/////////////////////////////////////////status class/////////////////////////////////////////////
+status status::OK("HTTP/1.1 200 OK\r\n");
+status status::MOVE("HTTP/1.1 301 Moved Permanently\r\n");
+status status::REDIRECT("HTTP/1.1 302 Found\r\n");
+status status::BAD("HTTP/1.1 400 Bad Request\r\n");
+status status::ERR("HTTP/1.1 500 Internal Server Error\r\n");
+
+void status::make() {
+
+}
+
+int status::read(char *data, int sz) {
+	return _stream.read(data, sz);
+}
+
+int status::feed(const char *data, int sz) {
+	//status line completed
+	if (_stream.full()) {
+		return 0;
+	}
+
+	//feed more data
+	int szfeed = _stream.write(data, sz);
+
+	//parse status line if it is completed
+	if (_stream.full()) {
+		//parse status line
+		parse();
+	}
+
+	return szfeed;
+}
+
+void status::parse() {
+	//check stream data
+	if (!_stream.full()) {
+		throw error("status: %s, incompleted status line", _stream.data().c_str());
+	}
+
+	//split status line
+	std::vector<std::string> items = cube::str::strtok(_stream.data().c_str(), " ", 3);
+	if (items.size() != 3) {
+		throw error("response: %s, invalid status line", _stream.data().c_str());
+	}
+
+	//parse http version
+	_version.parse(items[0]);
+
+	//parse status code
+	_code = cube::str::strip(items[1]);
+
+	//parse status phrase reason
+	_reason = cube::str::strip(items[2]);
+}
+
 //////////////////////////////////////////header class/////////////////////////////////////////
 void header::make() {
 	std::string data("");
@@ -452,9 +507,9 @@ int header::read(char *data, int sz) {
 	return _stream.read(data, sz);
 }
 
-int header::write(const char *data, int sz) {
+int header::feed(const char *data, int sz) {
 	//header has completed, can not take more
-	if (_stream.completed()) {
+	if (_stream.full()) {
 		return 0;
 	}
 
@@ -462,24 +517,22 @@ int header::write(const char *data, int sz) {
 	int wsz= _stream.write(data, sz);
 
 	//parse header if completed
-	if (_stream.completed()) {
-		int err = parse(_stream.data().c_str(), _stream.data().length());
-		if (err != 0) {
-			throw error("invalid header: %s, parse failed", _stream.data().c_str());
-		}
+	if (_stream.full()) {
+		parse();
 	}
 
 	//return data feeded
 	return wsz;
 }
 
-int header::parse(const std::string &str) {
-	return parse(str.c_str(), str.length());
-}
+void header::parse() {
+	//check if stream data is completed
+	if (_stream.full()) {
+		throw error("header: %s incompleted header", _stream.data().c_str());
+	}
 
-int header::parse(const char *str, int sz) {
-	const char *SEP = "\r\n";
-	std::vector<std::string> items = cube::str::split(str, sz, SEP);
+	//parse header items
+	std::vector<std::string> items = cube::str::strtok(_stream.data().c_str(), _stream.data().length(), "\r\n");
 	for (std::size_t i = 0; i < items.size(); i++) {
 		std::size_t sep = items[i].find(':');
 		if (sep != std::string::npos) {
@@ -496,8 +549,6 @@ int header::parse(const char *str, int sz) {
 			}
 		}
 	}
-
-	return 0;
 }
 
 bool header::has(const std::string &key) {
@@ -507,6 +558,26 @@ bool header::has(const std::string &key) {
 	}
 
 	return false;
+}
+
+header &header::set(const std::map<std::string, std::string> &items, bool replace) {
+	std::map<std::string, std::string>::const_iterator citer = items.begin(), citerend = items.end();
+	while (citer != citerend) {
+		std::string key = cube::str::lower(citer->first);
+		header::items::iterator iter = _items.find(key);
+		if (iter != _items.end()) {
+			if (replace) {
+				iter->second.clear();
+			}
+			iter->second.push_back(header::keyval(citer->first, citer->second));
+		} else {
+			header::keyvals kvs;
+			kvs.push_back(header::keyval(citer->first, citer->second));
+			_items.insert(std::pair<std::string, header::keyvals>(citer->first, kvs));
+		}
+	}
+
+	return *this;
 }
 
 header& header::set(const std::string &key, bool replace, const char *format, ...) {
@@ -526,10 +597,8 @@ header& header::set(const std::string &key, bool replace, const char *format, ..
 	if (iter != _items.end()) {
 		if (replace) {
 			iter->second.clear();
-			iter->second.push_back(header::keyval(key, val));
-		} else {
-			iter->second.push_back(header::keyval(key, val));
-		}
+		} 
+		iter->second.push_back(header::keyval(key, val));
 	} else {
 		header::keyvals kvs;
 		kvs.push_back(header::keyval(key, val));
@@ -560,102 +629,135 @@ std::vector<std::string> header::gets(const std::string &item) {
 	return result;
 }
 
-//////////////////////////////////////////content class/////////////////////////////////////////
-int content::write(const char *data, int sz) {
+//////////////////////////////////////////body class/////////////////////////////////////////
+void body::make() {
+
+}
+
+int body::read(char *data, int sz) {
+	return _stream.read(data, sz);
+}
+
+int body::feed(const char *data, int sz) {
+	if (_stream.full())
+		return 0;
 	return _stream.write(data, sz);
 }
 
+//////////////////////////////////////////entity class/////////////////////////////////////////
+void entity::make() {
+
+}
+
+int entity::read(char *data, int sz) {
+	return 0;
+}
+
+int entity::feed(const char *data, int sz) {
+	return 0;
+}
+
 //////////////////////////////////////////request class/////////////////////////////////////////
-int request::write(const char *data, int sz) {
+void request::make() {
+
+}
+
+int request::read(char *data, int sz) {
+	int rsz = 0;
+
+	//first: read query data
+	if (sz - rsz > 0 && !_query.ends()) {
+		rsz += _query.read(data + rsz, sz - rsz);
+	}
+
+	//second: read header data
+	if (sz - rsz > 0 && !_query.ends()) {
+		rsz += _query.read(data + rsz, sz - rsz);
+	}
+
+	//second: read entity data
+	if (sz - rsz > 0 && !_query.ends()) {
+		rsz += _query.read(data + rsz, sz - rsz);
+	}
+
+	return rsz;
+}
+
+int request::feed(const char *data, int sz) {
 	int wsz = 0;
 	//first: feed query if it is not completed
-	if (!_query.full()) {
-		wsz += _query.feed(data, sz);
+	if (sz - wsz > 0 && !_query.full()) {
+		wsz += _query.feed(data + wsz, sz - wsz);
 	}
 
 	//second: feed header if it is not completed
-	if (sz - wsz > 0 && !_header.completed()) {
-		wsz += _header.write(data + wsz, sz - wsz);
-
-		//try to get content length from header
-		_content.size(::atoi(_header.get("content-length", "0").c_str()));
+	if (sz - wsz > 0 && !_header.full()) {
+		wsz += _header.feed(data + wsz, sz - wsz);
 	}
 
 	//third: feed content if it is not completed
-	if (sz - wsz > 0 && !_content.completed()) {
-		wsz += _content.write(data + wsz, sz - wsz);
+	if (sz - wsz > 0 && !_entity.full()) {
+		wsz += _entity.feed(data + wsz, sz - wsz);
 	}
 
 	return wsz;
 }
 
-/////////////////////////////////////////status class/////////////////////////////////////////////
-void status::make() {
-
-}
-
-int status::read(char *data, int sz) {
-	return 0;
-}
-
-int status::write(const char *data, int sz) {
-	//feed data if status line not completed
-	if (!_stream.completed()) {
-		//feed more data
-		int szfeed = _stream.write(data, sz);
-
-		//parse status line if it is completed
-		if (_stream.completed()) {
-			//split status line
-			std::vector<std::string> items = cube::str::strtok(_stream.data().c_str(), " ");
-			if (items.size() != 3) {
-				throw error("response: %s, invalid status line", _stream.data().c_str());
-			}
-
-			//parse http version
-
-			//parse status code
-
-			//parse status phrase reason
-		}
-
-		return szfeed;
-	}
-
-	//status has completed, can not take more data
-	return 0;
-}
-
-/////////////////////////////////////////status specification class////////////////////////////////
-const status &statuss::get(const std::string &code) {
-	std::map<std::string, status>::iterator iter = statuss::_statuss.find(code);
-	if (iter == statuss::_statuss.end()) {
-		throw error("status spec: %s, is not support.", code.c_str());
-	}
-
-	return iter->second;
-}
-
-std::map<std::string, status> statuss::_statuss;
-
-void statuss::set(const std::string &code, const status &status) {
-	statuss::_statuss.insert(std::pair<std::string, http::status>(code, status));
-}
-
 /////////////////////////////////////////response class///////////////////////////////////////////
-int response::write(const char *data, int sz) {
-	return 0;
+void response::make() {
+	//make status data
+	_status.make();
+	
+	//make entity data
+	_entity.make();
+
+	//set entity header
+	_header.set(_entity.headers());
+
+	//make header data
+	_header.make();
 }
 
 int response::read(char *data, int sz) {
-	const char *resp = "HTTP/1.1 200 OK";
-	memcpy(data, resp, strlen(resp));
-	return 0;
+	int rsz = 0;
+
+	//first: read query data
+	if (sz - rsz > 0 && !_status.ends()) {
+		rsz += _status.read(data + rsz, sz - rsz);
+	}
+
+	//second: read header data
+	if (sz - rsz > 0 && !_header.ends()) {
+		rsz += _header.read(data + rsz, sz - rsz);
+	}
+
+	//second: read entity data
+	if (sz - rsz > 0 && !_entity.ends()) {
+		rsz += _entity.read(data + rsz, sz - rsz);
+	}
+
+	return rsz;
 }
 
-/////////////////////////////////////////http global variable initialize///////////////////////////
-statuss::setter set_status_200("1.1", "200", "OK");
-statuss::setter set_status_400("1.1", "400", "Bad Request");
+int response::feed(const char *data, int sz) {
+	int wsz = 0;
 
+	//first: feed query if it is not completed
+	if (sz - wsz > 0 && !_status.full()) {
+		wsz += _status.feed(data + wsz, sz - wsz);
+	}
+
+	//second: feed header if it is not completed
+	if (sz - wsz > 0 && !_header.full()) {
+		wsz += _header.feed(data + wsz, sz - wsz);
+	}
+
+	//third: feed content if it is not completed
+	if (sz - wsz > 0 && !_entity.full()) {
+		wsz += _entity.feed(data + wsz, sz - wsz);
+	}
+
+	return wsz;
+}
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE

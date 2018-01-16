@@ -267,6 +267,13 @@ public:
 	int read(char *data, int sz);
 
 	/*
+	*	check if read completed
+	*@return:
+	*	true if read completed, otherwise return false
+	*/
+	bool ends() { return _stream.ends(); }
+
+	/*
 	*	feed data to query
 	*@param data: in, write feed to query
 	*@param sz: in, data size want to write
@@ -280,7 +287,7 @@ public:
 	*@return:
 	*	true for completed, false if not
 	*/
-	bool full() { return _stream.completed(); }
+	bool full() { return _stream.full(); }
 
 	/*
 	*	
@@ -325,6 +332,95 @@ private:
 	delimitedstream _stream;
 };
 
+//response status class
+class status {
+	//status error
+	typedef cexception error;
+public:
+	static status OK, MOVE, REDIRECT, BAD, ERR;
+
+public:
+	status() : _stream("\r\n") {}
+	status(const std::string &str) : _stream("\r\n") { feed(str.c_str(), str.length()); }
+	virtual ~status() {}
+
+	/*
+	*	make status data
+	*@return:
+	*	void
+	*/
+	void make();
+
+	/*
+	*	read status to data
+	*@param data: in/out, data output
+	*@param sz: in, input data buffer size
+	*@return:
+	*	size read
+	*/
+	int read(char *data, int sz);
+
+	/*
+	*	check if read completed
+	*@return:
+	*	true if read completed, otherwise return false
+	*/
+	bool ends() { return _stream.ends(); }
+
+	/*
+	*	feed data to response status
+	*@param data: in, data to feed
+	*@param sz: in, data size to feed
+	*@return:
+	*	data size taked
+	*/
+	int feed(const char *data, int sz);
+
+	/*
+	*	check if query is completed
+	*@return:
+	*	true for completed, false if not
+	*/
+	bool full() { return _stream.full(); }
+
+	/*
+	*	get & set status code
+	*/
+	const std::string &code() { return _code; }
+	void code(const std::string &code) { _code = code; }
+
+	/*
+	*	get & set http version
+	*/
+	const std::string &version() { return _version.name(); }
+	void version(const std::string &version) { _version = version; }
+
+	/*
+	*	get & set status reason phrase
+	*/
+	const std::string &reason() { return _reason; }
+	void reason(const std::string &reason) { _reason = reason; }
+
+	const std::string &data() { return _stream.data(); }
+
+private:
+	/*
+	*	parse status from stream data
+	*/
+	void parse();
+
+private:
+	//http version
+	http::version _version;
+	//response code
+	std::string _code;
+	//response description
+	std::string _reason;
+
+	//stream status data
+	delimitedstream _stream;
+};
+
 //header class
 //request header
 class header {
@@ -356,20 +452,27 @@ public:
 	int read(char *data, int sz);
 
 	/*
+	*	check if read completed
+	*@return:
+	*	true if read completed, otherwise return false
+	*/
+	bool ends() { return _stream.ends(); }
+
+	/*
 	*	feed data to header
 	*@param data: in, data to feed
 	*@param sz: in, data size want to feed
 	*@return:
 	*	data size took by header object
 	*/
-	int write(const char *data, int sz);
+	int feed(const char *data, int sz);
 
 	/*
 	*	check if header is completed
 	*@return:
 	*	true for completed, false if not
 	*/
-	bool completed() { return _stream.completed(); }
+	bool full() { return _stream.full(); }
 
 	/*
 	*	check if item exist and get item value
@@ -385,6 +488,7 @@ public:
 	*	self
 	*/
 	header &set(const std::string &key, bool replace, const char *format, ...);
+	header &set(const std::map<std::string, std::string> &items, bool replace = false);
 
 	/*
 	*	get string value of specified item
@@ -403,16 +507,11 @@ public:
 	*/
 	std::vector<std::string> gets(const std::string &item);
 
+private:
 	/*
-	*	parse header items from string
-	*@param str: in, header string
-	*@param sz: in, size of string
-	*@param error: out, error message when failed
-	*@return:
-	*	0 for success, otherwise <0
+	*	parse header items
 	*/
-	int parse(const std::string &str);
-	int parse(const char *str, int sz);
+	void parse();
 
 private:
 	//header items, map<lower key, vector<<original key, value>>>
@@ -425,20 +524,17 @@ private:
 	delimitedstream _stream;
 };
 
-//content class
+//entity body class
 //post content
-class content {
+class body {
 public:
-	content() : _stream(0){}
-	virtual ~content() {}
+	body() : _stream(0){}
+	virtual ~body() {}
 
 	/*
-	*	set content size
-	*/
-	void size(int sz) { _stream.size(sz); }
-
-	/*
-	*	make status stream data
+	*	make body data
+	*@return:
+	*	void
 	*/
 	void make();
 
@@ -452,20 +548,38 @@ public:
 	int read(char *data, int sz);
 
 	/*
-	*	write data to header
+	*	check if read completed
+	*@return:
+	*	true if read completed, otherwise return false
+	*/
+	bool ends() { return _stream.ends(); }
+
+	/*
+	*	feed data to header
 	*@param data: in, data to write
 	*@param sz: in, data size want to write
 	*@return:
 	*	data size written
 	*/
-	int write(const char *data, int sz);
+	int feed(const char *data, int sz);
 
 	/*
 	*	check if header is completed
 	*@return:
 	*	true for completed, false if not
 	*/
-	bool completed() { return _stream.completed(); }
+	bool full() { return _stream.full(); }
+
+	/*
+	*	set content size
+	*/
+	void size(int sz) { _stream.size(sz); }
+
+	/*
+	*	get/set content data
+	*/
+	const std::string &data() { return _stream.data(); }
+	void data(const std::string &data) { _stream.data(data); }
 
 private:
 	//post params
@@ -473,6 +587,59 @@ private:
 
 	//stream to hold content
 	sizedstream _stream;
+};
+
+//entity class
+class entity {
+public:
+	entity() {}
+	virtual ~entity() {}
+
+	/*
+	*	make body data
+	*@return:
+	*	void
+	*/
+	void make();
+
+	/*
+	*	read status to data
+	*@param data: in/out, data output
+	*@param sz: in, input data buffer size
+	*@return:
+	*	size read
+	*/
+	int read(char *data, int sz);
+	
+	/*
+	*	check if read completed
+	*@return:
+	*	true if read completed, otherwise return false
+	*/
+	bool ends() { return _body.ends(); }
+
+	/*
+	*	feed data to header
+	*@param data: in, data to write
+	*@param sz: in, data size want to write
+	*@return:
+	*	data size written
+	*/
+	int feed(const char *data, int sz);
+
+	/*
+	*	check if header is completed
+	*@return:
+	*	true for completed, false if not
+	*/
+	bool full() { return _body.full(); }
+
+	std::map<std::string, std::string> &headers() { return _headers; }
+private:
+	//entity body content
+	body _body;
+	//entity headers
+	std::map<std::string, std::string> _headers;
 };
 
 /*data type to save http request parse results*/
@@ -499,129 +666,42 @@ public:
 	int read(char *data, int sz);
 
 	/*
+	*	check if read completed
+	*@return:
+	*	true if read completed, otherwise return false
+	*/
+	bool ends() { return _query.ends() && _header.ends() && _entity.ends(); }
+
+	/*
 	*	write data to request, and try to parse request in the same time
 	*@param data: in, new data
 	*@param sz: in, data size
 	*@return:
 	*	data size written
 	*/
-	int write(const char *data, int sz);
+	int feed(const char *data, int sz);
 
 	/*
 	*	check if request has completed
 	*@return:
 	*	true if completed, otherwise return false
 	*/
-	bool completed() { return _query.full() && _header.completed() && _content.completed(); }
+	bool full() { return _query.full() && _header.full() && _entity.full(); }
 	
 	/*
 	*	get request query/header/content
 	*/
 	query &query() { return _query; }
 	header &header() { return _header; }
-	content &content() { return _content; }
+	entity &entity() { return _entity; }
 
 private:
 	//request query
 	http::query _query;
 	//request header
 	http::header _header;
-	//request content
-	http::content _content;
-};
-
-//response status class
-class status {
-	//status error
-	typedef cexception error;
-public:
-	status() : _stream("\r\n") {}
-	status(const std::string &version, const std::string &code, const std::string &reason) : _version(version), _code(code), _reason(reason), _stream("\r\n"){}
-	virtual ~status() {}
-
-	/*
-	*	make status stream data
-	*/
-	void make();
-
-	/*
-	*	read status to data
-	*@param data: in/out, data output
-	*@param sz: in, input data buffer size
-	*@return:
-	*	size read
-	*/
-	int read(char *data, int sz);
-
-	/*
-	*	feed data to response status
-	*@param data: in, data to feed
-	*@param sz: in, data size to feed
-	*@return:
-	*	data size taked
-	*/
-	int write(const char *data, int sz);
-
-	/*
-	*	check if query is completed
-	*@return:
-	*	true for completed, false if not
-	*/
-	bool completed() { return _stream.completed(); }
-
-	/*
-	*	get & set status code
-	*/
-	const std::string &code() { return _code; }
-	void code(const std::string &code) { _code = code; }
-
-	/*
-	*	get & set http version
-	*/
-	const std::string &version() { return _version; }
-	void version(const std::string &version) { _version = version; }
-
-	/*
-	*	get & set status reason phrase
-	*/
-	const std::string &reason() { return _reason; }
-	void reason(const std::string &reason) { _reason = reason; }
-
-private:
-	//http version
-	std::string _version;
-	//response code
-	std::string _code;
-	//response description
-	std::string _reason;
-
-	//stream status data
-	delimitedstream _stream;
-};
-
-//response status specification
-class statuss {
-	//status error
-	typedef cexception error;
-public:
-	//register status
-	class setter {
-	public:
-		setter(const std::string &version, const std::string &code, const std::string &reason) {
-			statuss::set(code, status(version, code, reason));
-		}
-		virtual ~setter() {}
-	};
-
-public:
-	/*
-	*	get & set status specification
-	*/
-	static const status &get(const std::string &code);
-	static void set(const std::string &code, const status &status);
-
-private:
-	static std::map<std::string, status> _statuss;
+	//request entity
+	http::entity _entity;
 };
 
 /*data type to save http response results*/
@@ -629,24 +709,6 @@ class response {
 public:
 	response() {}
 	virtual ~response() {}
-
-	/*
-	*	get / set status code
-	*/
-	const std::string& status() { return _status.code(); }
-	void status(const std::string &code) {}
-	
-	/*
-	*	get / set response header
-	*/
-	std::string header(const std::string &key, const char *default = "");
-	void header(const std::string &key, bool replace, const char *format, ...);
-	
-	/*
-	*	get / set response content
-	*/
-	const std::string &content();
-	void content(const std::string &type, char *data, int sz);
 
 	/*
 	*	make response stream data after set response values
@@ -669,7 +731,17 @@ public:
 	*@return:
 	*	size feeded
 	*/
-	int write(const char *data, int sz);
+	int feed(const char *data, int sz);
+
+	/*
+	*	get/set response data
+	*/
+	http::status &status() { return _status; }
+	void status(const http::status &status) { _status = status; }
+
+	http::header &header() { return _header; }
+
+	http::entity &entity() { return _entity; }
 
 private:
 	//response status
@@ -677,7 +749,7 @@ private:
 	//response header
 	http::header _header;
 	//response content
-	http::content _content;
+	http::entity _entity;
 };
 
 END_HTTP_NAMESPACE

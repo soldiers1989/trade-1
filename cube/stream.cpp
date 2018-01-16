@@ -20,7 +20,7 @@ int sstream::read(char *data, int sz) {
 //////////////////////////////////////////sized stream class//////////////////////////////////////
 int sizedstream::write(const char *data, int sz) {
 	//stream has completed
-	if (completed()) {
+	if (full()) {
 		return 0;
 	}
 
@@ -36,7 +36,7 @@ int sizedstream::write(const char *data, int sz) {
 
 		//set flag if completed
 		if (_wpos == _size) {
-			complete(true);
+			full(true);
 		}
 	}
 
@@ -46,7 +46,7 @@ int sizedstream::write(const char *data, int sz) {
 //////////////////////////////////////////delimited stream class////////////////////////////////////////
 int delimitedstream::write(const char *data, int sz) {
 	//streamer is full
-	if (completed()) {
+	if (full()) {
 		return 0;
 	}
 
@@ -71,7 +71,7 @@ int delimitedstream::write(const char *data, int sz) {
 	//delimiter found in stream
 	if (pdelimiter - delimiter == szdelimiter) {
 		//set completed flag
-		complete(true);
+		full(true);
 		//write data
 		int wsz = pdata - data;
 		_data.append(data, wsz);

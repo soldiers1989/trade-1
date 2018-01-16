@@ -5,7 +5,7 @@ BEGIN_CUBE_NAMESPACE
 //stream class
 class stream {
 public:
-	stream() : _completed(false) {}
+	stream() : _full(false) {}
 	virtual ~stream() {}
 
 	/*
@@ -27,14 +27,22 @@ public:
 	virtual int write(const char* data, int sz) = 0;
 
 	/*
-	*	flag for indicating completed status of stream
+	*	get / set stream full flag
 	*/
-	void complete(bool flag) { _completed = flag; }
-	bool completed() { return _completed; }
+	bool full() { return _full; }
+	void full(bool flag) { _full = flag; }
+
+	/*
+	*	get / set stream end flag
+	*/
+	bool ends() { return _ends; }
+	void ends(bool flag) { _ends = flag; }
 
 private:
-	//completed flag for stream
-	bool _completed;
+	//stream full flag
+	bool _full;
+	//stream ends flag
+	bool _ends;
 };
 
 //string stream class
@@ -105,7 +113,7 @@ private:
 };
 
 //file streamer
-class filestreamer {
+class filestream {
 
 };
 END_CUBE_NAMESPACE
