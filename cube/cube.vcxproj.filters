@@ -63,6 +63,9 @@
     <ClCompile Include="stream.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="ios.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cube.h">
@@ -111,6 +114,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="stream.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ios.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

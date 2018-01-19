@@ -1,14 +1,16 @@
+/*
+*	ios - input output stream module
+*/
 #pragma once
 #include "cube.h"
 #include <string>
 BEGIN_CUBE_NAMESPACE
-
-//piped stream class
-class pipedstream {
+//stream class
+class stream {
 public:
-	pipedstream() : _stream(0) {}
-	pipedstream(pipedstream *pstream) : _stream(pstream) {}
-	virtual ~pipedstream() {
+	stream() : _stream(0) {}
+	stream(stream *stream) : _stream(stream) {}
+	virtual ~stream() {
 		if (_stream != 0) {
 			delete _stream;
 			_stream = 0;
@@ -110,95 +112,38 @@ protected:
 
 private:
 	//source stream
-	pipedstream *_stream;
+	stream *_stream;
 };
 
 //string stream class
-class stringstream : public pipedstream{
+class stringstream : public stream {
 public:
-	stringstream() : pipedstream(){}
-	stringstream(pipedstream *pstream) : pipedstream(pstream) {}
+	stringstream() : _rpos(0) {}
+	stringstream(stream *stream) : stream(stream), _rpos(0) {}
 	virtual ~stringstream() {}
 
-private:
-	//string stream
-};
+	int _put(const char *data, int sz);
 
-//stream class
-class stream {
-public:
-	stream() : _full(false) {}
-	stream(const stream *)
-	virtual ~stream() {}
+	int _get(char *data, int sz);
 
-	/*
-	*	read data from stream
-	*@param data: in/out, output data for write
-	*@param sz: in, output buffer size
-	*@return:
-	*	data size read
-	*/
-	virtual int read(char *data, int sz) = 0;
+	bool _endp() { return false; }
 
-	/*
-	*	write data to stream
-	*@param data: in, input data for read
-	*@param sz: in, data size
-	*@return:
-	*	data size write
-	*/
-	virtual int write(const char* data, int sz) = 0;
+	bool _endg() { return _rpos == _data.length(); }
 
-	/*
-	*	get / set stream full flag
-	*/
-	bool full() { return _full; }
-	void full(bool flag) { _full = flag; }
+	int _size() const {	return _data.length(); }
 
-	/*
-	*	get / set stream end flag
-	*/
-	bool ends() { return _ends; }
-	void ends(bool flag) { _ends = flag; }
+	const char *data() const { return _data.c_str(); }
 
 private:
-	//stream full flag
-	bool _full;
-	//stream ends flag
-	bool _ends;
-};
-
-//string stream class
-class sstream : public stream {
-public:
-	sstream() : _data(""), _rpos(0), _wpos(0) {}
-	virtual ~sstream() {}
-
-	/*
-	*	read data from stream
-	*/
-	int read(char *data, int sz);
-
-	/*
-	*	get/set string data of stream
-	*/
-	std::string &data() { return _data; }
-	void data(const std::string &data) { _data = data; _rpos = 0; _wpos = _data.length(); }
-
-	const std::string &cdata() const { return _data; }
-
-protected:
-	//data has taken
+	//string stream data
 	std::string _data;
 
 	//current read pos
 	int _rpos;
-	//current write pos
-	int _wpos;
 };
 
 //sized string stream class
-class sizedstream : public sstream{
+class sizedstream : public stringstream {
 public:
 	sizedstream() : _size(INT_MAX) {}
 	sizedstream(int size) : _size(size) {}
@@ -220,7 +165,7 @@ private:
 };
 
 //delimited string stream class
-class delimitedstream : public sstream {
+class delimitedstream : public stringstream {
 public:
 	delimitedstream(const std::string delimiter) : _delimiter(delimiter), _currpos(0) {}
 	virtual ~delimitedstream() {}
@@ -235,8 +180,8 @@ private:
 	int _currpos;
 };
 
-//file streamer
-class filestream {
+//file stream class
+class filestream : public stream{
 
 };
 END_CUBE_NAMESPACE

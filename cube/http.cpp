@@ -377,7 +377,7 @@ int query::feed(const char *data, int sz) {
 
 void query::parse() {
 	std::vector<std::string> reqs;
-	cube::str::strtok(_stream.data().c_str(), _stream.data().length(), " ", 3);
+	cube::str::strtok(_stream.data().c_str(), _stream.data().length(), " ", reqs, 3);
 	if (reqs.size() != 3) {
 		throw error("request: %s, invalid request", _stream.data().c_str());
 	}
@@ -527,25 +527,27 @@ int header::feed(const char *data, int sz) {
 
 void header::parse() {
 	//check if stream data is completed
-	if (_stream.full()) {
+	if (!_stream.full()) {
 		throw error("header: %s incompleted header", _stream.data().c_str());
 	}
 
 	//parse header items
-	std::vector<std::string> items = cube::str::strtok(_stream.data().c_str(), _stream.data().length(), "\r\n");
+	std::vector<std::string> items;
+	cube::str::strtok(_stream.data().c_str(), _stream.data().length(), "\r\n", items);
 	for (std::size_t i = 0; i < items.size(); i++) {
 		std::size_t sep = items[i].find(':');
 		if (sep != std::string::npos) {
-			std::string key = cube::str::lower(cube::str::strip(items[i].substr(0, sep)));
+			std::string okey = cube::str::strip(items[i].substr(0, sep));
+			std::string key = cube::str::lower(okey);
 			std::string val = cube::str::strip(items[i].substr(sep + 1));
 			
 			header::items::iterator iter = _items.find(key);
 			if (iter != _items.end()) {
-				iter->second.push_back(header::keyval(key, val));
+				iter->second.push_back(header::keyval(okey, val));
 			} else {
 				header::keyvals kvs;
-				kvs.push_back(header::keyval(key, val));
-				_items.insert(std::pair<std::string, header::keyvals>(key, kvs));
+				kvs.push_back(header::keyval(okey, val));
+				_items.insert(std::pair<std::string, header::keyvals>(okey, kvs));
 			}
 		}
 	}

@@ -339,41 +339,28 @@ int session::on_send(int transfered) {
 int session::on_recv(char *data, int transfered) {
 	cube::log::info("[http][%s] recv data: %d bytes", name().c_str(), transfered);
 	try {
-		//peer shutdown
-		if (transfered == 0) {
-			//try to handle request
+		//feed data to request
+		if (transfered > 0) {
+			_request.feed(data, transfered);
+		}
+
+		//request data has completed
+		if (_request.full()) {
 			int err = _servlets->handle(_request, _response);
 			if (err != 0) {
-				_response.status(http::status::BAD);
+				//send interval error
+				_response.status(http::status::ERR);
 			}
 
 			//make response
 			_response.make();
 
-			//send response
-			
-		} else {
-			//feed data to request
-			_request.feed(data, transfered);
-
-			//request data has completed
-			if (_request.full()) {
-				int err = _servlets->handle(_request, _response);
-				if (err != 0) {
-					//send interval error
-					_response.status(http::status::ERR);
-				}
-
-				//make response
-				_response.make();
-
-				//send response content
-				char buf[1024] = { 0 };
-				int sz = _response.read(buf, 1024);
-				err = send(buf, sz);
-				if (err != 0) {
-					return -1;
-				}
+			//send response content
+			char buf[1024] = { 0 };
+			int sz = _response.read(buf, 1024);
+			err = send(buf, sz);
+			if (err != 0) {
+				return -1;
 			}
 		}
 	} catch (std::exception &e) {

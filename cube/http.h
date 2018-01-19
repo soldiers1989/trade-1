@@ -752,5 +752,29 @@ private:
 	http::entity _entity;
 };
 
+//request data stream
+class requeststream : stream {
+public:
+	
+	/*
+	*	feed data to response
+	*@param data: in, data to feed
+	*@param sz: in, data size
+	*@return:
+	*	size feeded
+	*/
+	int feed(const char *data, int sz);
+
+private:
+	//request line & header data stream
+
+	//post entity stream
+};
+
+//response data stream
+class responsestream : stream{
+public:
+
+};
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE

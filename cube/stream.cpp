@@ -1,5 +1,48 @@
 #include "stream.h"
 BEGIN_CUBE_NAMESPACE
+//////////////////////////////////////////piped stream class//////////////////////////////////////
+int pipedstream::put(const char *data, int sz) {
+	if (_stream != 0) {
+		return _stream->put(data, sz);
+	}
+	return _put(data, sz);
+}
+
+int pipedstream::get(char *data, int sz) {
+	if (_stream != 0) {
+		return _stream->get(data, sz);
+	}
+	return _get(data, sz);
+}
+
+bool pipedstream::endp() {
+	if (_stream != 0) {
+		return _stream->endp();
+	}
+	return _endp();
+}
+
+bool pipedstream::endg() {
+	if (_stream != 0) {
+		return _stream->endg();
+	}
+	return _endg();
+}
+
+int pipedstream::size() {
+	if (_stream != 0) {
+		return _stream->size();
+	}
+	return _size();
+}
+
+const char *pipedstream::data() {
+	if (_stream != 0) {
+		return _stream->data();
+	}
+	return _data();
+}
+
 //////////////////////////////////////////string stream class//////////////////////////////////////
 int sstream::read(char *data, int sz) {
 	if (_rpos < _wpos) {
