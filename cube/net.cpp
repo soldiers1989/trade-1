@@ -296,21 +296,28 @@ void service::run() {
 
 BEGIN_HTTP_NAMESPACE
 //////////////////////////////////////http servlets class///////////////////////////////////////
-void servlets::mount(const std::string &path, servlet *servlet) {
-	_servlets.insert(std::pair<std::string, std::shared_ptr<cube::http::servlet>>(path, std::shared_ptr<cube::http::servlet>(servlet)));
+void servlets::mount(const std::string &method, const std::string &path, servlet *servlet) {
+	std::map<std::string, std::map<std::string, std::shared_ptr<http::servlet>>>::iterator iter = _servlets.find(method);
+	if (iter == _servlets.end()) {
+		_servlets.insert(std::pair<std::string, std::map<std::string, std::shared_ptr<http::servlet>>>(method, std::map<std::string, std::shared_ptr<http::servlet>>()));
+	}
+
+	_servlets[method].insert(std::pair<std::string, std::shared_ptr<cube::http::servlet>>(path, std::shared_ptr<cube::http::servlet>(servlet)));
 }
 
-int servlets::handle(request &req, response &resp) {
-	std::map<std::string, std::shared_ptr<servlet>>::iterator iter = _servlets.find(req.query().path());
-	if (iter != _servlets.end()) {
-		if (req.query().method() == "get")
-			return iter->second->handle_get(req, resp);
-		else if (req.query().method() == "post")
-			return iter->second->handle_post(req, resp);
-		else
-			return -1;
+void servlets::handle(request &req, response &resp) {
+	std::string method = req.query().method();
+	std::map<std::string, std::map<std::string, std::shared_ptr<http::servlet>>>::iterator miter = _servlets.find(method);
+	if (miter == _servlets.end()) {
+		//method not supported
 	}
-	return -1;
+
+	std::map<std::string, std::shared_ptr<servlet>>::iterator siter = _servlets[method].find(req.query().path());
+	if (siter == _servlets[method].end()) {
+		//request resource not exist
+	}
+
+	siter->second->handle(req, resp);
 }
 
 //////////////////////////////////////http session class///////////////////////////////////////
@@ -346,22 +353,13 @@ int session::on_recv(char *data, int transfered) {
 
 		//request data has completed
 		if (_request.full()) {
-			int err = _servlets->handle(_request, _response);
-			if (err != 0) {
-				//send interval error
-				_response.status(http::status::ERR);
-			}
-
+			_servlets->handle(_request, _response);
+			
 			//make response
 			_response.make();
 
 			//send response content
-			char buf[1024] = { 0 };
-			int sz = _response.read(buf, 1024);
-			err = send(buf, sz);
-			if (err != 0) {
-				return -1;
-			}
+			
 		}
 	} catch (std::exception &e) {
 		cube::log::error("[http][%s] recv data: %s", name().c_str(), e.what());

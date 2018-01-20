@@ -128,7 +128,6 @@ private:
 class stream {
 public:
 	stream() : _full(false) {}
-	stream(const stream *)
 	virtual ~stream() {}
 
 	/*

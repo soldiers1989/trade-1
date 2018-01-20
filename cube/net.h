@@ -396,24 +396,13 @@ public:
 	virtual ~servlet() {}
 
 	/*
-	*	handle http get request
+	*	handle http request
 	*@param req: in, client request
 	*@param resp: in/out, service response
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	virtual int handle_get(request &req, response &resp) {
-		return -1;
-	}
-
-	/*
-	*	handle http post request
-	*@param req: in, client request
-	*@param resp: in/out, service response
-	*@return:
-	*	0 for success, otherwise <0
-	*/
-	virtual int handle_post(request &req, response &resp) {
+	virtual int handle(request &req, response &resp) {
 		return -1;
 	}
 };
@@ -431,20 +420,20 @@ public:
 	*@return:
 	*	void
 	*/
-	void mount(const std::string &path, servlet *servlet);
+	void mount(const std::string &method, const std::string &path, servlet *servlet);
 
 	/*
 	*	handle request, set response with process result
 	*@param req: in, request object
 	*@param resp: in/out, response object
 	*@return:
-	*	0 for success, otherwise <0 means interval error
+	*	void
 	*/
-	int handle(request &req, response &resp);
+	void handle(request &req, response &resp);
 
 private:
-	//registered servlets
-	std::map<std::string, std::shared_ptr<servlet>> _servlets;
+	//registered servlets, <method, <path, servlet>>
+	std::map<std::string, std::map<std::string, std::shared_ptr<servlet>>> _servlets;
 };
 
 //http session class
