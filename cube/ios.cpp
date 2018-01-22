@@ -36,26 +36,141 @@ int stream::size() {
 	return _size();
 }
 
-const char *stream::data() {
+const std::string &stream::cdata() {
 	if (_stream != 0) {
-		return _stream->data();
+		return _stream->cdata();
 	}
-	return _data();
+	return _cdata();
+}
+
+void stream::assign(const std::string &data) {
+	if (_stream != 0) {
+		_stream->assign(data);
+	} else {
+		_assign(data);
+	}
 }
 
 //////////////////////////////////////////string stream class//////////////////////////////////////
 int stringstream::_put(const char *data, int sz) {
-	_data.append(data, sz);
-	return sz;
+	if (!endp()) {
+		_data.append(data, sz);
+		return sz;
+	}
+
+	return 0;
 }
 
 int stringstream::_get(char *data, int sz) {
-	//end of stream
-	if (endg()) {
-		return 0;
+	//still has left data
+	if (!endg()) {
+		int len = (int)_data.length();
+		//get read size
+		int rsz = len - _rpos > sz ? sz : len - _rpos;
+		//copy to destination data buffer
+		memcpy(data, _data.c_str(), rsz);
+		//reset current read pos
+		_rpos += rsz;
+		//return read size
+		return rsz;
 	}
 
-	//
+	//no more data left
+	return 0;
+}
 
+//////////////////////////////////////////sized stream class//////////////////////////////////////
+int sizedstream::_put(const char *data, int sz) {
+	//stream not completed, put more data
+	if (!endp()) {
+		int len = (int)_data.length();
+		int wsz = len + sz < _dsize ? sz : sz - len;
+		_data.append(data, wsz);
+		return wsz;
+	}
+
+	//stream has completed
+	return 0;
+}
+
+int sizedstream::_get(char *data, int sz) {
+	if (!endg()) {
+		int len = (int)_data.length();
+		//get read size
+		int rsz = len - _rpos > sz ? sz : len - _rpos;
+		//copy to destination data buffer
+		memcpy(data, _data.c_str(), rsz);
+		//reset current read pos
+		_rpos += rsz;
+		//return read size
+		return rsz;
+	}
+
+	//no more data
+	return 0;
+}
+
+//////////////////////////////////////////delimiter stream class//////////////////////////////////////
+int delimitedstream::_put(const char *data, int sz) {
+	//stream not completed, need more data
+	if (!endp()) {
+		//restore last delimiter match result
+		int szdelimiter = _delimiter.length();
+		const char *delimiter = _delimiter.c_str(), *pdelimiter = delimiter + _dpos;
+
+		//continue check the end tag
+		const char *pdata = data, *sdata = data;
+		while (pdata - data < sz && pdelimiter - delimiter < szdelimiter) {
+			if (*pdelimiter != *pdata) {
+				//move data pos to next position
+				sdata = ++pdata;
+				//reset delimiter pos
+				pdelimiter = delimiter;
+			} else {
+				pdata++;
+				pdelimiter++;
+			}
+		}
+
+		//delimiter found in stream
+		if (pdelimiter - delimiter == szdelimiter) {
+			//set completed flag
+			_full = true;
+			//write data
+			int wsz = pdata - data;
+			_data.append(data, wsz);
+			//return write size
+			return wsz;
+		}
+
+		//delimiter not found, save current matched pos
+		_dpos = pdelimiter - delimiter;
+
+		//write all data
+		_data.append(data, sz);
+
+		//all data feeded
+		return sz;
+	}
+
+	//stream has completed
+	return 0;
+}
+
+int delimitedstream::_get(char *data, int sz) {
+	if (!endg()) {
+		int len = (int)_data.length();
+		//get read size
+		int rsz = len - _rpos > sz ? sz : len - _rpos;
+		//copy to destination data buffer
+		memcpy(data, _data.c_str(), rsz);
+		//reset current read pos
+		_rpos += rsz;
+		//return read size
+		return rsz;
+	}
+
+	//no more data
+	return 0;
 }
 END_CUBE_NAMESPACE

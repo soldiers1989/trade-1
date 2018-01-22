@@ -61,7 +61,12 @@ public:
 	*@return:
 	*	stream data
 	*/
-	const char *data();
+	const std::string &cdata();
+
+	/*
+	*	assign stream data
+	*/
+	void assign(const std::string &data);
 
 protected:
 	/*
@@ -108,7 +113,12 @@ protected:
 	*@return:
 	*	stream data
 	*/
-	virtual const char *_data() = 0;
+	virtual const std::string &_cdata() = 0;
+
+	/*
+	*	assign stream data
+	*/
+	virtual void _assign(const std::string &data) = 0;
 
 private:
 	//source stream
@@ -130,9 +140,11 @@ public:
 
 	bool _endg() { return _rpos == _data.length(); }
 
-	int _size() const {	return _data.length(); }
+	int _size() { return _data.length(); }
 
-	const char *data() const { return _data.c_str(); }
+	void _assign(const std::string &data) { _data = data; }
+
+	const std::string &_cdata() { return _data; }
 
 private:
 	//string stream data
@@ -143,41 +155,67 @@ private:
 };
 
 //sized string stream class
-class sizedstream : public stringstream {
+class sizedstream : public stream {
 public:
-	sizedstream() : _size(INT_MAX) {}
-	sizedstream(int size) : _size(size) {}
+	sizedstream(int size) : _dsize(size), _rpos(0) {}
 	virtual ~sizedstream() {}
 
-	/*
-	*	write data to stream
-	*/
-	int write(const char *data, int sz);
+	int _put(const char *data, int sz);
 
-	/*
-	*	set stream size
-	*/
-	void size(int sz) { _size = sz; }
+	int _get(char *data, int sz);
+
+	bool _endp() { return _dsize == _data.length(); }
+
+	bool _endg() { return _rpos == _data.length(); }
+
+	int _size() { return _data.length(); }
+
+	void _assign(const std::string &data) { _data = data; _dsize = _data.length(); }
+
+	const std::string &_cdata() { return _data; }
 
 private:
-	//stream size
-	int _size;
+	//string stream data
+	std::string _data;
+	//stream data size
+	int _dsize;
+
+	//current read pos
+	int _rpos;
 };
 
 //delimited string stream class
-class delimitedstream : public stringstream {
+class delimitedstream : public stream {
 public:
-	delimitedstream(const std::string delimiter) : _delimiter(delimiter), _currpos(0) {}
+	delimitedstream(const std::string &delimiter) : _rpos(0), _full(false), _delimiter(delimiter), _dpos(0) {}
 	virtual ~delimitedstream() {}
 
-	int write(const char *data, int sz);
+	int _put(const char *data, int sz);
+
+	int _get(char *data, int sz);
+
+	bool _endp() { return _full; }
+
+	bool _endg() { return _rpos == _data.length(); }
+
+	int _size() { return _data.length(); }
+
+	void _assign(const std::string &data) { _data = data; _full = true; }
+
+	const std::string &_cdata() { return _data; }
 
 private:
+	//stream data
+	std::string _data;
+	//current read pos
+	int _rpos;
+	//full flag for stream
+	bool _full;
+
 	//delimiter for stream
 	std::string _delimiter;
-
-	//current pos to delimiter
-	int _currpos;
+	//delimiter pos to compare
+	int _dpos;
 };
 
 //file stream class

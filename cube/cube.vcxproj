@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="clt.cpp" />
+    <ClCompile Include="svr.cpp" />
     <ClCompile Include="http.cpp" />
     <ClCompile Include="ini.cpp" />
     <ClCompile Include="cube.cpp" />
@@ -31,13 +33,14 @@
     <ClCompile Include="sa.cpp" />
     <ClCompile Include="str.cpp" />
     <ClCompile Include="cc.cpp" />
-    <ClCompile Include="stream.cpp" />
     <ClCompile Include="tm.cpp" />
     <ClCompile Include="tsc.cpp" />
     <ClCompile Include="url.cpp" />
     <ClCompile Include="mm.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="clt.h" />
+    <ClInclude Include="svr.h" />
     <ClInclude Include="http.h" />
     <ClInclude Include="ini.h" />
     <ClInclude Include="cube.h" />
@@ -50,7 +53,6 @@
     <ClInclude Include="sa.h" />
     <ClInclude Include="str.h" />
     <ClInclude Include="cc.h" />
-    <ClInclude Include="stream.h" />
     <ClInclude Include="tm.h" />
     <ClInclude Include="tsc.h" />
     <ClInclude Include="url.h" />

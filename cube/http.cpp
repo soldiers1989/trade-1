@@ -4,34 +4,22 @@
 #include <algorithm>
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
-
 //////////////////////////////////////////parser class/////////////////////////////////////////
-std::string parser::take() {
-	std::string data;
-	take(data);
-	return data;
-}
-
-int parser::take(std::string &data) {
+std::string parser::data() {
 	char buf[BUFSZ] = { 0 };
-	int sz = take(buf, BUFSZ);
-	data = std::string(buf, sz);
-	return sz;
-}
-
-int parser::feed(const std::string &data) {
-	return feed(data.c_str(), data.length());
+	int sz = pack(buf, BUFSZ);
+	return std::string(buf, sz);
 }
 
 //////////////////////////////////////////address class/////////////////////////////////////////
-int address::take(char *data, int sz) {
+int address::pack(char *data, int sz) {
 	if (_port == 80)
 		return snprintf(data, sz, "%s", _host.c_str());
 	else
 		return snprintf(data, sz, "%s:%d", _host.c_str(), _port);
 }
 
-int address::feed(const char *data, int sz) {
+int address::parse(const char *data, int sz) {
 	//find seperator of host and port
 	const char *start = data, *end = data + sz, *pos = data;
 	while (*pos != ':' && pos < end)
@@ -64,7 +52,7 @@ int address::feed(const char *data, int sz) {
 }
 
 //////////////////////////////////////////parameters class/////////////////////////////////////////
-int params::take(char *data, int sz) {
+int params::pack(char *data, int sz) {
 	//data pos
 	int pos = 0;
 	
@@ -85,7 +73,7 @@ int params::take(char *data, int sz) {
 	return pos;
 }
 
-int params::feed(const char *data, int sz) {
+int params::parse(const char *data, int sz) {
 	//split data by param seperator
 	std::vector<std::string> items;
 	str::strtok(data, sz, "&", items);
@@ -123,7 +111,7 @@ std::string params::get(const std::string &key, const char *default) {
 }
 
 //////////////////////////////////////////uri class/////////////////////////////////////////
-int uri::take(char *data, int sz) {
+int uri::pack(char *data, int sz) {
 	int pos = 0;
 
 	//add scheme
@@ -154,7 +142,7 @@ int uri::take(char *data, int sz) {
 	return pos;
 }
 
-int uri::feed(const char *data, int sz) {
+int uri::parse(const char *data, int sz) {
 	//skip space characters
 	const char *start = data, *end = data + sz;
 	while (::isspace(*start))
@@ -212,7 +200,7 @@ int uri::feed(const char *data, int sz) {
 		std::string auth = std::string(start, pos - start);
 
 		//parse address
-		_addr.feed(auth.c_str(), auth.length());
+		_addr.parse(auth.c_str(), auth.length());
 
 		//set authority
 		_auth = auth;
@@ -249,7 +237,7 @@ int uri::feed(const char *data, int sz) {
 		std::string query = std::string(start, pos - start);
 
 		//parse params
-		_params.feed(query.c_str(), query.length());
+		_params.parse(query.c_str(), query.length());
 
 		//save query string
 		_query = query;
@@ -271,11 +259,11 @@ int uri::feed(const char *data, int sz) {
 //default http version
 version version::DEFAULT("HTTP/1.1");
 
-int version::take(char *data, int sz) {
+int version::pack(char *data, int sz) {
 	return snprintf(data, sz, "%s/%s", _name.c_str(), _code.c_str());
 }
 
-int version::feed(const char *data, int sz) {
+int version::parse(const char *data, int sz) {
 	std::vector<std::string> items;
 	str::strtok(data, sz, "/", items);
 	if (items.size() != 2) {
@@ -293,13 +281,16 @@ int version::feed(const char *data, int sz) {
 
 	return sz;
 }
-
 //////////////////////////////////////////query class///////////////////////////////////////////
-int query::take(char *data, int sz) {
-	return snprintf(data, sz, "%s %s %s\r\n", _method.c_str(), ((parser*)&_uri)->take().c_str(), ((parser*)&_version)->take().c_str());
+void query::init(const std::string &data) {
+	parse(data.c_str(), data.length());
 }
 
-int query::feed(const char *data, int sz) {
+int query::pack(char *data, int sz) {
+	return snprintf(data, sz, "%s %s %s\r\n", _method.c_str(), _uri.data().c_str(), _version.data().c_str());
+}
+
+int query::parse(const char *data, int sz) {
 	std::vector<std::string> items;
 	cube::str::strtok(data, sz, " ", items, 3);
 	if (items.size() != 3) {
@@ -310,53 +301,33 @@ int query::feed(const char *data, int sz) {
 	_method = items[0];
 
 	//parse query
-	((parser*)&_uri)->feed(items[1]);
+	_uri.parse(items[1].c_str(), items[1].length());
 
 	//parse protocol & version
-	((parser*)&_version)->feed(items[2]);
+	_version.parse(items[2].c_str(), items[2].length());
 
 	return sz;
 }
 
-query& query::get(const char *format, ...) {
-	//set method
-	_method = "GET";
-
-	//format uri string
+void query::make() {
+	//pack query line
 	char buf[BUFSZ] = { 0 };
-	va_list va;
-	va_start(va, format);
-	int sz = vsnprintf(buf, BUFSZ, format, va);
-	va_end(va);
-	
-	//set uri
-	_uri.feed(buf, sz);
+	int sz = pack(buf, BUFSZ);
 
-	//set version
-	_version = version::DEFAULT;
-
-	return *this;
+	//assign stream data
+	_stream.assign(std::string(buf, sz));
 }
 
-query& query::post(const char *format, ...) {
-	//set method
-	_method = "POST";
-	
-	//format uri string
-	char buf[BUFSZ] = { 0 };
-	va_list va;
-	va_start(va, format);
-	int sz = vsnprintf(buf, BUFSZ, format, va);
-	va_end(va);
+int query::take(char *data, int sz) {
+	return _stream.get(data, sz);
+}
 
-	//set uri
-	_uri.feed(buf, sz);
+int query::feed(const char *data, int sz) {
+	return _stream.put(data, sz);
+}
 
-	//set version
-	_version = version::DEFAULT;
-
-	return *this;
-
+const std::string &query::data() {
+	return _stream.cdata();
 }
 
 /////////////////////////////////////////status class/////////////////////////////////////////////
@@ -366,11 +337,15 @@ status status::REDIRECT("HTTP/1.1 302 Found\r\n");
 status status::BAD("HTTP/1.1 400 Bad Request\r\n");
 status status::ERR("HTTP/1.1 500 Internal Server Error\r\n");
 
-int status::take(char *data, int sz) {
-	return 0;
+void status::init(const std::string &data) {
+	parse(data.c_str(), data.length());
 }
 
-int status::feed(const char *data, int sz) {
+int status::pack(char *data, int sz) {
+	return snprintf(data, sz, "%s %s %s\r\n", _version.data().c_str(), _code.c_str(), _reason.c_str());
+}
+
+int status::parse(const char *data, int sz) {
 	//split status line
 	std::vector<std::string> items;
 	cube::str::strtok(data, sz, " ", items, 3);
@@ -379,7 +354,7 @@ int status::feed(const char *data, int sz) {
 	}
 
 	//parse http version
-	_version.feed(items[0].c_str(), items[0].length());
+	_version.parse(items[0].c_str(), items[0].length());
 
 	//parse status code
 	_code = items[1];
@@ -390,8 +365,34 @@ int status::feed(const char *data, int sz) {
 	return sz;
 }
 
+void status::make() {
+	//pack status line
+	char buf[BUFSZ] = { 0 };
+	int sz = pack(buf, BUFSZ);
+
+	//assign stream data
+	_stream.assign(std::string(buf, sz));
+}
+
+int status::take(char *data, int sz) {
+	return _stream.get(data, sz);
+}
+
+int status::feed(const char *data, int sz) {
+	return _stream.put(data, sz);
+}
+
+const std::string &status::data() {
+	return _stream.cdata();
+}
+
 //////////////////////////////////////////header class/////////////////////////////////////////
-int header::take(char *data, int sz) {
+void header::init(const std::string &data) {
+	_items.clear();
+	parse(data.c_str(), data.length());
+}
+
+int header::pack(char *data, int sz) {
 	int pos = 0;
 	//process each item
 	header::items::iterator iter = _items.begin(), iterend = _items.end();
@@ -406,21 +407,28 @@ int header::take(char *data, int sz) {
 	return pos;
 }
 
-int header::feed(const char *data, int sz) {
-	//check data
+int header::parse(const char *data, int sz) {
+	//seperate all header items
 	std::vector<std::string> items;
-	str::strtok(data, sz, ":", items, 2);
-	if (items.size() != 2) {
-		throw error("header: %s invalid header", std::string(data, sz).c_str());
-	}
+	str::strtok(data, sz, "\r\n", items);
 
-	//parse header
-	std::string key = str::lower(items[0]);
-	header::items::iterator iter = _items.find(key);
-	if (iter == _items.end()) {
-		_items.insert(std::pair<std::string, header::keyvals>(key, header::keyvals()));
+	//parse each header item
+	for (size_t i = 0; i < items.size(); i++) {
+		//check data
+		std::vector<std::string> item;
+		str::strtok(items[i].c_str(), items[i].size(), ":", item, 2);
+		if (item.size() != 2) {
+			throw error("header: %s invalid header", items[i].c_str());
+		}
+
+		//parse header
+		std::string key = str::lower(item[0]);
+		header::items::iterator iter = _items.find(key);
+		if (iter == _items.end()) {
+			_items.insert(std::pair<std::string, header::keyvals>(key, header::keyvals()));
+		}
+		_items[key].push_back(header::keyval(item[0], item[1]));
 	}
-	_items[key].push_back(header::keyval(items[0], items[1]));
 
 	return sz;
 }
@@ -494,34 +502,136 @@ std::string header::get(const std::string &item, const char *default) {
 	}
 }
 
+void header::make() {
+	//pack header
+	char buf[BUFSZ] = { 0 };
+	int sz = pack(buf, BUFSZ);
+
+	//assign stream data
+	_stream.assign(std::string(buf, sz));
+}
+
+int header::take(char *data, int sz) {
+	return _stream.get(data, sz);
+}
+
+int header::feed(const char *data, int sz) {
+	return _stream.put(data, sz);
+}
+
+const std::string &header::data() {
+	return _stream.cdata();
+}
+
 //////////////////////////////////////////entity class/////////////////////////////////////////
-int entity::take(char *data, int sz) {
+int entity::pack(char *data, int sz) {
 	return 0;
 }
 
-int entity::feed(const char *data, int sz) {
+int entity::parse(const char *data, int sz) {
 	return 0;
 }
 
 //////////////////////////////////////////request class/////////////////////////////////////////
+std::string request::default::_header = "User-Agent: \r\n"\
+										"Accept: *.*\r\n"\
+										"Accept-Encoding: gzip, deflate\r\n";
+
+void request::get(const char *urlformat, ...) {
+	//format url string
+	char url[BUFSZ] = { 0 };
+	va_list va;
+	va_start(va, urlformat);
+	int sz = vsnprintf(url, BUFSZ, urlformat, va);
+	va_end(va);
+
+	//initialize query
+	char query[BUFSZ] = { 0 };
+	snprintf(query, BUFSZ, "GET %s HTTP/1.1\r\n", url);
+	_query.init(query);
+
+	//initialize header
+	_header.init(default::header());
+
+	//initialize entity
+
+}
+
+void request::post(const char *url, const char *file) {
+
+}
+
+void request::post(const char *url, const char *data, int sz) {
+	//initialize query
+	char query[BUFSZ] = { 0 };
+	snprintf(query, BUFSZ, "POST %s HTTP/1.1\r\n", url);
+	_query.init(query);
+
+	//initialize header
+	_header.init(default::header());
+
+	//initialize entity
+}
+
+void request::make() {
+	_query.make();
+}
+
 int request::take(char *data, int sz) {
 	return 0;
 }
 
 int request::feed(const char *data, int sz) {
-
 	return 0;
 }
 
+const std::string &request::data() const{
+	return "";
+}
 
 /////////////////////////////////////////response class///////////////////////////////////////////
+void response::file(const char *path) {
+
+}
+void response::json(const char *data, int sz) {
+
+}
+void response::data(const char *data, int sz) {
+
+}
+
+void response::cerr(int code) {
+
+}
+
+void response::serr(int code) {
+
+}
+
+void response::redirect(int code, const char *url) {
+
+}
+
+
+void response::make() {
+
+}
+
 int response::take(char *data, int sz) {
 	return 0;
 }
 
 int response::feed(const char *data, int sz) {
-
 	return 0;
 }
+
+bool response::full() const {
+	return false;
+}
+
+const std::string &response::data() const {
+	return "";
+}
+
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE

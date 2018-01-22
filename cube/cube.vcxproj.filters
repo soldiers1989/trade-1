@@ -60,10 +60,13 @@
     <ClCompile Include="http.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="stream.cpp">
+    <ClCompile Include="ios.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ios.cpp">
+    <ClCompile Include="svr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="clt.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -113,10 +116,13 @@
     <ClInclude Include="http.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="stream.h">
+    <ClInclude Include="ios.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ios.h">
+    <ClInclude Include="svr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="clt.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
