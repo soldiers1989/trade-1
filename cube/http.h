@@ -9,6 +9,43 @@
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
 static const int BUFSZ = 4096;
+
+//charset class
+class charset {
+public:
+	/*
+	*	general charsets
+	*/
+	static std::string utf8;
+};
+
+//mime class
+class mime {
+public:
+	/*
+	*	general mime types
+	*/
+	static std::string octet;
+	static std::string form;
+	static std::string json;
+	static std::string unknown;
+
+public:
+	/*
+	*	get content type by extension name
+	*/
+	static const std::string &type(const std::string &ext);
+
+	/*
+	*	set content type by extension name & type
+	*/
+	static void type(const std::string &ext, const std::string &ctype);
+
+private:
+	//mime types, <extension, http content-type>
+	static std::map<std::string, std::string> _types;
+};
+
 //parser class
 class parser {
 public:
@@ -146,9 +183,6 @@ class version : public parser {
 	//version parse error
 	typedef cexception error;
 public:
-	static version DEFAULT;
-
-public:
 	version() : _name("HTTP"), _code("1.1") {}
 	version(const std::string &data) : _name(""), _code("") { parse(data.c_str(), data.length()); }
 	version(const std::string &name, const std::string &code) : _name(name), _code(code) { }
@@ -234,11 +268,18 @@ private:
 	int feed(const char *data, int sz);
 
 	/*
+	*	check if query line is full(completed)
+	*@return:
+	*	true - query line is full(completed), false - not full(completed)
+	*/
+	bool full() const;
+
+	/*
 	*	get query line data
 	*@return:
 	*	query line data
 	*/
-	const std::string &data();
+	const std::string &data() const;
 
 private:
 	//request method
@@ -258,7 +299,14 @@ class status : public parser{
 	typedef cexception error;
 	friend class response;
 public:
-	static status OK, MOVE, REDIRECT, BAD, ERR;
+	//status code
+	static const int ok = 200, moved_permanently = 301, moved_temporarily = 302, bad_request = 400, interval_server_error = 500;
+	//status setter
+	class setter {
+	public:
+		setter(int code, const std::string &reason);
+		~setter() {}
+	};
 
 public:
 	status() : _code(""), _reason(""), _stream("\r\n") {}
@@ -266,12 +314,12 @@ public:
 	virtual ~status() {}
 
 	/*
-	*	initialize status by data string, format: "<HTTP VERSION> <CODE> <REASON>\r\n"
-	*@param data: in, status line data
+	*	initialize status by code
+	*@param code: in, response status code
 	*@return:
 	*	void
 	*/
-	void init(const std::string &data);
+	void init(int code);
 
 	/*
 	*	http status line data parser
@@ -324,11 +372,18 @@ private:
 	int feed(const char *data, int sz);
 
 	/*
+	*	check if status line is full(completed)
+	*@return:
+	*	true - status line is full(completed), false - not full(completed)
+	*/
+	bool full() const;
+
+	/*
 	*	get status line data
 	*@return:
 	*	status line data
 	*/
-	const std::string &data();
+	const std::string &data() const;
 
 private:
 	//http version
@@ -340,6 +395,9 @@ private:
 
 	//status line data stream data
 	delimitedstream _stream;
+
+	//default status, <int-code, <string-code, reason>>
+	static std::map<int, std::pair<std::string, std::string>> _status;
 };
 
 //header class
@@ -352,8 +410,48 @@ class header : public parser{
 	typedef std::vector<keyval> keyvals;
 	typedef std::map<std::string, keyvals> items;
 
-	friend class request;
-	friend class response;
+	friend class http::request;
+	friend class http::response;
+
+public:
+	//default request header class
+	class request {
+	public:
+		class setter {
+		public:
+			setter(const std::string &key, const std::string &value) { http::header::request::default(key, value); }
+			~setter() {}
+		};
+
+		/*
+		*	get/set default request headers
+		*/
+		static const std::map<std::string, std::string> &default() { return _header; }
+		static void default(const std::string &key, const std::string &value) { _header[key] = value; }
+
+	private:
+		//default request header
+		static std::map<std::string, std::string> _header;
+	};
+
+	//default response header class
+	class response {
+	public:
+		class setter {
+		public:
+			setter(const std::string &key, const std::string &value) { http::header::response::default(key, value); }
+			~setter() {}
+		};
+
+		/*
+		*	get/set default response headers
+		*/
+		static const std::map<std::string, std::string> &default() { return _header; }
+		static void default(const std::string &key, const std::string &value) { _header[key] = value; }
+	private:
+		//default request header
+		static std::map<std::string, std::string> _header;
+	};
 public:
 	header() : _stream("\r\n\r\n") {}
 	header(const std::string &data) : _stream("\r\n\r\n") {}
@@ -381,6 +479,7 @@ public:
 	*@return:
 	*	self
 	*/
+	header &set(const std::string &key, const char *format, ...);
 	header &set(const std::string &key, bool replace, const char *format, ...);
 	header &set(const std::map<std::string, std::string> &items, bool replace = false);
 
@@ -391,8 +490,8 @@ public:
 	*@return:
 	*	item string value or default value
 	*/
-	std::vector<std::string> get(const std::string &item);
-	std::string get(const std::string &key, const char *default);
+	std::vector<std::string> get(const std::string &item) const;
+	std::string get(const std::string &key, const char *default) const;
 
 private:
 	/*
@@ -421,11 +520,18 @@ private:
 	int feed(const char *data, int sz);
 
 	/*
+	*	check if header is full(completed)
+	*@return:
+	*	true - header is full(completed), false - not full(completed)
+	*/
+	bool full() const;
+
+	/*
 	*	get header data
 	*@return:
 	*	request data
 	*/
-	const std::string &data();
+	const std::string &data() const;
 
 private:
 	//header items, map<lower key, vector<<original key, value>>>
@@ -436,53 +542,147 @@ private:
 };
 
 //request&response entity class
-class entity : public parser{
+class entity {
 	//bad request execption
 	typedef cexception error;
 
 	friend class request;
 	friend class response;
 public:
-	entity() {}
-	entity(const header &header) {}
+	entity() : _empty(""), _stream(nullptr) {}
 	virtual ~entity() {}
 
 	/*
-	*
+	*	initialize entity with header
+	*@param header: in, request/response header
+	*@return:
+	*	void
 	*/
-	void file();
-	void json();
-	void data();
-	void form();
+	void init(const http::header &header);
 
 	/*
-	*	http entity data parser
+	*	initialize entity with local file
 	*/
-	int pack(char *data, int sz);
-	int parse(const char *data, int sz);
+	void file(const std::string &path);
+
+	/*
+	*	initialize entity with form data
+	*/
+	void form(const char *data, int sz);
+
+	/*
+	*	initialize entity with specified content type & data
+	*@param type: in, content type, xml/html/json/... .etc
+	*@param data: in, content data
+	*@param sz: in, content size
+	*@return:
+	*	void
+	*/
+	void data(const std::string &type, const char *data, int sz);
+
+	/*
+	*	entity meta information
+	*/
+	void length(int len);
+	int length() const { return ::atoi(header("Content-Length", "0").c_str()); }
+	
+	void md5(const std::string &md5) { header("Content-MD5", md5); }
+	std::string md5() const { return header("Content-MD5"); }
+
+	void type(const std::string &type) { header("Content-Type", type); }
+	std::string type() const { return header("Content-Type"); }
+
+	void range(const std::string &range) { header("Content-Range", range); }
+	std::string range() const { return header("Content-Range"); }
+
+	void allow(const std::string &allow) { header("Allow", allow); }
+	std::string allow() const { return header("Allow"); }
+
+	void expires(const std::string &expires) { header("Expires", expires); }
+	std::string expires() const { return header("Expires"); }
+
+	void encoding(const std::string &encoding) { header("Content-Encoding", encoding); }
+	std::string encoding() const { return header("Content-Encoding"); }
+
+	void language(const std::string &language) { header("Content-Language", language); }
+	std::string language() const { return header("Content-Language"); }
+
+	void location(const std::string &location) { header("Content-Location", location); }
+	std::string location() const { return header("Content-Location"); }
+
+	void lastmodified(const std::string &lastmodified) { header("Last-Modified", lastmodified); }
+	std::string lastmodified() const { return header("Last-Modified"); }
 
 private:
+	/*
+	*	make query line data
+	*@return:
+	*	void
+	*/
+	void make();
+
+	/*
+	*	take data from entity stream
+	*@param data: in/out, data to take to
+	*@param sz: in, data size
+	*@return:
+	*	size taked
+	*/
+	int take(char *data, int sz);
+
+	/*
+	*	feed data to entity stream
+	*@param data: in, data to feed
+	*@param sz: in, data size
+	*@return:
+	*	size feeded
+	*/
+	int feed(const char *data, int sz);
+
+	/*
+	*	check if entity is full(completed)
+	*@return:
+	*	true - entity is full(completed), false - not full(completed)
+	*/
+	bool full() const;
+
+	/*
+	*	get entity data
+	*@return:
+	*	entity data
+	*/
+	const std::string &data() const;
+
+	/*
+	*	get/set entity meta information by specified key
+	*/
+	std::map<std::string, std::string> header() const;
+	void header(const std::string &key, const std::string &val);
+	std::string header(const std::string &key, const char *default = "") const;
+
+	/*
+	*	get post params
+	*/
+	const http::params &params() const { return _params; }
+
+private:
+	//empty data
+	std::string _empty;
+	
+	//request params by post method
+	http::params _params;
+
 	//content of entity
-	std::shared_ptr<stream> _stream;
+	std::unique_ptr<stream> _stream;
+
+	//entity header items, <lower-key, <key, value>>
+	std::map<std::string, std::pair<std::string, std::string>> _header;
 };
 
 //http request class
 class request {
 	//bad request execption
 	typedef cexception error;
-	//default request data
-	class default{
-	public:
-		/*
-		*	get/set request default header data
-		*/
-		static const std::string &header() { return _header; }
-		static void header(const std::string &header) { _header = header; }
-
-	private:
-		//default request header data
-		static std::string _header;
-	};
 
 	friend class requestbuffer;
 public:
@@ -540,13 +740,6 @@ private:
 	*/
 	bool full() const;
 
-	/*
-	*	get header data
-	*@return:
-	*	request data
-	*/
-	const std::string &data() const;
-
 private:
 	//request query
 	http::query _query;
@@ -584,7 +777,7 @@ public:
 	*@return:
 	*	void
 	*/
-	void cerr(int code);
+	void cerr(int code = status::bad_request);
 
 	/*
 	*	server error: 5xx
@@ -592,14 +785,21 @@ public:
 	*@return:
 	*	void
 	*/
-	void serr(int code);
+	void serr(int code = status::interval_server_error);
+
+	/*
+	*	move to new location, code: 3xx
+	*@param code: in, redirect code
+	*@param url: in, new location
+	*/
+	void moveto(const char *url);
 
 	/*
 	*	redirect to new location, code: 3xx
 	*@param code: in, redirect code
 	*@param url: in, new location
 	*/
-	void redirect(int code, const char *url);
+	void redirect(const char *url);
 
 	/*
 	*	get/set response data
@@ -640,14 +840,6 @@ private:
 	*	true - response if full(completed), false - not full(completed)
 	*/
 	bool full() const;
-
-	/*
-	*	get header data
-	*@return:
-	*	response data
-	*/
-	const std::string &data() const;
-
 private:
 	//response status
 	http::status _status;
@@ -697,13 +889,6 @@ public:
 	bool full() const { return _request.full(); }
 
 	/*
-	*	get request data
-	*@return:
-	*	request data
-	*/
-	const std::string &data() const { return _request.data(); }
-
-	/*
 	*	get request object
 	*/
 	http::request &request() { return _request; }
@@ -751,13 +936,6 @@ public:
 	*	true - response if full(completed), false - not full(completed)
 	*/
 	bool full() const { return _response.full(); }
-
-	/*
-	*	get response data
-	*@return:
-	*	response data
-	*/
-	const std::string &data() const { return _response.data(); }
 
 	/*
 	*	get response object

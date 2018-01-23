@@ -27,9 +27,8 @@ int ssquote::on_recv(char *data, int transfered) {
 	return 0;
 }
 
-int ssquote::on_close() {
+void ssquote::on_close() {
 	std::cout << "on close: " << peer().ip() << ":" << peer().port() << std::endl;
-	return 0;
 }
 
 //////////////////////////////session trade class///////////////////////////////////
@@ -58,9 +57,8 @@ int sstrade::on_recv(char *data, int transfered) {
 	return 0;
 }
 
-int sstrade::on_close() {
+void sstrade::on_close() {
 	std::cout << "on close: " << peer().ip() << ":" << peer().port() << std::endl;
-	return 0;
 }
 
 //////////////////////////////session manage class///////////////////////////////////
@@ -89,8 +87,7 @@ int ssmanage::on_recv(char *data, int transfered) {
 	return 0;
 }
 
-int ssmanage::on_close() {
+void ssmanage::on_close() {
 	std::cout << "on close: " << peer().ip() << ":" << peer().port() << std::endl;
-	return 0;
 }
 END_SERVICE_NAMESPACE

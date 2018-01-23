@@ -1,13 +1,8 @@
 #include "svcmgr.h"
 BEGIN_SERVICE_NAMESPACE
 /////////////////////////////servlet class///////////////////////////////////
-int servlet_login::handle_get(const cube::http::request &req, cube::http::response &resp) {
-	
-	return 0;
-}
-
-int servlet_login::handle_post(const cube::http::request &req, cube::http::response &resp) {
-	return -1;
+void servlet_login::handle(const cube::http::request &req, cube::http::response &resp) {
+	resp.redirect("http://www.baidu.com/");
 }
 
 /////////////////////////////service manager class///////////////////////////////////
@@ -23,7 +18,7 @@ service_manager *service_manager::instance() {
 
 int service_manager::start(ushort port) {
 	//register servlets
-	_servlets.mount("/login", new servlet_login());
+	_servlets.mount("GET", "/login", new servlet_login());
 
 	//start http server
 	return _server.start(port, &_servlets);

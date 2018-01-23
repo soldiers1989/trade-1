@@ -4,6 +4,7 @@
 #pragma once
 #include "cube.h"
 #include <string>
+#include <fstream>
 BEGIN_CUBE_NAMESPACE
 //stream class
 class stream {
@@ -40,28 +41,28 @@ public:
 	*@return:
 	*	bool
 	*/
-	bool endp();
+	bool endp() const;
 
 	/*
 	*	test if end of get, means no more data could be getting from stream
 	*@return:
 	*	bool
 	*/
-	bool endg();
+	bool endg() const;
 
 	/*
 	*	get stream data size
 	*@return:
 	*	data size in bytes
 	*/
-	int size();
+	int size() const;
 
 	/*
 	*	get stream data
 	*@return:
 	*	stream data
 	*/
-	const std::string &cdata();
+	const std::string &cdata() const;
 
 	/*
 	*	assign stream data
@@ -92,28 +93,28 @@ protected:
 	*@return:
 	*	bool
 	*/
-	virtual bool _endp() = 0;
+	virtual bool _endp() const = 0;
 
 	/*
 	*	test if end of get, means no more data could be getting from stream
 	*@return:
 	*	bool
 	*/
-	virtual bool _endg() = 0;
+	virtual bool _endg() const = 0;
 
 	/*
 	*	get stream data size
 	*@return:
 	*	data size in bytes
 	*/
-	virtual int _size() = 0;
+	virtual int _size() const = 0;
 
 	/*
 	*	get stream data
 	*@return:
 	*	stream data
 	*/
-	virtual const std::string &_cdata() = 0;
+	virtual const std::string &_cdata() const = 0;
 
 	/*
 	*	assign stream data
@@ -136,15 +137,15 @@ public:
 
 	int _get(char *data, int sz);
 
-	bool _endp() { return false; }
+	bool _endp() const { return false; }
 
-	bool _endg() { return _rpos == _data.length(); }
+	bool _endg() const { return _rpos == _data.length(); }
 
-	int _size() { return _data.length(); }
+	int _size() const { return _data.length(); }
 
 	void _assign(const std::string &data) { _data = data; }
 
-	const std::string &_cdata() { return _data; }
+	const std::string &_cdata() const { return _data; }
 
 private:
 	//string stream data
@@ -164,15 +165,15 @@ public:
 
 	int _get(char *data, int sz);
 
-	bool _endp() { return _dsize == _data.length(); }
+	bool _endp() const { return _dsize == _data.length(); }
 
-	bool _endg() { return _rpos == _data.length(); }
+	bool _endg() const { return _rpos == _data.length(); }
 
-	int _size() { return _data.length(); }
+	int _size() const { return _data.length(); }
 
 	void _assign(const std::string &data) { _data = data; _dsize = _data.length(); }
 
-	const std::string &_cdata() { return _data; }
+	const std::string &_cdata() const { return _data; }
 
 private:
 	//string stream data
@@ -194,15 +195,15 @@ public:
 
 	int _get(char *data, int sz);
 
-	bool _endp() { return _full; }
+	bool _endp() const { return _full; }
 
-	bool _endg() { return _rpos == _data.length(); }
+	bool _endg() const { return _rpos == _data.length(); }
 
-	int _size() { return _data.length(); }
+	int _size() const { return _data.length(); }
 
 	void _assign(const std::string &data) { _data = data; _full = true; }
 
-	const std::string &_cdata() { return _data; }
+	const std::string &_cdata() const { return _data; }
 
 private:
 	//stream data
@@ -220,6 +221,30 @@ private:
 
 //file stream class
 class filestream : public stream{
+public:
+	filestream(const std::string &path, int mode = std::ios::in | std::ios::out || std::ios::binary) { _file.open(path.c_str(), mode); }
+	virtual ~filestream() {}
 
+	int _put(const char *data, int sz);
+
+	int _get(char *data, int sz);
+
+	bool _endp() const;
+
+	bool _endg() const;
+
+	int _size() const;
+
+	void _assign(const std::string &data);
+
+	const std::string &_cdata() const;
+
+private:
+	//file path
+	std::string _path;
+	//file stream
+	std::fstream _file;
+	//file content
+	std::string _content;
 };
 END_CUBE_NAMESPACE

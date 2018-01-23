@@ -2,7 +2,7 @@
 #include "stdsvr.h"
 #include "cube\net.h"
 BEGIN_SERVICE_NAMESPACE
-class ssquote : public cube::session {
+class ssquote : public cube::net::session {
 public:
 	ssquote() {}
 	~ssquote() {}
@@ -13,10 +13,10 @@ public:
 
 	virtual int on_recv(char *data, int transfered);
 
-	virtual int on_close();
+	virtual void on_close();
 };
 
-class sstrade : public cube::session {
+class sstrade : public cube::net::session {
 public:
 	sstrade() {}
 	~sstrade() {}
@@ -27,10 +27,10 @@ public:
 
 	virtual int on_recv(char *data, int transfered);
 
-	virtual int on_close();
+	virtual void on_close();
 };
 
-class ssmanage : public cube::session {
+class ssmanage : public cube::net::session {
 public:
 	ssmanage() {}
 	~ssmanage() {}
@@ -41,7 +41,7 @@ public:
 
 	virtual int on_recv(char *data, int transfered);
 
-	virtual int on_close();
+	virtual void on_close();
 };
 
 END_SERVICE_NAMESPACE

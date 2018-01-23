@@ -106,10 +106,9 @@ public:
 	*@param req: in, client request
 	*@param resp: in/out, service response
 	*@return:
-	*	0 for success, otherwise <0
+	*	void
 	*/
-	virtual int handle(const request &req, response &resp) {
-		return -1;
+	virtual void handle(const request &req, response &resp) {
 	}
 };
 

@@ -15,28 +15,28 @@ int stream::get(char *data, int sz) {
 	return _get(data, sz);
 }
 
-bool stream::endp() {
+bool stream::endp() const {
 	if (_stream != 0) {
 		return _stream->endp();
 	}
 	return _endp();
 }
 
-bool stream::endg() {
+bool stream::endg() const {
 	if (_stream != 0) {
 		return _stream->endg();
 	}
 	return _endg();
 }
 
-int stream::size() {
+int stream::size() const {
 	if (_stream != 0) {
 		return _stream->size();
 	}
 	return _size();
 }
 
-const std::string &stream::cdata() {
+const std::string &stream::cdata() const {
 	if (_stream != 0) {
 		return _stream->cdata();
 	}
@@ -172,5 +172,34 @@ int delimitedstream::_get(char *data, int sz) {
 
 	//no more data
 	return 0;
+}
+
+//////////////////////////////////////////delimiter stream class//////////////////////////////////////
+int filestream::_put(const char *data, int sz) {
+	return 0;
+}
+
+int filestream::_get(char *data, int sz) {
+	return 0;
+}
+
+bool filestream::_endp() const {
+	return false;
+}
+
+bool filestream::_endg() const {
+	return false;
+}
+
+int filestream::_size() const {
+	return false;
+}
+
+void filestream::_assign(const std::string &data) {
+
+}
+
+const std::string &filestream::_cdata() const {
+	return _content;
 }
 END_CUBE_NAMESPACE

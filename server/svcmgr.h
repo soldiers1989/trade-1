@@ -1,12 +1,11 @@
 #pragma once
 #include "admin.h"
-#include "cube\net.h"
+#include "cube\svr.h"
 BEGIN_SERVICE_NAMESPACE
 
 class servlet_login : public cube::http::servlet {
 public:
-	int handle_get(const cube::http::request &req, cube::http::response &resp);
-	int handle_post(const cube::http::request &req, cube::http::response &resp);
+	void handle(const cube::http::request &req, cube::http::response &resp);
 };
 
 class service_manager {
