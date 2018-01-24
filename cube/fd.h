@@ -37,15 +37,12 @@ public:
 
 //file/directory class
 class fd {
-public:
 	//exceptions
-	typedef std::exception error;
+	typedef cexception error;
 
 public:
 	//seperator of path
 	static const char *SEP;
-	//exceptions
-	typedef std::exception error;
 	//file attribute
 	typedef enum{FILE = 0x20, DIR=0x10, HIDDEN=0x02, SYSTEM=0x04, ALL=0xFF} attrib;
 public:
@@ -92,7 +89,16 @@ public:
 	*	size of file
 	*/
 	static int size(int fd, size_t &sz);
+	static size_t size(const std::string &path);
 	static int size(const std::string &path, size_t &sz);
+
+	/*
+	*	get file extension name
+	*@param path: in, file name
+	*@return:
+	*	file extension name
+	*/
+	static std::string ext(const std::string &name);
 
 	/*
 	*	get file name from file path
@@ -149,7 +155,7 @@ public:
 class file {
 public:
 	//exceptions
-	typedef std::exception error;
+	typedef cexception error;
 
 public:
 	/*
@@ -187,7 +193,7 @@ public:
 class dir {
 public:
 	//exceptions
-	typedef std::exception error;
+	typedef cexception error;
 
 public:
 	/*

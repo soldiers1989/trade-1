@@ -16,15 +16,17 @@ void servlets::handle(const request &req, response &resp) {
 	std::string method = req.query().method();
 	std::map<std::string, std::map<std::string, std::shared_ptr<http::servlet>>>::iterator miter = _servlets.find(method);
 	if (miter == _servlets.end()) {
-		//method not supported
+		//method not allowed
+		resp.cerr(405);
 	}
 
 	std::map<std::string, std::shared_ptr<servlet>>::iterator siter = _servlets[method].find(req.query().path());
-	if (siter == _servlets[method].end()) {
-		//request resource not exist
+	if (siter != _servlets[method].end()) {
+		siter->second->handle(req, resp);
+	} else {
+		//request resource not found
+		resp.cerr(404);
 	}
-
-	siter->second->handle(req, resp);
 }
 
 //////////////////////////////////////http session class///////////////////////////////////////
@@ -99,8 +101,8 @@ void session::on_close() {
 }
 
 //////////////////////////////////////http server class///////////////////////////////////////
-int server::start(ushort port, servlets *servlets) {
-	return _server.start(port, servlets);
+int server::start(ushort port, int workers, servlets *servlets) {
+	return _server.start(port, workers, servlets);
 }
 
 void server::stop() {

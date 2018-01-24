@@ -8,6 +8,8 @@
 BEGIN_CUBE_NAMESPACE
 //stream class
 class stream {
+	typedef cexception error;
+
 public:
 	stream() : _stream(0) {}
 	stream(stream *stream) : _stream(stream) {}
@@ -55,14 +57,14 @@ public:
 	*@return:
 	*	data size in bytes
 	*/
-	int size() const;
+	int size();
 
 	/*
 	*	get stream data
 	*@return:
 	*	stream data
 	*/
-	const std::string &cdata() const;
+	const std::string &data();
 
 	/*
 	*	assign stream data
@@ -107,14 +109,14 @@ protected:
 	*@return:
 	*	data size in bytes
 	*/
-	virtual int _size() const = 0;
+	virtual int _size() = 0;
 
 	/*
 	*	get stream data
 	*@return:
 	*	stream data
 	*/
-	virtual const std::string &_cdata() const = 0;
+	virtual const std::string &_data() = 0;
 
 	/*
 	*	assign stream data
@@ -139,17 +141,17 @@ public:
 
 	bool _endp() const { return false; }
 
-	bool _endg() const { return _rpos == _data.length(); }
+	bool _endg() const { return _rpos == _stream.length(); }
 
-	int _size() const { return _data.length(); }
+	int _size() { return _stream.length(); }
 
-	void _assign(const std::string &data) { _data = data; }
+	const std::string &_data() { return _stream; }
 
-	const std::string &_cdata() const { return _data; }
+	void _assign(const std::string &data) { _stream = data; }
 
 private:
 	//string stream data
-	std::string _data;
+	std::string _stream;
 
 	//current read pos
 	int _rpos;
@@ -165,19 +167,19 @@ public:
 
 	int _get(char *data, int sz);
 
-	bool _endp() const { return _dsize == _data.length(); }
+	bool _endp() const { return _dsize == _stream.length(); }
 
-	bool _endg() const { return _rpos == _data.length(); }
+	bool _endg() const { return _rpos == _stream.length(); }
 
-	int _size() const { return _data.length(); }
+	int _size() { return _stream.length(); }
+	
+	const std::string &_data() { return _stream; }
 
-	void _assign(const std::string &data) { _data = data; _dsize = _data.length(); }
-
-	const std::string &_cdata() const { return _data; }
+	void _assign(const std::string &data) { _stream = data; _dsize = _stream.length(); }
 
 private:
 	//string stream data
-	std::string _data;
+	std::string _stream;
 	//stream data size
 	int _dsize;
 
@@ -197,17 +199,17 @@ public:
 
 	bool _endp() const { return _full; }
 
-	bool _endg() const { return _rpos == _data.length(); }
+	bool _endg() const { return _rpos == _stream.length(); }
 
-	int _size() const { return _data.length(); }
+	int _size() { return _stream.length(); }
 
-	void _assign(const std::string &data) { _data = data; _full = true; }
+	const std::string &_data() { return _stream; }
 
-	const std::string &_cdata() const { return _data; }
+	void _assign(const std::string &data) { _stream = data; _full = true; }
 
 private:
 	//stream data
-	std::string _data;
+	std::string _stream;
 	//current read pos
 	int _rpos;
 	//full flag for stream
@@ -221,8 +223,9 @@ private:
 
 //file stream class
 class filestream : public stream{
+	static const int BUFSZ = 16 * 1024;
 public:
-	filestream(const std::string &path, int mode = std::ios::in | std::ios::out || std::ios::binary) { _file.open(path.c_str(), mode); }
+	filestream(const std::string &path, int mode) : _file(path, mode), _content("") { }
 	virtual ~filestream() {}
 
 	int _put(const char *data, int sz);
@@ -233,11 +236,11 @@ public:
 
 	bool _endg() const;
 
-	int _size() const;
+	int _size();
+
+	const std::string &_data();
 
 	void _assign(const std::string &data);
-
-	const std::string &_cdata() const;
 
 private:
 	//file path

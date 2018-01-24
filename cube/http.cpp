@@ -1,29 +1,56 @@
 #include "http.h"
+#include "fd.h"
 #include "str.h"
 #include <stdarg.h>
 #include <algorithm>
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
 //////////////////////////////////////////charset class/////////////////////////////////////////
-std::string charset::utf8("utf8");
+std::string charset::utf8("utf-8");
+std::string charset::default("");
 
 //////////////////////////////////////////mime class/////////////////////////////////////////
-std::string mime::octet("application/octet-stream");
-std::string mime::form("application/x-www-form-urlencoded");
-std::string mime::json("application/json");
-std::string mime::unknown("application/unknown");
+std::string mime::json::default("application/json");
+std::string mime::octet::default("application/octet-stream");
+std::string mime::form::default("application/x-www-form-urlencoded");
+
+std::string mime::json::utf8("application/json;charset=utf-8");
+std::string mime::octet::utf8("application/octet-stream;charset=utf-8");
+std::string mime::form::utf8("application/x-www-form-urlencoded;charset=utf-8");
+
+std::string mime::json::gb2312("application/json;charset=gb2312");
+std::string mime::octet::gb2312("application/octet-stream;charset=gb2312");
+std::string mime::form::gb2312("application/x-www-form-urlencoded;charset=gb2312");
+
+std::string mime::unknown("");
 
 std::map<std::string, std::string> mime::_types;
 
-const std::string &mime::type(const std::string &ext) {
+mime::setter mime_json("json", "application/json");
+mime::setter mime_octet("octet", "application/octet-stream");
+mime::setter mime_form("form", "application/x-www-form-urlencoded");
+
+std::string mime::get(const std::string &ext, const std::string &charset) {
+	std::string res("");
+
+	//get relate mime type
 	std::map<std::string, std::string>::const_iterator citer = _types.find(ext);
 	if (citer != _types.end()) {
-		return citer->second;
+		res.append(citer->second);
 	}
-	return unknown;
+
+	//append content charset
+	if (!charset.empty()) {
+		if(!res.empty())
+			res.append(";charset=" + charset);
+		else
+			res.append("charset=" + charset);
+	}
+
+	return res;
 }
 
-void mime::type(const std::string &ext, const std::string &ctype) {
+void mime::set(const std::string &ext, const std::string &ctype) {
 	_types[ext] = ctype;
 }
 
@@ -352,7 +379,7 @@ int query::feed(const char *data, int sz) {
 	int wsz = _stream.put(data, sz);
 	if (full()) {
 		//parse status line
-		parse(_stream.cdata().c_str(), _stream.cdata().length());
+		parse(_stream.data().c_str(), _stream.data().length());
 	}
 
 	return wsz;
@@ -362,17 +389,19 @@ bool query::full() const {
 	return _stream.endp();
 }
 
-const std::string &query::data() const {
-	return _stream.cdata();
+const std::string &query::data() {
+	return _stream.data();
 }
 
 /////////////////////////////////////////status class/////////////////////////////////////////////
 std::map<int, std::pair<std::string, std::string>> status::_status;
-status::setter s_ok(status::ok, "OK");
-status::setter s_moved_permanently(status::moved_permanently, "Moved Permanently");
-status::setter s_moved_temporarily(status::moved_temporarily, "Found");
-status::setter s_bad_request(status::bad_request, "Bad Request");
-status::setter s_interval_server_error(status::interval_server_error, "Internal Server Error");
+status::setter s_ok(200, "OK");
+status::setter r_moved_permanently(301, "Moved Permanently");
+status::setter r_moved_temporarily(302, "Found");
+status::setter cerr_bad_request(400, "Bad Request");
+status::setter cerr_not_found(404, "Not Found");
+status::setter cerr_method_not_allowed(405, "Method Not Allowed");
+status::setter serr_interval_server_error(500, "Internal Server Error");
 
 status::setter::setter(int code, const std::string &reason) {
 	status::_status[code] = std::pair<std::string, std::string>(str::tostr(code), reason);
@@ -390,6 +419,11 @@ void status::init(int code) {
 }
 
 int status::pack(char *data, int sz) {
+	//check status
+	if (_code.empty() || _reason.empty()) {
+		throw error("status line: status not specified");
+	}
+
 	return snprintf(data, sz, "%s %s %s\r\n", _version.data().c_str(), _code.c_str(), _reason.c_str());
 }
 
@@ -436,7 +470,7 @@ int status::feed(const char *data, int sz) {
 	int wsz = _stream.put(data, sz);
 	if (full()) {
 		//parse status line
-		parse(_stream.cdata().c_str(), _stream.cdata().length());
+		parse(_stream.data().c_str(), _stream.data().length());
 	}
 
 	return wsz;
@@ -446,8 +480,8 @@ bool status::full() const {
 	return _stream.endp();
 }
 
-const std::string &status::data() const {
-	return _stream.cdata();
+const std::string &status::data() {
+	return _stream.data();
 }
 
 //////////////////////////////////////////header class/////////////////////////////////////////
@@ -618,7 +652,7 @@ int header::feed(const char *data, int sz) {
 	int wsz = _stream.put(data, sz);
 	if (full()) {
 		//parse header
-		parse(_stream.cdata().c_str(), _stream.cdata().length());
+		parse(_stream.data().c_str(), _stream.data().length());
 	}
 
 	return wsz;
@@ -628,8 +662,8 @@ bool header::full() const {
 	return _stream.endp();
 }
 
-const std::string &header::data() const {
-	return _stream.cdata();
+const std::string &header::data() {
+	return _stream.data();
 }
 
 //////////////////////////////////////////entity class/////////////////////////////////////////
@@ -653,16 +687,42 @@ void entity::init(const http::header &header) {
 	}
 }
 
-void entity::file(const std::string &path) {
+void entity::file(const std::string &path, const char* charset) {
+	//set stream data
+	_stream = std::unique_ptr<stream>(new filestream(path, std::ios::in|std::ios::binary));
 
+	//get file extension
+	std::string ext = fd::ext(path);
+
+	//set content type
+	entity::type(mime::get(ext, charset));
+
+	//set content length
+	entity::length(_stream->size());	
 }
 
-void entity::form(const char *data, int sz) {
+void entity::form(const char *data, int sz, const char* charset) {
+	//set content type
+	entity::type(mime::get("form", charset));
 
+	//set content length
+	entity::length(sz);
+
+	//set stream data
+	_stream = std::unique_ptr<stream>(new stringstream());
+	_stream->assign(std::string(data, sz));
 }
 
-void entity::data(const std::string &type, const char *data, int sz) {
-	mime::type(type);
+void entity::data(const std::string &type, const char *data, int sz, const char* charset) {
+	//set content type
+	entity::type(mime::get(type, charset));
+
+	//set content length
+	entity::length(sz);
+
+	//set stream data
+	_stream = std::unique_ptr<stream>(new stringstream());
+	_stream->assign(std::string(data, sz));
 }
 
 void entity::make() {
@@ -691,12 +751,12 @@ bool entity::full() const {
 	return _stream->endp();
 }
 
-const std::string &entity::data() const {
+const std::string &entity::data() {
 	if (_stream == nullptr) {
 		return _empty;
 	}
 
-	return _stream->cdata();
+	return _stream->data();
 }
 
 void entity::length(int len) {
@@ -769,7 +829,7 @@ void request::post(const char *url, const char *data, int sz) {
 	_header.set(http::header::request::default());
 
 	//set entity data
-	_entity.data(mime::octet, data, sz);
+	_entity.data(mime::octet::default, data, sz);
 }
 
 void request::make() {
@@ -840,42 +900,42 @@ bool request::full() const {
 }
 
 /////////////////////////////////////////response class///////////////////////////////////////////
-void response::file(const char *path) {
+void response::file(const char *path, const char* charset) {
 	//set status line
-	_status.init(status::ok);
+	_status.init(200);
 
 	//set general header
 	_header.set(http::header::response::default());
 
 	//set entity data
-	_entity.file(path);
+	_entity.file(path, charset);
 }
 
-void response::json(const char *data, int sz) {
+void response::json(const char *data, int sz, const char* charset) {
 	//set status line
-	_status.init(status::ok);
+	_status.init(200);
 
 	//set general header
 	_header.set(http::header::response::default());
 
 	//set entity data
-	_entity.data(http::mime::json, data, sz);
+	_entity.data("json", data, sz, charset);
 }
 
-void response::data(const char *data, int sz) {
+void response::data(const char *data, int sz, const char* charset) {
 	//set status line
-	_status.init(status::ok);
+	_status.init(200);
 
 	//set general header
 	_header.set(http::header::response::default());
 
 	//set entity data
-	_entity.data(http::mime::octet, data, sz);
+	_entity.data("octet", data, sz, charset);
 }
 
 void response::cerr(int code) {
 	//set status line
-	_status.init(status::bad_request);
+	_status.init(code);
 
 	//set general header
 	_header.set(http::header::response::default());
@@ -883,7 +943,7 @@ void response::cerr(int code) {
 
 void response::serr(int code) {
 	//set status line
-	_status.init(status::interval_server_error);
+	_status.init(code);
 
 	//set general header
 	_header.set(http::header::response::default());
@@ -891,7 +951,7 @@ void response::serr(int code) {
 
 void response::moveto(const char *url) {
 	//set status line
-	_status.init(status::moved_permanently);
+	_status.init(301);
 
 	//set general header
 	_header.set(http::header::response::default());
@@ -902,7 +962,7 @@ void response::moveto(const char *url) {
 
 void response::redirect(const char *url) {
 	//set status line
-	_status.init(status::moved_temporarily);
+	_status.init(302);
 	
 	//set general header
 	_header.set(http::header::response::default());

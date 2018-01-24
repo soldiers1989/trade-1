@@ -2,7 +2,8 @@
 BEGIN_SERVICE_NAMESPACE
 /////////////////////////////servlet class///////////////////////////////////
 void servlet_login::handle(const cube::http::request &req, cube::http::response &resp) {
-	resp.redirect("http://www.baidu.com/");
+	std::string json("{\"a\":\"0\",\"b\":\"1\"}");
+	resp.json(json.c_str(), json.length());
 }
 
 /////////////////////////////service manager class///////////////////////////////////
@@ -21,7 +22,7 @@ int service_manager::start(ushort port) {
 	_servlets.mount("GET", "/login", new servlet_login());
 
 	//start http server
-	return _server.start(port, &_servlets);
+	return _server.start(port, 1, &_servlets);
 }
 
 void service_manager::stop() {

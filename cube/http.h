@@ -17,6 +17,7 @@ public:
 	*	general charsets
 	*/
 	static std::string utf8;
+	static std::string default;
 };
 
 //mime class
@@ -25,21 +26,44 @@ public:
 	/*
 	*	general mime types
 	*/
-	static std::string octet;
-	static std::string form;
-	static std::string json;
+	class form {
+	public:
+		static std::string utf8;
+		static std::string gb2312;
+		static std::string default;
+	};
+	class json {
+	public:
+		static std::string utf8;
+		static std::string gb2312;
+		static std::string default;
+	};
+	class octet {
+	public:
+		static std::string utf8;
+		static std::string gb2312;
+		static std::string default;
+	};
 	static std::string unknown;
 
+	/*
+	*	mime setter
+	*/
+	class setter {
+	public:
+		setter(const std::string &ext, const std::string &ctype) { set(ext, ctype); }
+		~setter() {}
+	};
 public:
 	/*
 	*	get content type by extension name
 	*/
-	static const std::string &type(const std::string &ext);
+	static std::string get(const std::string &ext, const std::string &charset);
 
 	/*
 	*	set content type by extension name & type
 	*/
-	static void type(const std::string &ext, const std::string &ctype);
+	static void set(const std::string &ext, const std::string &ctype);
 
 private:
 	//mime types, <extension, http content-type>
@@ -279,7 +303,7 @@ private:
 	*@return:
 	*	query line data
 	*/
-	const std::string &data() const;
+	const std::string &data();
 
 private:
 	//request method
@@ -299,8 +323,6 @@ class status : public parser{
 	typedef cexception error;
 	friend class response;
 public:
-	//status code
-	static const int ok = 200, moved_permanently = 301, moved_temporarily = 302, bad_request = 400, interval_server_error = 500;
 	//status setter
 	class setter {
 	public:
@@ -383,7 +405,7 @@ private:
 	*@return:
 	*	status line data
 	*/
-	const std::string &data() const;
+	const std::string &data();
 
 private:
 	//http version
@@ -531,7 +553,7 @@ private:
 	*@return:
 	*	request data
 	*/
-	const std::string &data() const;
+	const std::string &data();
 
 private:
 	//header items, map<lower key, vector<<original key, value>>>
@@ -563,12 +585,12 @@ public:
 	/*
 	*	initialize entity with local file
 	*/
-	void file(const std::string &path);
+	void file(const std::string &path, const char *charset = "");
 
 	/*
 	*	initialize entity with form data
 	*/
-	void form(const char *data, int sz);
+	void form(const char *data, int sz, const char *charset = "");
 
 	/*
 	*	initialize entity with specified content type & data
@@ -578,19 +600,19 @@ public:
 	*@return:
 	*	void
 	*/
-	void data(const std::string &type, const char *data, int sz);
+	void data(const std::string &type, const char *data, int sz, const char *charset = "");
 
 	/*
 	*	entity meta information
 	*/
+	std::string type() const { return header("Content-Type"); }
+	void type(const std::string &type) { header("Content-Type", type); }
+
 	void length(int len);
 	int length() const { return ::atoi(header("Content-Length", "0").c_str()); }
-	
+
 	void md5(const std::string &md5) { header("Content-MD5", md5); }
 	std::string md5() const { return header("Content-MD5"); }
-
-	void type(const std::string &type) { header("Content-Type", type); }
-	std::string type() const { return header("Content-Type"); }
 
 	void range(const std::string &range) { header("Content-Range", range); }
 	std::string range() const { return header("Content-Range"); }
@@ -615,7 +637,7 @@ public:
 
 private:
 	/*
-	*	make query line data
+	*	make entity data
 	*@return:
 	*	void
 	*/
@@ -651,7 +673,7 @@ private:
 	*@return:
 	*	entity data
 	*/
-	const std::string &data() const;
+	const std::string &data();
 
 	/*
 	*	get/set entity meta information by specified key
@@ -767,9 +789,9 @@ public:
 	*@return:
 	*	void
 	*/
-	void file(const char *path);
-	void json(const char *data, int sz);
-	void data(const char *data, int sz);
+	void file(const char *path, const char *charset = charset::default.c_str());
+	void json(const char *data, int sz, const char *charset = charset::utf8.c_str());
+	void data(const char *data, int sz, const char *charset = charset::default.c_str());
 
 	/*
 	*	client error: 4xx
@@ -777,7 +799,7 @@ public:
 	*@return:
 	*	void
 	*/
-	void cerr(int code = status::bad_request);
+	void cerr(int code);
 
 	/*
 	*	server error: 5xx
@@ -785,7 +807,7 @@ public:
 	*@return:
 	*	void
 	*/
-	void serr(int code = status::interval_server_error);
+	void serr(int code);
 
 	/*
 	*	move to new location, code: 3xx

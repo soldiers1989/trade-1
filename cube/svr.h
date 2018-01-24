@@ -16,6 +16,7 @@ public:
 	/*
 	*	start server with listen port and argument pass to new session
 	*@param port: in, listen port
+	*@param workers: in, worker thread number for session 
 	*@param arg: in, argument pass to new session
 	*@return:
 	*	0 for success, otherwise <0
@@ -24,18 +25,33 @@ public:
 		return start(INADDR_ANY, port, arg);
 	}
 
+	int start(ushort port, int workers, void* arg = 0) {
+		return start(INADDR_ANY, port, workers,  arg);
+	}
+
 	/*
 	*	start server with listen port and argument pass to new session
 	@param ip: in, listen ip
 	*@param port: in, listen port
+	*@param workers: in, worker thread number for session
 	*@param arg: in, argument pass to new session
 	*@return:
 	*	0 for success, otherwise <0
 	*/
 	int start(ulong ip, ushort port, void *arg = 0) {
+		return start(ip, port, 0, arg);
+	}
+
+	int start(ulong ip, ushort port, int workers, void *arg = 0) {
 		//step1: start iocp service
-		if (_service.start(arg) != 0)
-			return -1;
+		if (workers > 0) {
+			if (_service.start(arg, workers) != 0)
+				return -1;
+		} else {
+			if (_service.start(arg) != 0)
+				return -1;
+		}
+		
 
 		//step2: start listen on the port
 		_socket = socket::listen(ip, port, socket::mode::OVERLAPPED | socket::mode::REUSEADDR);
@@ -173,11 +189,12 @@ public:
 	/*
 	*	start http server on specified port
 	*@param port: in, local http service port
+	*@param workers: in, workers for http session
 	*@param servlets: in, servlets for processing request
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int start(ushort port, servlets *servlets);
+	int start(ushort port, int workers, servlets *servlets);
 
 	/*
 	*	stop http server

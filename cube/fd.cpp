@@ -73,6 +73,16 @@ int fd::size(int fd, size_t &sz) {
 	return 0;
 }
 
+size_t fd::size(const std::string &path) {
+	size_t sz = 0;
+	int err = size(path, sz);
+	if (err != 0) {
+		throw error("file: %s, get size failed.", path.c_str());
+	}
+
+	return sz;
+}
+
 int fd::size(const std::string &path, size_t &sz) {
 	int fd = ::_open(path.c_str(), 0);
 	if (fd < 0)
@@ -82,6 +92,15 @@ int fd::size(const std::string &path, size_t &sz) {
 	::_close(fd);
 
 	return err;
+}
+
+std::string fd::ext(const std::string &name) {
+	size_t pos = name.rfind('.');
+	if (pos != std::string::npos) {
+		return name.substr(pos);
+	}
+
+	return "";
 }
 
 std::string fd::name(const std::string &path) {

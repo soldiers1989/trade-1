@@ -29,18 +29,18 @@ bool stream::endg() const {
 	return _endg();
 }
 
-int stream::size() const {
+int stream::size() {
 	if (_stream != 0) {
 		return _stream->size();
 	}
 	return _size();
 }
 
-const std::string &stream::cdata() const {
+const std::string &stream::data() {
 	if (_stream != 0) {
-		return _stream->cdata();
+		return _stream->data();
 	}
-	return _cdata();
+	return _data();
 }
 
 void stream::assign(const std::string &data) {
@@ -54,7 +54,7 @@ void stream::assign(const std::string &data) {
 //////////////////////////////////////////string stream class//////////////////////////////////////
 int stringstream::_put(const char *data, int sz) {
 	if (!endp()) {
-		_data.append(data, sz);
+		_stream.append(data, sz);
 		return sz;
 	}
 
@@ -64,11 +64,11 @@ int stringstream::_put(const char *data, int sz) {
 int stringstream::_get(char *data, int sz) {
 	//still has left data
 	if (!endg()) {
-		int len = (int)_data.length();
+		int len = (int)_stream.length();
 		//get read size
 		int rsz = len - _rpos > sz ? sz : len - _rpos;
 		//copy to destination data buffer
-		memcpy(data, _data.c_str(), rsz);
+		memcpy(data, _stream.c_str(), rsz);
 		//reset current read pos
 		_rpos += rsz;
 		//return read size
@@ -83,9 +83,9 @@ int stringstream::_get(char *data, int sz) {
 int sizedstream::_put(const char *data, int sz) {
 	//stream not completed, put more data
 	if (!endp()) {
-		int len = (int)_data.length();
+		int len = (int)_stream.length();
 		int wsz = len + sz < _dsize ? sz : sz - len;
-		_data.append(data, wsz);
+		_stream.append(data, wsz);
 		return wsz;
 	}
 
@@ -95,11 +95,11 @@ int sizedstream::_put(const char *data, int sz) {
 
 int sizedstream::_get(char *data, int sz) {
 	if (!endg()) {
-		int len = (int)_data.length();
+		int len = (int)_stream.length();
 		//get read size
 		int rsz = len - _rpos > sz ? sz : len - _rpos;
 		//copy to destination data buffer
-		memcpy(data, _data.c_str(), rsz);
+		memcpy(data, _stream.c_str(), rsz);
 		//reset current read pos
 		_rpos += rsz;
 		//return read size
@@ -138,7 +138,7 @@ int delimitedstream::_put(const char *data, int sz) {
 			_full = true;
 			//write data
 			int wsz = pdata - data;
-			_data.append(data, wsz);
+			_stream.append(data, wsz);
 			//return write size
 			return wsz;
 		}
@@ -147,7 +147,7 @@ int delimitedstream::_put(const char *data, int sz) {
 		_dpos = pdelimiter - delimiter;
 
 		//write all data
-		_data.append(data, sz);
+		_stream.append(data, sz);
 
 		//all data feeded
 		return sz;
@@ -159,11 +159,11 @@ int delimitedstream::_put(const char *data, int sz) {
 
 int delimitedstream::_get(char *data, int sz) {
 	if (!endg()) {
-		int len = (int)_data.length();
+		int len = (int)_stream.length();
 		//get read size
 		int rsz = len - _rpos > sz ? sz : len - _rpos;
 		//copy to destination data buffer
-		memcpy(data, _data.c_str(), rsz);
+		memcpy(data, _stream.c_str(), rsz);
 		//reset current read pos
 		_rpos += rsz;
 		//return read size
@@ -174,13 +174,15 @@ int delimitedstream::_get(char *data, int sz) {
 	return 0;
 }
 
-//////////////////////////////////////////delimiter stream class//////////////////////////////////////
+//////////////////////////////////////////file stream class//////////////////////////////////////
 int filestream::_put(const char *data, int sz) {
-	return 0;
+	_file.write(data, sz);
+	return sz;
 }
 
 int filestream::_get(char *data, int sz) {
-	return 0;
+	_file.read(data, sz);
+	return (int)_file.gcount();
 }
 
 bool filestream::_endp() const {
@@ -188,18 +190,47 @@ bool filestream::_endp() const {
 }
 
 bool filestream::_endg() const {
-	return false;
+	return _file.eof();
 }
 
-int filestream::_size() const {
-	return false;
+int filestream::_size() {
+	//save current get pos
+	std::streampos gpos = _file.tellg();
+
+	//get file size
+	_file.seekg(0, std::ios::end);
+	std::streampos sz = _file.tellg();
+
+	//restore get pos
+	_file.seekg(gpos, std::ios::beg);
+
+	return (int)sz;
 }
 
 void filestream::_assign(const std::string &data) {
-
+	_file.write(data.c_str(), data.length());
+	_file.flush();
 }
 
-const std::string &filestream::_cdata() const {
+const std::string &filestream::_data() {
+	//content has read before
+	if (!_content.empty())
+		return _content;
+
+	//save current get pos
+	std::streampos gpos = _file.tellg();
+
+	//set get pos to start
+	_file.seekg(0);
+
+	//read file content
+	char buf[BUFSZ] = { 0 };
+	while (!_file.eof()) {
+		_file.read(buf, BUFSZ);
+		_content.append(buf, (size_t)_file.gcount());
+	}
+
+	//return content read
 	return _content;
 }
 END_CUBE_NAMESPACE
