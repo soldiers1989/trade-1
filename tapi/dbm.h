@@ -1,8 +1,10 @@
+/*
+*	dbm - database managment
+*/
 #pragma once
-#include "stdsvr.h"
-#include "db.h"
-BEGIN_SERVICE_NAMESPACE
-class dbinit {
+#include "dbc.h"
+BEGIN_SEC_NAMESPACE
+class dbm {
 public:
 	/*
 	*	initialize database with create sql file
@@ -13,6 +15,6 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	static int init(const std::string &sqlfile, const std::string &name, db* db, std::string *error = 0);
+	static int init(const std::string &sqlfile, const std::string &name, dbc* db, std::string *error = 0);
 };
-END_SERVICE_NAMESPACE
+END_SEC_NAMESPACE

@@ -1,8 +1,8 @@
-#include "dbinit.h"
+#include "dbm.h"
 #include "cube\fd.h"
 #include "cube\str.h"
-BEGIN_SERVICE_NAMESPACE
-int dbinit::init(const std::string &sqlfile, const std::string &name, db* db, std::string *error) {
+BEGIN_SEC_NAMESPACE
+int dbm::init(const std::string &sqlfile, const std::string &name, dbc* db, std::string *error) {
 	//create database first
 	std::string sql = cube::str::format("create database if not exists %s default character set utf8 collate utf8_general_ci;", name.c_str());
 	int err = db->execute(sql, error);
@@ -37,4 +37,4 @@ int dbinit::init(const std::string &sqlfile, const std::string &name, db* db, st
 
 	return 0;
 }
-END_SERVICE_NAMESPACE
+END_SEC_NAMESPACE

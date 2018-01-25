@@ -2,17 +2,18 @@
 *	db - database module for access database
 */
 #pragma once
-#include "stdsvr.h"
+#include "stdapi.h"
+#include "cube\cube.h"
 #include "mysql_connection.h"
-BEGIN_SERVICE_NAMESPACE
-class db {
+BEGIN_SEC_NAMESPACE
+class dbc {
 public:
 	//exception of database access
-	typedef std::exception error;
+	typedef cube::cexception error;
 
 public:
-	db() : _connection(0){}
-	~db() {}
+	dbc() : _connection(0){}
+	~dbc() {}
 
 	/*
 	*	connect to database
@@ -60,13 +61,16 @@ private:
 
 class dao {
 public:
+	//exception of database access
+	typedef cube::cexception error;
+public:
 	dao() {}
 	~dao() {}
 
 	/*
 	*	 set database for dao
 	*/
-	static void setdb(db *db);
+	static void setdb(dbc *dbc);
 protected:
 	/*
 	*	execute a sql
@@ -80,15 +84,15 @@ protected:
 	/*
 	*	get database object
 	*/
-	db *database() { return _db; }
+	dbc *database() { return _dbc; }
 
 	/*
 	*	get database connection
 	*/
-	sql::Connection *conn() { return _db->conn(); }
+	sql::Connection *conn() { return _dbc->conn(); }
 
 private:
 	//database of dao
-	static db *_db;
+	static dbc *_dbc;
 };
-END_SERVICE_NAMESPACE
+END_SEC_NAMESPACE

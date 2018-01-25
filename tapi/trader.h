@@ -5,12 +5,12 @@
 #include "broker.h"
 #include "trade\trade.h"
 #include <map>
-BEGIN_SERVICE_NAMESPACE
-class trader
+BEGIN_SEC_NAMESPACE
+class traders
 {
 public:
-	trader() {}
-	~trader() {}
+	traders() {}
+	~traders() {}
 	
 	/*
 	*	initialize trader
@@ -30,6 +30,6 @@ private:
 	brokers _brokers;
 
 	//online accounts, <account name, trade object>
-	std::map<std::string, trade::trade*> _accounts;
+	//std::map<std::string, a*> _accounts;
 };
-END_SERVICE_NAMESPACE
+END_SEC_NAMESPACE

@@ -1,31 +1,32 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 5.0                                    */
-/* Created on:     2017/12/14 16:24:21                          */
+/* Created on:     2018/1/25 11:49:02                           */
 /*==============================================================*/
 
-drop table if exists tb_sub_account_trade;
-
-drop table if exists tb_sub_account_asset;
-
-drop table if exists tb_sub_account;
-
-drop table if exists tb_trade;
-
-drop table if exists tb_trader_asset;
-
-drop table if exists tb_trader;
-
-drop table if exists tb_account_asset;
 
 drop table if exists tb_account;
 
-drop table if exists tb_dept;
-
-drop table if exists tb_server;
+drop table if exists tb_account_asset;
 
 drop table if exists tb_broker;
 
-drop table if exists tb_admin;
+drop table if exists tb_dept;
+
+drop table if exists tb_manager;
+
+drop table if exists tb_server;
+
+drop table if exists tb_sub_account;
+
+drop table if exists tb_sub_account_asset;
+
+drop table if exists tb_sub_account_trade;
+
+drop table if exists tb_trade;
+
+drop table if exists tb_trader;
+
+drop table if exists tb_trader_asset;
 
 /*==============================================================*/
 /* Table: tb_account                                            */
@@ -34,7 +35,7 @@ create table tb_account
 (
    account_id           integer not null auto_increment,
    broker               integer not null,
-   admin                integer not null,
+   manager              integer not null,
    name                 char(32) not null,
    user                 char(32) not null,
    pwd                  char(32) not null,
@@ -68,21 +69,6 @@ create table tb_account_asset
 );
 
 /*==============================================================*/
-/* Table: tb_admin                                              */
-/*==============================================================*/
-create table tb_admin
-(
-   admin_id             integer not null auto_increment,
-   name                 char(32) not null,
-   user                 char(32) not null,
-   pwd                  char(32) not null,
-   role                 integer not null comment '0 - admin, 1 - risker, 2 - trader',
-   disable              boolean not null default false,
-   ctime                timestamp not null default CURRENT_TIMESTAMP,
-   primary key (admin_id)
-);
-
-/*==============================================================*/
 /* Table: tb_broker                                             */
 /*==============================================================*/
 create table tb_broker
@@ -111,6 +97,21 @@ create table tb_dept
 );
 
 /*==============================================================*/
+/* Table: tb_manager                                            */
+/*==============================================================*/
+create table tb_manager
+(
+   manager_id           integer not null auto_increment,
+   name                 char(32) not null,
+   user                 char(32) not null,
+   pwd                  char(32) not null,
+   role                 integer not null comment '0 - super, 1 - normal',
+   disable              boolean not null default false,
+   ctime                timestamp not null default CURRENT_TIMESTAMP,
+   primary key (manager_id)
+);
+
+/*==============================================================*/
 /* Table: tb_server                                             */
 /*==============================================================*/
 create table tb_server
@@ -133,7 +134,7 @@ create table tb_sub_account
 (
    account_id           integer not null auto_increment,
    parent               integer not null,
-   admin                integer not null,
+   manager              integer not null,
    name                 char(32) not null,
    user                 char(32) not null,
    pwd                  char(32) not null,
@@ -223,7 +224,7 @@ create table tb_trade
 create table tb_trader
 (
    trader_id            integer not null auto_increment,
-   admin                integer not null,
+   manager              integer not null,
    name                 char(32) not null,
    user                 char(32) not null,
    pwd                  char(32) not null,
@@ -249,8 +250,8 @@ create table tb_trader_asset
    primary key (trader, account, code)
 );
 
-alter table tb_account add constraint FK_Reference_16 foreign key (admin)
-      references tb_admin (admin_id) on delete restrict on update restrict;
+alter table tb_account add constraint FK_Reference_16 foreign key (manager)
+      references tb_manager (manager_id) on delete restrict on update restrict;
 
 alter table tb_account add constraint FK_Reference_7 foreign key (broker)
       references tb_broker (broker_id) on delete restrict on update restrict;
@@ -267,8 +268,8 @@ alter table tb_server add constraint FK_Reference_9 foreign key (broker)
 alter table tb_sub_account add constraint FK_Reference_10 foreign key (parent)
       references tb_account (account_id) on delete restrict on update restrict;
 
-alter table tb_sub_account add constraint FK_Reference_18 foreign key (admin)
-      references tb_admin (admin_id) on delete restrict on update restrict;
+alter table tb_sub_account add constraint FK_Reference_18 foreign key (manager)
+      references tb_manager (manager_id) on delete restrict on update restrict;
 
 alter table tb_sub_account_asset add constraint FK_Reference_11 foreign key (account)
       references tb_sub_account (account_id) on delete restrict on update restrict;
@@ -279,8 +280,8 @@ alter table tb_sub_account_trade add constraint FK_Reference_12 foreign key (acc
 alter table tb_trade add constraint FK_Reference_13 foreign key (trader, account, code)
       references tb_trader_asset (trader, account, code) on delete restrict on update restrict;
 
-alter table tb_trader add constraint FK_Reference_17 foreign key (admin)
-      references tb_admin (admin_id) on delete restrict on update restrict;
+alter table tb_trader add constraint FK_Reference_17 foreign key (manager)
+      references tb_manager (manager_id) on delete restrict on update restrict;
 
 alter table tb_trader_asset add constraint FK_Reference_14 foreign key (trader)
       references tb_trader (trader_id) on delete restrict on update restrict;

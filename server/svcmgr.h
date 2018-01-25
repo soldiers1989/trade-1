@@ -1,50 +1,88 @@
 #pragma once
-#include "admin.h"
+#include "stdsvr.h"
 #include "cube\svr.h"
-BEGIN_SERVICE_NAMESPACE
-
-class servlet_login : public cube::http::servlet {
+#include "tapi\manager.h"
+BEGIN_SVR_NAMESPACE
+BEGIN_MGR_NAMESPACE
+//manager login
+class login : public cube::http::servlet {
 public:
 	void handle(const cube::http::request &req, cube::http::response &resp);
 };
 
-class service_manager {
+//manager logout
+class logout : public cube::http::servlet {
 public:
-	virtual ~service_manager() {}
+	void handle(const cube::http::request &req, cube::http::response &resp);
+};
 
-	/*
-	*	get service manager instance
-	*@return:
-	*	service manager instance
-	*/
-	static service_manager *instance();
+//add account
+class add_account : public cube::http::servlet {
+public:
+	void handle(const cube::http::request &req, cube::http::response &resp);
+};
 
+//get account
+class get_account : public cube::http::servlet {
+public:
+	void handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+//del account
+class del_account : public cube::http::servlet {
+public:
+	void handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+//modify account
+class mod_account : public cube::http::servlet {
+public:
+	void handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+//manage service class
+class service {
+public:
+	/*mount manage servlet*/
+	class servlet{
+	public:
+		servlet(const std::string &method, const std::string &path, cube::http::servlet *servlet) {
+			service::mount(method, path, servlet);
+		}
+		~servlet() {}
+	};
+
+public:
 	/*
 	*	start manage service on specified port
 	*@param port: in, local http service port
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int start(ushort port);
+	static int start(ushort port);
 
 	/*
 	*	stop manage service
 	*@return:
 	*	void
 	*/
-	void stop();
+	static void stop();
+
+	/*
+	*	mount new servlet to service
+	*@param method: in, http method
+	*@param path: in, service path
+	*@param servlet: in, servlet for path
+	*@return:
+	*	void
+	*/
+	static void mount(const std::string &method, const std::string &path, cube::http::servlet *servlet);
 
 private:
-	//only allow singleton instance
-	service_manager() {}
-
-private:
-	//service manger instance
-	static service_manager *_instance;
-
 	//http server
-	cube::http::server _server;
+	static cube::http::server server;
 	//servlets registered for http server
-	cube::http::servlets _servlets;
+	static cube::http::servlets servlets;
 };
-END_SERVICE_NAMESPACE
+END_MGR_NAMESPACE
+END_SVR_NAMESPACE

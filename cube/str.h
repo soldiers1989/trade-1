@@ -256,5 +256,13 @@ public:
 	static std::string unescape(const char* str);
 	static std::string unescape(const std::string &str);
 	static std::string unescape(const char *str, int len);
+
+	/*
+	*	generate random string by specified length
+	*@param len: in, string length wanted
+	*@return:
+	*	random string
+	*/
+	static std::string random(int len);
 };
 END_CUBE_NAMESPACE
