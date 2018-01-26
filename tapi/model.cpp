@@ -1,6 +1,6 @@
 #include "model.h"
 #include "cube\str.h"
-BEGIN_SEC_NAMESPACE
+BEGIN_SEC_MODEL_NAMESPACE
 //////////////////////////////////////////manager class/////////////////////////////////////
 int manager::login(const std::string &pwd, std::string *error) {
 	if (disable) {
@@ -83,4 +83,4 @@ int broker::select(server::type type, server &server, std::string *error) {
 	return 0;
 }
 
-END_SEC_NAMESPACE
+END_SEC_MODEL_NAMESPACE

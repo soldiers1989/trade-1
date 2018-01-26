@@ -112,7 +112,7 @@ public:
 	*	0--success, -1--failed
 	*/
 	void set_string_value(const std::string &section, const std::string& key, const std::string &value);
-	int get_string_value(const std::string &section, const std::string& key, std::string &value);
+	std::string get_string_value(const std::string &section, const std::string& key, const char *default = 0);
 
 	/*
 	*	read a integer value from the configure file which specified by the section and item value.
@@ -123,7 +123,7 @@ public:
 	*	0--success, -1--failed
 	*/
 	void set_integer_value(const std::string &section, const std::string &key, int value);
-	int get_integer_value(const std::string &section, const std::string &key, int &value);
+	int get_integer_value(const std::string &section, const std::string &key, int default = 0);
 
 	/*
 	*	read a float value from the configure file which specified by the section and item value.
@@ -134,7 +134,7 @@ public:
 	*	0--success, -1--failed
 	*/
 	void set_float_value(const std::string &section, const std::string &key, float value);
-	int get_float_value(const std::string &section, const std::string &key, float &value);
+	float get_float_value(const std::string &section, const std::string &key, float default = 0.0);
 
 	/*
 	*	convert ini to string

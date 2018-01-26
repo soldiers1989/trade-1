@@ -1,7 +1,6 @@
 #pragma once
 #include "stdsvr.h"
 #include "cube\svr.h"
-#include "tapi\manager.h"
 BEGIN_SVR_NAMESPACE
 BEGIN_MGR_NAMESPACE
 //manager login
@@ -54,12 +53,11 @@ public:
 
 public:
 	/*
-	*	start manage service on specified port
-	*@param port: in, local http service port
+	*	start manage service
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	static int start(ushort port);
+	static int start();
 
 	/*
 	*	stop manage service

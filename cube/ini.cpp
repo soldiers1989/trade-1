@@ -110,36 +110,41 @@ void ini::set_string_value(const std::string &section, const std::string& key, c
 	_sections.set_item(section, key, value);
 }
 
-int ini::get_string_value(const std::string &section, const std::string& key, std::string &value) {
-	return _sections.get_item(section, key, value);
+std::string ini::get_string_value(const std::string &section, const std::string& key, const char *default) {
+	std::string value("");
+	int err = _sections.get_item(section, key, value);
+	if (err != 0 && default != 0) {
+		value = default;
+	}
+	return value;
 }
+
 
 void ini::set_integer_value(const std::string &section, const std::string &key, int value) {
 	_sections.set_item(section, key, str::tostr(value));
 }
 
-int ini::get_integer_value(const std::string &section, const std::string &key, int &value) {
+int ini::get_integer_value(const std::string &section, const std::string &key, int default) {
 	std::string svalue;
 	int err = _sections.get_item(section, key, svalue);
 	if (err != 0 && str::isnum(svalue.c_str()))
-		return atoi(svalue.c_str());
+		return ::atoi(svalue.c_str());
 
-	return -1;
+	return default;
 }
 
 void ini::set_float_value(const std::string &section, const std::string &key, float value) {
 	_sections.set_item(section, key, str::tostr(value));
 }
 
-int ini::get_float_value(const std::string &section, const std::string &key, float &value) {
+float ini::get_float_value(const std::string &section, const std::string &key, float default) {
 	std::string svalue;
 	int err = _sections.get_item(section, key, svalue);
 	if (err != 0 && str::isfloat(svalue.c_str())) {
-		value = (float)atof(svalue.c_str());
-		return 0;
+		return (float)::atof(svalue.c_str());
 	}
 
-	return -1;
+	return default;
 }
 
 bool ini::is_section(const std::string &line) {

@@ -5,7 +5,11 @@
 #include "cppconn\exception.h"
 BEGIN_SEC_NAMESPACE
 //////////////////////////////////db class//////////////////////////////////
-int dbc::connect(const std::string &host, const std::string &user, const std::string &pwd, ushort port/* = 3306*/, std::string *error/* = 0*/) {
+int dbc::connect(const db &db, std::string *error) {
+	return connect(db.host(), db.user(), db.pwd(), db.name(), db.port(), error);
+}
+
+int dbc::connect(const std::string &host, const std::string &user, const std::string &pwd, const std::string &name, ushort port/* = 3306*/, std::string *error/* = 0*/) {
 	try {
 		//mysql url
 		std::string url = cube::str::format("tcp://%s:%d/", host.c_str(), port);
@@ -14,8 +18,8 @@ int dbc::connect(const std::string &host, const std::string &user, const std::st
 		sql::Driver *driver = ::get_driver_instance();
 		_connection = driver->connect(url.c_str(), user.c_str(), pwd.c_str());
 
-		//connect success
-		return 0;
+		//use specified database
+		return use(name, error);
 
 	} catch (sql::SQLException &e) {
 		cube::throw_assign<dbc::error>(error, e.what());
@@ -59,20 +63,5 @@ int dbc::close() {
 		_connection = 0;
 	}
 	return 0;
-}
-//////////////////////////////////dao class//////////////////////////////////
-dbc *dao::_dbc = 0;
-
-void dao::setdb(dbc *dbc) {
-	_dbc = dbc;
-}
-
-int dao::execute(const std::string &sql, std::string *error/* = 0*/) {
-	if (_dbc == 0) {
-		cube::throw_assign<dbc::error>(error, "database not specified.");
-		return -1;
-	}
-
-	return _dbc->execute(sql, error);
 }
 END_SEC_NAMESPACE

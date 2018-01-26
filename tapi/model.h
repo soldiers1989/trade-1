@@ -2,7 +2,7 @@
 #include "stdapi.h"
 #include "trade\trade.h"
 #include <string>
-BEGIN_SEC_NAMESPACE
+BEGIN_SEC_MODEL_NAMESPACE
 //model base class
 class model {
 public:
@@ -11,7 +11,7 @@ public:
 };
 
 //account's fee property
-class fee {
+class fee : public model {
 public:
 	fee() : cfrate(0.0), cflimit(0.0), bfrate(0.0), sfrate(0.0) {}
 	//fee(float cfrate, float cflimit, float bfrate, float sfrate) : cfrate(cfrate), cflimit(cflimit), bfrate(bfrate), sfrate(sfrate) {}
@@ -28,7 +28,7 @@ public:
 };
 
 //account's money property
-class money {
+class money : public model {
 public:
 	money() : smoney(0), lmoney(0) {}
 	//money(float smoney, float lmoney) : smoney(smoney), lmoney(lmoney) {}
@@ -229,6 +229,7 @@ class broker : public model{
 public:
 	broker() : id(-1), code(""), name(""), version(""), disable(true), ctime(0) {}
 	~broker() {}
+	
 	/*
 	*	select a server from broker
 	*@param type: in, type of server
@@ -256,4 +257,4 @@ public:
 	std::vector<server> quotes; //quote servers
 	std::vector<server> trades; //trade servers
 };
-END_SEC_NAMESPACE
+END_SEC_MODEL_NAMESPACE

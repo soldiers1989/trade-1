@@ -19,29 +19,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="account.h" />
-    <ClInclude Include="manager.h" />
-    <ClInclude Include="broker.h" />
-    <ClInclude Include="config.h" />
+    <ClInclude Include="auth.h" />
     <ClInclude Include="dao.h" />
+    <ClInclude Include="dba.h" />
     <ClInclude Include="dbc.h" />
     <ClInclude Include="dbm.h" />
+    <ClInclude Include="manage.h" />
     <ClInclude Include="model.h" />
-    <ClInclude Include="quote.h" />
     <ClInclude Include="stdapi.h" />
-    <ClInclude Include="trader.h" />
+    <ClInclude Include="trade.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="account.cpp" />
-    <ClCompile Include="manager.cpp" />
-    <ClCompile Include="broker.cpp" />
-    <ClCompile Include="config.cpp" />
+    <ClCompile Include="auth.cpp" />
     <ClCompile Include="dao.cpp" />
+    <ClCompile Include="dba.cpp" />
     <ClCompile Include="dbc.cpp" />
     <ClCompile Include="dbm.cpp" />
+    <ClCompile Include="manage.cpp" />
     <ClCompile Include="model.cpp" />
-    <ClCompile Include="quote.cpp" />
-    <ClCompile Include="trader.cpp" />
+    <ClCompile Include="trade.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

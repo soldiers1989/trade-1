@@ -153,8 +153,8 @@ public:
 	*@return:
 	*	value of param
 	*/
-	std::vector<std::string> get(const std::string &key);
-	std::string get(const std::string &key, const char *default);
+	std::vector<std::string> get(const std::string &key) const;
+	std::string get(const std::string &key, const char *default) const;
 private:
 	//params
 	std::map<std::string, std::vector<std::string>> _params;

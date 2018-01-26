@@ -144,7 +144,7 @@ int params::parse(const char *data, int sz) {
 	return sz;
 }
 
-std::vector<std::string> params::get(const std::string &key) {
+std::vector<std::string> params::get(const std::string &key) const {
 	std::map<std::string, std::vector<std::string>>::const_iterator citer = _params.find(key);
 	if (citer == _params.end())
 		return std::vector<std::string>();
@@ -152,7 +152,7 @@ std::vector<std::string> params::get(const std::string &key) {
 	return citer->second;
 }
 
-std::string params::get(const std::string &key, const char *default) {
+std::string params::get(const std::string &key, const char *default) const {
 	std::map<std::string, std::vector<std::string>>::const_iterator citer = _params.find(key);
 	if (citer == _params.end() || citer->second.empty())
 		return default;

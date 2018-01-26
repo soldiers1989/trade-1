@@ -4,9 +4,22 @@
 #include "cppconn\statement.h"
 #include "cppconn\prepared_statement.h"
 
-BEGIN_SEC_NAMESPACE
-//////////////////////////////////////////managersdao class/////////////////////////////////////
-int managersdao::get(std::vector<manager> &managers, std::string *error) {
+BEGIN_SEC_DAO_NAMESPACE
+//////////////////////////////////dao class//////////////////////////////////
+int dao::execute(const std::string &sql, std::string *error/* = 0*/) {
+	if (_dbc == 0) {
+		cube::throw_assign<dbc::error>(error, "database not specified.");
+		return -1;
+	}
+
+	return _dbc->execute(sql, error);
+}
+
+//////////////////////////////////////////managedao class/////////////////////////////////////
+int manager::get(std::vector<model::manager> &managers, std::string *error) {
+	//get result
+	int num = 0;
+
 	//sql to execute
 	const char* sql = "select manager_id, name, user, pwd, role, disable, unix_timestamp(ctime) as ctime from tb_manager";
 	
@@ -14,7 +27,7 @@ int managersdao::get(std::vector<manager> &managers, std::string *error) {
 		std::shared_ptr<sql::Statement> stmt = std::shared_ptr<sql::Statement>(conn()->createStatement());
 		std::shared_ptr<sql::ResultSet> res = std::shared_ptr<sql::ResultSet>(stmt->executeQuery(sql));
 		while (res->next()) {
-			manager adm;
+			model::manager adm;
 			adm.id = res->getInt("manager_id");
 			adm.name = res->getString("name").c_str();
 			adm.user = res->getString("user").c_str();
@@ -22,18 +35,22 @@ int managersdao::get(std::vector<manager> &managers, std::string *error) {
 			adm.role = res->getInt("role");
 			adm.disable = res->getBoolean("disable");
 			adm.ctime = res->getUInt("ctime");
-
 			managers.push_back(adm);
+
+			num++;
 		}
 	} catch (sql::SQLException &e) {
 		cube::throw_assign<dao::error>(error, e.what());
 		return -1;
 	}
 
-	return 0;
+	return num;
 }
 
-int managersdao::get(const std::string &user, manager &manager, std::string *error) {
+int manager::get(const std::string &user, model::manager &manager, std::string *error) {
+	//get num
+	int num = 0;
+
 	//sql to execute
 	const char* sql = "select manager_id, name, user, pwd, role, disable, unix_timestamp(ctime) as ctime from tb_manager where user=?";
 
@@ -50,16 +67,18 @@ int managersdao::get(const std::string &user, manager &manager, std::string *err
 			manager.role = res->getInt("role");
 			manager.disable = res->getBoolean("disable");
 			manager.ctime = res->getUInt("ctime");
+
+			num++;
 		}
 	} catch (sql::SQLException &e) {
 		cube::throw_assign<dao::error>(error, e.what());
 		return -1;
 	}
 
-	return 0;
+	return num;
 }
 
-int managersdao::add(const manager &manager, std::string *error) {
+int manager::add(const model::manager &manager, std::string *error) {
 	//sql to execute
 	const char* sql = "insert into tb_manager(name, user, pwd, role, disable) values(?, ?, ?, ?, ?)";
 
@@ -80,13 +99,48 @@ int managersdao::add(const manager &manager, std::string *error) {
 	return 0;
 }
 
-int managersdao::enable(const std::string &user, std::string *error) {
+int manager::del(int id, std::string *error) {
 	//sql to execute
-	const char* sql = "update tb_manager set disable=false where user=?";
+	const char* sql = "delete from tb_manager where manager_id=?";
 
 	try {
 		std::shared_ptr<sql::PreparedStatement> stmt = std::shared_ptr<sql::PreparedStatement>(conn()->prepareStatement(sql));
-		stmt->setString(1, user.c_str());
+		stmt->setInt(1, id);
+		stmt->executeUpdate();
+
+	} catch (sql::SQLException &e) {
+		cube::throw_assign<dao::error>(error, e.what());
+		return -1;
+	}
+
+	return 0;
+}
+
+int manager::del(const std::string &user, std::string *error) {
+	//sql to execute
+	const char* sql = "delete from tb_manager where user=?";
+
+	try {
+		std::shared_ptr<sql::PreparedStatement> stmt = std::shared_ptr<sql::PreparedStatement>(conn()->prepareStatement(sql));
+		stmt->setString(1, user);
+		stmt->executeUpdate();
+
+	} catch (sql::SQLException &e) {
+		cube::throw_assign<dao::error>(error, e.what());
+		return -1;
+	}
+
+	return 0;
+}
+
+int manager::mod(const std::string &user, bool disable, std::string *error) {
+	//sql to execute
+	const char* sql = "update tb_manager set disable=? where user=?";
+
+	try {
+		std::shared_ptr<sql::PreparedStatement> stmt = std::shared_ptr<sql::PreparedStatement>(conn()->prepareStatement(sql));
+		stmt->setBoolean(1, disable);
+		stmt->setString(2, user.c_str());
 		stmt->executeUpdate();
 	} catch (sql::SQLException &e) {
 		cube::throw_assign<dao::error>(error, e.what());
@@ -96,13 +150,17 @@ int managersdao::enable(const std::string &user, std::string *error) {
 	return 0;
 }
 
-int managersdao::disable(const std::string &user, std::string *error) {
+int manager::mod(const std::string &user, const model::manager &manager, std::string *error) {
 	//sql to execute
-	const char* sql = "update tb_manager set disable=true where user=?";
+	const char* sql = "update tb_manager set name=?, pwd=?, role=?, disable=? where user=?";
 
 	try {
 		std::shared_ptr<sql::PreparedStatement> stmt = std::shared_ptr<sql::PreparedStatement>(conn()->prepareStatement(sql));
-		stmt->setString(1, user.c_str());
+
+		stmt->setString(1, manager.name.c_str());
+		stmt->setString(2, manager.pwd.c_str());
+		stmt->setInt(3, manager.role);
+		stmt->setBoolean(4, manager.disable);
 		stmt->executeUpdate();
 	} catch (sql::SQLException &e) {
 		cube::throw_assign<dao::error>(error, e.what());
@@ -112,8 +170,8 @@ int managersdao::disable(const std::string &user, std::string *error) {
 	return 0;
 }
 
-//////////////////////////////////////////accountsdao class/////////////////////////////////////
-int accountsdao::get(std::vector<account> &accounts, std::string *error) {
+//////////////////////////////////////////account class/////////////////////////////////////
+int account::get(std::vector<model::account> &accounts, std::string *error) {
 	//sql to execute
 	const char* sql = "select account_id, broker, manager, name, user, pwd, cfrate, cflimit, bfrate, sfrate, disable, unix_timestamp(ctime) as ctime from tb_account;";
 
@@ -121,7 +179,7 @@ int accountsdao::get(std::vector<account> &accounts, std::string *error) {
 		std::shared_ptr<sql::Statement> stmt = std::shared_ptr<sql::Statement>(conn()->createStatement());
 		std::shared_ptr<sql::ResultSet> res = std::shared_ptr<sql::ResultSet>(stmt->executeQuery(sql));
 		while (res->next()) {
-			account acnt;
+			model::account acnt;
 			acnt.id = res->getInt("account_id");
 			acnt.broker = res->getInt("broker");
 			acnt.manager = res->getInt("manager");
@@ -147,7 +205,7 @@ int accountsdao::get(std::vector<account> &accounts, std::string *error) {
 	return 0;
 }
 
-int accountsdao::get(int broker, const std::string &user, account &acnt, std::string *error) {
+int account::get(int broker, const std::string &user, model::account &account, std::string *error) {
 	//sql to execute
 	const char* sql = "select account_id, broker, manager, name, user, pwd, cfrate, cflimit, bfrate, sfrate, disable, unix_timestamp(ctime) as ctime from tb_account where broker=? and user=?";
 
@@ -158,20 +216,20 @@ int accountsdao::get(int broker, const std::string &user, account &acnt, std::st
 
 		std::shared_ptr<sql::ResultSet> res = std::shared_ptr<sql::ResultSet>(stmt->executeQuery(sql));
 		if (res->next()) {
-			acnt.id = res->getInt("account_id");
-			acnt.broker = res->getInt("broker");
-			acnt.manager = res->getInt("manager");
-			acnt.name = res->getString("name").c_str();
-			acnt.user = res->getString("user").c_str();
-			acnt.pwd = res->getString("pwd").c_str();
+			account.id = res->getInt("account_id");
+			account.broker = res->getInt("broker");
+			account.manager = res->getInt("manager");
+			account.name = res->getString("name").c_str();
+			account.user = res->getString("user").c_str();
+			account.pwd = res->getString("pwd").c_str();
 
-			acnt.cfrate = (float)res->getDouble("cfrate");
-			acnt.cflimit = (float)res->getDouble("cflimit");
-			acnt.bfrate = (float)res->getDouble("bfrate");
-			acnt.sfrate = (float)res->getDouble("sfrate");
+			account.cfrate = (float)res->getDouble("cfrate");
+			account.cflimit = (float)res->getDouble("cflimit");
+			account.bfrate = (float)res->getDouble("bfrate");
+			account.sfrate = (float)res->getDouble("sfrate");
 
-			acnt.disable = res->getBoolean("disable");
-			acnt.ctime = res->getUInt("ctime");
+			account.disable = res->getBoolean("disable");
+			account.ctime = res->getUInt("ctime");
 		}
 	} catch (sql::SQLException &e) {
 		cube::throw_assign<dao::error>(error, e.what());
@@ -181,7 +239,7 @@ int accountsdao::get(int broker, const std::string &user, account &acnt, std::st
 	return 0;
 }
 
-int accountsdao::add(const account &account, std::string *error) {
+int account::add(const model::account &account, std::string *error) {
 	//sql to execute
 	const char* sql = "insert into tb_account(broker, manager, name, user, pwd, cfrate, cflimit, bfrate, sfrate, disable) values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -208,7 +266,7 @@ int accountsdao::add(const account &account, std::string *error) {
 	return 0;
 }
 
-int accountsdao::del(int id, std::string *error) {
+int account::del(int id, std::string *error) {
 	//sql to execute
 	const char* sql = "delete from tb_account where account_id=?";
 
@@ -225,8 +283,8 @@ int accountsdao::del(int id, std::string *error) {
 	return 0;
 }
 
-//////////////////////////////////////brokersdao class////////////////////////////////////////////
-int brokersdao::add(const broker &brkr, std::string *error) {
+//////////////////////////////////////broker class////////////////////////////////////////////
+int broker::add(const model::broker &brkr, std::string *error) {
 	//sql to execute
 	const char* sql = "insert into tb_broker(code, name, version, disable) values(?, ?, ?, ?)";
 
@@ -247,7 +305,7 @@ int brokersdao::add(const broker &brkr, std::string *error) {
 	return 0;
 }
 
-int brokersdao::get(std::vector<broker> &brokers, std::string *error) {
+int broker::get(std::vector<model::broker> &brokers, std::string *error) {
 	//sql to execute
 	const char* sql = "select broker_id, code, name, version, disable, unix_timestamp(ctime) as ctime from tb_broker;";
 
@@ -255,7 +313,7 @@ int brokersdao::get(std::vector<broker> &brokers, std::string *error) {
 		std::shared_ptr<sql::PreparedStatement> stmt = std::shared_ptr<sql::PreparedStatement>(conn()->prepareStatement(sql));
 		std::shared_ptr<sql::ResultSet> res = std::shared_ptr<sql::ResultSet>(stmt->executeQuery());
 		while (res->next()) {
-			broker brkr;
+			model::broker brkr;
 			int id = res->getInt("broker_id");
 			brkr.code = res->getString("code").c_str();
 			brkr.name = res->getString("name").c_str();
@@ -273,7 +331,7 @@ int brokersdao::get(std::vector<broker> &brokers, std::string *error) {
 	return 0;
 }
 
-int brokersdao::get(const std::string &code, broker &brkr, std::string *error) {
+int broker::get(const std::string &code, model::broker &brkr, std::string *error) {
 	//sql to execute
 	const char* sql = "select broker_id, code, name, version, disable, unix_timestamp(ctime) as ctime from tb_broker where code=?";
 
@@ -302,7 +360,7 @@ int brokersdao::get(const std::string &code, broker &brkr, std::string *error) {
 	return 0;
 }
 
-int brokersdao::get(int id, std::vector<dept> &depts, std::string *error) {
+int broker::get(int id, std::vector<model::dept> &depts, std::string *error) {
 	//sql to execute
 	const char* sql = "select dept_id, code, name, disable, unix_timestamp(ctime) as ctime from tb_dept where broker=?";
 
@@ -312,7 +370,7 @@ int brokersdao::get(int id, std::vector<dept> &depts, std::string *error) {
 
 		std::shared_ptr<sql::ResultSet> res = std::shared_ptr<sql::ResultSet>(stmt->executeQuery(sql));
 		while (res->next()) {
-			dept dept;
+			model::dept dept;
 			dept.id = res->getInt("dept_id");
 			dept.code = res->getString("code").c_str();
 			dept.name = res->getString("name").c_str();
@@ -329,7 +387,7 @@ int brokersdao::get(int id, std::vector<dept> &depts, std::string *error) {
 	return 0;
 }
 
-int brokersdao::get(int id, server::type stype, std::vector<server> &servers, std::string *error) {
+int broker::get(int id, model::server::type stype, std::vector<model::server> &servers, std::string *error) {
 	//sql to execute
 	const char* sql = "select server_id, name, host, port, type, disable, unix_timestamp(ctime) as ctime from tb_server where brokerd=? and type=?";
 
@@ -340,7 +398,7 @@ int brokersdao::get(int id, server::type stype, std::vector<server> &servers, st
 
 		std::shared_ptr<sql::ResultSet> res = std::shared_ptr<sql::ResultSet>(stmt->executeQuery(sql));
 		while (res->next()) {
-			server svr;
+			model::server svr;
 			svr.id = res->getInt("server_id");
 			svr.name = res->getString("name").c_str();
 			svr.host = res->getString("host").c_str();
@@ -358,4 +416,4 @@ int brokersdao::get(int id, server::type stype, std::vector<server> &servers, st
 
 	return 0;
 }
-END_SEC_NAMESPACE
+END_SEC_DAO_NAMESPACE
