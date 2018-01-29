@@ -1,6 +1,7 @@
 #include "svcmgr.h"
 #include "config.h"
 #include "cube\log.h"
+#include "json\json.h"
 #include "tapi\manage.h"
 BEGIN_SVR_NAMESPACE
 BEGIN_MGR_NAMESPACE
@@ -18,7 +19,14 @@ void login::handle(const cube::http::request &req, cube::http::response &resp) {
 		return;
 	}
 	
-	resp.json(auth.token().c_str(), auth.token().length());
+	Json::Value root;
+	root["user"] = user;
+	root["token"] = auth.token();
+
+	Json::FastWriter fw;
+	std::string str = fw.write(root);
+
+	resp.json(str.c_str(), str.length());
 }
 
 void logout::handle(const cube::http::request &req, cube::http::response &resp) {

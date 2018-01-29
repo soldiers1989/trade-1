@@ -1,6 +1,7 @@
 #include "http.h"
 #include "fd.h"
 #include "str.h"
+#include <ctime>
 #include <stdarg.h>
 #include <algorithm>
 BEGIN_CUBE_NAMESPACE
@@ -786,6 +787,105 @@ std::string entity::header(const std::string &key, const char *default) const {
 	}
 
 	return std::string(default);
+}
+
+//////////////////////////////////////////cookie class/////////////////////////////////////////
+cookie::cookie(const std::string &name, const std::string &value) : _name(name), _value(value), _domain(""), _path(""), _expires(0), _maxage(0) {
+
+}
+
+cookie::cookie(const std::string &name, const std::string &value, const std::string &domain, const std::string &path, int maxage) : _name(name), _value(value), _domain(domain), _path(path), _maxage(maxage) {
+	_expires = time(0) + _maxage; 
+}
+
+const std::string &cookie::expires() const { 
+	ctime(&_expires); 
+}
+
+//////////////////////////////////////////cookies class/////////////////////////////////////////
+std::string cookies::get(const std::string &name) {
+	std::map<std::string, cookie>::const_iterator citer = _cookies.find(name);
+	if (citer != _cookies.end()) {
+		return citer->second.value;
+	}
+	return "";
+}
+
+void cookies::set(const std::string &name, const std::string &value, const std::string &domain, const std::string &path, int maxage) {
+	_cookies[name] = cookie(name, value, domain, path, maxage);
+}
+
+//////////////////////////////////////////session class/////////////////////////////////////////
+session::session(const std::string &id, int maxage) : _id(id), _maxage(maxage){
+	_expires = time(0) + _maxage;
+}
+
+bool session::aged(time_t now) {
+	if (now > _expires)
+		return true;
+	return false;
+}
+
+std::string session::get(const std::string &name) {
+	std::map<std::string, std::string>::const_iterator citer = _items.find(name);
+	if (citer != _items.end()) {
+		return citer->second;
+	}
+	return "";
+}
+
+void session::set(const std::string &name, const std::string &value) {
+	_items[name] = value;
+}
+
+//////////////////////////////////////////sessions class/////////////////////////////////////////
+//default session id length
+int sessions::_length = 16;
+//default session life time 1 day
+int sessions::_life = 86400;
+//global sessions
+std::mutex sessions::_mutex;
+std::map<std::string, session> sessions::_sessions;
+
+void sessions::aging() {
+	std::unique_lock<std::mutex> lck(_mutex);
+	time_t now = time(0);
+	std::map<std::string, session>::iterator iter = _sessions.begin(), iterend = _sessions.end();
+	while (iter != iterend) {
+		if (iter->second.aged(now))
+			_sessions.erase(iter++);
+		else
+			iter++;
+	}
+}
+
+void sessions::life(int secs) {
+	std::unique_lock<std::mutex> lck(_mutex);
+	_life = secs;
+}
+
+void sessions::length(int len) {
+	std::unique_lock<std::mutex> lck(_mutex);
+	_length = len;
+}
+
+session &sessions::gen(int age) {
+	std::unique_lock<std::mutex> lck(_mutex);
+	//generate session id
+	std::string id = cube::str::random(_length);
+	while (_sessions.find(id) != _sessions.end()) {
+		id = cube::str::random(_length);
+	}
+
+	//add new session
+	_sessions[id] = session(id, age);
+
+	return _sessions[id];
+}
+
+session &sessions::get(const std::string &sid) {
+	std::unique_lock<std::mutex> lck(_mutex);
+	return _sessions[sid]; 
 }
 
 //////////////////////////////////////////request class/////////////////////////////////////////

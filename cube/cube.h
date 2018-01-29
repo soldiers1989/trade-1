@@ -12,6 +12,9 @@
 #define BEGIN_HTTP_NAMESPACE namespace http{
 #define END_HTTP_NAMESPACE }
 
+#define BEGIN_IOS_NAMESPACE namespace cube { namespace ios {
+#define END_IOS_NAMESPACE }}
+
 BEGIN_CUBE_NAMESPACE
 typedef unsigned char byte;
 typedef unsigned short ushort;

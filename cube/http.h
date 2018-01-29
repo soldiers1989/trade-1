@@ -4,6 +4,7 @@
 #pragma once
 #include "ios.h"
 #include <map>
+#include <mutex>
 #include <vector>
 #include <memory>
 BEGIN_CUBE_NAMESPACE
@@ -420,6 +421,93 @@ private:
 
 	//default status, <int-code, <string-code, reason>>
 	static std::map<int, std::pair<std::string, std::string>> _status;
+};
+
+//http cookie class
+class cookie {
+public:
+	cookie() : _name(""), _value(""), _domain(""), _path(""), _expires(0), _maxage(0) {}
+	cookie(const std::string &name, const std::string &value);
+	cookie(const std::string &name, const std::string &value, const std::string &domain, const std::string &path, int maxage);
+	~cookie() {}
+	
+	const std::string &name() const { return _name; }
+	const std::string &value() const { return _value; }
+	const std::string &domain() const { return _domain; }
+	const std::string &path() const { return _path; }
+	const std::string &expires() const;
+	int maxage() const { return _maxage; }
+private:
+	std::string _name;
+	std::string _value;
+
+	std::string _domain;
+	std::string _path;
+	int _maxage;
+	time_t _expires;
+};
+
+//http cookies class
+class cookies {
+public:
+	cookies() {}
+	~cookies() {}
+
+	std::string get(const std::string &name);
+	void set(const std::string &name, const std::string &value, const std::string &domain, const std::string &path, int maxage);
+private:
+	//cookie values
+	std::map<std::string, cookie> _cookies;
+};
+
+//http session class
+class session {
+public:
+	session() : _id(""), _maxage(0), _expires(0) {}
+	session(const std::string &id, int maxage);
+	~session() {}
+
+	//test if session has aged
+	bool aged(time_t now);
+
+	//get/set session value
+	std::string get(const std::string &name);
+	void set(const std::string &name, const std::string &value);
+private:
+	//session id;
+	std::string _id;
+	//max age in seconds
+	int _maxage;
+	//expire time point
+	time_t _expires;
+	//session values
+	std::map<std::string, std::string> _items;
+};
+
+//http sessions class
+class sessions {
+public:
+	//aging out of life time sessions
+	static void aging();
+	
+	//set default session life time in seconds
+	static void life(int secs);
+	//set default session id length
+	static void length(int len);
+
+	//generate a new session
+	static session &gen(int age = sessions::_life);
+	//get session by id
+	static session &get(const std::string &sid);
+
+private:
+	//session id length
+	static int _length;
+	//default life time in seconds
+	static int _life;
+	//global sessions
+	static std::mutex _mutex;
+	static std::map<std::string, session> _sessions;
 };
 
 //header class
@@ -869,6 +957,80 @@ private:
 	http::header _header;
 	//response content
 	http::entity _entity;
+};
+
+//http parser
+class parser {
+public:
+	
+
+};
+
+//http packer
+class packer {
+public:
+
+};
+
+//http request stream
+class rqstream {
+public:
+	rqstream() : _head("\r\n\r\n"), _body(nullptr) {}
+	~rqstream() {}
+
+	/*
+	*	take data from request buffer
+	*@param data: in/out, data to take to
+	*@param sz: in, data size
+	*@return:
+	*	size taked
+	*/
+	int take(char *data, int sz);
+
+	/*
+	*	feed data to request buffer
+	*@param data: in, data to feed
+	*@param sz: in, data size
+	*@return:
+	*	size feeded
+	*/
+	int feed(const char *data, int sz);
+	
+private:
+	//head data stream
+	ios::delimitedstream _head;
+	//body data stream
+	std::unique_ptr<ios::stream> _body;
+};
+
+//http response stream
+class rpstream {
+public:
+	rpstream() : _head("\r\n\r\n"), _body(nullptr) {}
+	~rpstream() {}
+
+	/*
+	*	take data from request buffer
+	*@param data: in/out, data to take to
+	*@param sz: in, data size
+	*@return:
+	*	size taked
+	*/
+	int take(char *data, int sz);
+
+	/*
+	*	feed data to request buffer
+	*@param data: in, data to feed
+	*@param sz: in, data size
+	*@return:
+	*	size feeded
+	*/
+	int feed(const char *data, int sz);
+private:
+	//head data stream
+	ios::delimitedstream _head;
+	//body data stream
+	std::unique_ptr<ios::stream> _body;
 };
 
 //request data buffer

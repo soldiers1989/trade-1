@@ -1,5 +1,5 @@
 #include "ios.h"
-BEGIN_CUBE_NAMESPACE
+BEGIN_IOS_NAMESPACE
 //////////////////////////////////////////stream class//////////////////////////////////////
 int stream::put(const char *data, int sz) {
 	if (_stream != 0) {
@@ -233,4 +233,4 @@ const std::string &filestream::_data() {
 	//return content read
 	return _content;
 }
-END_CUBE_NAMESPACE
+END_IOS_NAMESPACE

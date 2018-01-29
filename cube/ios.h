@@ -5,7 +5,7 @@
 #include "cube.h"
 #include <string>
 #include <fstream>
-BEGIN_CUBE_NAMESPACE
+BEGIN_IOS_NAMESPACE
 //stream class
 class stream {
 	typedef cexception error;
@@ -250,4 +250,4 @@ private:
 	//file content
 	std::string _content;
 };
-END_CUBE_NAMESPACE
+END_IOS_NAMESPACE
