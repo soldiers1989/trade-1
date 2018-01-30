@@ -55,22 +55,19 @@ void mime::set(const std::string &ext, const std::string &ctype) {
 	_types[ext] = ctype;
 }
 
-//////////////////////////////////////////parser class/////////////////////////////////////////
-std::string parser::data() {
-	char buf[BUFSZ] = { 0 };
-	int sz = pack(buf, BUFSZ);
-	return std::string(buf, sz);
-}
-
 //////////////////////////////////////////address class/////////////////////////////////////////
-int address::pack(char *data, int sz) {
+std::string address::get() const {
+	int sz = 0;
+	char data[BUFSZ] = { 0 };
 	if (_port == 80)
-		return snprintf(data, sz, "%s", _host.c_str());
+		sz = snprintf(data, BUFSZ, "%s", _host.c_str());
 	else
-		return snprintf(data, sz, "%s:%d", _host.c_str(), _port);
+		sz = snprintf(data, BUFSZ, "%s:%d", _host.c_str(), _port);
+
+	return std::string(data, sz);
 }
 
-int address::parse(const char *data, int sz) {
+int address::set(const char *data, int sz, std::string *err) {
 	//find seperator of host and port
 	const char *start = data, *end = data + sz, *pos = data;
 	while (*pos != ':' && pos < end)
@@ -88,11 +85,13 @@ int address::parse(const char *data, int sz) {
 
 	//check host and port
 	if (host.empty()) {
-		throw error("address: empty host");
+		cube::safe_assign<std::string>(err, "address: empty host");
+		return -1;
 	}
 
 	if (!cube::str::isdigit(port.c_str())) {
-		throw error("address: %s, invalid port", port.c_str());
+		cube::safe_assign<std::string>(err, str::format("address: %s, invalid port", port.c_str()));
+		return -1;
 	}
 
 	//set host and port
@@ -102,29 +101,30 @@ int address::parse(const char *data, int sz) {
 	return sz;
 }
 
-//////////////////////////////////////////parameters class/////////////////////////////////////////
-int params::pack(char *data, int sz) {
-	//data pos
-	int pos = 0;
-	
+//////////////////////////////////////////params class/////////////////////////////////////////
+std::string params::get() const {
+	//data buffer
+	char data[BUFSZ] = { 0 };
+
 	//output data
+	int dsz = 0;
 	bool first = true;
-	std::map<std::string, std::vector<std::string>>::iterator iter = _params.begin(), iterend = _params.end();
+	std::map<std::string, std::vector<std::string>>::const_iterator iter = _params.begin(), iterend = _params.end();
 	while (iter != iterend) {
 		for (size_t i = 0; i < iter->second.size(); i++) {
 			if (first) {
-				pos += snprintf(data + pos, sz - pos, "%s=%s", str::escape(iter->first).c_str(), str::escape(iter->second[i]).c_str());
+				dsz += snprintf(data + dsz, BUFSZ - dsz, "%s=%s", str::escape(iter->first).c_str(), str::escape(iter->second[i]).c_str());
 				first = false;
 			} else {
-				pos += snprintf(data + pos, sz - pos, "&%s=%s", str::escape(iter->first).c_str(), str::escape(iter->second[i]).c_str());
+				dsz += snprintf(data + dsz, BUFSZ - dsz, "&%s=%s", str::escape(iter->first).c_str(), str::escape(iter->second[i]).c_str());
 			}
 		}
 	}
 
-	return pos;
+	return std::string(data, dsz);
 }
 
-int params::parse(const char *data, int sz) {
+int params::set(const char *data, int sz, std::string *err) {
 	//split data by param seperator
 	std::vector<std::string> items;
 	str::strtok(data, sz, "&", items);
@@ -135,14 +135,14 @@ int params::parse(const char *data, int sz) {
 		if (sep != std::string::npos) {
 			std::string key = str::unescape(items[i].substr(0, sep));
 			std::string val = str::unescape(items[i].substr(sep + 1));
-			if (_params.find(key) == _params.end()) {
-				_params.insert(std::pair<std::string, std::vector<std::string>>(key, std::vector<std::string>()));
-			}
 			_params[key].push_back(val);
+		} else {
+			cube::safe_assign<std::string>(err, str::format("params: %s, invalid param", items[i].c_str()));
+			return -1;
 		}
 	}
 
-	return sz;
+	return 0;
 }
 
 std::vector<std::string> params::get(const std::string &key) const {
@@ -162,7 +162,12 @@ std::string params::get(const std::string &key, const char *default) const {
 }
 
 //////////////////////////////////////////uri class/////////////////////////////////////////
-int uri::pack(char *data, int sz) {
+std::string uri::get() const {
+	//data buffer
+	int sz = BUFSZ;
+	char data[BUFSZ] = { 0 };
+
+	//data pos
 	int pos = 0;
 
 	//add scheme
@@ -190,10 +195,10 @@ int uri::pack(char *data, int sz) {
 		pos += snprintf(data + pos, sz - pos, "#%s", _fragment.c_str());
 	}
 
-	return pos;
+	return std::string(data, pos);
 }
 
-int uri::parse(const char *data, int sz) {
+int uri::set(const char *data, int sz, std::string *err) {
 	//skip space characters
 	const char *start = data, *end = data + sz;
 	while (::isspace(*start))
@@ -203,7 +208,8 @@ int uri::parse(const char *data, int sz) {
 		end--;
 
 	if (start > end) {
-		throw error("uri: empty uri data.");
+		cube::safe_assign<std::string>(err, "uri: empty uri data.");
+		return -1;
 	}
 
 	const char *pos = start;
@@ -251,7 +257,8 @@ int uri::parse(const char *data, int sz) {
 		std::string auth = std::string(start, pos - start);
 
 		//parse address
-		_addr.parse(auth.c_str(), auth.length());
+		if(_addr.set(auth.c_str(), auth.length(), err) != 0)
+			return -1;
 
 		//set authority
 		_auth = auth;
@@ -288,7 +295,8 @@ int uri::parse(const char *data, int sz) {
 		std::string query = std::string(start, pos - start);
 
 		//parse params
-		_params.parse(query.c_str(), query.length());
+		if(_params.set(query.c_str(), query.length(), err) != 0)
+			return -1;
 
 		//save query string
 		_query = query;
@@ -303,95 +311,69 @@ int uri::parse(const char *data, int sz) {
 		_fragment = std::string(start, end - start);
 	}
 
-	return sz;
+	return 0;
 }
 
 //////////////////////////////////////////http version class/////////////////////////////////////////
-int version::pack(char *data, int sz) {
-	return snprintf(data, sz, "%s/%s", _name.c_str(), _code.c_str());
+std::string version::get() const {
+	//data buffer
+	int sz = BUFSZ;
+	char data[BUFSZ] = { 0 };
+
+	//pack version
+	sz = snprintf(data, sz, "%s/%s", _name.c_str(), _code.c_str());
+	return std::string(data, sz);
 }
 
-int version::parse(const char *data, int sz) {
+int version::set(const char *data, int sz, std::string *err) {
 	std::vector<std::string> items;
 	str::strtok(data, sz, "/", items);
 	if (items.size() != 2) {
-		throw error("http version: %s, invalid http version", std::string(data,sz).c_str());
+		cube::safe_assign<std::string>(err, str::format("http version: %s, invalid http version", std::string(data,sz).c_str()));
+		return -1;
 	}
 
 	//check protocol
 	if (str::lower(items[0]) != "http") {
-		throw error("http version: %s, protocol not supported", items[0].c_str());
+		cube::safe_assign<std::string>(err, str::format("http version: %s, protocol not supported", items[0].c_str()));
+		return -1;
 	}
 
 	//set name & code
 	_name = items[0];
 	_code = items[1];
 
-	return sz;
+	return 0;
 }
 //////////////////////////////////////////query class///////////////////////////////////////////
-void query::init(const std::string &data) {
-	parse(data.c_str(), data.length());
+std::string query::get() const {
+	int sz = BUFSZ;
+	char data[BUFSZ] = { 0 };
+
+	sz = snprintf(data, sz, "%s %s %s\r\n", _method.c_str(), _uri.get().c_str(), _version.get().c_str());
+	return std::string(data, sz);
 }
 
-int query::pack(char *data, int sz) {
-	return snprintf(data, sz, "%s %s %s\r\n", _method.c_str(), _uri.data().c_str(), _version.data().c_str());
-}
-
-int query::parse(const char *data, int sz) {
+int query::set(const char *data, int sz, std::string *err) {
 	std::vector<std::string> items;
 	cube::str::strtok(data, sz, " ", items, 3);
 	if (items.size() != 3) {
-		throw error("query line: %s, invalid request", std::string(data, sz).c_str());
+		cube::safe_assign<std::string>(err, str::format("query line: %s, invalid request", std::string(data, sz).c_str()));
+		return -1;
 	}
 
 	//parse method
 	_method = items[0];
 
 	//parse query
-	_uri.parse(items[1].c_str(), items[1].length());
+	if(_uri.set(items[1].c_str(), items[1].length(), err) != 0)
+		return -1;
 
 	//parse protocol & version
-	_version.parse(items[2].c_str(), items[2].length());
+	if(_version.set(items[2].c_str(), items[2].length(), err) != 0)
+		return -1;
 
-	return sz;
-}
-
-void query::make() {
-	//pack query line
-	char buf[BUFSZ] = { 0 };
-	int sz = pack(buf, BUFSZ);
-
-	//assign stream data
-	_stream.assign(std::string(buf, sz));
-}
-
-int query::take(char *data, int sz) {
-	return _stream.get(data, sz);
-}
-
-int query::feed(const char *data, int sz) {
-	//query line has completed
-	if (full()) {
-		return 0;
-	}
-
-	//feed data
-	int wsz = _stream.put(data, sz);
-	if (full()) {
-		//parse status line
-		parse(_stream.data().c_str(), _stream.data().length());
-	}
-
-	return wsz;
-}
-
-bool query::full() const {
-	return _stream.endp();
-}
-
-const std::string &query::data() {
-	return _stream.data();
+	return 0;
 }
 
 /////////////////////////////////////////status class/////////////////////////////////////////////
@@ -404,40 +386,40 @@ status::setter cerr_not_found(404, "Not Found");
 status::setter cerr_method_not_allowed(405, "Method Not Allowed");
 status::setter serr_interval_server_error(500, "Internal Server Error");
 
-status::setter::setter(int code, const std::string &reason) {
-	status::_status[code] = std::pair<std::string, std::string>(str::tostr(code), reason);
+std::string status::get() const {
+	int sz = BUFSZ;
+	char data[BUFSZ] = { 0 };
+
+	sz = snprintf(data, sz, "%s %s %s\r\n", _version.get().c_str(), _code.c_str(), _reason.c_str());
+	return std::string(data, sz);
 }
 
-void status::init(int code) {
+int status::set(int code, std::string *err) {
 	std::map<int, std::pair<std::string, std::string>>::const_iterator citer = _status.find(code);
 	if (citer == _status.end()) {
-		throw error("status line: %d, not supported", code);
+		cube::safe_assign<std::string>(err, str::format("status line: %d, not supported", code));
+		return -1;
 	}
 
 	//set code & reason
 	_code = citer->second.first;
 	_reason = citer->second.second;
+
+	return 0;
 }
 
-int status::pack(char *data, int sz) {
-	//check status
-	if (_code.empty() || _reason.empty()) {
-		throw error("status line: status not specified");
-	}
-
-	return snprintf(data, sz, "%s %s %s\r\n", _version.data().c_str(), _code.c_str(), _reason.c_str());
-}
-
-int status::parse(const char *data, int sz) {
+int status::set(const char *data, int sz, std::string *err) {
 	//split status line
 	std::vector<std::string> items;
 	cube::str::strtok(data, sz, " ", items, 3);
 	if (items.size() != 3) {
-		throw error("status line: %s, invalid response", std::string(data, sz).c_str());
+		cube::safe_assign<std::string>(err, str::format("status line: %s, invalid response", std::string(data, sz).c_str()));
+		return -1;
 	}
 
 	//parse http version
-	_version.parse(items[0].c_str(), items[0].length());
+	if(_version.set(items[0].c_str(), items[0].length(), err) != 0)
+		return -1;
 
 	//parse status code
 	_code = items[1];
@@ -445,348 +427,7 @@ int status::parse(const char *data, int sz) {
 	//parse status phrase reason
 	_reason = items[2];
 
-	return sz;
-}
-
-void status::make() {
-	//pack status line
-	char buf[BUFSZ] = { 0 };
-	int sz = pack(buf, BUFSZ);
-
-	//assign stream data
-	_stream.assign(std::string(buf, sz));
-}
-
-int status::take(char *data, int sz) {
-	return _stream.get(data, sz);
-}
-
-int status::feed(const char *data, int sz) {
-	//status line has completed
-	if (full()) {
-		return 0;
-	}
-
-	//feed data
-	int wsz = _stream.put(data, sz);
-	if (full()) {
-		//parse status line
-		parse(_stream.data().c_str(), _stream.data().length());
-	}
-
-	return wsz;
-}
-
-bool status::full() const {
-	return _stream.endp();
-}
-
-const std::string &status::data() {
-	return _stream.data();
-}
-
-//////////////////////////////////////////header class/////////////////////////////////////////
-std::map<std::string, std::string> http::header::request::_header;
-std::map<std::string, std::string> http::header::response::_header;
-
-http::header::request::setter request_accept("Accept", "*/*");
-http::header::request::setter request_set_user_agent("User-Agent", "cube");
-http::header::request::setter request_accept_encoding("Accept-Encoding", "gzip, deflate");
-
-http::header::response::setter response_server("Server", "Cube/1.0");
-
-void header::init(const std::string &data) {
-	parse(data.c_str(), data.length());
-}
-
-int header::pack(char *data, int sz) {
-	int pos = 0;
-	//process each item
-	header::items::iterator iter = _items.begin(), iterend = _items.end();
-	while (iter != iterend) {
-		for (size_t i = 0; i < iter->second.size(); i++) {
-			pos += snprintf(data + pos, sz - pos, "%s: %s\r\n", iter->second[i].first.c_str(), iter->second[i].second.c_str());
-		}
-		iter++;
-	}
-
-	//add last "\r\n"
-	pos += snprintf(data + pos, sz - pos, "\r\n");
-	return pos;
-}
-
-int header::parse(const char *data, int sz) {
-	//seperate all header items
-	std::vector<std::string> items;
-	str::strtok(data, sz, "\r\n", items);
-
-	//parse each header item
-	for (size_t i = 0; i < items.size(); i++) {
-		//check data
-		std::vector<std::string> item;
-		str::strtok(items[i].c_str(), items[i].size(), ":", item, 2);
-		if (item.size() != 2) {
-			throw error("header: %s invalid header", items[i].c_str());
-		}
-
-		//parse header
-		std::string key = str::lower(item[0]);
-		header::items::iterator iter = _items.find(key);
-		if (iter == _items.end()) {
-			_items.insert(std::pair<std::string, header::keyvals>(key, header::keyvals()));
-		}
-		_items[key].push_back(header::keyval(item[0], item[1]));
-	}
-
-	return sz;
-}
-
-header &header::set(const std::string &key, const char *format, ...) {
-	//format value string
-	static const int BUFSZ = 2048;
-	char buf[BUFSZ] = { 0 };
-	va_list va;
-	va_start(va, format);
-	vsnprintf(buf, BUFSZ, format, va);
-	va_end(va);
-
-	//formatted value
-	std::string val(buf);
-
-	//set header value
-	_items[key] = header::keyvals();
-	_items[key].push_back(header::keyval(key, val));
-
-	return *this;
-}
-
-header& header::set(const std::string &key, bool replace, const char *format, ...) {
-	//format value string
-	static const int BUFSZ = 2048;
-	char buf[BUFSZ] = { 0 };
-	va_list va;
-	va_start(va, format);
-	vsnprintf(buf, BUFSZ, format, va);
-	va_end(va);
-
-	//formatted value
-	std::string val(buf);
-
-	//set header value
-	header::items::iterator iter = _items.find(key);
-	if (iter != _items.end()) {
-		if (replace) {
-			iter->second.clear();
-		} 
-		iter->second.push_back(header::keyval(key, val));
-	} else {
-		_items[key] = header::keyvals();
-		_items[key].push_back(header::keyval(key, val));
-	}
-
-	return *this;
-}
-
-header &header::set(const std::map<std::string, std::string> &items, bool replace) {
-	std::map<std::string, std::string>::const_iterator citer = items.begin(), citerend = items.end();
-	while (citer != citerend) {
-		std::string key = cube::str::lower(citer->first);
-		header::items::iterator iter = _items.find(key);
-		if (iter != _items.end()) {
-			if (replace) {
-				iter->second.clear();
-			}
-			iter->second.push_back(header::keyval(citer->first, citer->second));
-		} else {
-			header::keyvals kvs;
-			kvs.push_back(header::keyval(citer->first, citer->second));
-			_items.insert(std::pair<std::string, header::keyvals>(citer->first, kvs));
-		}
-
-		citer++;
-	}
-
-	return *this;
-}
-
-std::vector<std::string> header::get(const std::string &item) const{
-	std::vector<std::string> result;
-	header::items::const_iterator iter = _items.find(cube::str::lower(item));
-	if (iter != _items.end()) {
-		for (size_t i = 0; i < iter->second.size(); i++) {
-			result.push_back(iter->second[i].second);
-		}
-	}
-
-	return result;
-}
-
-std::string header::get(const std::string &item, const char *default) const{
-	header::items::const_iterator iter = _items.find(cube::str::lower(item));
-	if (iter != _items.end() && iter->second.size() > 0) {
-		return iter->second[0].second;
-	} else {
-		return default;
-	}
-}
-
-void header::make() {
-	//pack header
-	char buf[BUFSZ] = { 0 };
-	int sz = pack(buf, BUFSZ);
-
-	//assign stream data
-	_stream.assign(std::string(buf, sz));
-}
-
-int header::take(char *data, int sz) {
-	return _stream.get(data, sz);
-}
-
-int header::feed(const char *data, int sz) {
-	//header has completed
-	if (full()) {
-		return 0;
-	}
-
-	//feed more data
-	int wsz = _stream.put(data, sz);
-	if (full()) {
-		//parse header
-		parse(_stream.data().c_str(), _stream.data().length());
-	}
-
-	return wsz;
-}
-
-bool header::full() const {
-	return _stream.endp();
-}
-
-const std::string &header::data() {
-	return _stream.data();
-}
-
-//////////////////////////////////////////entity class/////////////////////////////////////////
-void entity::init(const http::header &header) {
-	//initialize entity header
-	entity::header("Allow", header.get("Allow", ""));
-	entity::header("Expires", header.get("Expires", ""));
-	entity::header("Content-MD5", header.get("Content-MD5", ""));
-	entity::header("Content-Type", header.get("Content-Type", ""));
-	entity::header("Last-Modified", header.get("Last-Modified", ""));
-	entity::header("Content-Range", header.get("Content-Range", ""));
-	entity::header("Content-Length", header.get("Content-Length", "0"));
-	entity::header("Content-Location", header.get("Content-Location", ""));
-	entity::header("Content-Encoding", header.get("Content-Encoding", ""));
-	entity::header("Content-Language", header.get("Content-Language", ""));
-
-	//create output stream
-	int len = length();
-	if (len > 0) {
-		_stream = std::unique_ptr<stream>(new sizedstream(len));
-	}
-}
-
-void entity::file(const std::string &path, const char* charset) {
-	//set stream data
-	_stream = std::unique_ptr<stream>(new filestream(path, std::ios::in|std::ios::binary));
-
-	//get file extension
-	std::string ext = fd::ext(path);
-
-	//set content type
-	entity::type(mime::get(ext, charset));
-
-	//set content length
-	entity::length(_stream->size());	
-}
-
-void entity::form(const char *data, int sz, const char* charset) {
-	//set content type
-	entity::type(mime::get("form", charset));
-
-	//set content length
-	entity::length(sz);
-
-	//set stream data
-	_stream = std::unique_ptr<stream>(new stringstream());
-	_stream->assign(std::string(data, sz));
-}
-
-void entity::data(const std::string &type, const char *data, int sz, const char* charset) {
-	//set content type
-	entity::type(mime::get(type, charset));
-
-	//set content length
-	entity::length(sz);
-
-	//set stream data
-	_stream = std::unique_ptr<stream>(new stringstream());
-	_stream->assign(std::string(data, sz));
-}
-
-void entity::make() {
-
-}
-
-int entity::take(char *data, int sz) {
-	if (_stream == nullptr) {
-		return 0;
-	}
-
-	return _stream->get(data, sz);
-}
-
-int entity::feed(const char *data, int sz) {
-	if (_stream == nullptr) {
-		return 0;
-	}
-	return _stream->put(data, sz);
-}
-
-bool entity::full() const {
-	if (_stream == nullptr) {
-		return true;
-	}
-	return _stream->endp();
-}
-
-const std::string &entity::data() {
-	if (_stream == nullptr) {
-		return _empty;
-	}
-
-	return _stream->data();
-}
-
-void entity::length(int len) {
-	header("Content-Length", str::tostr(len));
-}
-
-std::map<std::string, std::string> entity::header() const {
-	std::map<std::string, std::string> items;
-	std::map<std::string, std::pair<std::string, std::string>>::const_iterator citer = _header.begin(), citerend = _header.end();
-	while (citer != citerend) {
-		items.insert(citer->second);
-		citer++;
-	}
-	return items;
-}
-
-void entity::header(const std::string &key, const std::string &val) {
-	if (!val.empty()) {
-		_header[str::lower(key)] = std::pair<std::string, std::string>(key, val);
-	}
-}
-
-std::string entity::header(const std::string &key, const char *default) const {
-	std::map<std::string, std::pair<std::string, std::string>>::const_iterator citer = _header.find(str::lower(key));
-	if (citer != _header.end()) {
-		return citer->second.second;
-	}
-
-	return std::string(default);
+	return 0;
 }
 
 //////////////////////////////////////////cookie class/////////////////////////////////////////
@@ -888,6 +529,278 @@ session &sessions::get(const std::string &sid) {
 	return _sessions[sid]; 
 }
 
+//////////////////////////////////////////header class/////////////////////////////////////////
+std::map<std::string, std::string> http::header::request::_header;
+std::map<std::string, std::string> http::header::response::_header;
+
+http::header::request::setter request_accept("Accept", "*/*");
+http::header::request::setter request_set_user_agent("User-Agent", "cube");
+http::header::request::setter request_accept_encoding("Accept-Encoding", "gzip, deflate");
+http::header::response::setter response_server("Server", "Cube/1.0");
+
+std::string header::get() const {
+	//header data
+	int sz = 0;
+	char data[BUFSZ] = { 0 };
+
+	//process each item
+	header::items::const_iterator iter = _items.begin(), iterend = _items.end();
+	while (iter != iterend) {
+		for (size_t i = 0; i < iter->second.size(); i++) {
+			sz += snprintf(data + sz, BUFSZ - sz, "%s: %s\r\n", iter->second[i].first.c_str(), iter->second[i].second.c_str());
+		}
+		iter++;
+	}
+
+	//add last "\r\n"
+	sz += snprintf(data + sz, BUFSZ - sz, "\r\n");
+	return std::string(data, sz);
+}
+
+int header::set(const char *data, int sz, std::string *err) {
+	//check data
+	std::vector<std::string> item;
+	str::strtok(data, sz, ":", item, 2);
+	if (item.size() != 2) {
+		cube::safe_assign<std::string>(err, str::format("header: %s invalid header", std::string(data, sz).c_str()));
+		return -1;
+	}
+
+	//parse header
+	std::string key = str::lower(item[0]);
+	header::items::iterator iter = _items.find(key);
+	if (iter == _items.end()) {
+		_items.insert(std::pair<std::string, header::keyvals>(key, header::keyvals()));
+	}
+	_items[key].push_back(header::keyval(item[0], item[1]));
+
+	return 0;
+}
+
+int header::sets(const char *data, int sz, std::string *err) {
+	//seperate all header items
+	std::vector<std::string> items;
+	str::strtok(data, sz, "\r\n", items);
+
+	//parse each header item
+	for (size_t i = 0; i < items.size(); i++) {
+		if(set(items[i].c_str(), items[i].length(), err) != 0)
+			return -1;
+	}
+
+	return 0;
+}
+
+header &header::set(const std::string &key, const char *format, ...) {
+	//format value string
+	static const int BUFSZ = 2048;
+	char buf[BUFSZ] = { 0 };
+	va_list va;
+	va_start(va, format);
+	vsnprintf(buf, BUFSZ, format, va);
+	va_end(va);
+
+	//formatted value
+	std::string val(buf);
+
+	//set header value
+	_items[key] = header::keyvals();
+	_items[key].push_back(header::keyval(key, val));
+
+	return *this;
+}
+
+header& header::set(const std::string &key, bool replace, const char *format, ...) {
+	//format value string
+	static const int BUFSZ = 2048;
+	char buf[BUFSZ] = { 0 };
+	va_list va;
+	va_start(va, format);
+	vsnprintf(buf, BUFSZ, format, va);
+	va_end(va);
+
+	//formatted value
+	std::string val(buf);
+
+	//set header value
+	header::items::iterator iter = _items.find(key);
+	if (iter != _items.end()) {
+		if (replace) {
+			iter->second.clear();
+		}
+		iter->second.push_back(header::keyval(key, val));
+	} else {
+		_items[key] = header::keyvals();
+		_items[key].push_back(header::keyval(key, val));
+	}
+
+	return *this;
+}
+
+header &header::set(const std::map<std::string, std::string> &items, bool replace) {
+	std::map<std::string, std::string>::const_iterator citer = items.begin(), citerend = items.end();
+	while (citer != citerend) {
+		std::string key = cube::str::lower(citer->first);
+		header::items::iterator iter = _items.find(key);
+		if (iter != _items.end()) {
+			if (replace) {
+				iter->second.clear();
+			}
+			iter->second.push_back(header::keyval(citer->first, citer->second));
+		} else {
+			header::keyvals kvs;
+			kvs.push_back(header::keyval(citer->first, citer->second));
+			_items.insert(std::pair<std::string, header::keyvals>(citer->first, kvs));
+		}
+
+		citer++;
+	}
+
+	return *this;
+}
+
+std::vector<std::string> header::get(const std::string &item) const {
+	std::vector<std::string> result;
+	header::items::const_iterator iter = _items.find(cube::str::lower(item));
+	if (iter != _items.end()) {
+		for (size_t i = 0; i < iter->second.size(); i++) {
+			result.push_back(iter->second[i].second);
+		}
+	}
+
+	return result;
+}
+
+std::string header::get(const std::string &item, const char *default) const {
+	header::items::const_iterator iter = _items.find(cube::str::lower(item));
+	if (iter != _items.end() && iter->second.size() > 0) {
+		return iter->second[0].second;
+	} else {
+		return default;
+	}
+}
+
+//////////////////////////////////////////entity class/////////////////////////////////////////
+void entity::init(const http::header &header) {
+	//initialize entity header
+	entity::header("Allow", header.get("Allow", ""));
+	entity::header("Expires", header.get("Expires", ""));
+	entity::header("Content-MD5", header.get("Content-MD5", ""));
+	entity::header("Content-Type", header.get("Content-Type", ""));
+	entity::header("Last-Modified", header.get("Last-Modified", ""));
+	entity::header("Content-Range", header.get("Content-Range", ""));
+	entity::header("Content-Length", header.get("Content-Length", "0"));
+	entity::header("Content-Location", header.get("Content-Location", ""));
+	entity::header("Content-Encoding", header.get("Content-Encoding", ""));
+	entity::header("Content-Language", header.get("Content-Language", ""));
+
+	//create output stream
+	int len = length();
+	if (len > 0) {
+		_stream = std::unique_ptr<stream>(new sizedstream(len));
+	}
+}
+
+void entity::file(const std::string &path, const char* charset) {
+	//set stream data
+	_stream = std::unique_ptr<stream>(new filestream(path, std::ios::in | std::ios::binary));
+
+	//get file extension
+	std::string ext = fd::ext(path);
+
+	//set content type
+	entity::type(mime::get(ext, charset));
+
+	//set content length
+	entity::length(_stream->size());
+}
+
+void entity::form(const char *data, int sz, const char* charset) {
+	//set content type
+	entity::type(mime::get("form", charset));
+
+	//set content length
+	entity::length(sz);
+
+	//set stream data
+	_stream = std::unique_ptr<stream>(new stringstream());
+	_stream->assign(std::string(data, sz));
+}
+
+void entity::data(const std::string &type, const char *data, int sz, const char* charset) {
+	//set content type
+	entity::type(mime::get(type, charset));
+
+	//set content length
+	entity::length(sz);
+
+	//set stream data
+	_stream = std::unique_ptr<stream>(new stringstream());
+	_stream->assign(std::string(data, sz));
+}
+
+void entity::make() {
+
+}
+
+int entity::take(char *data, int sz) {
+	if (_stream == nullptr) {
+		return 0;
+	}
+
+	return _stream->get(data, sz);
+}
+
+int entity::feed(const char *data, int sz) {
+	if (_stream == nullptr) {
+		return 0;
+	}
+	return _stream->put(data, sz);
+}
+
+bool entity::full() const {
+	if (_stream == nullptr) {
+		return true;
+	}
+	return _stream->endp();
+}
+
+const std::string &entity::data() {
+	if (_stream == nullptr) {
+		return _empty;
+	}
+
+	return _stream->data();
+}
+
+void entity::length(int len) {
+	header("Content-Length", str::tostr(len));
+}
+
+std::map<std::string, std::string> entity::header() const {
+	std::map<std::string, std::string> items;
+	std::map<std::string, std::pair<std::string, std::string>>::const_iterator citer = _header.begin(), citerend = _header.end();
+	while (citer != citerend) {
+		items.insert(citer->second);
+		citer++;
+	}
+	return items;
+}
+
+void entity::header(const std::string &key, const std::string &val) {
+	if (!val.empty()) {
+		_header[str::lower(key)] = std::pair<std::string, std::string>(key, val);
+	}
+}
+
+std::string entity::header(const std::string &key, const char *default) const {
+	std::map<std::string, std::pair<std::string, std::string>>::const_iterator citer = _header.find(str::lower(key));
+	if (citer != _header.end()) {
+		return citer->second.second;
+	}
+
+	return std::string(default);
+}
 //////////////////////////////////////////request class/////////////////////////////////////////
 void request::get(const char *urlformat, ...) {
 	//format url string
@@ -1139,5 +1052,149 @@ bool response::full() const {
 	return _status.full() && _header.full() && _entity.full();
 }
 
+////////////////////////http file stream/////////////////////////////
+
+int fstream::take(char *data, int sz) {
+	if (!eof()) {
+		read(data, sz);
+		return (int)gcount();
+	}
+	return 0;
+}
+
+int fstream::feed(const char *data, int sz) {
+	write(data, sz);
+	return sz;
+}
+
+////////////////////////http head stream/////////////////////////////
+const std::string hstream::_crlf = "\r\n\r\n";
+
+int hstream::take(char *data, int sz) {
+	if (!eof()) {
+		read(data, sz);
+		return (int)gcount();
+	}
+	return 0;
+}
+
+int hstream::feed(const char *data, int sz) {
+	//stream not completed, need more data
+	if (!_completed) {
+		//restore last crlf match result
+		int szcrlf = _crlf.length();
+		const char *crlf = _crlf.c_str(), *pcrlf = crlf + _pos;
+
+		//continue check the end tag
+		const char *pdata = data, *sdata = data;
+		while (pdata - data < sz && pcrlf - crlf < szcrlf) {
+			if (*pcrlf != *pdata) {
+				//move data pos to next position
+				sdata = ++pdata;
+				//reset crlf pos
+				pcrlf = crlf;
+			} else {
+				pdata++;
+				pcrlf++;
+			}
+		}
+
+		//crlf found in stream
+		if (pcrlf - crlf == szcrlf) {
+			//set completed flag
+			_completed = true;
+			//write data
+			int wsz = pdata - data;
+			write(data, wsz);
+			//return write size
+			return wsz;
+		}
+
+		//crlf not found, save current matched pos
+		_pos = pcrlf - crlf;
+		//write all data
+		write(data, sz);
+		//all data feeded
+		return sz;
+	}
+
+	//stream has completed
+	return 0;
+}
+
+////////////////////////http string stream/////////////////////////////
+int sstream::take(char *data, int sz) {
+	if (!eof()) {
+		read(data, sz);
+		return (int)gcount();
+	}
+	return 0;
+}
+
+int sstream::feed(const char *data, int sz) {
+	write(data, sz);
+	return sz;
+}
+
+////////////////////////http parser/////////////////////////////
+const int parser::BUFSZ = 4*1024; //max line size 4KB
+
+int parser::parse(hstream &head, request &req, std::string *err) {
+	//string line
+	char buf[BUFSZ] = { 0 };
+
+	//parse query line
+	head.getline(buf, BUFSZ);
+
+	//parse headers
+	while (!head.endg()) {
+
+		head.getline(buf, BUFSZ);
+	}
+
+	//parse success
+	return 0;
+}
+
+int parser::parse(hstream &head, response &resp, std::string *err) {
+
+}
+
+////////////////////////http packer/////////////////////////////
+int packer::pack(request &req, hstream &head, std::string *err) {
+
+}
+
+int packer::pack(response &resp, hstream &head, std::string *err) {
+
+}
+
+////////////////////////http request stream/////////////////////////////
+int rqstream::take(char *data, int sz) {
+	int tsz = 0;
+	if (_head != nullptr && !_head->endg()) {
+		tsz = _head->take(data + tsz, sz - tsz);
+	}
+
+	if (_body != nullptr && !_body->endg()) {
+		tsz = _body->take(data + tsz , sz - tsz);
+	}
+
+	return tsz;
+}
+
+int rqstream::feed(const char *data, int sz) {
+
+	return 0;
+}
+
+////////////////////////http response stream/////////////////////////////
+int rpstream::take(char *data, int sz) {
+	return 0;
+}
+
+int rpstream::feed(const char *data, int sz) {
+	return 0;
+}
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE
