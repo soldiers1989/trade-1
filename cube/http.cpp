@@ -6,6 +6,90 @@
 #include <algorithm>
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
+////////////////////////http file stream/////////////////////////////
+
+int fstream::take(char *data, int sz) {
+	if (!eof()) {
+		read(data, sz);
+		return (int)gcount();
+	}
+	return 0;
+}
+
+int fstream::feed(const char *data, int sz) {
+	write(data, sz);
+	return sz;
+}
+
+////////////////////////http head stream/////////////////////////////
+const std::string hstream::_crlf = "\r\n\r\n";
+
+int hstream::take(char *data, int sz) {
+	if (!eof()) {
+		read(data, sz);
+		return (int)gcount();
+	}
+	return 0;
+}
+
+int hstream::feed(const char *data, int sz) {
+	//stream not completed, need more data
+	if (!_completed) {
+		//restore last crlf match result
+		int szcrlf = _crlf.length();
+		const char *crlf = _crlf.c_str(), *pcrlf = crlf + _pos;
+
+		//continue check the end tag
+		const char *pdata = data, *sdata = data;
+		while (pdata - data < sz && pcrlf - crlf < szcrlf) {
+			if (*pcrlf != *pdata) {
+				//move data pos to next position
+				sdata = ++pdata;
+				//reset crlf pos
+				pcrlf = crlf;
+			} else {
+				pdata++;
+				pcrlf++;
+			}
+		}
+
+		//crlf found in stream
+		if (pcrlf - crlf == szcrlf) {
+			//set completed flag
+			_completed = true;
+			//write data
+			int wsz = pdata - data;
+			write(data, wsz);
+			//return write size
+			return wsz;
+		}
+
+		//crlf not found, save current matched pos
+		_pos = pcrlf - crlf;
+		//write all data
+		write(data, sz);
+		//all data feeded
+		return sz;
+	}
+
+	//stream has completed
+	return 0;
+}
+
+////////////////////////http string stream/////////////////////////////
+int sstream::take(char *data, int sz) {
+	if (!eof()) {
+		read(data, sz);
+		return (int)gcount();
+	}
+	return 0;
+}
+
+int sstream::feed(const char *data, int sz) {
+	write(data, sz);
+	return sz;
+}
+
 //////////////////////////////////////////charset class/////////////////////////////////////////
 std::string charset::utf8("utf-8");
 std::string charset::default("");
@@ -386,6 +470,10 @@ status::setter cerr_not_found(404, "Not Found");
 status::setter cerr_method_not_allowed(405, "Method Not Allowed");
 status::setter serr_interval_server_error(500, "Internal Server Error");
 
+status::setter::setter(int code, const std::string &reason) {
+	status::_status[code] = std::pair<std::string, std::string>(str::tostr(code), reason);
+}
+
 std::string status::get() const {
 	int sz = BUFSZ;
 	char data[BUFSZ] = { 0 };
@@ -439,15 +527,15 @@ cookie::cookie(const std::string &name, const std::string &value, const std::str
 	_expires = time(0) + _maxage; 
 }
 
-const std::string &cookie::expires() const { 
-	ctime(&_expires); 
+std::string cookie::expires() const { 
+	return ctime(&_expires); 
 }
 
 //////////////////////////////////////////cookies class/////////////////////////////////////////
 std::string cookies::get(const std::string &name) {
 	std::map<std::string, cookie>::const_iterator citer = _cookies.find(name);
 	if (citer != _cookies.end()) {
-		return citer->second.value;
+		return citer->second.value();
 	}
 	return "";
 }
@@ -681,520 +769,271 @@ std::string header::get(const std::string &item, const char *default) const {
 }
 
 //////////////////////////////////////////entity class/////////////////////////////////////////
-void entity::init(const http::header &header) {
-	//initialize entity header
-	entity::header("Allow", header.get("Allow", ""));
-	entity::header("Expires", header.get("Expires", ""));
-	entity::header("Content-MD5", header.get("Content-MD5", ""));
-	entity::header("Content-Type", header.get("Content-Type", ""));
-	entity::header("Last-Modified", header.get("Last-Modified", ""));
-	entity::header("Content-Range", header.get("Content-Range", ""));
-	entity::header("Content-Length", header.get("Content-Length", "0"));
-	entity::header("Content-Location", header.get("Content-Location", ""));
-	entity::header("Content-Encoding", header.get("Content-Encoding", ""));
-	entity::header("Content-Language", header.get("Content-Language", ""));
+void body::init(const meta &meta) {
+	//
 
 	//create output stream
-	int len = length();
-	if (len > 0) {
-		_stream = std::unique_ptr<stream>(new sizedstream(len));
-	}
+	int len = meta.length();
 }
 
-void entity::file(const std::string &path, const char* charset) {
+void body::file(const std::string &path, const char* charset) {
 	//set stream data
-	_stream = std::unique_ptr<stream>(new filestream(path, std::ios::in | std::ios::binary));
+	_stream = std::unique_ptr<stream>(new fstream(path, std::ios::in | std::ios::binary));
 
 	//get file extension
 	std::string ext = fd::ext(path);
 
 	//set content type
-	entity::type(mime::get(ext, charset));
+	_meta.type(mime::get(ext, charset));
 
 	//set content length
-	entity::length(_stream->size());
+	_meta.length(_stream->size());
 }
 
-void entity::form(const char *data, int sz, const char* charset) {
+void body::form(const char *data, int sz, const char* charset) {
 	//set content type
-	entity::type(mime::get("form", charset));
+	_meta.type(mime::get("form", charset));
 
 	//set content length
-	entity::length(sz);
+	_meta.length(sz);
 
 	//set stream data
-	_stream = std::unique_ptr<stream>(new stringstream());
-	_stream->assign(std::string(data, sz));
+	_stream = std::unique_ptr<stream>(new sstream(std::string(data, sz)));
 }
 
-void entity::data(const std::string &type, const char *data, int sz, const char* charset) {
+void body::data(const std::string &type, const char *data, int sz, const char* charset) {
 	//set content type
-	entity::type(mime::get(type, charset));
+	_meta.type(mime::get(type, charset));
 
 	//set content length
-	entity::length(sz);
+	_meta.length(sz);
 
 	//set stream data
-	_stream = std::unique_ptr<stream>(new stringstream());
-	_stream->assign(std::string(data, sz));
+	_stream = std::unique_ptr<stream>(new sstream(std::string(data, sz)));
 }
 
-void entity::make() {
-
-}
-
-int entity::take(char *data, int sz) {
+int body::take(char *data, int sz) {
 	if (_stream == nullptr) {
 		return 0;
 	}
 
-	return _stream->get(data, sz);
+	return _stream->take(data, sz);
 }
 
-int entity::feed(const char *data, int sz) {
+int body::feed(const char *data, int sz) {
 	if (_stream == nullptr) {
 		return 0;
 	}
-	return _stream->put(data, sz);
+	return _stream->feed(data, sz);
 }
 
-bool entity::full() const {
+bool body::done() const {
 	if (_stream == nullptr) {
 		return true;
 	}
-	return _stream->endp();
+	return _stream->full();
 }
 
-const std::string &entity::data() {
-	if (_stream == nullptr) {
-		return _empty;
-	}
-
-	return _stream->data();
-}
-
-void entity::length(int len) {
-	header("Content-Length", str::tostr(len));
-}
-
-std::map<std::string, std::string> entity::header() const {
-	std::map<std::string, std::string> items;
-	std::map<std::string, std::pair<std::string, std::string>>::const_iterator citer = _header.begin(), citerend = _header.end();
-	while (citer != citerend) {
-		items.insert(citer->second);
-		citer++;
-	}
-	return items;
-}
-
-void entity::header(const std::string &key, const std::string &val) {
-	if (!val.empty()) {
-		_header[str::lower(key)] = std::pair<std::string, std::string>(key, val);
-	}
-}
-
-std::string entity::header(const std::string &key, const char *default) const {
-	std::map<std::string, std::pair<std::string, std::string>>::const_iterator citer = _header.find(str::lower(key));
-	if (citer != _header.end()) {
-		return citer->second.second;
-	}
-
-	return std::string(default);
-}
 //////////////////////////////////////////request class/////////////////////////////////////////
-void request::get(const char *urlformat, ...) {
-	//format url string
-	char url[BUFSZ] = { 0 };
-	va_list va;
-	va_start(va, urlformat);
-	int sz = vsnprintf(url, BUFSZ, urlformat, va);
-	va_end(va);
-
-	//initialize query
-	char query[BUFSZ] = { 0 };
-	snprintf(query, BUFSZ, "GET %s HTTP/1.1\r\n", url);
-	_query.init(query);
-
-	//set general header
-	_header.set(http::header::request::default());
-}
-
-void request::post(const char *url, const char *file) {
-	//initialize query
-	char query[BUFSZ] = { 0 };
-	snprintf(query, BUFSZ, "POST %s HTTP/1.1\r\n", url);
-	_query.init(query);
-	
-	//set general header
-	_header.set(http::header::request::default());
-
-	//set post entity
-	_entity.file(file);
-}
-
-void request::post(const char *url, const char *data, int sz) {
-	//initialize query
-	char query[BUFSZ] = { 0 };
-	snprintf(query, BUFSZ, "POST %s HTTP/1.1\r\n", url);
-	_query.init(query);
-
-	//set general header
-	_header.set(http::header::request::default());
-
-	//set entity data
-	_entity.data(mime::octet::default, data, sz);
-}
-
-void request::make() {
-	//make query line
-	_query.make();
-
-	//make query entity
-	_entity.make();
-
-	//set entity header
-	_header.set(_entity.header());
-
-	//make request header
-	_header.make();
-}
-
 int request::take(char *data, int sz) {
 	//taked size
-	int rsz = 0;
+	int tsz = 0;
 
-	//take query line
-	if (rsz < sz) {
-		rsz += _query.take(data + rsz, sz - rsz);
+	//take head data
+	if (tsz < sz) {
+		tsz += _head.take(data + tsz, sz - tsz);
 	}
 
-	//take header data
-	if (rsz < sz) {
-		rsz += _header.take(data + rsz, sz - rsz);
+	//take body data
+	if (tsz < sz) {
+		tsz += _body.take(data + tsz, sz - tsz);
 	}
 
-	//take entity data
-	if (rsz < sz) {
-		rsz += _entity.take(data + rsz, sz - rsz);
-	}
-
-	return rsz;
+	//size taked
+	return tsz;
 }
 
 int request::feed(const char *data, int sz) {
 	//feed size
-	int wsz = 0;
+	int fsz = 0;
 
-	//feed query line
-	if (wsz < sz) {
-		wsz += _query.feed(data + wsz, sz - wsz);
+	//feed head
+	if (!_head.done()) {
+		fsz += _head.feed(data + fsz, sz - fsz);
 	}
 
-	//feed header data
-	if (wsz < sz) {
-		wsz += _header.feed(data + wsz, sz - wsz);
+	//feed body
+	fsz += _body.feed(data + fsz, sz - fsz);
 
-		//initialize entity
-		if (_header.full()) {
-			_entity.init(_header);
+	//size feed
+	return fsz;
+}
+
+
+////////////////////////////////////////response class///////////////////////////////////////////
+
+int response::head::take(char *data, int sz, std::string *err) {
+	//make stream
+	if (_stream == nullptr) {
+		_stream = std::unique_ptr<hstream>(new hstream(_status.get() + _header.get() + "\r\n"));
+	}
+
+	//take data from stream
+	return _stream->take(data, sz);
+}
+
+int response::head::feed(const char *data, int sz, std::string *err) {
+	//create stream
+	if (_stream == nullptr) {
+		_stream = std::unique_ptr<hstream>(new hstream());
+	}
+
+	//full stream
+	if (_stream->full())
+		return 0;
+
+	//check data
+	if (sz == 0 || data == 0) {
+		//incompleted response
+		cube::safe_assign<std::string>(err, "incompleted response.");
+		return -1;
+	}
+
+	//feed stream
+	int fsz = _stream->feed(data, sz);
+
+	//parse head
+	if (_stream->full()) {
+		//string line
+		char buf[BUFSZ] = { 0 };
+
+		//parse query line
+		if (!_stream->endg()) {
+			_stream->getline(buf, BUFSZ);
+			if (_status.set(buf, ::strlen(buf), err) != 0)
+				return -1;
+		} else {
+			//invalid request
+			cube::safe_assign<std::string>(err, "empty response.");
+			return -1;
+		}
+
+		//parse headers
+		while (!_stream->endg()) {
+			_stream->getline(buf, BUFSZ);
+			if (_header.set(buf, ::strlen(buf), err) != 0)
+				return -1;
 		}
 	}
 
-	//feed entity data
-	if (wsz < sz) {
-		wsz += _entity.feed(data + wsz, sz - wsz);
-	}
-
-	return wsz;
+	//return feed size
+	return fsz;
 }
 
-bool request::full() const {
-	return _query.full() && _header.full() && _entity.full();
-}
-
-/////////////////////////////////////////response class///////////////////////////////////////////
 void response::file(const char *path, const char* charset) {
 	//set status line
-	_status.init(200);
+	_head.set_status(200);
 
 	//set general header
-	_header.set(http::header::response::default());
+	_head.set_header(http::header::response::default());
 
 	//set entity data
-	_entity.file(path, charset);
+	_body.file(path, charset);
 }
 
 void response::json(const char *data, int sz, const char* charset) {
 	//set status line
-	_status.init(200);
+	_head.set_status(200);
 
 	//set general header
-	_header.set(http::header::response::default());
+	_head.set_header(http::header::response::default());
 
 	//set entity data
-	_entity.data("json", data, sz, charset);
+	_body.data("json", data, sz, charset);
 }
 
 void response::data(const char *data, int sz, const char* charset) {
 	//set status line
-	_status.init(200);
+	_head.set_status(200);
 
 	//set general header
-	_header.set(http::header::response::default());
+	_head.set_header(http::header::response::default());
 
 	//set entity data
-	_entity.data("octet", data, sz, charset);
+	_body.data("octet", data, sz, charset);
 }
 
 void response::cerr(int code) {
 	//set status line
-	_status.init(code);
+	_head.set_status(code);
 
 	//set general header
-	_header.set(http::header::response::default());
+	_head.set_header(http::header::response::default());
 }
 
 void response::serr(int code) {
 	//set status line
-	_status.init(code);
+	_head.set_status(code);
 
 	//set general header
-	_header.set(http::header::response::default());
+	_head.set_header(http::header::response::default());
 }
 
 void response::moveto(const char *url) {
 	//set status line
-	_status.init(301);
+	_head.set_status(301);
 
 	//set general header
-	_header.set(http::header::response::default());
+	_head.set_header(http::header::response::default());
 
 	//set redirect location
-	_header.set("Location", url);
+	_head.set_header("Location", url);
 }
 
 void response::redirect(const char *url) {
 	//set status line
-	_status.init(302);
+	_head.set_status(302);
 	
 	//set general header
-	_header.set(http::header::response::default());
+	_head.set_header(http::header::response::default());
 
 	//set redirect location
-	_header.set("Location", url);
+	_head.set_header("Location", url);
 }
 
-
-void response::make() {
-	//make status line
-	_status.make();
-
-	//make entity
-	_entity.make();
-
-	//set entity header
-	_header.set(_entity.header());
-
-	//make headers
-	_header.make();
-}
 
 int response::take(char *data, int sz) {
 	//taked size
-	int rsz = 0;
+	int tsz = 0;
 
-	//take status line
-	if (rsz < sz) {
-		rsz += _status.take(data + rsz, sz - rsz);
+	//take head data
+	if (tsz < sz) {
+		tsz += _head.take(data + tsz, sz - tsz);
 	}
 
-	//take header data
-	if (rsz < sz) {
-		rsz += _header.take(data + rsz, sz - rsz);
+	//take body data
+	if (tsz < sz) {
+		tsz += _body.take(data + tsz, sz - tsz);
 	}
 
-	//take entity data
-	if (rsz < sz) {
-		rsz += _entity.take(data + rsz, sz - rsz);
-	}
-
-	return rsz;
+	//size taked
+	return tsz;
 }
 
 int response::feed(const char *data, int sz) {
 	//feed size
-	int wsz = 0;
+	int fsz = 0;
 
-	//feed status line
-	if (wsz < sz) {
-		wsz += _status.feed(data + wsz, sz - wsz);
+	//feed head
+	if (!_head.done()) {
+		fsz += _head.feed(data + fsz, sz - fsz);
 	}
 
-	//feed header data
-	if (wsz < sz) {
-		wsz += _header.feed(data + wsz, sz - wsz);
+	//feed body
+	fsz += _body.feed(data + fsz, sz - fsz);
 
-		//initialize entity
-		if (_header.full()) {
-			_entity.init(_header);
-		}
-	}
-
-	//feed entity data
-	if (wsz < sz) {
-		wsz += _entity.feed(data + wsz, sz - wsz);
-	}
-
-	return wsz;
-}
-
-bool response::full() const {
-	return _status.full() && _header.full() && _entity.full();
-}
-
-////////////////////////http file stream/////////////////////////////
-
-int fstream::take(char *data, int sz) {
-	if (!eof()) {
-		read(data, sz);
-		return (int)gcount();
-	}
-	return 0;
-}
-
-int fstream::feed(const char *data, int sz) {
-	write(data, sz);
-	return sz;
-}
-
-////////////////////////http head stream/////////////////////////////
-const std::string hstream::_crlf = "\r\n\r\n";
-
-int hstream::take(char *data, int sz) {
-	if (!eof()) {
-		read(data, sz);
-		return (int)gcount();
-	}
-	return 0;
-}
-
-int hstream::feed(const char *data, int sz) {
-	//stream not completed, need more data
-	if (!_completed) {
-		//restore last crlf match result
-		int szcrlf = _crlf.length();
-		const char *crlf = _crlf.c_str(), *pcrlf = crlf + _pos;
-
-		//continue check the end tag
-		const char *pdata = data, *sdata = data;
-		while (pdata - data < sz && pcrlf - crlf < szcrlf) {
-			if (*pcrlf != *pdata) {
-				//move data pos to next position
-				sdata = ++pdata;
-				//reset crlf pos
-				pcrlf = crlf;
-			} else {
-				pdata++;
-				pcrlf++;
-			}
-		}
-
-		//crlf found in stream
-		if (pcrlf - crlf == szcrlf) {
-			//set completed flag
-			_completed = true;
-			//write data
-			int wsz = pdata - data;
-			write(data, wsz);
-			//return write size
-			return wsz;
-		}
-
-		//crlf not found, save current matched pos
-		_pos = pcrlf - crlf;
-		//write all data
-		write(data, sz);
-		//all data feeded
-		return sz;
-	}
-
-	//stream has completed
-	return 0;
-}
-
-////////////////////////http string stream/////////////////////////////
-int sstream::take(char *data, int sz) {
-	if (!eof()) {
-		read(data, sz);
-		return (int)gcount();
-	}
-	return 0;
-}
-
-int sstream::feed(const char *data, int sz) {
-	write(data, sz);
-	return sz;
-}
-
-////////////////////////http parser/////////////////////////////
-const int parser::BUFSZ = 4*1024; //max line size 4KB
-
-int parser::parse(hstream &head, request &req, std::string *err) {
-	//string line
-	char buf[BUFSZ] = { 0 };
-
-	//parse query line
-	head.getline(buf, BUFSZ);
-
-	//parse headers
-	while (!head.endg()) {
-
-		head.getline(buf, BUFSZ);
-	}
-
-	//parse success
-	return 0;
-}
-
-int parser::parse(hstream &head, response &resp, std::string *err) {
-
-}
-
-////////////////////////http packer/////////////////////////////
-int packer::pack(request &req, hstream &head, std::string *err) {
-
-}
-
-int packer::pack(response &resp, hstream &head, std::string *err) {
-
-}
-
-////////////////////////http request stream/////////////////////////////
-int rqstream::take(char *data, int sz) {
-	int tsz = 0;
-	if (_head != nullptr && !_head->endg()) {
-		tsz = _head->take(data + tsz, sz - tsz);
-	}
-
-	if (_body != nullptr && !_body->endg()) {
-		tsz = _body->take(data + tsz , sz - tsz);
-	}
-
-	return tsz;
-}
-
-int rqstream::feed(const char *data, int sz) {
-
-	return 0;
-}
-
-////////////////////////http response stream/////////////////////////////
-int rpstream::take(char *data, int sz) {
-	return 0;
-}
-
-int rpstream::feed(const char *data, int sz) {
-	return 0;
+	//size feed
+	return fsz;
 }
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE

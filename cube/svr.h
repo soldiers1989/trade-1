@@ -124,24 +124,14 @@ public:
 	*@return:
 	*	void
 	*/
-	virtual void handle(const request &req, response &resp) {
-	}
+	virtual void handle(const request &req, response &resp) = 0;
 };
 
-//http servlets class
-class servlets {
+//http applet class
+class applet {
 public:
-	servlets() {}
-	virtual ~servlets() {}
-
-	/*
-	*	mount path with relate servlet
-	*@param path: in, servlet relate path
-	*@param servlet: in, servlet for path
-	*@return:
-	*	void
-	*/
-	void mount(const std::string &method, const std::string &path, servlet *servlet);
+	app() {}
+	virtual ~app() {}
 
 	/*
 	*	handle request, set response with process result
@@ -151,6 +141,15 @@ public:
 	*	void
 	*/
 	void handle(const request &req, response &resp);
+
+	/*
+	*	mount path with relate servlet
+	*@param path: in, servlet relate path
+	*@param servlet: in, servlet for path
+	*@return:
+	*	void
+	*/
+	void mount(const std::string &method, const std::string &path, servlet *servlet);
 
 private:
 	//registered servlets, <method, <path, servlet>>
@@ -162,7 +161,7 @@ class session : public net::session {
 	//session send & recv buffer size
 	static const int BUFSZ = 4096;
 public:
-	session() : _servlets(0) {}
+	session() : _applet(0) {}
 	virtual ~session() {}
 
 	int on_open(void *arg);
@@ -171,13 +170,13 @@ public:
 	void on_close();
 
 private:
-	//relate servlets
-	servlets *_servlets;
+	//relate applet
+	applet *_applet;
 
-	//session request buffer
-	requestbuffer _req;
-	//session response buffer
-	responsebuffer _resp;
+	//session request stream
+	rqstream _req;
+	//session response stream
+	rpstream _resp;
 };
 
 //http server class
@@ -194,7 +193,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int start(ushort port, int workers, servlets *servlets);
+	int start(ushort port, int workers, applet *applet);
 
 	/*
 	*	stop http server

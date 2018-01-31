@@ -2,8 +2,8 @@
 #include "log.h"
 BEGIN_CUBE_NAMESPACE
 BEGIN_HTTP_NAMESPACE
-//////////////////////////////////////http servlets class///////////////////////////////////////
-void servlets::mount(const std::string &method, const std::string &path, servlet *servlet) {
+////////////////////////http applet class/////////////////////////////
+void applet::mount(const std::string &method, const std::string &path, servlet *servlet) {
 	std::map<std::string, std::map<std::string, std::shared_ptr<http::servlet>>>::iterator iter = _servlets.find(method);
 	if (iter == _servlets.end()) {
 		_servlets.insert(std::pair<std::string, std::map<std::string, std::shared_ptr<http::servlet>>>(method, std::map<std::string, std::shared_ptr<http::servlet>>()));
@@ -12,7 +12,7 @@ void servlets::mount(const std::string &method, const std::string &path, servlet
 	_servlets[method].insert(std::pair<std::string, std::shared_ptr<cube::http::servlet>>(path, std::shared_ptr<cube::http::servlet>(servlet)));
 }
 
-void servlets::handle(const request &req, response &resp) {
+void applet::handle(const request &req, response &resp) {
 	std::string method = req.query().method();
 	std::map<std::string, std::map<std::string, std::shared_ptr<http::servlet>>>::iterator miter = _servlets.find(method);
 	if (miter == _servlets.end()) {
@@ -28,12 +28,11 @@ void servlets::handle(const request &req, response &resp) {
 		resp.cerr(404);
 	}
 }
-
 //////////////////////////////////////http session class///////////////////////////////////////
 int session::on_open(void *arg) {
 	cube::log::info("[http][%s] open session", name().c_str());
 	//save servlets
-	_servlets = (servlets*)arg;
+	_applet = (applet*)arg;
 
 	//receive data from client
 	std::string errmsg("");
@@ -64,17 +63,12 @@ int session::on_recv(char *data, int transfered) {
 	cube::log::info("[http][%s] recv data: %d bytes", name().c_str(), transfered);
 	try {
 		//feed data to request
-		if (transfered > 0 && !_req.full()) {
-			_req.feed(data, transfered);
-		}
+		_req.feed(data, transfered);
 
 		//request data has completed
-		if (_req.full()) {
+		if (_req.done()) {
 			//process request
-			_servlets->handle(_req.request(), _resp.response());
-
-			//make response
-			_resp.make();
+			_applet->handle(_req.request(), _resp.response());
 
 			//send response content
 			char buf[BUFSZ] = { 0 };
@@ -101,8 +95,8 @@ void session::on_close() {
 }
 
 //////////////////////////////////////http server class///////////////////////////////////////
-int server::start(ushort port, int workers, servlets *servlets) {
-	return _server.start(port, workers, servlets);
+int server::start(ushort port, int workers, applet *applet) {
+	return _server.start(port, workers, applet);
 }
 
 void server::stop() {
