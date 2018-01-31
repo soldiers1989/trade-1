@@ -6,6 +6,9 @@
 #define BEGIN_NET_NAMESPACE namespace net{
 #define END_NET_NAMESPACE }
 
+#define BEGIN_SVR_NAMESPACE namespace svr{
+#define END_SVR_NAMESPACE }
+
 #define BEGIN_TCP_NAMESPACE namespace tcp{
 #define END_TCP_NAMESPACE }
 

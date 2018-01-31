@@ -29,7 +29,7 @@ void applet::handle(const request &req, response &resp) {
 	}
 }
 //////////////////////////////////////http session class///////////////////////////////////////
-int session::on_open(void *arg) {
+int httpsession::on_open(void *arg) {
 	cube::log::info("[http][%s] open session", name().c_str());
 	//save servlets
 	_applet = (applet*)arg;
@@ -45,7 +45,7 @@ int session::on_open(void *arg) {
 	return 0;
 }
 
-int session::on_send(int transfered) {
+int httpsession::on_send(int transfered) {
 	cube::log::info("[http][%s] send data: %d bytes", name().c_str(), transfered);
 	//send response content
 	char buf[BUFSZ] = { 0 };
@@ -59,7 +59,7 @@ int session::on_send(int transfered) {
 	return -1;
 }
 
-int session::on_recv(char *data, int transfered) {
+int httpsession::on_recv(char *data, int transfered) {
 	cube::log::info("[http][%s] recv data: %d bytes", name().c_str(), transfered);
 	try {
 		//feed data to request
@@ -90,7 +90,7 @@ int session::on_recv(char *data, int transfered) {
 	}
 }
 
-void session::on_close() {
+void httpsession::on_close() {
 	cube::log::info("[http][%s] close session", name().c_str());
 }
 

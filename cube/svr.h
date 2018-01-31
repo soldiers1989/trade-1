@@ -130,8 +130,8 @@ public:
 //http applet class
 class applet {
 public:
-	app() {}
-	virtual ~app() {}
+	applet() {}
+	virtual ~applet() {}
 
 	/*
 	*	handle request, set response with process result
@@ -157,12 +157,12 @@ private:
 };
 
 //http session class
-class session : public net::session {
+class httpsession : public net::session {
 	//session send & recv buffer size
 	static const int BUFSZ = 4096;
 public:
-	session() : _applet(0) {}
-	virtual ~session() {}
+	httpsession() : _applet(0) {}
+	virtual ~httpsession() {}
 
 	int on_open(void *arg);
 	int on_send(int transfered);
@@ -204,7 +204,7 @@ public:
 
 private:
 	//http server
-	tcp::server<session> _server;
+	tcp::server<httpsession> _server;
 };
 END_HTTP_NAMESPACE
 END_CUBE_NAMESPACE

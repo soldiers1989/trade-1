@@ -80,7 +80,7 @@ private:
 	//http server
 	static cube::http::server server;
 	//servlets registered for http server
-	static cube::http::servlets servlets;
+	static cube::http::applet applet;
 };
 END_MGR_NAMESPACE
 END_SVR_NAMESPACE

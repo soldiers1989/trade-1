@@ -56,7 +56,7 @@ void mod_account::handle(const cube::http::request &req, cube::http::response &r
 
 /////////////////////////////service manager class///////////////////////////////////
 cube::http::server service::server;
-cube::http::servlets service::servlets;
+cube::http::applet service::applet;
 
 int service::start() {
 	std::string emsg("");
@@ -80,7 +80,7 @@ int service::start() {
 	cube::log::info("init manage service.");
 
 	//start http server
-	err = server.start(cfg::http.port, 1, &servlets);
+	err = server.start(cfg::http.port, 1, &applet);
 	if (err != 0) {
 		cube::log::error("start manage service on port %d failed.", cfg::http.port);
 		return -1;
@@ -100,7 +100,7 @@ void service::stop() {
 }
 
 void service::mount(const std::string &method, const std::string &path, cube::http::servlet *servlet) {
-	servlets.mount(method, path, servlet);
+	applet.mount(method, path, servlet);
 }
 
 /////////////////////////////mount servlet///////////////////////////////////
