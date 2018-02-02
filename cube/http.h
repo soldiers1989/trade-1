@@ -163,9 +163,9 @@ public:
 	address() : _host(""), _port(0){ }
 	virtual ~address() {}
 	
-	//get/set address with data string
-	std::string get() const;
-	int set(const char *data, int sz, std::string *err = 0);
+	//pack/parse address with data string
+	std::string pack() const;
+	int parse(const char *data, int sz, std::string *err = 0);
 
 
 	//get/set address properties
@@ -187,9 +187,9 @@ public:
 	params() {}
 	virtual ~params(){}
 
-	//get/set params with data string
-	std::string get() const;
-	int set(const char *data, int sz, std::string *err = 0);
+	//pack/parse params with data string
+	std::string pack() const;
+	int parse(const char *data, int sz, std::string *err = 0);
 
 	/*
 	*	get param value by specfied key
@@ -213,9 +213,9 @@ public:
 	uri() : _scheme(""), _auth(""), _path(""), _query(""), _fragment("") {}
 	virtual ~uri() {}
 
-	//get/set uri with data string
-	std::string get() const;
-	int set(const char *data, int sz, std::string *err = 0);
+	//pack/parse uri with data string
+	std::string pack() const;
+	int parse(const char *data, int sz, std::string *err = 0);
 
 	/*
 	*	get uri items
@@ -248,9 +248,9 @@ public:
 	version() : _name("HTTP"), _code("1.1") {}
 	virtual ~version() {}
 
-	//get/set version with data string
-	std::string get() const;
-	int set(const char *data, int sz, std::string *err = 0);
+	//pack/parse version with data string
+	std::string pack() const;
+	int parse(const char *data, int sz, std::string *err = 0);
 
 	/*
 	*	get/set version items
@@ -271,9 +271,9 @@ public:
 	query() : _method("") {}
 	virtual ~query() {}
 
-	//get/set query line with data string
-	std::string get() const;
-	int set(const char *data, int sz, std::string *err = 0);
+	//pack/parse query line with data string
+	std::string pack() const;
+	int parse(const char *data, std::string *err = 0);
 
 	/*
 	*	get query items parsed from data
@@ -310,10 +310,12 @@ public:
 	status() : _code(""), _reason("") {}
 	virtual ~status() {}
 
-	//get/set query line with data string
-	std::string get() const;
+	//pack/parse status line with string
+	std::string pack() const;
+	int parse(const char *str, std::string *err = 0);
+
+	//set status with specified code
 	int set(int code, std::string *err = 0);
-	int set(const char *data, int sz, std::string *err = 0);
 
 	//get/set status properties
 	const std::string &code() { return _code; }
@@ -418,6 +420,34 @@ private:
 	static std::map<std::string, session> _sessions;
 };
 
+//http body meta information
+class meta {
+public:
+	meta() : _type(""), _lang(""), _encoding(""), _length(0), _range(""), _expires("") {}
+	~meta() {}
+
+	const std::string &type()  const { return _type; }
+	void type(const std::string &type) { _type = type; }
+	const std::string &lang()  const { return _lang; }
+	void lang(const std::string &lang) { _lang = lang; }
+	const std::string &encoding()  const { return _encoding; }
+	void encoding(const std::string &encoding) { _encoding = encoding; }
+	int length() const { return _length; }
+	void length(int len) { _length = len; }
+	const std::string &range()  const { return _range; }
+	void range(const std::string &range) { _range = range; }
+	const std::string &expires() const { return _expires; }
+	void expires(const std::string &expires) { _expires = expires; }
+private:
+	int _length;
+	std::string _type;
+	std::string _lang;
+	std::string _encoding;
+	std::string _range;
+	std::string _expires;
+};
+
+
 //header class
 class header{
 	typedef std::pair<std::string, std::string> keyval;
@@ -429,15 +459,12 @@ public:
 	public:
 		class setter {
 		public:
-			setter(const std::string &key, const std::string &value) { http::header::request::default(key, value); }
+			setter(const std::string &key, const std::string &value) { http::header::request::set(key, value); }
 			~setter() {}
 		};
 
-		/*
-		*	get/set default request headers
-		*/
-		static const std::map<std::string, std::string> &default() { return _header; }
-		static void default(const std::string &key, const std::string &value) { _header[key] = value; }
+		static const std::map<std::string, std::string> &get() { return _header; }
+		static void set(const std::string &key, const std::string &value) { _header[key] = value; }
 
 	private:
 		//default request header
@@ -449,15 +476,12 @@ public:
 	public:
 		class setter {
 		public:
-			setter(const std::string &key, const std::string &value) { http::header::response::default(key, value); }
+			setter(const std::string &key, const std::string &value) { http::header::response::set(key, value); }
 			~setter() {}
 		};
 
-		/*
-		*	get/set default response headers
-		*/
-		static const std::map<std::string, std::string> &default() { return _header; }
-		static void default(const std::string &key, const std::string &value) { _header[key] = value; }
+		static const std::map<std::string, std::string> &get() { return _header; }
+		static void set(const std::string &key, const std::string &value) { _header[key] = value; }
 	private:
 		//default request header
 		static std::map<std::string, std::string> _header;
@@ -466,10 +490,19 @@ public:
 	header() {}
 	virtual ~header() { }
 
-	//get/set header data string
-	std::string get() const;
-	int set(const char *str, int sz, std::string *err = 0);
-	int sets(const char *str, int sz, std::string *err = 0);
+	/*
+	*	pack header data
+	*@return:
+	*	header crlf feed
+	*/
+	std::string pack() const;
+
+	/*
+	*	parse header data
+	*@return:
+	*	0 for success, otherwise <0
+	*/
+	int parse(const char *str, std::string *err = 0);
 
 	/*
 	*	set string value of specified item
@@ -490,7 +523,7 @@ public:
 	*@return:
 	*	item string value or default value
 	*/
-	std::vector<std::string> get(const std::string &item) const;
+	std::vector<std::string> get(const std::string &key) const;
 	std::string get(const std::string &key, const char *default) const;
 
 private:
@@ -503,60 +536,28 @@ class body {
 	friend class request;
 	friend class response;
 public:
-	class meta {
-	public:
-		meta() : _type(""), _lang(""), _encoding(""), _length(0), _range(""), _expires("") {}
-		~meta() {}
-
-		const std::string &type()  const { return _type; }
-		void type(const std::string &type) { _type = type; }
-		const std::string &lang()  const { return _lang; }
-		void lang(const std::string &lang) { _lang = lang; }
-		const std::string &encoding()  const { return _encoding; }
-		void encoding(const std::string &encoding) { _encoding = encoding; }
-		int length() const { return _length; }
-		void length(int len) { _length = len; }
-		const std::string &range()  const { return _range; }
-		void range(const std::string &range) { _range = range; }
-		const std::string &expires() const { return _expires; }
-		void expires(const std::string &expires) { _expires = expires; }
-	private:
-		int _length;
-		std::string _type;
-		std::string _lang;
-		std::string _encoding;
-		std::string _range;
-		std::string _expires;
-	};
-
-public:
 	body() : _stream(nullptr) {}
 	virtual ~body() {}
-	/*
-	*	init body by meta information
-	*/
+
 	void init(const meta &meta);
 
-	/*
-	*	init body by data content
-	*/
 	void file(const std::string &path, const char *charset = "");
 	void form(const char *data, int sz, const char *charset = "");
 	void data(const std::string &type, const char *data, int sz, const char *charset = "");
 
-	/*
-	*	get meta information
-	*/
-	const meta& get_meta() { return _meta; }
+public:
+	http::meta& meta() { return _meta; }
+	const http::meta& meta() const { return _meta; }
 
 private:
 	int take(char *data, int sz);
 	int feed(const char *data, int sz);
+
 	bool done() const;
 	
 private:
 	//body meta information
-	meta _meta;
+	http::meta _meta;
 	
 	//body data stream
 	std::unique_ptr<stream> _stream;
@@ -568,81 +569,28 @@ class request {
 
 	//response head
 	class head {
+		friend class request;
 	public:
 		head() : _stream(nullptr) {}
 		~head() {}
 
-		int take(char *data, int sz, std::string *err = 0) {
-			//make stream
-			if (_stream == nullptr) {
-				_stream = std::unique_ptr<hstream>(new hstream(_query.get() + _header.get() + "\r\n"));
-			}
+		http::query &query() { return _query; }
+		const http::query &query() const { return _query; }
 
-			//take data from stream
-			return _stream->take(data, sz);
-		}
+		http::header &header() { return _header; }
+		const http::header &header() const { return _header; }
 
-		int feed(const char *data, int sz, std::string *err = 0) {
-			//create stream
-			if (_stream == nullptr) {
-				_stream = std::unique_ptr<hstream>(new hstream());
-			}
+	private:
+		int take(char *data, int sz, std::string *err = 0);
+		int feed(const char *data, int sz, std::string *err = 0);
 
-			//full stream
-			if (_stream->full())
-				return 0;
+		bool done() const;
 
-			//check data
-			if (sz == 0 || data == 0) {
-				//incompleted request
-				cube::safe_assign<std::string>(err, "incompleted request.");
-				return -1;
-			}
-
-			//feed stream
-			int fsz = _stream->feed(data, sz);
-
-			//parse head
-			if (_stream->full()) {
-				//string line
-				char buf[BUFSZ] = { 0 };
-
-				//parse query line
-				if (!_stream->endg()) {
-					_stream->getline(buf, BUFSZ);
-					if (_query.set(buf, ::strlen(buf), err) != 0)
-						return -1;
-				} else {
-					//invalid request
-					cube::safe_assign<std::string>(err, "empty request.");
-					return -1;
-				}
-
-				//parse headers
-				while (!_stream->endg()) {
-					_stream->getline(buf, BUFSZ);
-					if (_header.set(buf, ::strlen(buf), err) != 0)
-						return -1;
-				}
-			}
-
-			//return feed size
-			return fsz;
-		}
-
-		bool done() const { 
-			if (_stream == nullptr)
-				return false;
-			return _stream->full(); 
-		}
-
-		const query &get_query() const { return _query; }
-		const header &get_header() const { return _header; }
 	private:
 		//request line
-		query _query;
+		http::query _query;
 		//request header
-		header _header;
+		http::header _header;
 
 		//head data stream
 		std::unique_ptr<hstream> _stream;
@@ -651,36 +599,15 @@ public:
 	request() {}
 	virtual ~request() {}
 
-	/*
-	*	get request query/header/content
-	*/
-	const query &query() const { return _head.get_query(); }
-	const header &header() const { return _head.get_header(); }
+	http::query &query() { return _head.query(); }
+	const http::query &query() const { return _head.query(); }
+
+	http::header &header() { return _head.header(); }
+	const http::header &header() const { return _head.header(); }
 
 private:
-	/*
-	*	take data from request buffer
-	*@param data: in/out, data to take to
-	*@param sz: in, data size
-	*@return:
-	*	size taked, <0 when error
-	*/
 	int take(char *data, int sz);
-
-	/*
-	*	feed data to request buffer
-	*@param data: in, data to feed
-	*@param sz: in, data size
-	*@return:
-	*	size feeded, <0 when error
-	*/
 	int feed(const char *data, int sz);
-
-	/*
-	*	check if request transfering has done
-	*@return:
-	*	true - request has done, false - not done
-	*/
 	bool done() const { return _head.done() && _body.done(); }
 
 private:
@@ -698,26 +625,27 @@ class response {
 public:
 	//response head
 	class head {
+		friend class response;
 	public:
 		head() : _stream(nullptr) {}
 		~head() {}
 
+		http::status &status() { return _status; }
+		const http::status &status() const { return _status; }
+
+		http::header &header() { return _header; }
+		const http::header &header() const { return _header; }
+
+	private:
 		int take(char *data, int sz, std::string *err = 0);
 		int feed(const char *data, int sz, std::string *err = 0);
 
-		bool done() const { return _stream->full(); }
-
-		void set_status(int code) { _status.set(code); }
-		const status &get_status() const { return _status; }
-
-		void set_header(const std::string &key, const char *value) { _header.set(key, value); }
-		void set_header(const std::map<std::string, std::string> &items) { _header.set(items); }
-		const header &get_header() const { return _header; }
+		bool done() const;
 	private:
 		//response status
-		status _status;
+		http::status _status;
 		//response header
-		header _header;
+		http::header _header;
 
 		//head data stream
 		std::unique_ptr<hstream> _stream;
@@ -728,16 +656,14 @@ public:
 	virtual ~response() {}
 
 	/*
-	*	success response with file/json/data, code: 200 OK
-	*@param path: in, local file path
-	*@param data: in, data to response
-	*@param sz: in, data size
-	*@return:
-	*	void
+	*	informational: 1xx
 	*/
-	void file(const char *path, const char *charset = charset::default.c_str());
-	void json(const char *data, int sz, const char *charset = charset::utf8.c_str());
-	void data(const char *data, int sz, const char *charset = charset::default.c_str());
+	void info(int code);
+
+	/*
+	*	success: 2xx
+	*/
+	void succ(int code);
 
 	/*
 	*	client error: 4xx
@@ -756,24 +682,30 @@ public:
 	void serr(int code);
 
 	/*
-	*	move to new location, code: 3xx
+	*	jump to new location, code: 3xx
 	*@param code: in, redirect code
 	*@param url: in, new location
 	*/
-	void moveto(const char *url);
+	void jump(const char *url, bool permanent = true);
 
 	/*
-	*	redirect to new location, code: 3xx
-	*@param code: in, redirect code
-	*@param url: in, new location
+	*	success response with file/json/data, code: 200 OK
+	*@param path: in, local file path
+	*@param data: in, data to response
+	*@param sz: in, data size
+	*@return:
+	*	void
 	*/
-	void redirect(const char *url);
+	void file(const char *path, const char *charset = charset::default.c_str());
+	void json(const char *data, int sz, const char *charset = charset::utf8.c_str());
+	void data(const char *data, int sz, const char *charset = charset::default.c_str());
 
-	/*
-	*	get/set response data
-	*/
-	const http::status &status() const { return _head.get_status(); }
-	const http::header &header() const { return _head.get_header(); }
+public:
+	http::status &status() { return _head.status(); }
+	const http::status &status() const { return _head.status(); }
+
+	http::header &header() { return _head.header(); }
+	const http::header &header() const { return _head.header(); }
 
 private:
 	/*

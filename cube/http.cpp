@@ -140,7 +140,7 @@ void mime::set(const std::string &ext, const std::string &ctype) {
 }
 
 //////////////////////////////////////////address class/////////////////////////////////////////
-std::string address::get() const {
+std::string address::pack() const {
 	int sz = 0;
 	char data[BUFSZ] = { 0 };
 	if (_port == 80)
@@ -151,7 +151,7 @@ std::string address::get() const {
 	return std::string(data, sz);
 }
 
-int address::set(const char *data, int sz, std::string *err) {
+int address::parse(const char *data, int sz, std::string *err) {
 	//find seperator of host and port
 	const char *start = data, *end = data + sz, *pos = data;
 	while (*pos != ':' && pos < end)
@@ -186,7 +186,7 @@ int address::set(const char *data, int sz, std::string *err) {
 }
 
 //////////////////////////////////////////params class/////////////////////////////////////////
-std::string params::get() const {
+std::string params::pack() const {
 	//data buffer
 	char data[BUFSZ] = { 0 };
 
@@ -208,7 +208,7 @@ std::string params::get() const {
 	return std::string(data, dsz);
 }
 
-int params::set(const char *data, int sz, std::string *err) {
+int params::parse(const char *data, int sz, std::string *err) {
 	//split data by param seperator
 	std::vector<std::string> items;
 	str::strtok(data, sz, "&", items);
@@ -246,7 +246,7 @@ std::string params::get(const std::string &key, const char *default) const {
 }
 
 //////////////////////////////////////////uri class/////////////////////////////////////////
-std::string uri::get() const {
+std::string uri::pack() const {
 	//data buffer
 	int sz = BUFSZ;
 	char data[BUFSZ] = { 0 };
@@ -282,7 +282,7 @@ std::string uri::get() const {
 	return std::string(data, pos);
 }
 
-int uri::set(const char *data, int sz, std::string *err) {
+int uri::parse(const char *data, int sz, std::string *err) {
 	//skip space characters
 	const char *start = data, *end = data + sz;
 	while (::isspace(*start))
@@ -341,7 +341,7 @@ int uri::set(const char *data, int sz, std::string *err) {
 		std::string auth = std::string(start, pos - start);
 
 		//parse address
-		if(_addr.set(auth.c_str(), auth.length(), err) != 0)
+		if(_addr.parse(auth.c_str(), auth.length(), err) != 0)
 			return -1;
 
 		//set authority
@@ -379,7 +379,7 @@ int uri::set(const char *data, int sz, std::string *err) {
 		std::string query = std::string(start, pos - start);
 
 		//parse params
-		if(_params.set(query.c_str(), query.length(), err) != 0)
+		if(_params.parse(query.c_str(), query.length(), err) != 0)
 			return -1;
 
 		//save query string
@@ -399,7 +399,7 @@ int uri::set(const char *data, int sz, std::string *err) {
 }
 
 //////////////////////////////////////////http version class/////////////////////////////////////////
-std::string version::get() const {
+std::string version::pack() const {
 	//data buffer
 	int sz = BUFSZ;
 	char data[BUFSZ] = { 0 };
@@ -409,7 +409,7 @@ std::string version::get() const {
 	return std::string(data, sz);
 }
 
-int version::set(const char *data, int sz, std::string *err) {
+int version::parse(const char *data, int sz, std::string *err) {
 	std::vector<std::string> items;
 	str::strtok(data, sz, "/", items);
 	if (items.size() != 2) {
@@ -430,19 +430,19 @@ int version::set(const char *data, int sz, std::string *err) {
 	return 0;
 }
 //////////////////////////////////////////query class///////////////////////////////////////////
-std::string query::get() const {
+std::string query::pack() const {
 	int sz = BUFSZ;
 	char data[BUFSZ] = { 0 };
 
-	sz = snprintf(data, sz, "%s %s %s\r\n", _method.c_str(), _uri.get().c_str(), _version.get().c_str());
+	sz = snprintf(data, sz, "%s %s %s\r\n", _method.c_str(), _uri.pack().c_str(), _version.pack().c_str());
 	return std::string(data, sz);
 }
 
-int query::set(const char *data, int sz, std::string *err) {
+int query::parse(const char *str, std::string *err) {
 	std::vector<std::string> items;
-	cube::str::strtok(data, sz, " ", items, 3);
+	cube::str::strtok(str, " ", items, 3);
 	if (items.size() != 3) {
-		cube::safe_assign<std::string>(err, str::format("query line: %s, invalid request", std::string(data, sz).c_str()));
+		cube::safe_assign<std::string>(err, str::format("query line: %s, invalid request", str));
 		return -1;
 	}
 
@@ -450,11 +450,11 @@ int query::set(const char *data, int sz, std::string *err) {
 	_method = items[0];
 
 	//parse query
-	if(_uri.set(items[1].c_str(), items[1].length(), err) != 0)
+	if(_uri.parse(items[1].c_str(), items[1].length(), err) != 0)
 		return -1;
 
 	//parse protocol & version
-	if(_version.set(items[2].c_str(), items[2].length(), err) != 0)
+	if(_version.parse(items[2].c_str(), items[2].length(), err) != 0)
 		return -1;
 
 	return 0;
@@ -474,11 +474,11 @@ status::setter::setter(int code, const std::string &reason) {
 	status::_status[code] = std::pair<std::string, std::string>(str::tostr(code), reason);
 }
 
-std::string status::get() const {
+std::string status::pack() const {
 	int sz = BUFSZ;
 	char data[BUFSZ] = { 0 };
 
-	sz = snprintf(data, sz, "%s %s %s\r\n", _version.get().c_str(), _code.c_str(), _reason.c_str());
+	sz = snprintf(data, sz, "%s %s %s\r\n", _version.pack().c_str(), _code.c_str(), _reason.c_str());
 	return std::string(data, sz);
 }
 
@@ -496,17 +496,17 @@ int status::set(int code, std::string *err) {
 	return 0;
 }
 
-int status::set(const char *data, int sz, std::string *err) {
+int status::parse(const char *str, std::string *err) {
 	//split status line
 	std::vector<std::string> items;
-	cube::str::strtok(data, sz, " ", items, 3);
+	cube::str::strtok(str, " ", items, 3);
 	if (items.size() != 3) {
-		cube::safe_assign<std::string>(err, str::format("status line: %s, invalid response", std::string(data, sz).c_str()));
+		cube::safe_assign<std::string>(err, str::format("status line: %s, invalid response", str));
 		return -1;
 	}
 
 	//parse http version
-	if(_version.set(items[0].c_str(), items[0].length(), err) != 0)
+	if(_version.parse(items[0].c_str(), items[0].length(), err) != 0)
 		return -1;
 
 	//parse status code
@@ -626,7 +626,7 @@ http::header::request::setter request_set_user_agent("User-Agent", "cube");
 http::header::request::setter request_accept_encoding("Accept-Encoding", "gzip, deflate");
 http::header::response::setter response_server("Server", "Cube/1.0");
 
-std::string header::get() const {
+std::string header::pack() const {
 	//header data
 	int sz = 0;
 	char data[BUFSZ] = { 0 };
@@ -645,12 +645,12 @@ std::string header::get() const {
 	return std::string(data, sz);
 }
 
-int header::set(const char *data, int sz, std::string *err) {
+int header::parse(const char *str, std::string *err) {
 	//check data
 	std::vector<std::string> item;
-	str::strtok(data, sz, ":", item, 2);
+	str::strtok(str, ":", item, 2);
 	if (item.size() != 2) {
-		cube::safe_assign<std::string>(err, str::format("header: %s invalid header", std::string(data, sz).c_str()));
+		cube::safe_assign<std::string>(err, str::format("header: %s invalid header", str));
 		return -1;
 	}
 
@@ -665,23 +665,8 @@ int header::set(const char *data, int sz, std::string *err) {
 	return 0;
 }
 
-int header::sets(const char *data, int sz, std::string *err) {
-	//seperate all header items
-	std::vector<std::string> items;
-	str::strtok(data, sz, "\r\n", items);
-
-	//parse each header item
-	for (size_t i = 0; i < items.size(); i++) {
-		if(set(items[i].c_str(), items[i].length(), err) != 0)
-			return -1;
-	}
-
-	return 0;
-}
-
 header &header::set(const std::string &key, const char *format, ...) {
 	//format value string
-	static const int BUFSZ = 2048;
 	char buf[BUFSZ] = { 0 };
 	va_list va;
 	va_start(va, format);
@@ -700,7 +685,6 @@ header &header::set(const std::string &key, const char *format, ...) {
 
 header& header::set(const std::string &key, bool replace, const char *format, ...) {
 	//format value string
-	static const int BUFSZ = 2048;
 	char buf[BUFSZ] = { 0 };
 	va_list va;
 	va_start(va, format);
@@ -769,7 +753,7 @@ std::string header::get(const std::string &item, const char *default) const {
 }
 
 //////////////////////////////////////////entity class/////////////////////////////////////////
-void body::init(const meta &meta) {
+void body::init(const http::meta &meta) {
 	//
 
 	//create output stream
@@ -835,6 +819,71 @@ bool body::done() const {
 }
 
 //////////////////////////////////////////request class/////////////////////////////////////////
+int request::head::take(char *data, int sz, std::string *err = 0) {
+	//make stream
+	if (_stream == nullptr) {
+		_stream = std::unique_ptr<hstream>(new hstream(_query.pack() + _header.pack() + "\r\n"));
+	}
+
+	//take data from stream
+	return _stream->take(data, sz);
+}
+
+int request::head::feed(const char *data, int sz, std::string *err = 0) {
+	//create stream
+	if (_stream == nullptr) {
+		_stream = std::unique_ptr<hstream>(new hstream());
+	}
+
+	//full stream
+	if (_stream->full())
+		return 0;
+
+	//check data
+	if (sz == 0 || data == 0) {
+		//incompleted request
+		cube::safe_assign<std::string>(err, "incompleted request.");
+		return -1;
+	}
+
+	//feed stream
+	int fsz = _stream->feed(data, sz);
+
+	//parse head
+	if (_stream->full()) {
+		//string line
+		char buf[BUFSZ] = { 0 };
+
+		//parse query line
+		if (!_stream->endg()) {
+			_stream->getline(buf, BUFSZ);
+			if (_query.parse(buf, err) != 0)
+				return -1;
+		} else {
+			//invalid request
+			cube::safe_assign<std::string>(err, "empty request.");
+			return -1;
+		}
+
+		//parse headers
+		while (!_stream->endg()) {
+			_stream->getline(buf, BUFSZ);
+			if (_header.parse(buf, err) != 0)
+				return -1;
+		}
+	}
+
+	//return feed size
+	return fsz;
+}
+
+bool request::head::done() const {
+	if (_stream == nullptr)
+		return false;
+	return _stream->full();
+}
+
+
 int request::take(char *data, int sz) {
 	//taked size
 	int tsz = 0;
@@ -875,7 +924,7 @@ int request::feed(const char *data, int sz) {
 int response::head::take(char *data, int sz, std::string *err) {
 	//make stream
 	if (_stream == nullptr) {
-		_stream = std::unique_ptr<hstream>(new hstream(_status.get() + _header.get() + "\r\n"));
+		_stream = std::unique_ptr<hstream>(new hstream(_status.pack() + _header.pack() + "\r\n"));
 	}
 
 	//take data from stream
@@ -910,7 +959,7 @@ int response::head::feed(const char *data, int sz, std::string *err) {
 		//parse query line
 		if (!_stream->endg()) {
 			_stream->getline(buf, BUFSZ);
-			if (_status.set(buf, ::strlen(buf), err) != 0)
+			if (_status.parse(buf, err) != 0)
 				return -1;
 		} else {
 			//invalid request
@@ -921,7 +970,7 @@ int response::head::feed(const char *data, int sz, std::string *err) {
 		//parse headers
 		while (!_stream->endg()) {
 			_stream->getline(buf, BUFSZ);
-			if (_header.set(buf, ::strlen(buf), err) != 0)
+			if (_header.parse(buf, err) != 0)
 				return -1;
 		}
 	}
@@ -930,12 +979,57 @@ int response::head::feed(const char *data, int sz, std::string *err) {
 	return fsz;
 }
 
-void response::file(const char *path, const char* charset) {
+bool response::head::done() const {
+	if (_stream == nullptr) {
+		return true;
+	}
+	return _stream->full();
+}
+
+void response::info(int code) {
+
+}
+
+void response::succ(int code) {
+
+}
+
+void response::cerr(int code) {
 	//set status line
-	_head.set_status(200);
+	_head.status().set(code);
+
+	//set general header
+	_head.header().set(http::header::response::default());
+}
+
+void response::serr(int code) {
+	//set status line
+	_head.status().set(code);
+
+	//set general header
+	_head.header().set(http::header::response::default());
+}
+
+void response::jump(const char *url, bool permanent) {
+	//set status line
+	if (permanent)
+		_head.status().set(301);
+	else
+		_head.status().set(302);
 
 	//set general header
 	_head.set_header(http::header::response::default());
+
+	//set redirect location
+	_head.set_header("Location", url);
+}
+
+void response::file(const char *path, const char* charset) {
+	//set status line
+	_head.status().set(200);
+
+	//set general header
+	_head.header.(http::header::response::default());
 
 	//set entity data
 	_body.file(path, charset);
@@ -943,7 +1037,7 @@ void response::file(const char *path, const char* charset) {
 
 void response::json(const char *data, int sz, const char* charset) {
 	//set status line
-	_head.set_status(200);
+	_head.status().set(200);
 
 	//set general header
 	_head.set_header(http::header::response::default());
@@ -954,7 +1048,7 @@ void response::json(const char *data, int sz, const char* charset) {
 
 void response::data(const char *data, int sz, const char* charset) {
 	//set status line
-	_head.set_status(200);
+	_head.status().set(200);
 
 	//set general header
 	_head.set_header(http::header::response::default());
@@ -962,45 +1056,6 @@ void response::data(const char *data, int sz, const char* charset) {
 	//set entity data
 	_body.data("octet", data, sz, charset);
 }
-
-void response::cerr(int code) {
-	//set status line
-	_head.set_status(code);
-
-	//set general header
-	_head.set_header(http::header::response::default());
-}
-
-void response::serr(int code) {
-	//set status line
-	_head.set_status(code);
-
-	//set general header
-	_head.set_header(http::header::response::default());
-}
-
-void response::moveto(const char *url) {
-	//set status line
-	_head.set_status(301);
-
-	//set general header
-	_head.set_header(http::header::response::default());
-
-	//set redirect location
-	_head.set_header("Location", url);
-}
-
-void response::redirect(const char *url) {
-	//set status line
-	_head.set_status(302);
-	
-	//set general header
-	_head.set_header(http::header::response::default());
-
-	//set redirect location
-	_head.set_header("Location", url);
-}
-
 
 int response::take(char *data, int sz) {
 	//taked size
