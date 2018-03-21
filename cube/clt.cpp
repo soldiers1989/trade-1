@@ -1,3 +1,0 @@
-#include "clt.h"
-BEGIN_CUBE_NAMESPACE
-END_CUBE_NAMESPACE
