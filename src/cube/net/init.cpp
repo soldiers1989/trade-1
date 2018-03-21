@@ -2,9 +2,6 @@
 #include "cube\sys\error.h"
 #include <WinSock2.h>
 BEGIN_CUBE_NET_NS
-//for initialize the windows socket environment
-static const init g_netsvc_init;
-
 init::init() {
 	/*start up windows socket environment*/
 	WORD wsaversion;

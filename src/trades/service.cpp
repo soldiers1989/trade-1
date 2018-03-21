@@ -2,13 +2,11 @@
 #include "servlet.h"
 #include "service.h"
 #include "cube\log\log.h"
-#include "cube\net\init.h"
 
 cube::http::applet service::applet;
 cube::svc::http_server service::server;
 
 int service::start() {
-	cube::net::init init;
 	std::string emsg("");
 	cube::log::info("start trade service...");
 

@@ -13,7 +13,7 @@ int session::on_recv(char *data, int transfered) {
 	return -1;
 }
 
-int session::on_timer(int id) {
+int session::on_timer(time_t now) {
 	return -1;
 }
 

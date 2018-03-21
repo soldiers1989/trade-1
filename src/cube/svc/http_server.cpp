@@ -39,6 +39,9 @@ int http_session::on_send(int transfered) {
 int http_session::on_recv(char *data, int transfered) {
 	cube::log::info("[http][%s] recv data: %d bytes", name().c_str(), transfered);
 	try {
+		if (transfered == 0)
+			return -1;
+
 		//parse request
 		if(_request.parse(std::string(data, transfered)) != 0)
 			return -1;

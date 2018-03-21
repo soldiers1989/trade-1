@@ -45,7 +45,7 @@ public:
 	/*
 	*	recalled when the timer
 	*/
-	virtual int on_timer(int id);
+	virtual int on_timer(time_t now);
 
 	/*
 	*	recalled when the handler will be destroyed.

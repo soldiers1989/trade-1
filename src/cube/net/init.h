@@ -7,6 +7,7 @@ public:
 	init();
 	virtual ~init();
 };
-
+//for initialize the windows socket environment
+static const init g_netsvc_init;
 END_CUBE_NET_NS
 
