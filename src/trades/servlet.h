@@ -1,6 +1,45 @@
 #pragma once
+#include "stdtrds.h"
 #include "cube\http\servlet.h"
+BEGIN_TRADES_NAMESPACE
+class protocol {
+public:
+	static std::string succ(const std::string &msg, const std::string &data = "");
+	static std::string fail(const std::string &msg, const std::string &data = "");
+};
+
 class login : public cube::http::servlet {
 public:
 	virtual int handle(const cube::http::request &req, cube::http::response &resp);
 };
+
+class quote : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class querycurrent : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class queryhistory : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class order : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class cancel : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class logout : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+END_TRADES_NAMESPACE

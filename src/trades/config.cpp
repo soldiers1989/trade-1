@@ -1,4 +1,5 @@
-#include "config.h"
+#include "trades\config.h"
+BEGIN_TRADES_NAMESPACE
 //initalize default config
 std::string config::wdir = "./";
 std::string config::token = "";
@@ -20,3 +21,4 @@ int config::load(const std::string &path) {
 
 	return 0;
 }
+END_TRADES_NAMESPACE

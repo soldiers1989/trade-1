@@ -1,6 +1,8 @@
 #pragma once
+#include "trades\stdtrds.h"
 #include "cube\http\applet.h"
 #include "cube\svc\http_server.h"
+BEGIN_TRADES_NAMESPACE
 //manage service class
 class service {
 public:
@@ -50,3 +52,4 @@ private:
 	//http server
 	static cube::svc::http_server server;
 };
+END_TRADES_NAMESPACE

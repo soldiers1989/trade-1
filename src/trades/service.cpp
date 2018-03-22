@@ -1,8 +1,9 @@
-#include "config.h"
-#include "servlet.h"
-#include "service.h"
 #include "cube\log\log.h"
+#include "trades\config.h"
+#include "trades\servlet.h"
+#include "trades\service.h"
 
+BEGIN_TRADES_NAMESPACE
 cube::http::applet service::applet;
 cube::svc::http_server service::server;
 
@@ -51,3 +52,11 @@ void service::mount(const std::string &method, const std::string &path, cube::ht
 
 /////////////////////////////mount servlet///////////////////////////////////
 service::mount_servlet s_login("GET", "/trade/login", new login());
+service::mount_servlet s_quote("GET", "/trade/quote", new quote());
+service::mount_servlet s_order("GET", "/trade/order", new order());
+service::mount_servlet s_cancel("GET", "/trade/cancel", new cancel());
+service::mount_servlet s_query("GET", "/trade/query/current", new querycurrent());
+service::mount_servlet s_history("GET", "/trade/query/history", new queryhistory());
+service::mount_servlet s_logout("GET", "/trade/logout", new logout());
+
+END_TRADES_NAMESPACE

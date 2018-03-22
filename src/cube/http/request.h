@@ -16,6 +16,11 @@ public:
 	int parse(const std::string &str);
 
 public:
+	const std::string &method() const { return _query.method(); }
+	const std::string &path() const { return _query.path(); }
+	const http::params &params() const { return _query.params(); }
+
+public:
 	const http::query &query() const { return _query; }
 	const http::headers &headers() const { return _headers; }
 
