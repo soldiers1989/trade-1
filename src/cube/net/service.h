@@ -12,7 +12,7 @@ class service : public cc::task {
 	typedef std::exception efatal;
 
 public:
-	service() : _arg(0) {
+	service() : _arg(0), _tick_time_interval(1), _last_tick_time(0){
 
 	}
 
@@ -51,6 +51,13 @@ public:
 	int discard(session *s);
 
 	/*
+	*	trigger tick for all sessions in the service, on_tick() method will be called
+	*@return:
+	*	void
+	*/
+	void trigger();
+
+	/*
 	*	stop iocp service
 	*@return:
 	*	always 0
@@ -78,6 +85,10 @@ private:
 
 	//argument for new session
 	void *_arg;
+
+	//session tick interval
+	int _tick_time_interval;
+	::time_t _last_tick_time;
 
 	//sessions of service
 	std::mutex _mutex;

@@ -1,13 +1,13 @@
+#include "trades\config.h"
 #include "cube\str\json.h"
 #include "cube\str\stype.h"
 #include "trades\account.h"
 #include "trades\servlet.h"
 BEGIN_TRADES_NAMESPACE
 std::string protocol::succ(const std::string &msg, const std::string &data) {
-	std::string res("{" \
-						"\"status\":0," \
-						"\"msg\":\"success\"," \
-						"\"data\":");
+	std::string res("{\"status\":0,");
+	res.append("\"msg\":\""+msg+"\",");
+	res.append("\"data\":");
 
 
 	if (data.empty())
@@ -21,10 +21,9 @@ std::string protocol::succ(const std::string &msg, const std::string &data) {
 }
 
 std::string protocol::fail(const std::string &msg, const std::string &data) {
-	std::string res("{" \
-		"\"status\":-1," \
-		"\"msg\":\"failed\"," \
-		"\"data\":");
+	std::string res("{\"status\":-1,");
+	res.append("\"msg\":\"" + msg + "\",");
+	res.append("\"data\":");
 
 	if (data.empty())
 		res.append("{}");
@@ -36,11 +35,24 @@ std::string protocol::fail(const std::string &msg, const std::string &data) {
 	return res;
 }
 
+bool authority::allow(const std::string &ip) {
+	if (config::allowips.empty() || config::allowips.find(ip) != std::string::npos)
+		return true;
+	return false;
+}
+
 /*
 *request:
 *	/trade/login?account=$account&pwd=$pwd&ip=$ip&port=$port&dept=dept&version=$version
 */
 int login::handle(const cube::http::request &req, cube::http::response &resp) {
+	//check authority
+	if (!authority::allow(req.peerip())) {
+		std::string content = protocol::fail("authority denied");
+		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		return 0;
+	}
+
 	//get request parameters
 	std::string account = req.params().get("account");
 	std::string pwd = req.params().get("pwd");
@@ -76,6 +88,13 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 *	/trade/quote?account=$account&code=$code
 */
 int quote::handle(const cube::http::request &req, cube::http::response &resp) {
+	//check authority
+	if (!authority::allow(req.peerip())) {
+		std::string content = protocol::fail("authority denied");
+		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		return 0;
+	}
+
 	//get request parameters
 	std::string account = req.params().get("account");
 	std::string code = req.params().get("code");
@@ -111,6 +130,13 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 *	/trade/query/current?account=$account&category=$category	
 */
 int querycurrent::handle(const cube::http::request &req, cube::http::response &resp) {
+	//check authority
+	if (!authority::allow(req.peerip())) {
+		std::string content = protocol::fail("authority denied");
+		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		return 0;
+	}
+
 	//get request parameters
 	std::string account = req.params().get("account");
 	std::string category = req.params().get("category");
@@ -146,6 +172,13 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 *	/trade/query/history?account=$account&category=$category
 */
 int queryhistory::handle(const cube::http::request &req, cube::http::response &resp) {
+	//check authority
+	if (!authority::allow(req.peerip())) {
+		std::string content = protocol::fail("authority denied");
+		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		return 0;
+	}
+
 	//get request parameters
 	std::string account = req.params().get("account");
 	std::string category = req.params().get("category");
@@ -183,6 +216,13 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 *	/trade/order?account=$account&otype=$otype&ptype=$ptype&gddm=$gddm&zqdm=$zqdm&price=$price&count=$count
 */
 int order::handle(const cube::http::request &req, cube::http::response &resp) {
+	//check authority
+	if (!authority::allow(req.peerip())) {
+		std::string content = protocol::fail("authority denied");
+		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		return 0;
+	}
+
 	//get request parameters
 	std::string account = req.params().get("account");
 	std::string otype = req.params().get("otype");
@@ -223,6 +263,13 @@ int order::handle(const cube::http::request &req, cube::http::response &resp) {
 *	/trade/cancel?account=$account&seid=$seid&orderno=$orderno
 */
 int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
+	//check authority
+	if (!authority::allow(req.peerip())) {
+		std::string content = protocol::fail("authority denied");
+		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		return 0;
+	}
+
 	//get request parameters
 	std::string account = req.params().get("account");
 	std::string seid = req.params().get("seid");
@@ -259,6 +306,13 @@ int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 *	/trade/logout?account=$account
 */
 int logout::handle(const cube::http::request &req, cube::http::response &resp) {
+	//check authority
+	if (!authority::allow(req.peerip())) {
+		std::string content = protocol::fail("authority denied");
+		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		return 0;
+	}
+
 	//get request parameters
 	std::string account = req.params().get("account");
 	
@@ -281,6 +335,19 @@ int logout::handle(const cube::http::request &req, cube::http::response &resp) {
 
 
 	std::string content = protocol::succ("success", data);
+	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	return 0;
+}
+
+int echo::handle(const cube::http::request &req, cube::http::response &resp) {
+	//check authority
+	if (!authority::allow(req.peerip())) {
+		std::string content = protocol::fail("authority denied");
+		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		return 0;
+	}
+
+	std::string content = protocol::succ("success");
 	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
 	return 0;
 }

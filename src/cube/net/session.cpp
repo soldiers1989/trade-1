@@ -13,8 +13,8 @@ int session::on_recv(char *data, int transfered) {
 	return -1;
 }
 
-int session::on_timer(time_t now) {
-	return -1;
+int session::on_tick(time_t now) {
+	return 0;
 }
 
 void session::on_close() {

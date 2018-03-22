@@ -4,6 +4,7 @@
 BEGIN_CUBE_SVC_NS
 //////////////////////////////////////http session class///////////////////////////////////////
 int http_session::on_open(void *arg) {
+	_last_active_time = ::time(0);
 	cube::log::info("[http][%s] open session", name().c_str());
 	//save servlets
 	_applet = (http::applet*)arg;
@@ -20,6 +21,7 @@ int http_session::on_open(void *arg) {
 }
 
 int http_session::on_send(int transfered) {
+	_last_active_time = ::time(0);
 	cube::log::info("[http][%s] send data: %d bytes", name().c_str(), transfered);
 	//add transfered data
 	_transfered += transfered;
@@ -37,6 +39,7 @@ int http_session::on_send(int transfered) {
 }
 
 int http_session::on_recv(char *data, int transfered) {
+	_last_active_time = ::time(0);
 	cube::log::info("[http][%s] recv data: %d bytes", name().c_str(), transfered);
 	try {
 		if (transfered == 0)
@@ -47,6 +50,7 @@ int http_session::on_recv(char *data, int transfered) {
 			return -1;
 
 		//handle request
+		_request.peerip(net::sa::ipaddr(peer().peeraddr().ip));
 		if (_applet->handle(_request, _response) != 0) {
 			return -1;
 		}
@@ -64,6 +68,15 @@ int http_session::on_recv(char *data, int transfered) {
 		cube::log::error("[http][%s] recv data: %s", name().c_str(), e.what());
 		return -1;
 	}
+}
+
+int http_session::on_tick(::time_t now) {
+	if (now - _last_active_time > _max_idle_interval) {
+		cube::log::info("[http][%s] tick time out", name().c_str());
+		return -1;
+	}
+		
+	return 0;
 }
 
 void http_session::on_close() {

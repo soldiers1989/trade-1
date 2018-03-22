@@ -43,9 +43,12 @@ public:
 	virtual int on_recv(char *data, int transfered);
 
 	/*
-	*	recalled when the timer
+	*	recalled when the tick time has triggered
+	*@param now: trigger time point
+	*@return:
+	*	0--success, other--failed, session will be destroyed
 	*/
-	virtual int on_timer(time_t now);
+	virtual int on_tick(time_t now);
 
 	/*
 	*	recalled when the handler will be destroyed.

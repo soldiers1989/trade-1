@@ -8,12 +8,13 @@ class http_session : public net::session {
 	//session send & recv buffer size
 	static const int BUFSZ = 16*1024;
 public:
-	http_session() : _applet(0) {}
+	http_session() : _applet(0), _max_idle_interval(5), _last_active_time(~0) {}
 	virtual ~http_session() {}
 
 	int on_open(void *arg);
 	int on_send(int transfered);
 	int on_recv(char *data, int transfered);
+	int on_tick(::time_t now);
 	void on_close();
 
 private:
@@ -28,6 +29,10 @@ private:
 	//response data & transfered
 	std::string _respdata;
 	int _transfered;
+
+	//idle control for session
+	::time_t _last_active_time;
+	int _max_idle_interval;
 };
 
 //http server class

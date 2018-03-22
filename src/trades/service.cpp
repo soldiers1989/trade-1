@@ -58,5 +58,5 @@ service::mount_servlet s_cancel("GET", "/trade/cancel", new cancel());
 service::mount_servlet s_query("GET", "/trade/query/current", new querycurrent());
 service::mount_servlet s_history("GET", "/trade/query/history", new queryhistory());
 service::mount_servlet s_logout("GET", "/trade/logout", new logout());
-
+service::mount_servlet s_echo("GET", "/echo", new echo());
 END_TRADES_NAMESPACE

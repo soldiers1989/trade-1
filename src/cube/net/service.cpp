@@ -13,6 +13,9 @@ int service::start(void *arg, int workers) {
 	//start worker threads
 	_loopers.start(this, workers);
 
+	//setup tick trigger
+	_last_tick_time = ::time(0);
+	_tick_time_interval = 1; // tick every 1s
 	return 0;
 }
 
@@ -85,19 +88,50 @@ int service::discard(socket_t s) {
 
 int service::discard(session *s) {
 	std::lock_guard<std::mutex> lock(_mutex);
+	//remove session from sessions
+	_sessions.erase(s->handle());
+
 	//notify the session with connection closed event
 	s->on_close();
 
 	//close socket
 	s->close();
 
-	//remove session from sessions
-	_sessions.erase(s->handle());
-
 	//free session object
 	delete s;
 
 	return 0;
+}
+
+void service::trigger() {
+	::time_t now = ::time(0);
+	//check if tick triggered
+	if (now - _last_tick_time < _tick_time_interval)
+		return;
+
+	std::lock_guard<std::mutex> lock(_mutex);
+	std::map<SOCKET, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
+	while (iter != iterend) {
+		session *s = iter->second;
+		if (s->on_tick(now) != 0) {
+			//remove current session
+			_sessions.erase(iter++);
+
+			//notify session close
+			s->on_close();
+
+			//close socket
+			s->close();
+
+			//free session
+			delete s;
+		} else {
+			iter++;
+		}
+	}
+
+	//reset last tick time
+	_last_tick_time = now;
 }
 
 //stop iocp service
@@ -175,7 +209,7 @@ void service::run() {
 		}
 	}
 
-	//run timer
-
+	//run tick trigger
+	trigger();
 }
 END_CUBE_NET_NS

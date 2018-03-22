@@ -9,7 +9,7 @@ BEGIN_CUBE_HTTP_NS
 //http request class
 class request {
 public:
-	request() {}
+	request() : _peerip("") {}
 	virtual ~request() {}
 
 	std::string pack() const;
@@ -19,6 +19,8 @@ public:
 	const std::string &method() const { return _query.method(); }
 	const std::string &path() const { return _query.path(); }
 	const http::params &params() const { return _query.params(); }
+	void peerip(const std::string &ip){ _peerip = ip; }
+	const std::string &peerip() const { return _peerip; }
 
 public:
 	const http::query &query() const { return _query; }
@@ -29,5 +31,9 @@ private:
 	http::query _query;
 	//http request headers
 	http::headers _headers;
+
+	//remote peer ip
+	std::string _peerip;
+
 };
 END_CUBE_HTTP_NS

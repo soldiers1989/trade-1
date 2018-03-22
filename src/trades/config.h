@@ -15,6 +15,9 @@ public:
 	//service port
 	static unsigned short port;
 	
+	//allow ip address
+	static std::string allowips;
+
 public:
 	//load configure file
 	static int load(const std::string &path);

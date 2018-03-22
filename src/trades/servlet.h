@@ -8,6 +8,11 @@ public:
 	static std::string fail(const std::string &msg, const std::string &data = "");
 };
 
+class authority {
+public:
+	static bool allow(const std::string &ip);
+};
+
 class login : public cube::http::servlet {
 public:
 	virtual int handle(const cube::http::request &req, cube::http::response &resp);
@@ -39,6 +44,11 @@ public:
 };
 
 class logout : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class echo : public cube::http::servlet {
 public:
 	virtual int handle(const cube::http::request &req, cube::http::response &resp);
 };
