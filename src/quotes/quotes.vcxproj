@@ -18,159 +18,35 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="http\applet.cpp" />
-    <ClCompile Include="http\charset.cpp" />
-    <ClCompile Include="http\config.cpp" />
-    <ClCompile Include="http\handler.cpp" />
-    <ClCompile Include="http\buffer.cpp" />
-    <ClCompile Include="cc\crontab.cpp" />
-    <ClCompile Include="cc\looper.cpp" />
-    <ClCompile Include="cc\reactor.cpp" />
-    <ClCompile Include="cc\thread.cpp" />
-    <ClCompile Include="cc\timer.cpp" />
-    <ClCompile Include="cfg\ini.cpp" />
-    <ClCompile Include="http\mime.cpp" />
-    <ClCompile Include="http\packer.cpp" />
-    <ClCompile Include="http\message.cpp" />
-    <ClCompile Include="http\param.cpp" />
-    <ClCompile Include="http\servlet.cpp" />
-    <ClCompile Include="str\json.cpp" />
-    <ClCompile Include="sys\cpu.cpp" />
-    <ClCompile Include="sys\file.cpp" />
-    <ClCompile Include="sys\path.cpp" />
-    <ClCompile Include="http\cookie.cpp" />
-    <ClCompile Include="http\entity.cpp" />
-    <ClCompile Include="http\header.cpp" />
-    <ClCompile Include="http\parser.cpp" />
-    <ClCompile Include="http\query.cpp" />
-    <ClCompile Include="http\request.cpp" />
-    <ClCompile Include="http\response.cpp" />
-    <ClCompile Include="http\csession.cpp" />
-    <ClCompile Include="http\status.cpp" />
-    <ClCompile Include="http\stream.cpp" />
-    <ClCompile Include="log\log.cpp" />
-    <ClCompile Include="log\logger.cpp" />
-    <ClCompile Include="log\printer.cpp" />
-    <ClCompile Include="net\context.cpp" />
-    <ClCompile Include="sys\error.cpp" />
-    <ClCompile Include="net\init.cpp" />
-    <ClCompile Include="net\iocp.cpp" />
-    <ClCompile Include="net\service.cpp" />
-    <ClCompile Include="net\session.cpp" />
-    <ClCompile Include="net\socket.cpp" />
-    <ClCompile Include="str\case.cpp" />
-    <ClCompile Include="str\cast.cpp" />
-    <ClCompile Include="str\find.cpp" />
-    <ClCompile Include="str\format.cpp" />
-    <ClCompile Include="str\hex.cpp" />
-    <ClCompile Include="str\part.cpp" />
-    <ClCompile Include="str\print.cpp" />
-    <ClCompile Include="str\rand.cpp" />
-    <ClCompile Include="str\split.cpp" />
-    <ClCompile Include="str\strip.cpp" />
-    <ClCompile Include="str\stype.cpp" />
-    <ClCompile Include="str\escape.cpp" />
-    <ClCompile Include="svc\http_server.cpp" />
-    <ClCompile Include="sys\time.cpp" />
-    <ClCompile Include="str\search.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="http\applet.h" />
-    <ClInclude Include="http\charset.h" />
-    <ClInclude Include="http\config.h" />
-    <ClInclude Include="http\mime.h" />
-    <ClInclude Include="http\servlet.h" />
-    <ClInclude Include="str\json.h" />
-    <ClInclude Include="sys\cpu.h" />
-    <ClInclude Include="http\handler.h" />
-    <ClInclude Include="http\buffer.h" />
-    <ClInclude Include="cc\crontab.h" />
-    <ClInclude Include="cc\looper.h" />
-    <ClInclude Include="cc\reactor.h" />
-    <ClInclude Include="cc\task.h" />
-    <ClInclude Include="cc\thread.h" />
-    <ClInclude Include="cc\timer.h" />
-    <ClInclude Include="cfg\ini.h" />
-    <ClInclude Include="http\packer.h" />
-    <ClInclude Include="http\message.h" />
-    <ClInclude Include="svc\tcp_client.h" />
-    <ClInclude Include="sys\file.h" />
-    <ClInclude Include="sys\ftype.h" />
-    <ClInclude Include="sys\path.h" />
-    <ClInclude Include="http\cookie.h" />
-    <ClInclude Include="http\entity.h" />
-    <ClInclude Include="http\header.h" />
-    <ClInclude Include="http\pair.h" />
-    <ClInclude Include="http\param.h" />
-    <ClInclude Include="http\parser.h" />
-    <ClInclude Include="http\query.h" />
-    <ClInclude Include="http\request.h" />
-    <ClInclude Include="http\response.h" />
-    <ClInclude Include="http\csession.h" />
-    <ClInclude Include="http\status.h" />
-    <ClInclude Include="http\stream.h" />
-    <ClInclude Include="log\log.h" />
-    <ClInclude Include="log\logger.h" />
-    <ClInclude Include="log\printer.h" />
-    <ClInclude Include="net\context.h" />
-    <ClInclude Include="sys\error.h" />
-    <ClInclude Include="net\init.h" />
-    <ClInclude Include="net\iocp.h" />
-    <ClInclude Include="net\service.h" />
-    <ClInclude Include="net\session.h" />
-    <ClInclude Include="net\socket.h" />
-    <ClInclude Include="ns.h" />
-    <ClInclude Include="str\case.h" />
-    <ClInclude Include="str\cast.h" />
-    <ClInclude Include="str\find.h" />
-    <ClInclude Include="str\format.h" />
-    <ClInclude Include="str\hex.h" />
-    <ClInclude Include="str\part.h" />
-    <ClInclude Include="str\print.h" />
-    <ClInclude Include="str\rand.h" />
-    <ClInclude Include="str\split.h" />
-    <ClInclude Include="str\strip.h" />
-    <ClInclude Include="str\stype.h" />
-    <ClInclude Include="str\escape.h" />
-    <ClInclude Include="svc\http_server.h" />
-    <ClInclude Include="svc\tcp_server.h" />
-    <ClInclude Include="sys\time.h" />
-    <ClInclude Include="type.h" />
-    <ClInclude Include="exp.h" />
-    <ClInclude Include="str\search.h" />
-    <ClInclude Include="safe.h" />
-    <ClInclude Include="list.h" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{2CCFB5A8-7C09-4191-B397-E1DF830368DF}</ProjectGuid>
+    <ProjectGuid>{0F235D6F-D049-47E4-AF19-83FE4AE1E706}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>cube</RootNamespace>
+    <RootNamespace>quotes</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -196,20 +72,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\lib\</OutDir>
-    <IntDir>..\..\obj\cube\debug\</IntDir>
-    <TargetExt>.lib</TargetExt>
-    <TargetName>$(ProjectName).mtd</TargetName>
+    <OutDir>..\..\bin\debug\</OutDir>
+    <IntDir>..\..\bin\debug\quotes\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\lib\</OutDir>
-    <TargetExt>.lib</TargetExt>
-    <IntDir>..\..\obj\cube\release\</IntDir>
-    <TargetName>$(ProjectName).mt</TargetName>
+    <OutDir>..\..\bin\release\</OutDir>
+    <IntDir>..\..\bin\release\quotes\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -220,14 +92,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).mtd.pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cube.mt.lib;quote.mt.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -236,10 +109,10 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -251,16 +124,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <ProgramDataBaseFileName>$(IntDir)$(ProjectName).mt.pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>..\..\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cube.mt.lib;quote.mt.lib;Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -271,15 +145,29 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="config.cpp" />
+    <ClCompile Include="quoter.cpp" />
+    <ClCompile Include="quotes.cpp" />
+    <ClCompile Include="service.cpp" />
+    <ClCompile Include="servlet.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config.h" />
+    <ClInclude Include="quoter.h" />
+    <ClInclude Include="service.h" />
+    <ClInclude Include="servlet.h" />
+    <ClInclude Include="stdqots.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -39,6 +39,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "trades", "trades\trades.vcx
 		{2CCFB5A8-7C09-4191-B397-E1DF830368DF} = {2CCFB5A8-7C09-4191-B397-E1DF830368DF}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "quotes", "quotes\quotes.vcxproj", "{0F235D6F-D049-47E4-AF19-83FE4AE1E706}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9C209AA4-B950-4C96-B6F8-CD8F0FB7AE0C} = {9C209AA4-B950-4C96-B6F8-CD8F0FB7AE0C}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -157,6 +162,16 @@ Global
 		{7E975AE3-C6D9-4BB2-A261-B5DC601CB18D}.Release|x64.Build.0 = Release|x64
 		{7E975AE3-C6D9-4BB2-A261-B5DC601CB18D}.Release|x86.ActiveCfg = Release|Win32
 		{7E975AE3-C6D9-4BB2-A261-B5DC601CB18D}.Release|x86.Build.0 = Release|Win32
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Debug|x64.ActiveCfg = Debug|x64
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Debug|x64.Build.0 = Debug|x64
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Debug|x86.ActiveCfg = Debug|Win32
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Debug|x86.Build.0 = Debug|Win32
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Release|Any CPU.ActiveCfg = Release|Win32
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Release|x64.ActiveCfg = Release|x64
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Release|x64.Build.0 = Release|x64
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Release|x86.ActiveCfg = Release|Win32
+		{0F235D6F-D049-47E4-AF19-83FE4AE1E706}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,5 +1,6 @@
-#include "tdx1.h"
-#include "cube\str.h"
+#include "quote\tdx1.h"
+#include "cube\safe.h"
+#include "cube\str\split.h"
 
 BEGIN_QUOTE_NAMESPACE
 const char* tdx1cfg::RESULT_ROW_SEP = "\n";

@@ -1,7 +1,9 @@
 #include <Windows.h>
-#include "tdxdll2.h"
-#include "cube\os.h"
-#include "cube\fd.h"
+#include "quote\tdxdll2.h"
+#include "cube\safe.h"
+#include "cube\sys\file.h"
+#include "cube\sys\path.h"
+#include "cube\sys\error.h"
 
 BEGIN_QUOTE_NAMESPACE
 const char* tdxdll2cfg::DLLDIR = "dll\\raw";
@@ -9,10 +11,10 @@ const char* tdxdll2cfg::DLLNAME = "TdxL2HqApi.dll";
 
 int tdxdll2::load(const std::string &workdir, std::string *error/* = 0*/) {
 	//first load dll module
-	std::string dllfile = cube::path::make(workdir, cube::path::make(tdxdll2cfg::DLLDIR, tdxdll2cfg::DLLNAME));
+	std::string dllfile = cube::sys::path::mkpath(workdir, cube::sys::path::mkpath(tdxdll2cfg::DLLDIR, tdxdll2cfg::DLLNAME));
 	_hmodule = LoadLibrary(dllfile.c_str());
 	if (_hmodule == NULL) {
-		cube::safe_assign<std::string>(error, cube::os::last_error());
+		cube::safe_assign<std::string>(error, cube::sys::last_error());
 		return -1;
 	}
 

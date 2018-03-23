@@ -169,7 +169,7 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 
 /*
 *request:
-*	/trade/query/history?account=$account&category=$category
+*	/trade/query/history?account=$account&category=$category&sdate=$sdate&edate=$edate
 */
 int queryhistory::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
