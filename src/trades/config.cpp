@@ -2,8 +2,8 @@
 BEGIN_TRADES_NAMESPACE
 //initalize default config
 std::string config::wdir = "./";
-std::string config::token = "";
 unsigned short config::port = 80;
+int config::workers = 1;
 std::string config::allowips = "";
 
 //initalize static object
@@ -17,8 +17,8 @@ int config::load(const std::string &path) {
 	}
 
 	config::wdir = _ini.get_string_value("trade", "wdir", "./");
-	config::token = _ini.get_string_value("trade", "token", "");
 	config::port = _ini.get_integer_value("trade", "port", 80);
+	config::workers = _ini.get_integer_value("trade", "workers", 1);
 	config::allowips = _ini.get_string_value("trade", "allowips", "");
 
 	return 0;

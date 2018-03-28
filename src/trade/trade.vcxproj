@@ -73,7 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\..\lib\</OutDir>
-    <IntDir>..\..\obj\trade\debug\</IntDir>
+    <IntDir>..\..\obj\debug\trade\</IntDir>
     <TargetExt>.lib</TargetExt>
     <TargetName>$(ProjectName).mtd</TargetName>
   </PropertyGroup>
@@ -83,7 +83,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\..\lib\</OutDir>
-    <IntDir>..\..\obj\trade\release\</IntDir>
+    <IntDir>..\..\obj\release\trade\</IntDir>
     <TargetExt>.lib</TargetExt>
     <TargetName>$(ProjectName).mt</TargetName>
   </PropertyGroup>

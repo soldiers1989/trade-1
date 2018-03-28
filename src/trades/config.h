@@ -9,12 +9,12 @@ public:
 	//trade working dir
 	static std::string wdir;
 	
-	//private token
-	static std::string token;
-
 	//service port
 	static unsigned short port;
 	
+	//service workers
+	static int workers;
+
 	//allow ip address
 	static std::string allowips;
 

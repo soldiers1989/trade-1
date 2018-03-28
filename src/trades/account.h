@@ -9,7 +9,7 @@ public:
 	virtual ~accounts() {}
 	static accounts *instance();
 
-	int login(const std::string &account, const std::string &pwd, const std::string &ip, ushort port, int dept, const std::string &version, std::string *error);
+	int login(const std::string &laccount, const std::string taccount, const std::string tpwd, const std::string cpwd, const std::string &ip, ushort port, int dept, const std::string &version, std::string *error);
 	
 	int quote(const std::string &account, const std::string &code, trade::table &result, std::string *error);
 	

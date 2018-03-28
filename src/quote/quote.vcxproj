@@ -74,7 +74,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\..\lib\</OutDir>
-    <IntDir>..\..\obj\quote\debug\</IntDir>
+    <IntDir>..\..\obj\debug\quote\</IntDir>
     <TargetName>$(ProjectName).mtd</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -83,7 +83,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\..\lib\</OutDir>
-    <IntDir>..\..\obj\quote\release\</IntDir>
+    <IntDir>..\..\obj\release\quote\</IntDir>
     <TargetName>$(ProjectName).mt</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

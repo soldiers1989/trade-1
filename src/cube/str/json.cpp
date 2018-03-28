@@ -1,5 +1,21 @@
+#include "cube\str\hex.h"
 #include "cube\str\json.h"
 BEGIN_CUBE_STR_NS
+std::string json(const std::string &str) {
+	std::string res("");
+
+	for (std::size_t i = 0; i < str.length(); i++) {
+		char ch = str.at(i);
+		if ((ch >= 0x00 && ch< 0x0D) || ch == '\"' || ch == '\'') {
+			res.append(str::hex(ch));
+		} else {
+			res.append(1, ch);
+		}
+	}
+
+	return res;
+}
+
 std::string json(const std::vector<std::vector<std::string>> &table) {
 	std::string res("[");
 	

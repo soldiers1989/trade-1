@@ -129,7 +129,7 @@ void ini::set_integer_value(const std::string &section, const std::string &key, 
 int ini::get_integer_value(const std::string &section, const std::string &key, int default) {
 	std::string svalue;
 	int err = _sections.get_item(section, key, svalue);
-	if (err != 0 && str::isnum(svalue.c_str()))
+	if (err == 0 && str::isnum(svalue.c_str()))
 		return ::atoi(svalue.c_str());
 
 	return default;
@@ -142,7 +142,7 @@ void ini::set_float_value(const std::string &section, const std::string &key, fl
 float ini::get_float_value(const std::string &section, const std::string &key, float default) {
 	std::string svalue;
 	int err = _sections.get_item(section, key, svalue);
-	if (err != 0 && str::isfloat(svalue.c_str())) {
+	if (err == 0 && str::isfloat(svalue.c_str())) {
 		return (float)::atof(svalue.c_str());
 	}
 

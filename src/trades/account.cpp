@@ -14,12 +14,12 @@ accounts *accounts::instance() {
 	return _instance;
 }
 
-int accounts::login(const std::string &account, const std::string &pwd, const std::string &ip, ushort port, int dept, const std::string &version, std::string *error) {
-	cube::log::info("account %s login...", account.c_str());
+int accounts::login(const std::string &laccount, const std::string taccount, const std::string tpwd, const std::string cpwd, const std::string &ip, ushort port, int dept, const std::string &version, std::string *error) {
+	cube::log::info("account %s login...", laccount.c_str());
 	std::lock_guard<std::mutex> lck(_mutex);
 	//account has login
-	if (_accounts.find(account) != _accounts.end()) {
-		cube::log::info("account %s has already login.", account.c_str());
+	if (_accounts.find(laccount) != _accounts.end()) {
+		cube::log::info("account %s has already login.", laccount.c_str());
 		return 0;
 	}
 
@@ -27,22 +27,22 @@ int accounts::login(const std::string &account, const std::string &pwd, const st
 	//account create
 	trade::trade *acnt = new trade::tdx();
 	if (acnt->init(config::wdir, &errmsg) != 0) {
-		cube::log::error("account %s login failed, error: %s", account.c_str(), errmsg.c_str());
+		cube::log::error("account %s login failed, error: %s", laccount.c_str(), errmsg.c_str());
 		cube::safe_assign<std::string>(error, errmsg);
 		return -1;
 	}
 
 	//account login
-	if (acnt->login(ip, port, version, dept, account, account, pwd, pwd, &errmsg) != 0) {
+	if (acnt->login(ip, port, version, dept, laccount, taccount, tpwd, cpwd, &errmsg) != 0) {
 		cube::safe_assign<std::string>(error, errmsg);
-		cube::log::error("account %s login failed, error: %s", account.c_str(), errmsg.c_str());
+		cube::log::error("account %s login failed, error: %s", laccount.c_str(), errmsg.c_str());
 		return -1;
 	}
 
 	//add account
-	_accounts.insert(std::pair<std::string, trade::trade*>(account, acnt));
+	_accounts.insert(std::pair<std::string, trade::trade*>(laccount, acnt));
 
-	cube::log::info("account %s login success.", account.c_str());
+	cube::log::info("account %s login success.", laccount.c_str());
 	return 0;
 
 }

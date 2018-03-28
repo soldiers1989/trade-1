@@ -23,6 +23,36 @@ public:
 	virtual int handle(const cube::http::request &req, cube::http::response &resp);
 };
 
+class query_security_list : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class query_security_kline : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class query_index_kline : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class query_current_time_data : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class query_current_deal_data : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
+class query_current_quote_data : public cube::http::servlet {
+public:
+	virtual int handle(const cube::http::request &req, cube::http::response &resp);
+};
+
 class disconnect : public cube::http::servlet {
 public:
 	virtual int handle(const cube::http::request &req, cube::http::response &resp);

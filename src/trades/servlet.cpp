@@ -6,9 +6,8 @@
 BEGIN_TRADES_NAMESPACE
 std::string protocol::succ(const std::string &msg, const std::string &data) {
 	std::string res("{\"status\":0,");
-	res.append("\"msg\":\""+msg+"\",");
+	res.append("\"msg\":\""+cube::str::json(msg)+"\",");
 	res.append("\"data\":");
-
 
 	if (data.empty())
 		res.append("{}");
@@ -22,7 +21,7 @@ std::string protocol::succ(const std::string &msg, const std::string &data) {
 
 std::string protocol::fail(const std::string &msg, const std::string &data) {
 	std::string res("{\"status\":-1,");
-	res.append("\"msg\":\"" + msg + "\",");
+	res.append("\"msg\":\"" + cube::str::json(msg) + "\",");
 	res.append("\"data\":");
 
 	if (data.empty())
@@ -43,7 +42,7 @@ bool authority::allow(const std::string &ip) {
 
 /*
 *request:
-*	/trade/login?account=$account&pwd=$pwd&ip=$ip&port=$port&dept=dept&version=$version
+*	/login?account=$account&pwd=$pwd&ip=$ip&port=$port&dept=dept&version=$version
 */
 int login::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
@@ -56,14 +55,35 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 	//get request parameters
 	std::string account = req.params().get("account");
 	std::string pwd = req.params().get("pwd");
+
+	//login account
+	std::string laccount = req.params().get("laccount");
+	if (laccount.empty()) {
+		laccount = account;
+	}
+
+	//trade account
+	std::string taccount = req.params().get("taccount");
+	if (taccount.empty()) {
+		taccount = account;
+	}
+
+	//trade password
+	std::string tpwd = req.params().get("tpwd");
+	if (tpwd.empty()) {
+		tpwd = pwd;
+	}
+
+	std::string cpwd = req.params().get("cpwd");
+
 	std::string ip = req.params().get("ip");
 	std::string port = req.params().get("port");
 	std::string dept = req.params().get("dept");
 	std::string version = req.params().get("version");
 
-	std::string data = "{\"account\":\"" + account + "\"}";
+	std::string data = "{\"account\":\"" + laccount + "\"}";
 	//check parameters
-	if (account.empty() || pwd.empty() || ip.empty() || port.empty() || dept.empty() || version.empty()) {
+	if (laccount.empty() || taccount.empty() || tpwd.empty() || ip.empty() || port.empty() || dept.empty() || version.empty()) {
 		std::string content = protocol::fail("invalid parameter.", data);
 		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
 		return 0;
@@ -71,7 +91,7 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 
 	std::string errmsg("");
 	//login account
-	if (accounts::instance()->login(account, pwd, ip, (ushort)::atoi(port.c_str()), ::atoi(dept.c_str()), version, &errmsg) != 0) {
+	if (accounts::instance()->login(laccount, taccount, tpwd, cpwd, ip, (ushort)::atoi(port.c_str()), ::atoi(dept.c_str()), version, &errmsg) != 0) {
 		std::string content = protocol::fail(errmsg, data);
 		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
 		return 0;
@@ -85,7 +105,7 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 
 /*
 *request:
-*	/trade/quote?account=$account&code=$code
+*	/query/quote?account=$account&code=$code
 */
 int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
@@ -127,7 +147,7 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 
 /*
 *request:
-*	/trade/query/current?account=$account&category=$category	
+*	/query/current?account=$account&category=$category	
 */
 int querycurrent::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
@@ -169,7 +189,7 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 
 /*
 *request:
-*	/trade/query/history?account=$account&category=$category&sdate=$sdate&edate=$edate
+*	/query/history?account=$account&category=$category&sdate=$sdate&edate=$edate
 */
 int queryhistory::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority

@@ -1,3 +1,4 @@
+#include "cube\log\log.h"
 #include "cube\sys\error.h"
 #include "cube\net\service.h"
 BEGIN_CUBE_NET_NS
@@ -174,11 +175,12 @@ void service::free() {
 void service::run() {
 	//process complete io request until stop
 	iores res = _iocp.pull(50);
-	if (res.error == 0) {
-		//get sepcial data from completion data
-		session *s = (session*)res.completionkey;
-		ioctxt *context = (ioctxt*)res.overlapped;
+	
+	//get sepcial data from completion data
+	session *s = (session*)res.completionkey;
+	ioctxt *context = (ioctxt*)res.overlapped;
 
+	if (res.error == 0) {
 		//notify session with completed events
 		int err = 0;
 		switch (context->opt) {
@@ -200,11 +202,17 @@ void service::run() {
 		}
 	} else {
 		if (res.error == ERROR_ABANDONED_WAIT_0)
-			; // iocp handle closed
+			// iocp handle closed
+			log::error("iocp: iocp handle closed, errno %d", res.error);
 		else {
 			if (res.error != WAIT_TIMEOUT) {
-				//fatal error with iocp
-				throw efatal(sys::last_error(res.error).c_str());
+				if (s != 0) {
+					log::error("iocp:  local connection closed, errno: %d", res.error);
+				} else {
+					log::error("iocp: fatal error with errno %d", res.error);
+					//fatal error with iocp
+					throw efatal(sys::last_error(res.error).c_str());
+				}
 			}
 		}
 	}

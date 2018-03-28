@@ -3,6 +3,9 @@
 #include <vector>
 #include "cube\ns.h"
 BEGIN_CUBE_STR_NS
+
+std::string json(const std::string &str);
+
 /*
 *	convert table to json array string
 *@param table: in, table to convert

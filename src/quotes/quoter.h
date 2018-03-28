@@ -16,6 +16,18 @@ public:
 
 	int query_security_count(int market, int &count, std::string *error);
 
+	int query_security_list(int market, int start, int &count, quote::table &result, std::string *error);
+
+	int query_security_kline(int line, int market, const std::string &zqdm, int start, int &count, quote::table &result, std::string *error);
+
+	int query_index_kline(int line, int market, const std::string &zqdm, int start, int &count, quote::table &result, std::string *error);
+
+	int query_current_time_data(int market, const std::string &zqdm, quote::table &result, std::string *error);
+
+	int query_current_deal_data(int market, const std::string &zqdm, int start, int &count, quote::table &result, std::string *error);
+
+	int query_current_quote_data(int market, const std::string &zqdm, quote::table &result, std::string *error);
+
 	int disconnect();
 
 	int destroy();

@@ -72,16 +72,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\</OutDir>
-    <IntDir>..\..\obj\trades\debug\</IntDir>
+    <OutDir>..\..\bin\debug\trades\</OutDir>
+    <IntDir>..\..\obj\debug\trades\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\</OutDir>
-    <IntDir>..\..\obj\trades\release\</IntDir>
+    <OutDir>..\..\bin\release\trades\</OutDir>
+    <IntDir>..\..\obj\release\trades\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>

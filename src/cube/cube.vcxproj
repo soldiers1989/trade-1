@@ -197,7 +197,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\..\lib\</OutDir>
-    <IntDir>..\..\obj\cube\debug\</IntDir>
+    <IntDir>..\..\obj\debug\cube\</IntDir>
     <TargetExt>.lib</TargetExt>
     <TargetName>$(ProjectName).mtd</TargetName>
   </PropertyGroup>
@@ -208,7 +208,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\..\lib\</OutDir>
     <TargetExt>.lib</TargetExt>
-    <IntDir>..\..\obj\cube\release\</IntDir>
+    <IntDir>..\..\obj\release\cube\</IntDir>
     <TargetName>$(ProjectName).mt</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

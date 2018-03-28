@@ -22,13 +22,13 @@ int service::start() {
 
 	
 	//start http server
-	err = server.start(config::port, 1, &applet);
+	err = server.start(config::port, config::workers, &applet);
 	if (err != 0) {
-		cube::log::error("start manage service on port %d failed.", config::port);
+		cube::log::error("start trade service on port %d failed.", config::port);
 		return -1;
 	}
 
-	cube::log::info("manage service started.");
+	cube::log::info("trade service started on port %d.", config::port);
 
 	return 0;
 }
@@ -51,12 +51,12 @@ void service::mount(const std::string &method, const std::string &path, cube::ht
 }
 
 /////////////////////////////mount servlet///////////////////////////////////
-service::mount_servlet s_login("GET", "/trade/login", new login());
-service::mount_servlet s_quote("GET", "/trade/quote", new quote());
-service::mount_servlet s_order("GET", "/trade/order", new order());
-service::mount_servlet s_cancel("GET", "/trade/cancel", new cancel());
-service::mount_servlet s_query("GET", "/trade/query/current", new querycurrent());
-service::mount_servlet s_history("GET", "/trade/query/history", new queryhistory());
-service::mount_servlet s_logout("GET", "/trade/logout", new logout());
+service::mount_servlet s_login("GET", "/login", new login());
+service::mount_servlet s_quote("GET", "/query/quote", new quote());
+service::mount_servlet s_order("GET", "/send/order", new order());
+service::mount_servlet s_cancel("GET", "/cancel/order", new cancel());
+service::mount_servlet s_query("GET", "/query/current", new querycurrent());
+service::mount_servlet s_history("GET", "/query/history", new queryhistory());
+service::mount_servlet s_logout("GET", "/logout", new logout());
 service::mount_servlet s_echo("GET", "/echo", new echo());
 END_TRADES_NAMESPACE

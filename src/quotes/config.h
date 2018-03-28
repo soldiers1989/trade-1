@@ -11,6 +11,9 @@ public:
 
 	//service port
 	static unsigned short port;
+
+	//service workers
+	static int workers;
 	
 	//allow ip address
 	static std::string allowips;
