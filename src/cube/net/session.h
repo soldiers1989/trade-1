@@ -84,7 +84,6 @@ private:
 	*/
 	void open(socket s);
 
-
 	/*
 	*	close current session
 	*@return:

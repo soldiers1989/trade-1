@@ -12,10 +12,12 @@ int service::start(void *arg, int workers) {
 	_arg = arg;
 
 	//start worker threads
-	_loopers.start(this, workers);
+	_workers.start(workers, this);
+
+	//start looper thread
+	_looper.start(this);
 
 	//setup tick trigger
-	_last_tick_time = ::time(0);
 	_tick_time_interval = 1; // tick every 1s
 	return 0;
 }
@@ -104,37 +106,6 @@ int service::discard(session *s) {
 	return 0;
 }
 
-void service::trigger() {
-	::time_t now = ::time(0);
-	//check if tick triggered
-	if (now - _last_tick_time < _tick_time_interval)
-		return;
-
-	std::lock_guard<std::mutex> lock(_mutex);
-	std::map<SOCKET, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
-	while (iter != iterend) {
-		session *s = iter->second;
-		if (s->on_tick(now) != 0) {
-			//remove current session
-			_sessions.erase(iter++);
-
-			//notify session close
-			s->on_close();
-
-			//close socket
-			s->close();
-
-			//free session
-			delete s;
-		} else {
-			iter++;
-		}
-	}
-
-	//reset last tick time
-	_last_tick_time = now;
-}
-
 //stop iocp service
 int service::stop() {
 	//close all sessions
@@ -156,8 +127,11 @@ int service::stop() {
 	//close iocp
 	_iocp.close();
 
-	//stop loopers
-	_loopers.stop();
+	//stop looper
+	_looper.stop();
+
+	//stop workers
+	_workers.stop();
 
 	return 0;
 }
@@ -173,6 +147,29 @@ void service::free() {
 }
 
 void service::run() {
+	//wait for tick timeout
+	std::this_thread::sleep_for(std::chrono::seconds(_tick_time_interval));
+	log::info("tick all session...");
+	int count = 0;
+	//tick all session
+	std::lock_guard<std::mutex> lock(_mutex);
+	::time_t now = ::time(0);
+	std::map<SOCKET, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
+	while (iter != iterend) {
+		session *s = iter->second;
+		if (s->on_tick(now) != 0) {
+			//expire the session
+			_iocp.expire((ULONG_PTR)s);
+			count++;
+		}
+
+		iter++;
+	}
+
+	log::info("tick all session finished, expire count %d", count);
+}
+
+void service::ioloop() {
 	//process complete io request until stop
 	iores res = _iocp.pull(50);
 	
@@ -182,17 +179,22 @@ void service::run() {
 
 	if (res.error == 0) {
 		//notify session with completed events
-		int err = 0;
-		switch (context->opt) {
-		case IO_SEND:
-			err = s->on_send(context, res.transfered);
-			break;
-		case IO_RECV:
-			err = s->on_recv(context, res.transfered);
-			break;
-		default:
-			err = 0;
-			break;
+		int err = -1;
+
+		if (context != 0) {
+			switch (context->opt) {
+			case IO_SEND:
+				err = s->on_send(context, res.transfered);
+				break;
+			case IO_RECV:
+				err = s->on_recv(context, res.transfered);
+				break;
+			default:
+				err = 0;
+				break;
+			}
+		} else {
+			log::info("socket timeout.");
 		}
 
 		//process error recall result
@@ -216,8 +218,5 @@ void service::run() {
 			}
 		}
 	}
-
-	//run tick trigger
-	trigger();
 }
 END_CUBE_NET_NS

@@ -74,6 +74,7 @@
     <ClCompile Include="svc\http_server.cpp" />
     <ClCompile Include="sys\time.cpp" />
     <ClCompile Include="str\search.cpp" />
+    <ClCompile Include="net\worker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="http\applet.h" />
@@ -141,6 +142,7 @@
     <ClInclude Include="str\search.h" />
     <ClInclude Include="safe.h" />
     <ClInclude Include="list.h" />
+    <ClInclude Include="net\worker.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
