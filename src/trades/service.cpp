@@ -28,7 +28,7 @@ int service::start() {
 		return -1;
 	}
 
-	cube::log::info("trade service started on port %d.", config::port);
+	cube::log::info("trade service started on port %d with wokers %d.", config::port, config::workers);
 
 	return 0;
 }
