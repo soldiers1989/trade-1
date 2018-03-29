@@ -39,24 +39,7 @@ public:
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int dispatch(session *s);
 	int dispatch(socket sock, session *s);
-
-	/*
-	*	discard an existing session in the service
-	*@param s: in, sessionto discard
-	*@return:
-	*	always 0
-	*/
-	int discard(socket_t s);
-	int discard(session *s);
-
-	/*
-	*	tick all sessions in the service, on_tick() method will be called
-	*@return:
-	*	void
-	*/
-	void tickall();
 
 	/*
 	*	stop iocp service
@@ -64,6 +47,25 @@ public:
 	*	always 0
 	*/
 	int stop();
+
+private:
+	/*
+	*	discard an existing session in the service
+	*@param s: in, sessionto discard
+	*@return:
+	*	always 0
+	*/
+	int discard(socket_t s);
+
+	/*
+	*	tick all sessions
+	*/
+	void tickall();
+
+	/*
+	*	free sessions
+	*/
+	void free();
 
 public:
 	/*
@@ -75,12 +77,6 @@ public:
 	*	service net io loop
 	*/
 	void ioloop();
-
-private:
-	/*
-	*	free sessions
-	*/
-	void free();
 
 private:
 	//iocp of service
