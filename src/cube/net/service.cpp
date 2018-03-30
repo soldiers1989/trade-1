@@ -22,18 +22,18 @@ int service::start(void *arg, int workers) {
 	return 0;
 }
 
-int service::dispatch(socket sock, session *s) {
+int service::dispatch(session *s) {
 	std::lock_guard<std::mutex> lock(_mutex);
-	//bind session with the socket
-	s->open(sock);
-	
 	//first bind the new session to completion port
-	_iocp.bind((HANDLE)s->handle(), (ULONG_PTR)s->handle());
+	_iocp.bind((HANDLE)s->handle(), (ULONG_PTR)s);
 
 	//notify the session with connection opened event
 	if (s->on_open(_arg) != 0) {
 		//notify the session with connection closed event
 		s->on_close();
+
+		//close session socket
+		s->close();
 
 		//free session object
 		delete s;
@@ -52,11 +52,11 @@ int service::stop() {
 	std::map<socket_t, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
 	while (iter != iterend) {
 		session *s = iter->second;
-		//close session socket, so it can unbind from iocp port
-		s->close();
-
 		//notify session the close event
 		s->on_close();
+
+		//close session socket, so it can unbind from iocp port
+		s->close();
 
 		//process next session
 		iter++;
@@ -75,9 +75,9 @@ int service::stop() {
 	return 0;
 }
 
-int service::discard(socket_t s) {
-	//std::lock_guard<std::mutex> lock(_mutex);
-	std::map<socket_t, session*>::iterator iter = _sessions.find(s);
+int service::discard(session *s) {
+	std::lock_guard<std::mutex> lock(_mutex);
+	std::map<socket_t, session*>::iterator iter = _sessions.find(s->handle());
 	if (iter != _sessions.end()) {
 		//remove session from service
 		session *s = iter->second;
@@ -96,7 +96,7 @@ int service::discard(socket_t s) {
 	return 0;
 }
 
-void service::tickall() {
+void service::tick() {
 	std::lock_guard<std::mutex> lock(_mutex);
 	//tick all session
 	::time_t now = ::time(0);
@@ -135,7 +135,7 @@ void service::run() {
 	//wait for tick timeout
 	std::this_thread::sleep_for(std::chrono::seconds(_tick_time_interval));
 	//tick all session
-	tickall();
+	tick();
 }
 
 void service::ioloop() {
@@ -143,48 +143,38 @@ void service::ioloop() {
 	iores res = _iocp.pull(1000);
 	
 	//process current io completed session
-	std::lock_guard<std::mutex> lock(_mutex);
-	socket_t sock = (socket_t)res.completionkey;
-	std::map<socket_t, session*>::iterator iter = _sessions.find(sock);
-	if (iter != _sessions.end()) {
-		//relate session
-		session *s = iter->second;
+	if (res.error == 0) {
+		//current completed io session
+		session *s = (session *)res.completionkey;
 		//get sepcial data from completion data
 		ioctxt *context = (ioctxt*)res.overlapped;
 
-		if (res.error == 0) {
-			//notify session with completed events
-			int err = 0;
-			switch (context->opt) {
-			case IO_SEND:
-				err = s->on_send(context, res.transfered);
-				break;
-			case IO_RECV:
-				err = s->on_recv(context, res.transfered);
-				break;
-			default:
-				err = 0;
-				break;
-			}	
-			//process error recall result
-			if (err != 0) {
-				//discard session from service
-				discard(sock);
-			}
+		//notify session with completed events
+		int err = 0;
+		switch (context->opt) {
+		case IO_SEND:
+			err = s->on_send(context, res.transfered);
+			break;
+		case IO_RECV:
+			err = s->on_recv(context, res.transfered);
+			break;
+		default:
+			err = 0;
+			break;
+		}
+
+		//process error recall result
+		if (err != 0) {
+			//discard session from service
+			discard(s);
+		}
+	} else {
+		if (res.error == ERROR_ABANDONED_WAIT_0) {
+			// iocp handle closed
+			log::error("iocp: iocp handle closed, errno %d", res.error);
 		} else {
-			if (res.error == ERROR_ABANDONED_WAIT_0)
-				// iocp handle closed
-				log::error("iocp: iocp handle closed, errno %d", res.error);
-			else {
-				if (res.error != WAIT_TIMEOUT) {
-					if (s != 0) {
-						log::error("iocp:  local connection closed, errno: %d", res.error);
-					} else {
-						log::error("iocp: fatal error with errno %d", res.error);
-						//fatal error with iocp
-						throw efatal(sys::last_error(res.error).c_str());
-					}
-				}
+			if (res.error != WAIT_TIMEOUT && res.error != ERROR_CONNECTION_ABORTED) {
+				log::fatal("iocp: fatal error with errno %d", res.error);
 			}
 		}
 	}

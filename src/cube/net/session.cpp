@@ -20,7 +20,7 @@ int session::on_tick(time_t now) {
 void session::on_close() {
 }
 
-void session::open(socket s) {
+void session::bind(socket s) {
 	_socket = s;
 }
 

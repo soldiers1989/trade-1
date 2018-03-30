@@ -34,12 +34,11 @@ public:
 
 	/*
 	*	dispatch a new session to iocp service
-	*@param sock: in, new socket
-	*@param s: in, new session for the socket
+	*@param s: in, new session will bind with socket
 	*@return:
 	*	0 for success, otherwise <0
 	*/
-	int dispatch(socket sock, session *s);
+	int dispatch(session *s);
 
 	/*
 	*	stop iocp service
@@ -51,16 +50,16 @@ public:
 private:
 	/*
 	*	discard an existing session in the service
-	*@param s: in, sessionto discard
+	*@param s: in, session to discard
 	*@return:
 	*	always 0
 	*/
-	int discard(socket_t s);
+	int discard(session *s);
 
 	/*
 	*	tick all sessions
 	*/
-	void tickall();
+	void tick();
 
 	/*
 	*	free sessions
