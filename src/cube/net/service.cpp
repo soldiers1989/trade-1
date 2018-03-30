@@ -113,8 +113,8 @@ void service::tick() {
 			//close socket
 			s->close();
 
-			//free session
-			delete s;
+			//free session !NOTE: free in worker ioloop!
+			//delete s;
 		} else {
 			iter++;
 		}
@@ -141,11 +141,12 @@ void service::run() {
 void service::ioloop() {
 	//process complete io request until stop
 	iores res = _iocp.pull(1000);
-	
+
+	//current completed io session
+	session *s = (session *)res.completionkey;
+
 	//process current io completed session
 	if (res.error == 0) {
-		//current completed io session
-		session *s = (session *)res.completionkey;
 		//get sepcial data from completion data
 		ioctxt *context = (ioctxt*)res.overlapped;
 
@@ -173,8 +174,11 @@ void service::ioloop() {
 			// iocp handle closed
 			log::error("iocp: iocp handle closed, errno %d", res.error);
 		} else {
-			if (res.error != WAIT_TIMEOUT && res.error != ERROR_CONNECTION_ABORTED) {
-				log::fatal("iocp: fatal error with errno %d", res.error);
+			if (res.error != WAIT_TIMEOUT) {
+				//free session object
+				delete s;
+
+				log::error("iocp: fatal error with errno %d", res.error);
 			}
 		}
 	}
