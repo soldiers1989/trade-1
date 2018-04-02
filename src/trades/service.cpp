@@ -20,6 +20,8 @@ int service::start() {
 	}
 	cube::log::info("load config file: %s, loaded.", config_file);
 
+	//set http session idle time limit
+	cube::svc::http_config::max_idle_time = config::idle;
 	
 	//start http server
 	err = server.start(config::port, config::workers, &applet);

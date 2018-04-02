@@ -15,6 +15,10 @@ public:
 	//service workers
 	static int workers;
 
+	//session idle time limit
+	static int idle;
+
+
 	//allow ip address
 	static std::string allowips;
 
