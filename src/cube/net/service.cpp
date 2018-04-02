@@ -178,7 +178,7 @@ void service::ioloop() {
 				//free session object
 				delete s;
 
-				log::error("iocp: fatal error with errno %d", res.error);
+				log::error("iocp: other error with errno %d", res.error);
 			}
 		}
 	}
