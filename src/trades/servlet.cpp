@@ -10,7 +10,7 @@ std::string protocol::succ(const std::string &msg, const std::string &data) {
 	res.append("\"data\":");
 
 	if (data.empty())
-		res.append("{}");
+		res.append("[]");
 	else
 		res.append(data);
 
@@ -25,7 +25,7 @@ std::string protocol::fail(const std::string &msg, const std::string &data) {
 	res.append("\"data\":");
 
 	if (data.empty())
-		res.append("{}");
+		res.append("[]");
 	else
 		res.append(data);
 
@@ -81,10 +81,9 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string dept = req.params().get("dept");
 	std::string version = req.params().get("version");
 
-	std::string data = "{\"account\":\"" + laccount + "\"}";
 	//check parameters
 	if (laccount.empty() || taccount.empty() || tpwd.empty() || ip.empty() || port.empty() || dept.empty() || version.empty()) {
-		std::string content = protocol::fail("invalid parameter.", data);
+		std::string content = protocol::fail("invalid parameter.");
 		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
 		return 0;
 	}
@@ -92,12 +91,12 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string errmsg("");
 	//login account
 	if (accounts::instance()->login(laccount, taccount, tpwd, cpwd, ip, (ushort)::atoi(port.c_str()), ::atoi(dept.c_str()), version, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg, data);
+		std::string content = protocol::fail(errmsg);
 		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
 		return 0;
 	}
 
-	std::string content = protocol::succ("success", data);
+	std::string content = protocol::succ("success");
 	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
 	return 0;
 }
@@ -233,7 +232,7 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 
 /*
 *request:
-*	/trade/order?account=$account&otype=$otype&ptype=$ptype&gddm=$gddm&zqdm=$zqdm&price=$price&count=$count
+*	/send/order?account=$account&otype=$otype&ptype=$ptype&gddm=$gddm&zqdm=$zqdm&price=$price&count=$count
 */
 int order::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
@@ -280,7 +279,7 @@ int order::handle(const cube::http::request &req, cube::http::response &resp) {
 
 /*
 *request:
-*	/trade/cancel?account=$account&seid=$seid&orderno=$orderno
+*	/cancel/order?account=$account&seid=$seid&orderno=$orderno
 */
 int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
@@ -323,7 +322,7 @@ int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 
 /*
 *request:
-*	/trade/logout?account=$account
+*	/logout?account=$account
 */
 int logout::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority

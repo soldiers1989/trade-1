@@ -35,6 +35,7 @@
     <ClCompile Include="http\message.cpp" />
     <ClCompile Include="http\param.cpp" />
     <ClCompile Include="http\servlet.cpp" />
+    <ClCompile Include="str\conv.cpp" />
     <ClCompile Include="str\json.cpp" />
     <ClCompile Include="sys\cpu.cpp" />
     <ClCompile Include="sys\file.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="http\config.h" />
     <ClInclude Include="http\mime.h" />
     <ClInclude Include="http\servlet.h" />
+    <ClInclude Include="str\conv.h" />
     <ClInclude Include="str\json.h" />
     <ClInclude Include="sys\cpu.h" />
     <ClInclude Include="http\handler.h" />

@@ -36,6 +36,10 @@ public:
 	*/
 	std::string tostring();
 
+	/*
+	*	get all items of section
+	*/
+	std::map<std::string, std::string> items();
 private:
 	//section name
 	std::string _name;
@@ -76,6 +80,10 @@ public:
 	*/
 	std::string tostring();
 
+	/*
+	*	get all items of specfied section
+	*/
+	std::map<std::string, std::string> items(const std::string &section_name);
 private:
 	//sections of configure
 	std::map<std::string, section>	_sections;
@@ -142,6 +150,11 @@ public:
 	*	string of represent the sections
 	*/
 	std::string tostring();
+
+	/*
+	*	get all items of specfied section
+	*/
+	std::map<std::string, std::string> items(const std::string &section_name);
 private:
 	/*
 	*	 check if current line of string is section

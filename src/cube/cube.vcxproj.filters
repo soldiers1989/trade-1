@@ -183,6 +183,9 @@
     <ClCompile Include="net\worker.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="str\conv.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cc\crontab.h">
@@ -381,6 +384,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="net\worker.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="str\conv.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

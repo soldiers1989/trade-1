@@ -29,6 +29,9 @@ std::string section::tostring() {
 	return res;
 }
 
+std::map<std::string, std::string> section::items() {
+	return _items;
+}
 
 void sections::set_item(const std::string &section_name, const std::string &key, const std::string &value) {
 	std::map<std::string, section>::iterator iter = _sections.find(section_name);
@@ -56,6 +59,14 @@ std::string sections::tostring() {
 		iter++;
 	}
 	return res;
+}
+
+std::map<std::string, std::string> sections::items(const std::string &section_name) {
+	std::map<std::string, section>::iterator iter = _sections.find(section_name);
+	if (iter != _sections.end())
+		return iter->second.items();
+
+	return std::map<std::string, std::string>();
 }
 
 int ini::load(const char *file_path) {
@@ -192,5 +203,9 @@ bool ini::parse_key_value(const std::string &line, std::string &key, std::string
 
 std::string ini::tostring() {
 	return _sections.tostring();
+}
+
+std::map<std::string, std::string> ini::items(const std::string &section_name) {
+	return _sections.items(section_name);
 }
 END_CUBE_CFG_NS
