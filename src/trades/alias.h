@@ -48,5 +48,8 @@ private:
 
 	//alias->name of table column name
 	std::map<std::string, std::string> _alias;
+
+	//need character charset converting column names(after alias)
+	std::map<std::string, std::string> _convs;
 };
 END_TRADES_NAMESPACE

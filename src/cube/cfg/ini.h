@@ -8,6 +8,7 @@ BEGIN_CUBE_CFG_NS
 //section structure of configure file
 class section {
 public:
+	section() {}
 	section(std::string name) : _name(name){}
 	virtual ~section() {}
 
@@ -54,6 +55,11 @@ public:
 	virtual ~sections() {}
 
 	/*
+	*	add new section
+	*/
+	void add_section(const std::string &section_name);
+
+	/*
 	*	add a item to section
 	*@param section_name: in, section name
 	*@param key: in, key of item
@@ -91,6 +97,8 @@ private:
 
 
 class ini {
+public:
+	static char *COMMENT_TAGS;
 public:
 	ini() {}
 	virtual ~ini() {}
@@ -171,7 +179,7 @@ private:
 	*@return:
 	*	true if is comment, otherwise false
 	*/
-	bool is_comment(const std::string &line, const char* ctags = "#;/");
+	bool is_comment(const std::string &line, const char* ctags = COMMENT_TAGS);
 
 	/*
 	*	parse section name from a line of string with format "[section name]", e.g. "[section1]" -> "section1"
@@ -190,7 +198,7 @@ private:
 	*@return:
 	*	true if parse success, otherwise false
 	*/
-	bool parse_key_value(const std::string &line, std::string &key, std::string &value, const char* ctags = "#;/");
+	bool parse_key_value(const std::string &line, std::string &key, std::string &value, const char* ctags = COMMENT_TAGS);
 
 private:
 	//configure file path

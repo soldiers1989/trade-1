@@ -17,28 +17,44 @@ void lang::set(int codepage, const std::string &charset) {
 	_charset = charset;
 }
 
+std::string lang::conv(const std::string &src) {
+	std::string dest("");
+	if (cube::str::iconv(dest, src, CODEPAGE, _codepage) != 0) {
+		return src;
+	}
 
-int lang::process(trade::table &result, const trade::table &tbl) {
+	return dest;
+}
+
+int lang::conv(std::string &dest, const std::string &src) {
+	if (cube::str::iconv(dest, src, CODEPAGE, _codepage) != 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+trade::table lang::process(const trade::table &tbl) {
+	trade::table result;
+	process(result, tbl);
+	return result;
+}
+
+void lang::process(trade::table &result, const trade::table &tbl) {
 	//no need to convert
 	if (_codepage == CODEPAGE) {
 		result = tbl;
-		return 0;
+		return;
 	}
 
 	//convert every items
 	for (std::size_t i = 0; i < tbl.size(); i++) {
 		std::vector<std::string> row;
 		for (std::size_t j = 0; j < tbl[i].size(); j++) {
-			std::string newstr("");
-			if (cube::str::iconv(newstr, tbl[i][j], CODEPAGE, _codepage) != 0) {
-				return -1;
-			}
-			row.push_back(newstr);
+			row.push_back(conv(tbl[i][j]));
 		}
 		result.push_back(row);
 	}
-
-	return 0;
 }
 
 bool lang::needconv() {
@@ -46,5 +62,9 @@ bool lang::needconv() {
 		return false;
 	}
 	return true;
+}
+
+const std::string& lang::charset() {
+	return instance()->_charset;
 }
 END_TRADES_NAMESPACE

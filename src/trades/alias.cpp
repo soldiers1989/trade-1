@@ -1,6 +1,7 @@
+#include "trades\lang.h"
+#include "trades\alias.h"
 #include "cube\cfg\ini.h"
 #include "cube\str\part.h"
-#include "trades\alias.h"
 BEGIN_TRADES_NAMESPACE
 alias *alias::_inst = 0;
 alias *alias::instance() {
@@ -34,6 +35,15 @@ int alias::load(const char *cfg) {
 		iter++;
 	}
 
+	//get need character encoding converting column names(after alias)
+	std::string sconvs = tmpcfg.get_string_value("conv", "columns", "");
+	if (!sconvs.empty()) {
+		std::vector<std::string> vconvs = cube::str::part(sconvs.c_str(), " ");
+		for (std::size_t i = 0; i < vconvs.size(); i++) {
+			_convs[vconvs[i]] = vconvs[i];
+		}
+	}
+
 	//set enabled flag
 	_enabled = true;
 
@@ -58,13 +68,20 @@ trade::table alias::process(const trade::table &tbl) {
 	std::vector<std::string> colnames;
 	//filter result for column numbers(start with 0)
 	std::vector<int> colnums;
+	//columns need to convert charaset
+	std::map<int, int> colconvs;
 
 	//filter column by original names
 	for (std::size_t i = 0; i < tbl[0].size(); i++) {
 		std::map<std::string, std::string>::iterator iter = _alias.find(tbl[0][i]);
 		if (iter != _alias.end()) {
+			//new column names after alias convert
 			colnames.push_back(iter->second);
+			//keep columns after alias filter
 			colnums.push_back(i);
+			//column need to convert charset
+			if (_convs.find(iter->second) != _convs.end())
+				colconvs[i] = i;
 		}
 	}
 
@@ -79,7 +96,12 @@ trade::table alias::process(const trade::table &tbl) {
 	for (std::size_t j = 1; j < tbl.size(); j++) {
 		std::vector<std::string> col;
 		for (std::size_t k = 0; k < colnums.size(); k++) {
-			col.push_back(tbl[j][colnums[k]]);
+			std::string val = tbl[j][colnums[k]];
+			if (colconvs.find(colnums[k]) != colconvs.end()) {
+				val = lang::instance()->conv(val);
+			}
+				
+			col.push_back(val);
 		}
 
 		result.push_back(col);

@@ -33,6 +33,13 @@ std::map<std::string, std::string> section::items() {
 	return _items;
 }
 
+void sections::add_section(const std::string &section_name) {
+	std::map<std::string, section>::iterator iter = _sections.find(section_name);
+	if (iter == _sections.end()) {
+		_sections[section_name] = section(section_name);
+	}
+}
+
 void sections::set_item(const std::string &section_name, const std::string &key, const std::string &value) {
 	std::map<std::string, section>::iterator iter = _sections.find(section_name);
 	if (iter != _sections.end())
@@ -83,7 +90,7 @@ int ini::load(const char *file_path) {
 	char buf[BUFSZ] = { 0 };
 
 	//current section name
-	std::string section("");
+	std::string section_name("");
 
 	//process each file line
 	ifs.getline(buf, BUFSZ);
@@ -91,12 +98,14 @@ int ini::load(const char *file_path) {
 		//process current line
 		std::string line = str::strip(buf);
 		if (!line.empty() && !is_comment(line)) {
-			if (is_section(line))
-				section = parse_section_name(line);
-			else {
+			if (is_section(line)) {
+				section_name = parse_section_name(line);
+				if(!section_name.empty())
+					_sections.add_section(section_name);
+			} else {
 				std::string key, value;
 				if (parse_key_value(line, key, value))
-					_sections.set_item(section, key, value);
+					_sections.set_item(section_name, key, value);
 				else
 					return -1; //invalid configure
 			}
@@ -132,6 +141,8 @@ std::string ini::get_string_value(const std::string &section, const std::string&
 	return value;
 }
 
+//comment tag characters
+char *ini::COMMENT_TAGS = "#;";
 
 void ini::set_integer_value(const std::string &section, const std::string &key, int value) {
 	_sections.set_item(section, key, str::string(value));
@@ -188,8 +199,8 @@ bool ini::parse_key_value(const std::string &line, std::string &key, std::string
 	//process value and comment
 	std::string vc = str::strip(line.substr(pos + 1)); // value and comment
 	size_t cpos = std::string::npos; //comment pos
-	for (pos = 0; pos < value.length(); pos++) {
-		if (strchr(ctags, value[pos]) != 0) {
+	for (pos = 0; pos < vc.length(); pos++) {
+		if (strchr(ctags, vc[pos]) != 0) {
 			cpos = pos;
 			break;
 		}

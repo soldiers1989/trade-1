@@ -17,18 +17,33 @@ public:
 	void set(int codepage, const std::string &charset);
 
 	/*
+	*	convert source string to target character encoded string
+	*@param dest: in, destination string converted
+	*@param src: in, source string to be converted
+	*@return:
+	*	0 for success, otherwise faliure
+	*/
+	std::string conv(const std::string &src);
+	int conv(std::string &dest, const std::string &src);
+
+	/*
 	*	process table result by alias
 	*@param tbl: table data with table header as the first line
 	*@return:
-	*	alias result
+	*	0 for success, otherwise faliure
 	*/
-	int process(trade::table &result, const trade::table &tbl);
+	trade::table process(const trade::table &tbl);
+	void process(trade::table &result, const trade::table &tbl);
 
 	/*
 	*	test if need convert response data
 	*/
 	bool needconv();
 
+	/*
+	*	get current charset of response
+	*/
+	static const std::string& charset();
 private:
 	lang() : _codepage(CODEPAGE), _charset(CHARSET){}
 
