@@ -100,7 +100,7 @@ int connect::handle(const cube::http::request &req, cube::http::response &resp) 
 
 /*
 *request:
-*	/quote/count?market=$market
+*	/count?market=$market
 */
 int query_security_count::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
@@ -140,7 +140,7 @@ int query_security_count::handle(const cube::http::request &req, cube::http::res
 
 /*
 *request:
-*	/query/security/list?market=$market&start=$start
+*	/list?market=$market&start=$start
 */
 int query_security_list::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
@@ -450,7 +450,7 @@ int query_current_quote_data::handle(const cube::http::request &req, cube::http:
 
 /*
 *request:
-*	/quote/disconnect
+*	/disconnect
 */
 int disconnect::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
