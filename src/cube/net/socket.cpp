@@ -330,23 +330,35 @@ socket_t socket::handle() const {
 	return _socket;
 }
 
+bool socket::valid() const {
+	return _socket != INVALID_SOCKET;
+}
+
 saddr socket::peeraddr() const {
+	if (_socket == INVALID_SOCKET)
+		return saddr(_ip, _port);
+
 	struct sockaddr_in addr;
 	int addrlen = sizeof(addr);
 	int err = ::getpeername(_socket, (struct sockaddr*)&addr, &addrlen);
 	if (err != 0) {
-		throw error(sa::last_error().c_str());
+		return saddr(_ip, _port); //Note: consider error later
+		//throw error(sa::last_error().c_str());
 	}
 
 	return saddr(ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port));
 }
 
 saddr socket::localaddr() const {
+	if (_socket == INVALID_SOCKET)
+		return saddr(0, 0);
+
 	struct sockaddr_in addr;
 	int addrlen = sizeof(addr);
 	int err = ::getsockname(_socket, (struct sockaddr*)&addr, &addrlen);
 	if (err != 0) {
-		throw error(sa::last_error().c_str());
+		return saddr(0, 0); //Note: consider error later
+		//throw error(sa::last_error().c_str());
 	}
 
 	return saddr(ntohl(addr.sin_addr.s_addr), ntohs(addr.sin_port));

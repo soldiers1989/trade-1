@@ -197,6 +197,11 @@ public:
 	socket_t handle() const;
 	
 	/*
+	*	check socket valid status
+	*/
+	bool valid() const;
+
+	/*
 	*	get peer or local address connected with the socket
 	*/
 	saddr peeraddr() const;
