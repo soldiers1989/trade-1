@@ -1,120 +1,164 @@
 """
-    table class
+    table class, table data format:
+    [
+        [column1, column2, ... , columnN],
+        [value11, value21, ... , valueN1],
+        [value12, value22, ... , valueN2],
+        ...
+    ]
+
+    you can access value21 by access table[column2][0], if there is same column name,
+    you can access value by specified number of the same column like table[column:X][0]
 """
-from .series import Series
 
 
-class Table:
+class _Table:
     """
         base class of models
     """
-    def __init__(self, data, index=None, columns=None):
+    def __init__(self, data):
         """
-            initialize table with table data
-        :param data: array, data frame of table
-        :param index: array, index values of table rows
-        :param columns: array, column names of table
+            table data
+        :param data:
         """
-        self._data, self._index = {}, {}
-        if isinstance(data, list) or isinstance(data, tuple): # input data is list
-            if len(data) > 0:
-                # detect the row and column number
-                rownum, colnum = None, None
-                if isinstance(data[0], list) or isinstance(data[0], tuple):
-                    colnum = len(data)
-                    for col in data:
-                        if rownum is None:
-                            rownum = len(col)
-                        else:
-                            if rownum < len(col):
-                                rownum = len(col)
-                else:
-                    colnum = 1
-                    rownum = len(data)
+        if data is None:
+            return
 
-                # construct index, make sure index is satisfied with data
-                if index is not None:
-                    if len(index) != rownum:
-                        raise ValueError("table index values is not satisfied.")
-                    for i in range(0, rownum):
-                        self._index[index[i]] = i
-                else:
-                    for i in range(0, rownum):
-                        self._index[i] = i
+        if not self.is_table(data):
+            raise "input data is not table format"
 
-                # construct columns, make sure columns is satisfied with data
-                if columns is not None:
-                    if len(columns) != colnum:
-                        raise ValueError("table column names is not satisfied.")
+        self._data = data
 
-                else:
-                    columns = [i for i in range(0, colnum)]
+    def __getitem__(self, idx):
+        """
+            get item by column name and row number identifier
+        :param idx:
+        :return:
+        """
+        try:
+            # get column name and row number
+            colname, colidx = idx, 0
+            if isinstance(idx, slice):
+                colname, colidx = idx.start, idx.stop
 
-                # construct table data
-                if colnum == 1:
-                    self._data[columns[0]] = data
-                else:
-                    for i in range(0, colnum):
-                        self._data[columns[i]] = data[i]
-        elif isinstance(data, dict): # input data dict
-            if len(data) > 0:
-                # detect the row and column number
-                rownum, columns = None, len(data)
-                for col in data.values():
-                    if rownum is None:
-                        rownum = len(col)
+            idx, colnum = 0, None
+            for i in range(0, len(self._data[0])):
+                if colname == self._data[0][i]:
+                    if idx == colidx:
+                       colnum = i
+                       break
                     else:
-                        if rownum < len(col):
-                            rownum = len(col)
+                        idx += 1
 
-                # construct index, make sure index is satisfied with data
-                if index is not None:
-                    if len(index) != rownum:
-                        raise ValueError("table index values is not satisfied.")
-                    for i in range(0, rownum):
-                        self._index[index[i]] = i
-                else:
-                    for i in range(0, rownum):
-                        self._index[i] = i
+            colvals = None
+            if colnum is not None:
+                colvals = []
+                for row in self._data[1:]:
+                    colvals.append(row[colnum])
 
-                # construct table data
-                self._data = data
-        else:
-            raise ValueError("table data must be list|tupe|dict.")
+            return colvals
 
-    def __getitem__(self, column):
-        data = self._data.get(column, None)
-        if data is not None:
-            Series(data.extend([None]*(len(self._index)-len(data))), self._index)
-        return data
-
-    def __setitem__(self, column, value):
-        if value is None:
-            self._data.pop(column, None)
-        else:
-            if isinstance(value, list):
-                self._data[column] = value
-            elif isinstance(value, tuple):
-                self._data[column] = list(value)
-            else:
-                raise ValueError("table column data is not satisfied.")
+        except:
+            return None
 
     @property
     def data(self):
-        return list(self._data.values())
+        """
+            get table data
+        :return:
+        """
+        return self._data
 
-    @property
-    def columns(self):
-        pass
 
-    @columns.setter
-    def columns(self, cols):
-        pass
+    @staticmethod
+    def is_table(data):
+        """
+            check data
+        :param data:
+        :return:
+        """
+        if not isinstance(data, list):
+            return False
 
-    @property
-    def index(self):
-        pass
+        if len(data) > 0:
+            for item in data:
+                if not isinstance(item, list):
+                    return False
 
-    @index.setter
-    def index(self, idxs):
-        pass
+            cols = len(data[0])
+            for item in data[1:]:
+                if len(item) != cols:
+                    return False
+
+        return True
+
+    @staticmethod
+    def sub(data, alias):
+        """
+            extract columns by column name alias
+        :param data: in, table
+        :param alias: in, dict<alias name, [column names]>
+        :return:
+            sub table by extract columns with alias
+        """
+        if not data or not _Table.is_table(data):
+            raise "input data is not table"
+
+        if not alias:
+            return data
+
+        if not isinstance(alias, dict):
+            raise "input alias is not dict"
+
+        colnames, colnums = [], []
+        for i in range(0, len(data[0])):
+            for aliasname, names in alias.items():
+                if data[0][i] in names:
+                    colnames.append(aliasname)
+                    colnums.append(i)
+
+        result = [colnames]
+        for row in data[1:]:
+            newrow = []
+            for num in colnums:
+                newrow.append(row[num])
+            result.append(newrow)
+
+        return result
+
+
+    @staticmethod
+    def transform(data):
+        """
+            row column transform
+        :param data:
+        :return:
+        """
+        if not data or not _Table.is_table(data):
+            raise "input data is not table"
+
+        result = []
+        for i in range(0, len(data[0])):
+            result.append([])
+            for row in data:
+                result[i].append(row[i])
+
+        return result
+
+if __name__ == "__main__":
+    alias = {'A':['a', 'b']}
+    data = [['a', 'b', 'c', 'c'],[1, 2, 3, 4]]
+    a = _Table(data)
+
+    print(a['a'])
+    print(a['b':0])
+    print(a['c':1])
+    print(a['f':0])
+
+
+    b = _Table.transform(data)
+
+    print(b)
+
+    c = _Table.sub(data, alias)
+    print(c)

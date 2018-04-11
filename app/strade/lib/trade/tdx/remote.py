@@ -2,7 +2,7 @@
     remote service request wraper
 """
 import requests
-from . import config
+from lib.trade.tdx import config
 
 class Remote:
     def __init__(self, host, port):
@@ -100,7 +100,7 @@ class Remote:
         # return response result
         return status, msg, data
 
-    def quote(self, account, code):
+    def quote(self, account, code, market):
         """
             query current quote of code
         :param account:
@@ -113,7 +113,8 @@ class Remote:
         # request parameters
         params = {
             "account":account,
-            "code" : code
+            "code" : code,
+            "market": market
         }
 
         # request remote service
@@ -161,12 +162,12 @@ class Remote:
         # return response result
         return status, msg, data
 
-    def cancel(self, account, seid, orderno):
+    def cancel(self, account, orderno, seid):
         """
             cancel an order
         :param account:
-        :param seid:
         :param orderno:
+        :param seid:
         :return:
         """
         # make request url

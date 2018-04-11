@@ -1,1 +1,1 @@
-from . import series, table
+from .table import _Table as table

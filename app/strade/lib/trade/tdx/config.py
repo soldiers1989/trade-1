@@ -3,4 +3,4 @@
 """
 
 # timeout in seconds for http request
-TIMEOUT = 10
+TIMEOUT = 15
