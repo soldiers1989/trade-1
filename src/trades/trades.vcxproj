@@ -157,6 +157,8 @@
   <ItemGroup>
     <ClCompile Include="account.cpp" />
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="alias.cpp" />
+    <ClCompile Include="lang.cpp" />
     <ClCompile Include="service.cpp" />
     <ClCompile Include="servlet.cpp" />
     <ClCompile Include="trades.cpp" />
@@ -164,6 +166,8 @@
   <ItemGroup>
     <ClInclude Include="account.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="alias.h" />
+    <ClInclude Include="lang.h" />
     <ClInclude Include="service.h" />
     <ClInclude Include="servlet.h" />
     <ClInclude Include="stdtrds.h" />

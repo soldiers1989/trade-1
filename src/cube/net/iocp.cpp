@@ -25,6 +25,10 @@ iores iocp::pull(int waitmsec/* = -1*/) {
 	return res;
 }
 
+bool iocp::expire(ULONG_PTR key) {
+	return PostQueuedCompletionStatus(_iocp, 0, key, 0);
+}
+
 void iocp::close() {
 	if (_iocp != INVALID_HANDLE_VALUE) {
 		CloseHandle(_iocp);

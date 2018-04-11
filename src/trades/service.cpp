@@ -1,3 +1,5 @@
+#include "trades\lang.h"
+#include "trades\alias.h"
 #include "cube\log\log.h"
 #include "trades\config.h"
 #include "trades\servlet.h"
@@ -20,6 +22,25 @@ int service::start() {
 	}
 	cube::log::info("load config file: %s, loaded.", config_file);
 
+	//set lang codepage and charset
+	lang::instance()->set(config::codepage, config::charset);
+	if (lang::instance()->needconv()) {
+		cube::log::info("enable charset convert to %s.", config::charset.c_str());
+	}
+
+	//load alias configure if alias enable
+	if (config::alias_enable == "true") {
+		if (alias::instance()->load(config::alias_config.c_str()) != 0) {
+			cube::log::info("load alias configure %s failed, disable alias.", config::alias_config.c_str());
+		} else {
+			cube::log::info("load alias configure %s success, enable alias.", config::alias_config.c_str());
+		}
+	} else {
+		alias::instance()->disable();
+	}
+
+	//set http session idle time limit
+	cube::svc::http_config::max_idle_time = config::idle;
 	
 	//start http server
 	err = server.start(config::port, config::workers, &applet);
@@ -28,7 +49,7 @@ int service::start() {
 		return -1;
 	}
 
-	cube::log::info("trade service started on port %d.", config::port);
+	cube::log::info("trade service started on port %d with wokers %d.", config::port, config::workers);
 
 	return 0;
 }

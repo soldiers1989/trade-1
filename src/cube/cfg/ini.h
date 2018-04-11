@@ -8,6 +8,7 @@ BEGIN_CUBE_CFG_NS
 //section structure of configure file
 class section {
 public:
+	section() {}
 	section(std::string name) : _name(name){}
 	virtual ~section() {}
 
@@ -36,6 +37,10 @@ public:
 	*/
 	std::string tostring();
 
+	/*
+	*	get all items of section
+	*/
+	std::map<std::string, std::string> items();
 private:
 	//section name
 	std::string _name;
@@ -48,6 +53,11 @@ class sections {
 public:
 	sections() {}
 	virtual ~sections() {}
+
+	/*
+	*	add new section
+	*/
+	void add_section(const std::string &section_name);
 
 	/*
 	*	add a item to section
@@ -76,6 +86,10 @@ public:
 	*/
 	std::string tostring();
 
+	/*
+	*	get all items of specfied section
+	*/
+	std::map<std::string, std::string> items(const std::string &section_name);
 private:
 	//sections of configure
 	std::map<std::string, section>	_sections;
@@ -83,6 +97,8 @@ private:
 
 
 class ini {
+public:
+	static char *COMMENT_TAGS;
 public:
 	ini() {}
 	virtual ~ini() {}
@@ -142,6 +158,11 @@ public:
 	*	string of represent the sections
 	*/
 	std::string tostring();
+
+	/*
+	*	get all items of specfied section
+	*/
+	std::map<std::string, std::string> items(const std::string &section_name);
 private:
 	/*
 	*	 check if current line of string is section
@@ -158,7 +179,7 @@ private:
 	*@return:
 	*	true if is comment, otherwise false
 	*/
-	bool is_comment(const std::string &line, const char* ctags = "#;/");
+	bool is_comment(const std::string &line, const char* ctags = COMMENT_TAGS);
 
 	/*
 	*	parse section name from a line of string with format "[section name]", e.g. "[section1]" -> "section1"
@@ -177,7 +198,7 @@ private:
 	*@return:
 	*	true if parse success, otherwise false
 	*/
-	bool parse_key_value(const std::string &line, std::string &key, std::string &value, const char* ctags = "#;/");
+	bool parse_key_value(const std::string &line, std::string &key, std::string &value, const char* ctags = COMMENT_TAGS);
 
 private:
 	//configure file path

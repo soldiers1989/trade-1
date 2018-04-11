@@ -56,6 +56,16 @@ public:
 	*	always 0
 	*/
 	virtual void on_close();
+
+public:
+	/*
+	*	bind session with socket
+	*@param s: in, socket of new session
+	*@return:
+	*	void
+	*/
+	void bind(socket s);
+
 protected:
 	/*
 	*	make an asynchronize iocp send operation with data @buf which size is @sz
@@ -76,15 +86,6 @@ protected:
 	int recv(int sz, std::string *error = 0);
 
 private:
-	/*
-	*	open the new session
-	*@param s: in, socket of new session
-	*@return:
-	*	void
-	*/
-	void open(socket s);
-
-
 	/*
 	*	close current session
 	*@return:

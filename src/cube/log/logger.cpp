@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <Windows.h>
 #include "cube\sys\time.h"
 #include "cube\log\logger.h"
 BEGIN_CUBE_LOG_NS
@@ -106,11 +107,11 @@ void logger::print(level lvl, const char *msg) {
 	//check level
 	if (lvl < _level)
 		return;
-
+	
 	//add level and time to message
 	const int BUFSZ = 1024;
 	char buf[BUFSZ] = { 0 };
-	int pos = snprintf(buf, BUFSZ, "%s[%s]%s\n", sys::time::now("[%Y%m%d][%H:%M:%S]").c_str(), LEVEL[(int)lvl], msg);
+	int pos = snprintf(buf, BUFSZ, "%s[%d][%s]%s\n", sys::time::now("[%Y%m%d][%H:%M:%S]").c_str(), thread_id(), LEVEL[(int)lvl], msg);
 	if (pos > 0 && pos<BUFSZ) {
 		buf[pos] = 0;
 		msg = buf;
@@ -145,5 +146,9 @@ void logger::set(output out, const char *dir/* = "."*/, const char *name/* = "lo
 		_printer = 0;
 		break;
 	}
+}
+
+uint logger::thread_id() {
+	return ::GetCurrentThreadId();
 }
 END_CUBE_LOG_NS

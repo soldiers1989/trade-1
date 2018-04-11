@@ -3,12 +3,18 @@
 #include "cube\http\applet.h"
 #include "cube\svc\tcp_server.h"
 BEGIN_CUBE_SVC_NS
+//http configure
+class http_config {
+public:
+	static int max_idle_time;
+};
+
 //http session class
 class http_session : public net::session {
 	//session send & recv buffer size
 	static const int BUFSZ = 16*1024;
 public:
-	http_session() : _applet(0), _max_idle_interval(5), _last_active_time(~0) {}
+	http_session() : _applet(0), _max_idle_interval(http_config::max_idle_time), _last_active_time(~0) {}
 	virtual ~http_session() {}
 
 	int on_open(void *arg);

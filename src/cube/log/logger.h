@@ -59,6 +59,12 @@ public:
 	void set(output out, const char *dir = ".", const char *name = "log", roll ropt = roll::none, uint fszlimit = -1);
 
 private:
+	/*
+	*	get current thread id
+	*/
+	uint thread_id();
+
+private:
 	//output printer for log
 	printer *_printer;
 

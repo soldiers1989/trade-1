@@ -2,6 +2,8 @@
 #include "cube\svc\http_server.h"
 
 BEGIN_CUBE_SVC_NS
+int http_config::max_idle_time = 10;
+
 //////////////////////////////////////http session class///////////////////////////////////////
 int http_session::on_open(void *arg) {
 	_last_active_time = ::time(0);

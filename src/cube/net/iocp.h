@@ -47,6 +47,14 @@ public:
 	iores pull(int waitmsec = -1);
 
 	/*
+	*	expire handle with completion @key bind with the iocp
+	*@param key: in, completion key of handle
+	*@return:
+	*	true for success, otherwise return false and call getlasterror for more informaiton
+	*/
+	bool expire(ULONG_PTR key);
+
+	/*
 	*	close iocp handle
 	*/
 	void close();

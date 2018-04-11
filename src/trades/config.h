@@ -15,8 +15,22 @@ public:
 	//service workers
 	static int workers;
 
+	//session idle time limit
+	static int idle;
+
 	//allow ip address
 	static std::string allowips;
+
+	//alias configure file
+	static std::string alias_enable;
+	static std::string alias_config;
+
+	//response data charset
+	static std::string charset;
+	//response data locale
+	static std::string locale;
+	//response data code page
+	static int codepage;
 
 public:
 	//load configure file

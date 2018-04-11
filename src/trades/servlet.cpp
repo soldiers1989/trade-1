@@ -1,16 +1,21 @@
+#include "trades\lang.h"
+#include "trades\alias.h"
 #include "trades\config.h"
 #include "cube\str\json.h"
 #include "cube\str\stype.h"
 #include "trades\account.h"
 #include "trades\servlet.h"
 BEGIN_TRADES_NAMESPACE
+//response content type
+std::string protocol::ctype = "application/json";
+
 std::string protocol::succ(const std::string &msg, const std::string &data) {
 	std::string res("{\"status\":0,");
 	res.append("\"msg\":\""+cube::str::json(msg)+"\",");
 	res.append("\"data\":");
 
 	if (data.empty())
-		res.append("{}");
+		res.append("[]");
 	else
 		res.append(data);
 
@@ -25,7 +30,7 @@ std::string protocol::fail(const std::string &msg, const std::string &data) {
 	res.append("\"data\":");
 
 	if (data.empty())
-		res.append("{}");
+		res.append("[]");
 	else
 		res.append(data);
 
@@ -48,7 +53,7 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
 		std::string content = protocol::fail("authority denied");
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -81,24 +86,23 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string dept = req.params().get("dept");
 	std::string version = req.params().get("version");
 
-	std::string data = "{\"account\":\"" + laccount + "\"}";
 	//check parameters
 	if (laccount.empty() || taccount.empty() || tpwd.empty() || ip.empty() || port.empty() || dept.empty() || version.empty()) {
-		std::string content = protocol::fail("invalid parameter.", data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail("invalid parameter.");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
 	std::string errmsg("");
 	//login account
 	if (accounts::instance()->login(laccount, taccount, tpwd, cpwd, ip, (ushort)::atoi(port.c_str()), ::atoi(dept.c_str()), version, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg, data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail(errmsg);
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
-	std::string content = protocol::succ("success", data);
-	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	std::string content = protocol::succ("success");
+	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
 
@@ -111,7 +115,7 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
 		std::string content = protocol::fail("authority denied");
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -119,12 +123,10 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string account = req.params().get("account");
 	std::string code = req.params().get("code");
 
-	std::string data = "{\"account\":\"" + account + "\"}";
-
 	//check parameters
 	if (account.empty() || code.empty()) {
-		std::string content = protocol::fail("invalid parameter.", data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail("invalid parameter.");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -132,16 +134,27 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string errmsg("");
 	//query account
 	if (accounts::instance()->quote(account, code, result, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg, data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
+	//proccess alias if enabled
+	if (alias::instance()->enabled()) {
+		//charset will be convert in alias processing
+		result = alias::instance()->process(result);
+	} else {
+		//process charset converting
+		if (lang::instance()->needconv()) {
+			result = lang::instance()->process(result);
+		}
+	}
+
 	//response json
-	data = cube::str::json(result);
+	std::string data = cube::str::json(result);
 
 	std::string content = protocol::succ("success", data);
-	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
 
@@ -153,7 +166,7 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 	//check authority
 	if (!authority::allow(req.peerip())) {
 		std::string content = protocol::fail("authority denied");
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -161,12 +174,10 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 	std::string account = req.params().get("account");
 	std::string category = req.params().get("category");
 
-	std::string data = "{\"account\":\"" + account + "\"}";
-
 	//check parameters
 	if (account.empty() || category.empty()) {
-		std::string content = protocol::fail("invalid parameter.", data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail("invalid parameter.");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -174,16 +185,27 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 	std::string errmsg("");
 	//query account
 	if (accounts::instance()->query(account, ::atoi(category.c_str()), result, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg, data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 	
+	//proccess alias if enabled
+	if (alias::instance()->enabled()) {
+		//charset will be convert in alias processing
+		result = alias::instance()->process(result);
+	} else {
+		//process charset converting
+		if (lang::instance()->needconv()) {
+			result = lang::instance()->process(result);
+		}
+	}
+
 	//response json
-	data = cube::str::json(result);
+	std::string data = cube::str::json(result);
 
 	std::string content = protocol::succ("success", data);
-	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
 
@@ -195,7 +217,7 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 	//check authority
 	if (!authority::allow(req.peerip())) {
 		std::string content = protocol::fail("authority denied");
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -205,12 +227,10 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 	std::string sdate = req.params().get("sdate");
 	std::string edate = req.params().get("edate");
 
-	std::string data = "{\"account\":\"" + account + "\"}";
-
 	//check parameters
 	if (account.empty() || category.empty() || sdate.empty() || edate.empty()) {
-		std::string content = protocol::fail("invalid parameter.", data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail("invalid parameter.");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -218,28 +238,39 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 	std::string errmsg("");
 	//query account
 	if (accounts::instance()->query(account, ::atoi(category.c_str()), sdate, edate, result, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg, data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
+	//proccess alias if enabled
+	if (alias::instance()->enabled()) {
+		//charset will be convert in alias processing
+		result = alias::instance()->process(result);
+	} else {
+		//process charset converting
+		if (lang::instance()->needconv()) {
+			result = lang::instance()->process(result);
+		}
+	}
+
 	//response json
-	data = cube::str::json(result);
+	std::string data = cube::str::json(result);
 
 	std::string content = protocol::succ("success", data);
-	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
 
 /*
 *request:
-*	/trade/order?account=$account&otype=$otype&ptype=$ptype&gddm=$gddm&zqdm=$zqdm&price=$price&count=$count
+*	/send/order?account=$account&otype=$otype&ptype=$ptype&gddm=$gddm&zqdm=$zqdm&price=$price&count=$count
 */
 int order::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
 		std::string content = protocol::fail("authority denied");
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -252,12 +283,10 @@ int order::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string price = req.params().get("price");
 	std::string count = req.params().get("count");
 
-	std::string data = "{\"account\":\"" + account + "\"}";
-
 	//check parameters
 	if (account.empty() || otype.empty() || ptype.empty() || gddm.empty() || zqdm.empty() || price.empty() || count.empty()) {
-		std::string content = protocol::fail("invalid parameter.", data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail("invalid parameter.");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -265,28 +294,39 @@ int order::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string errmsg("");
 	//send order
 	if (accounts::instance()->order(account, ::atoi(otype.c_str()), ::atoi(ptype.c_str()), gddm, zqdm, (float)::atof(price.c_str()), ::atoi(count.c_str()), result, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg, data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
+	//proccess alias if enabled
+	if (alias::instance()->enabled()) {
+		//charset will be convert in alias processing
+		result = alias::instance()->process(result);
+	} else {
+		//process charset converting
+		if (lang::instance()->needconv()) {
+			result = lang::instance()->process(result);
+		}
+	}
+
 	//response json
-	data = cube::str::json(result);
+	std::string data = cube::str::json(result);
 
 	std::string content = protocol::succ("success", data);
-	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
 
 /*
 *request:
-*	/trade/cancel?account=$account&seid=$seid&orderno=$orderno
+*	/cancel/order?account=$account&seid=$seid&orderno=$orderno
 */
 int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
 		std::string content = protocol::fail("authority denied");
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -295,12 +335,10 @@ int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string seid = req.params().get("seid");
 	std::string orderno = req.params().get("orderno");
 	
-	std::string data = "{\"account\":\"" + account + "\"}";
-
 	//check parameters
 	if (account.empty() || seid.empty() || orderno.empty()) {
-		std::string content = protocol::fail("invalid parameter.", data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail("invalid parameter.");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
@@ -308,54 +346,63 @@ int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string errmsg("");
 	//send order
 	if (accounts::instance()->cancel(account, seid, orderno, result, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg, data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
+	//proccess alias if enabled
+	if (alias::instance()->enabled()) {
+		//charset will be convert in alias processing
+		result = alias::instance()->process(result);
+	} else {
+		//process charset converting
+		if (lang::instance()->needconv()) {
+			result = lang::instance()->process(result);
+		}
+	}
+
 	//response json
-	data = cube::str::json(result);
+	std::string data = cube::str::json(result);
 
 	std::string content = protocol::succ("success", data);
-	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
 
 /*
 *request:
-*	/trade/logout?account=$account
+*	/logout?account=$account
 */
 int logout::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
 		std::string content = protocol::fail("authority denied");
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
 	//get request parameters
 	std::string account = req.params().get("account");
-	
-	std::string data = "{\"account\":\"" + account + "\"}";
 
 	//check parameters
 	if (account.empty()) {
-		std::string content = protocol::fail("invalid parameter.", data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail("invalid parameter.");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
 	std::string errmsg("");
 	//logout account
 	if (accounts::instance()->logout(account, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg, data);
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		std::string content = protocol::fail(errmsg);
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
 
-	std::string content = protocol::succ("success", data);
-	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	std::string content = protocol::succ("success");
+	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
 
@@ -363,12 +410,12 @@ int echo::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
 		std::string content = protocol::fail("authority denied");
-		resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
 	std::string content = protocol::succ("success");
-	resp.set_content(content.c_str(), content.length(), "application/json;charset=gbk");
+	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
 END_TRADES_NAMESPACE

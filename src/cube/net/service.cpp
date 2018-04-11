@@ -12,34 +12,13 @@ int service::start(void *arg, int workers) {
 	_arg = arg;
 
 	//start worker threads
-	_loopers.start(this, workers);
+	_workers.start(workers, this);
+
+	//start looper thread
+	_looper.start(this);
 
 	//setup tick trigger
-	_last_tick_time = ::time(0);
 	_tick_time_interval = 1; // tick every 1s
-	return 0;
-}
-
-int service::dispatch(socket sock, session *s) {
-	std::lock_guard<std::mutex> lock(_mutex);
-	//bind session with the socket
-	s->open(sock);
-
-	//first bind the new session to completion port
-	_iocp.bind((HANDLE)s->handle(), (ULONG_PTR)s);
-
-	//notify the session with connection opened event
-	if (s->on_open(_arg) != 0) {
-		//notify the session with connection closed event
-		s->on_close();
-
-		//free session object
-		delete s;
-	}
-
-	//add to sessions
-	_sessions.insert(std::pair<socket_t, session*>(s->handle(), s));
-
 	return 0;
 }
 
@@ -53,7 +32,7 @@ int service::dispatch(session *s) {
 		//notify the session with connection closed event
 		s->on_close();
 
-		//close socket
+		//close session socket
 		s->close();
 
 		//free session object
@@ -66,9 +45,39 @@ int service::dispatch(session *s) {
 	return 0;
 }
 
-int service::discard(socket_t s) {
+//stop iocp service
+int service::stop() {
+	//close all sessions
 	std::lock_guard<std::mutex> lock(_mutex);
-	std::map<socket_t, session*>::iterator iter = _sessions.find(s);
+	std::map<socket_t, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
+	while (iter != iterend) {
+		session *s = iter->second;
+		//notify session the close event
+		s->on_close();
+
+		//close session socket, so it can unbind from iocp port
+		s->close();
+
+		//process next session
+		iter++;
+	}
+	_sessions.clear();
+
+	//close iocp
+	_iocp.close();
+
+	//stop looper
+	_looper.stop();
+
+	//stop workers
+	_workers.stop();
+
+	return 0;
+}
+
+int service::discard(session *s) {
+	std::lock_guard<std::mutex> lock(_mutex);
+	std::map<socket_t, session*>::iterator iter = _sessions.find(s->handle());
 	if (iter != _sessions.end()) {
 		//remove session from service
 		session *s = iter->second;
@@ -87,35 +96,15 @@ int service::discard(socket_t s) {
 	return 0;
 }
 
-int service::discard(session *s) {
+void service::tick() {
 	std::lock_guard<std::mutex> lock(_mutex);
-	//remove session from sessions
-	_sessions.erase(s->handle());
-
-	//notify the session with connection closed event
-	s->on_close();
-
-	//close socket
-	s->close();
-
-	//free session object
-	delete s;
-
-	return 0;
-}
-
-void service::trigger() {
+	//tick all session
 	::time_t now = ::time(0);
-	//check if tick triggered
-	if (now - _last_tick_time < _tick_time_interval)
-		return;
-
-	std::lock_guard<std::mutex> lock(_mutex);
-	std::map<SOCKET, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
+	std::map<socket_t, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
 	while (iter != iterend) {
 		session *s = iter->second;
 		if (s->on_tick(now) != 0) {
-			//remove current session
+			//remove from session map
 			_sessions.erase(iter++);
 
 			//notify session close
@@ -124,48 +113,18 @@ void service::trigger() {
 			//close socket
 			s->close();
 
-			//free session
-			delete s;
+			//free session !NOTE: free in worker ioloop!
+			//delete s;
 		} else {
 			iter++;
 		}
 	}
-
-	//reset last tick time
-	_last_tick_time = now;
-}
-
-//stop iocp service
-int service::stop() {
-	//close all sessions
-	std::lock_guard<std::mutex> lock(_mutex);
-	std::map<SOCKET, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
-	while (iter != iterend) {
-		session *s = iter->second;
-		//close session socket, so it can unbind from iocp port
-		s->close();
-
-		//notify session the close event
-		s->on_close();
-
-		//process next session
-		iter++;
-	}
-	_sessions.clear();
-
-	//close iocp
-	_iocp.close();
-
-	//stop loopers
-	_loopers.stop();
-
-	return 0;
 }
 
 void service::free() {
 	// free all sessions
 	std::lock_guard<std::mutex> lock(_mutex);
-	std::map<SOCKET, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
+	std::map<socket_t, session*>::iterator iter = _sessions.begin(), iterend = _sessions.end();
 	while (iter != iterend) {
 		delete iter->second;
 	}
@@ -173,14 +132,24 @@ void service::free() {
 }
 
 void service::run() {
-	//process complete io request until stop
-	iores res = _iocp.pull(50);
-	
-	//get sepcial data from completion data
-	session *s = (session*)res.completionkey;
-	ioctxt *context = (ioctxt*)res.overlapped;
+	//wait for tick timeout
+	std::this_thread::sleep_for(std::chrono::seconds(_tick_time_interval));
+	//tick all session
+	tick();
+}
 
+void service::ioloop() {
+	//process complete io request until stop
+	iores res = _iocp.pull(1000);
+
+	//current completed io session
+	session *s = (session *)res.completionkey;
+
+	//process current io completed session
 	if (res.error == 0) {
+		//get sepcial data from completion data
+		ioctxt *context = (ioctxt*)res.overlapped;
+
 		//notify session with completed events
 		int err = 0;
 		switch (context->opt) {
@@ -201,23 +170,17 @@ void service::run() {
 			discard(s);
 		}
 	} else {
-		if (res.error == ERROR_ABANDONED_WAIT_0)
+		if (res.error == ERROR_ABANDONED_WAIT_0) {
 			// iocp handle closed
 			log::error("iocp: iocp handle closed, errno %d", res.error);
-		else {
+		} else {
 			if (res.error != WAIT_TIMEOUT) {
-				if (s != 0) {
-					log::error("iocp:  local connection closed, errno: %d", res.error);
-				} else {
-					log::error("iocp: fatal error with errno %d", res.error);
-					//fatal error with iocp
-					throw efatal(sys::last_error(res.error).c_str());
-				}
+				//free session object
+				delete s;
+
+				log::error("iocp: other error with errno %d", res.error);
 			}
 		}
 	}
-
-	//run tick trigger
-	trigger();
 }
 END_CUBE_NET_NS

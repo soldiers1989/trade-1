@@ -90,9 +90,10 @@ public:
 
 			//create new session for connection
 			net::session *s = new sessionimpl();
+			s->bind(sock);
 
 			//dispatch new session to iocp service
-			_service.dispatch(sock, s);
+			_service.dispatch(s);
 
 		} catch (const net::socket::ewouldblock&) {}
 	}

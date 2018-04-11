@@ -3,6 +3,7 @@
 #include "cube\cc\looper.h"
 #include "cube\sys\cpu.h"
 #include "cube\net\iocp.h"
+#include "cube\net\worker.h"
 #include "cube\net\session.h"
 BEGIN_CUBE_NET_NS
 //iocp service class
@@ -12,7 +13,7 @@ class service : public cc::task {
 	typedef std::exception efatal;
 
 public:
-	service() : _arg(0), _tick_time_interval(1), _last_tick_time(0){
+	service() : _arg(0), _tick_time_interval(1) {
 
 	}
 
@@ -33,29 +34,11 @@ public:
 
 	/*
 	*	dispatch a new session to iocp service
-	*@param sock: in, new socket
-	*@param s: in, new session for the socket
+	*@param s: in, new session will bind with socket
 	*@return:
 	*	0 for success, otherwise <0
 	*/
 	int dispatch(session *s);
-	int dispatch(socket sock, session *s);
-
-	/*
-	*	discard an existing session in the service
-	*@param s: in, sessionto discard
-	*@return:
-	*	always 0
-	*/
-	int discard(socket_t s);
-	int discard(session *s);
-
-	/*
-	*	trigger tick for all sessions in the service, on_tick() method will be called
-	*@return:
-	*	void
-	*/
-	void trigger();
 
 	/*
 	*	stop iocp service
@@ -64,31 +47,51 @@ public:
 	*/
 	int stop();
 
+private:
+	/*
+	*	discard an existing session in the service
+	*@param s: in, session to discard
+	*@return:
+	*	always 0
+	*/
+	int discard(session *s);
+
+	/*
+	*	tick all sessions
+	*/
+	void tick();
+
+	/*
+	*	free sessions
+	*/
+	void free();
+
 public:
 	/*
 	*	worker to do the queued complete events
 	*/
 	void run();
 
-private:
 	/*
-	*	free sessions
+	*	service net io loop
 	*/
-	void free();
+	void ioloop();
 
 private:
 	//iocp of service
 	iocp _iocp;
 
-	//loopers of service
-	cc::loopers _loopers;
+	//workers of service
+	workers _workers;
+
+	//looper of service
+	cc::looper _looper;
 
 	//argument for new session
 	void *_arg;
 
 	//session tick interval
 	int _tick_time_interval;
-	::time_t _last_tick_time;
 
 	//sessions of service
 	std::mutex _mutex;

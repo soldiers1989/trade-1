@@ -155,14 +155,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="alias.cpp" />
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="lang.cpp" />
     <ClCompile Include="quoter.cpp" />
     <ClCompile Include="quotes.cpp" />
     <ClCompile Include="service.cpp" />
     <ClCompile Include="servlet.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="alias.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="lang.h" />
     <ClInclude Include="quoter.h" />
     <ClInclude Include="service.h" />
     <ClInclude Include="servlet.h" />

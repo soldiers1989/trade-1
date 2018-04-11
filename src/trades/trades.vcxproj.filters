@@ -30,6 +30,12 @@
     <ClCompile Include="servlet.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="lang.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="alias.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="service.h">
@@ -45,6 +51,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="stdtrds.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lang.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="alias.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
