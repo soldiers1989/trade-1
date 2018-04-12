@@ -1,11 +1,12 @@
 """
-    tdx trade service api wrapper
+    tdx trade service api wrapper, Agent->Tdx
 """
 from lib.utl import table
+from lib.trade.agent import Agent
 from lib.trade.tdx import error, remote, option
 
 
-class Tdx:
+class Tdx(Agent):
     def __init__(self, host, port):
         """
             init tdx trade object with remote http service host and port
@@ -479,7 +480,7 @@ class Tdx:
 
         try:
             #remote logout
-            bres, msg, data =  self._remote.logout(account)
+            bres, msg =  self._remote.logout(account)
 
             return bres, msg
         except Exception as e:

@@ -1,1 +1,1 @@
-from .tdx import Tdx as tdx
+from .tdx import Tdx
