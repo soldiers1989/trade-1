@@ -6,7 +6,7 @@ from lib.trade.agent import Agent
 from lib.trade.tdx import error, remote, option
 
 
-class Tdx(Agent):
+class TdxTrade(Agent):
     def __init__(self, host, port):
         """
             init tdx trade object with remote http service host and port
@@ -18,19 +18,15 @@ class Tdx(Agent):
     def login(self, account, pwd, ip, port, dept, version):
         """
             账户登录
-        :param account:
-        :param pwd:
-        :param ip:
-        :param port:
-        :param dept:
-        :param version:
-        :return:
+        :param account: 客户号 或 资金账号
+        :param pwd: 交易密码
+        :param ip: 交易服务器ip
+        :param port: 交易服务器端口
+        :param dept: 营业部代码
+        :param version: 当前软件版本号
+        :return: tuple
             (True|False, result message string)
         """
-        # check parameters
-        if not (account and pwd and ip and port and dept and version) :
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote login
             bres, msg = self._remote.login(account, pwd, ip, port, dept, version)
@@ -45,12 +41,9 @@ class Tdx(Agent):
         """
             当前资产查询
         :param account: in, account
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query dqzc
             bres, msg, data = self._remote.query1(account, option.dqzc.type)
@@ -72,12 +65,9 @@ class Tdx(Agent):
         """
             当前持仓查询
         :param account: in, account
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query dqcc
             bres, msg, data = self._remote.query1(account, option.dqcc.type)
@@ -99,12 +89,9 @@ class Tdx(Agent):
         """
             当日委托查询
         :param account: in, account
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query drwt
             bres, msg, data = self._remote.query1(account, option.drwt.type)
@@ -126,12 +113,9 @@ class Tdx(Agent):
         """
             当日成交查询
         :param account: in, account
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query drcj
             bres, msg, data = self._remote.query1(account, option.drcj.type)
@@ -153,12 +137,9 @@ class Tdx(Agent):
         """
             可撤委托查询
         :param account: in, account
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query kcwt
             bres, msg, data = self._remote.query1(account, option.kcwt.type)
@@ -180,13 +161,9 @@ class Tdx(Agent):
         """
             股东信息查询
         :param account: in, account
-        :return:
+        :return: tuple
             (True, [gddm list]) or (False, error message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query gddm
             bres, msg, data = self._remote.query1(account, option.gdxx.type)
@@ -213,12 +190,9 @@ class Tdx(Agent):
         :param account:
         :param sdate: str, in, format: yyyymmdd
         :param edate: str, in, format: yyyymmdd
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query lswt
             bres, msg, data = self._remote.query2(account, option.lswt.type, sdate, edate)
@@ -242,12 +216,9 @@ class Tdx(Agent):
         :param account:
         :param sdate: str, in, format: yyyymmdd
         :param edate: str, in, format: yyyymmdd
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query lscj
             bres, msg, data = self._remote.query2(account, option.lscj.type, sdate, edate)
@@ -271,12 +242,9 @@ class Tdx(Agent):
         :param account:
         :param sdate: str, in, format: yyyymmdd
         :param edate: str, in, format: yyyymmdd
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query jgd
             bres, msg, data = self._remote.query2(account, option.jgd.type, sdate, edate)
@@ -300,12 +268,9 @@ class Tdx(Agent):
         :param account: str, in, user account
         :param code: str, in, stock code
         :param market: 0 - shenzhen, 1 -shanghai, useless...
-        :return:
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account or not code:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # remote query gphq
             bres, msg, data = self._remote.quote(account, code, market)
@@ -327,16 +292,14 @@ class Tdx(Agent):
     def order_xjmr(self, account, gddm, zqdm, price, count):
         """
             限价买入
-        :param account:
-        :param gddm:
-        :param zqdm:
-        :param price:
-        :param count:
-        :return:
+        :param account: str, in, 股票账户
+        :param gddm: str, in, 股东代码
+        :param zqdm: str, in, 证券代码
+        :param price: float, in, 委托价格
+        :param count: int, in, 委托数量，100整数倍
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account or not gddm or not zqdm or not price or not count:
-            return False, error.INVALID_PARAMETERS
 
         try:
             # send order to remote
@@ -356,17 +319,14 @@ class Tdx(Agent):
     def order_xjmc(self, account, gddm, zqdm, price, count):
         """
             限价卖出
-        :param account:
-        :param gddm:
-        :param zqdm:
-        :param price:
-        :param count:
-        :return:
+        :param account: str, in, 股票账户
+        :param gddm: str, in, 股东代码
+        :param zqdm: str, in, 证券代码
+        :param price: float, in, 委托价格
+        :param count: int, in, 委托数量，100整数倍
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account or not gddm or not zqdm or not price or not count:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # send order to remote
             bres, msg, data = self._remote.order(account, option.xjmc.otype, option.xjmc.ptype, gddm, zqdm, price, count)
@@ -385,17 +345,14 @@ class Tdx(Agent):
     def order_sjmr(self, account, gddm, zqdm, price, count):
         """
             市价买入
-        :param account:
-        :param gddm:
-        :param zqdm:
-        :param price:
-        :param count:
-        :return:
+        :param account: str, in, 股票账户
+        :param gddm: str, in, 股东代码
+        :param zqdm: str, in, 证券代码
+        :param price: float, in, 委托价格
+        :param count: int, in, 委托数量，100整数倍
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account or not gddm or not zqdm or not price or not count:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # send order to remote
             bres, msg, data = self._remote.order(account, option.sjmr.otype, option.sjmr.ptype, gddm, zqdm, price, count)
@@ -414,17 +371,14 @@ class Tdx(Agent):
     def order_sjmc(self, account, gddm, zqdm, price, count):
         """
             市价卖出
-        :param account:
-        :param gddm:
-        :param zqdm:
-        :param price:
-        :param count:
-        :return:
+        :param account: str, in, 股票账户
+        :param gddm: str, in, 股东代码
+        :param zqdm: str, in, 证券代码
+        :param price: float, in, 委托价格
+        :param count: int, in, 委托数量，100整数倍
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account or not gddm or not zqdm or not price or not count:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # send order to remote
             bres, msg, data = self._remote.order(account, option.sjmc.otype, option.sjmc.ptype, gddm, zqdm, price, count)
@@ -443,15 +397,12 @@ class Tdx(Agent):
     def cancel_order(self, account, orderno, market):
         """
             委托撤单
-        :param account:
-        :param orderno:
-        :param market: 0 - shenzhen， 1 - 上海
-        :return:
+        :param account: str, in, 股票账户
+        :param orderno: str, in, 委托编号
+        :param market: 0 - shenzhen， 1 - shanghai, useless
+        :return: tuple
+            (True, Data) or (False, Message)
         """
-        # check parameters
-        if not account or not orderno or not market:
-            return False, error.INVALID_PARAMETERS
-
         try:
             # cancel order
             bres, msg, data = self._remote.cancel(account, orderno, market)
@@ -488,7 +439,7 @@ class Tdx(Agent):
 
 
 if __name__ == "__main__":
-    tdx = Tdx("172.16.21.135", 80)
+    tdx = TdxTrade("172.16.21.135", 80)
     res = tdx.query_dqzc("29633865")
     print(res)
 

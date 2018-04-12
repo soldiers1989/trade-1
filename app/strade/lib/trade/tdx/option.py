@@ -2,8 +2,6 @@
     option for tdx interface
 """
 
-categories = { "zj" : "0", "gf" : "1", "drwt" : "2", "drcj" : "3", "kcwt" : "4", "gddm" : "5", "rzye" : "6", "rqye" : "7", "krzq" : "8", "lswt" : "0",  "lscj":"1", "jgd":"2"}
-
 # 当前资产查询
 class dqzc:
     type = "0"

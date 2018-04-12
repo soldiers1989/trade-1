@@ -1,1 +1,1 @@
-from .tdx import Tdx
+from lib.trade.tdx.trade import TdxTrade
