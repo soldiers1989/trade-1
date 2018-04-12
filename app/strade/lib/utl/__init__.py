@@ -1,0 +1,1 @@
+from .table import _Table as table
