@@ -5,7 +5,7 @@ from django.db import models
 
 # tb_admin
 class Admin(models.Model):
-    admin_id = models.IntegerField(primary_key=True)
+    admin_id = models.AutoField(primary_key=True)
     user = models.CharField(max_length=32, null=False)
     pwd = models.CharField(max_length=32, null=False)
     name = models.CharField(max_length=32, null=False)
@@ -19,7 +19,7 @@ class Admin(models.Model):
 
 # tb_file
 class File(models.Model):
-    file_id = models.IntegerField(primary_key=True)
+    file_id = models.AutoField(primary_key=True)
     code = models.CharField(max_length=32, null=False)
     name = models.CharField(max_length=256, null=False)
     size = models.BigIntegerField(null=False)

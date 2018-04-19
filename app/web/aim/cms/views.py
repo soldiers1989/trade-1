@@ -1,18 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
-from cms import auth, config
-
-
-def extend_context(context = None):
-    """
-        extend context with default common context
-    :param context:
-    :return:
-    """
-    if context is None:
-        return config.default_context
-
-    return context.update(config.default_context)
+from cms import auth, context
 
 
 def login(request):
@@ -21,31 +9,38 @@ def login(request):
     :param request:
     :return:
     """
-    # user has not login
+    if request.method == 'GET':
+        # user has login
+        if auth.has_login(request):
+            return redirect('cms.index')
+
+        # user has not login
+        return render(request, 'login.html', context=context.extend())
+    elif request.method == 'POST':
+        # user login request
+        if auth.do_login(request):
+            pass
+        else:
+            pass
+    else:
+        pass
 
 
-    # user has login
-
-    # login checking
-
-    return render(request, 'login.html', context=extend_context())
-
-
+@auth.has_auth
 def logout(request):
     """
         administrator logout
     :param request:
     :return:
     """
+    pass
 
 
-@auth.check_auth
+@auth.has_auth
 def index(request):
     """
         administrator index page
     :param request:
     :return:
     """
-    context = {'pagename':'index', 'platform':'test', 'username':'polly', 'modulename':'abc', 'submodule':'efg'}
-
-    return render(request, 'index.html', context=context)
+    return render(request, 'index.html', context=context.extend())

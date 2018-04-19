@@ -1,7 +1,9 @@
 from django.conf.urls import url
-from cms import views
+from cms import apis, views
 
 urlpatterns = [
-    url(r'^$', views.index),
-    url(r'^login/$', views.login),
+    url(r'^index/$', views.index, name='cms.index'),
+    url(r'^login/$', views.login, name='cms.login'),
+
+    url(r'^api/login/$', apis.login, name="cms.api.login")
 ]

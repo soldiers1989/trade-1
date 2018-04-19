@@ -63,18 +63,18 @@
 
 											<div class="space-6"></div>
 
-											<form>
+											<form id="formlogin" class="form-horizontal">
 												<fieldset>
 													<label class="block clearfix">
 														<span class="block input-icon input-icon-right">
-															<input type="text" id="username" class="form-control" placeholder="您的用户名" />
+															<input type="text" id="username" name="username" class="form-control" placeholder="您的用户名" minlength="3" maxlength="32" aria-required="true"/>
 															<i class="ace-icon fa fa-user"></i>
 														</span>
 													</label>
 
 													<label class="block clearfix">
 														<span class="block input-icon input-icon-right">
-															<input type="password" id="password" class="form-control" placeholder="您的登录密码" />
+															<input type="password" id="password" name="password" class="form-control" placeholder="您的登录密码" minlength="6", maxlength="32" aria-required="true"/>
 															<i class="ace-icon fa fa-lock"></i>
 														</span>
 													</label>
@@ -83,11 +83,11 @@
 
 													<div class="clearfix">
 														<label class="inline">
-															<input type="checkbox" class="ace" />
+															<input type="checkbox" id="remember" value="true" class="ace" checked/>
 															<span class="lbl"> 保持登录状态 </span>
 														</label>
 
-														<button type="button" id="login" class="width-35 pull-right btn btn-sm btn-primary">
+														<button type="submit" id="login" class="width-35 pull-right btn btn-sm btn-primary">
 															<i class="ace-icon fa fa-key"></i>
 															<span class="bigger-110">登录</span>
 														</button>
@@ -106,8 +106,6 @@
 			</div><!-- /.main-content -->
 		</div><!-- /.main-container -->
 
-		<!-- basic scripts -->
-
 		<!--[if !IE]> -->
 		<script src="/assets/js/jquery-2.1.4.min.js"></script>
 
@@ -116,30 +114,67 @@
 		<!--[if IE]>
         <script src="/assets/js/jquery-1.11.3.min.js"></script>
         <![endif]-->
+
+        <!-- basic scripts -->
+        <script src="/assets/js/jquery.validate.min.js"></script>
+
 		<script type="text/javascript">
 			if('ontouchstart' in document.documentElement) document.write("<script src='/assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
 		</script>
 
 		<!-- inline scripts related to this page -->
 		<script type="text/javascript">
-			jQuery(function($) {
-			 $(document).on('click', '.toolbar a[data-target]', function(e) {
-				e.preventDefault();
-				var target = $(this).data('target');
-				$('.widget-box.visible').removeClass('visible');//hide others
-				$(target).addClass('visible');//show target
-			 });
-			});
-
-            $(function () {
-                $('#login').on('click', function(){
-                    if(false){
-                        window.location.assign("/");
-                    } else {
-                        $('#hint').html("请输入正确的用户名和登录密码！");
-                    }
-                })
+            $.validator.setDefaults({
+                submitHandler: function() {
+                    do_login();
+                }
             });
+
+            $().ready(function () {
+                $('#formlogin').validate({
+                    messages:{
+                        username:{
+                            required:'请输入登录名',
+                            minlength: '用户名由1~32个字符组成',
+                            maxlength: '用户名由1~32个字符组成'
+                        },
+                        password:{
+                            required:'请输入密码',
+                            minlength: '密码由6~32个字符组成',
+                            maxlength: '密码由6~32个字符组成'
+                        }
+
+                    },
+
+                    errorClass:"text-danger"
+                });
+            })
+
+			$(function(){
+			   $('#remember').change(function(){
+			       if($('#remember').is(':checked')){
+			           $('#remember').val('true');
+                   } else {
+			           $('#remember').val('false');
+                   }
+               })
+            });
+
+            function do_login() {
+                var username = $('#username').val();
+                var password = $('#password').val();
+                var remember = $('#remember').val();
+
+                var params = 'username='+username+'&password='+password+'&remember='+remember;
+
+                $.get('/cms/api/login/', params, function(resp){
+                    if(resp.status){
+                        window.location.assign('/cms/index/');
+                    } else {
+                       $('#hint').html(resp.message);
+                    }
+                }, "json");
+            }
 
 		</script>
 	</body>
