@@ -9,31 +9,25 @@ def login(request):
     :param request:
     :return:
     """
-    if request.method == 'GET':
-        # user has login
-        if auth.has_login(request):
-            return redirect('cms.index')
+    # user has login
+    if auth.has_login(request):
+        return redirect('cms.index')
 
-        # user has not login
-        return render(request, 'login.html', context=context.extend())
-    elif request.method == 'POST':
-        # user login request
-        if auth.do_login(request):
-            pass
-        else:
-            pass
-    else:
-        pass
+    # user has not login
+    return render(request, 'login.html', context=context.extend())
 
 
-@auth.has_auth
 def logout(request):
     """
         administrator logout
     :param request:
     :return:
     """
-    pass
+    # logout
+    auth.logout(request)
+
+    # goto login page
+    return redirect('cms.login')
 
 
 @auth.has_auth
