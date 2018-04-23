@@ -1,10 +1,128 @@
 """
      authority control
 """
-from cms import forms
+from cms import forms, hint
 from pub import models
 
 from django.shortcuts import redirect
+
+
+class Sid:
+    UID = 'g_uid'
+    UNAME = 'g_uname'
+    UMODULES = 'g_umodules'
+
+sid = Sid
+
+
+class User:
+    @staticmethod
+    def id(request, id=None):
+        """
+            get user id
+        :param request:
+        :return:
+        """
+        if id is not None:
+            request.session[sid.UID] = id
+        else:
+            return request.session.get(sid.UID)
+
+    @staticmethod
+    def name(request, name=None):
+        """
+            get user name
+        :param request:
+        :return:
+        """
+        if name is not None:
+            request.session[sid.UNAME] = name
+        else:
+            return request.session.get(sid.UNAME)
+
+    @staticmethod
+    def modules(request, mobjs=None):
+        """
+            get admin authorized modules
+        :return:
+        """
+        if mobjs is not None:
+            request.session[sid.UMODULES] = user.build_modules(mobjs)
+        else:
+            return request.session.get(sid.UMODULES)
+
+    @staticmethod
+    def has_module(request):
+        """
+
+        :param modules:
+        :return:
+        """
+        modules = request.session.get('_umodules')
+        return user._has_module(modules, request.path)
+
+    @staticmethod
+    def _has_module(modules, path):
+        """
+
+        :param modules:
+        :param path:
+        :return:
+        """
+        for module in modules:
+            # compare current
+            if module['path'] == path:
+                return True
+
+            # compare childs
+            childs = module['childs']
+            if childs is not None:
+                return user._has_module(childs, path)
+
+        return False
+
+    @staticmethod
+    def build_modules(mobjs, parent=None):
+        """
+
+        :param mobjs:
+        :return:
+        """
+        # child modules of parent
+        childs = []
+
+        # filter child modules
+        for obj in mobjs:
+            if obj.parent_id == parent:
+                module_id = obj.module_id
+                parent = obj.parent_id
+                name = obj.name
+                icon = obj.icon
+                order = obj.order
+                disable = obj.disable
+                ctime = obj.ctime
+
+                childs.append({'id':module_id,
+                                'parent':parent,
+                                'name':name,
+                                'icon':icon,
+                                'order':order,
+                                'disable':disable,
+                                'ctime':ctime,
+                                'childs':[]})
+
+        # sort child modules by order
+        childs.sort(key=lambda x: x['order'], reverse=True)
+
+        # process child's child modules
+        for child in childs:
+            schilds = user.build_modules(mobjs, child['id'])
+            child['childs'].extend(schilds)
+
+        return childs
+
+
+user = User
 
 
 def has_auth(func):
@@ -14,25 +132,37 @@ def has_auth(func):
     :return:
     """
     def _has_auth(request):
-        mdls = request.session.get('modules', None)
-        if mdls is not None:
-            for mdl in mdls:
-                mpath = mdl.get('path')
-                # user has module auth
-                if mpath is not None and mpath  == request.path:
-                    return func(request)
-
-        # user has no auth, goto login
-        return redirect('cms.login')
+        if is_login(request):
+            if user.has_module(request):
+                return func(request)
+            return redirect('cms.index')
+        else:
+            return redirect('cms.login')
     return _has_auth
 
 
-def has_login(request):
+def has_login(func):
+    """
+        login authority decorator
+    :param request:
+    :return:
+    """
+    def _has_login(request):
+        if is_login(request):
+            # go on with request
+            return func(request)
+        else:
+            # goto login
+            return redirect('cms.login')
+    return _has_login
+
+
+def is_login(request):
     """
         check login status
     :return:
     """
-    uid = request.session.get('userid', None)
+    uid = user.id(request)
     if uid is not None:
         return True
     return False
@@ -49,26 +179,41 @@ def login(request):
     try:
         login_form = forms.LoginForm(request.GET)
         if login_form.is_valid():
+            # get login data form user input
             username = login_form.cleaned_data.get('username')
             password = login_form.cleaned_data.get('password')
             remember = login_form.cleaned_data.get('remember')
 
+            # get user data from database
             admin = models.Admin.objects.get(user=username)
+
+            # check password
             if admin.pwd == password:
+                # user has been disabled
+                if admin.disable:
+                    return False, hint.ERR_LOGIN_DISABLED
+
                 # set session expire for not remember choice
                 if not remember:
                     request.session.set_expiry(0)
 
-                # set user name
-                request.session['userid'] = admin.admin_id
-                request.session['username'] = username
-                request.session['modules'] = [{'path':'/cms/index/'}]
+                # get user modules
+                mobjs = models.Module.objects.filter(authority__admin_id=1, authority__disable=False, disable=False).all()
 
-                return True
-    except:
-        pass
+                # set user session
+                user.id(request, admin.admin_id)
+                user.name(request, admin.user)
+                user.modules(request, mobjs)
 
-    return False
+                return True, hint.MSG_LOGIN_SUCCESS
+            else:
+                return False, hint.ERR_LOGIN_PASSWORD
+        else:
+            return False, hint.ERR_LOGIN_INPUT
+    except models.Admin.DoesNotExist:
+        return False, hint.ERR_LOGIN_USER
+    except Exception as e:
+        return False, hint.ERR_EXCEPTION
 
 
 def logout(request):
@@ -78,12 +223,3 @@ def logout(request):
     """
     # clear session
     request.session.clear()
-
-
-def modules(request):
-    """
-        get admin authorized modules
-    :return:
-    """
-    return request.session.get('modules', None)
-

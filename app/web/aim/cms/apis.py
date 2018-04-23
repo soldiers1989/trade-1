@@ -50,7 +50,8 @@ def login(request):
     :param request:
     :return:
     """
-    if auth.login(request):
-        return success(message=hint.MSG_LOGIN_SUCCESS)
+    res, msg = auth.login(request)
+    if res:
+        return success(message=msg)
     else:
-        return failure(message=hint.ERR_USERNAME_OR_PASSWORD)
+        return failure(message=msg)

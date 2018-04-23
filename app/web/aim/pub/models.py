@@ -8,6 +8,7 @@ class Module(models.Model):
     name = models.CharField(max_length=32, null=False)
     path = models.CharField(max_length=128, null=True)
     icon = models.CharField(max_length=32, null=True)
+    order = models.IntegerField(null=False, default=0)
     disable = models.BooleanField(null=False, default=False)
     ctime = models.BigIntegerField(null=False)
 
@@ -32,8 +33,8 @@ class Admin(models.Model):
 # tb_authority
 class Authority(models.Model):
     auth_id = models.AutoField(primary_key=True)
-    module_id = models.ForeignKey(Module, null=False)
-    admin_id = models.ForeignKey(Admin, null=False)
+    module = models.ForeignKey(Module, null=False)
+    admin = models.ForeignKey(Admin, null=False)
     disable = models.BooleanField(null=False, default=False)
     ctime = models.BigIntegerField(null=False)
 
