@@ -1,22 +1,19 @@
 {% extends 'base.html' %}
 
 {% block pagecontent %}
-    <div id="container">
-        <table id="example" class="table table-hover table-striped table-bordered"></table>
-    </div>
+    <table id="example" class="table table-hover table-bordered"></table>
 {% endblock %}
 
 {% block jsfiles %}
-		<script src="/assets/js/jquery.dataTables.min.js"></script>
-		<script src="/assets/js/jquery.dataTables.bootstrap.min.js"></script>
-		<script src="/assets/js/dataTables.buttons.min.js"></script>
-		<script src="/assets/js/buttons.flash.min.js"></script>
-		<script src="/assets/js/buttons.html5.min.js"></script>
-		<script src="/assets/js/dataTables.select.min.js"></script>
+    <script src="/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/js/jquery.dataTables.bootstrap.min.js"></script>
+    <script src="/assets/js/dataTables.buttons.min.js"></script>
+    <script src="/assets/js/buttons.flash.min.js"></script>
+    <script src="/assets/js/buttons.html5.min.js"></script>
+    <script src="/assets/js/dataTables.select.min.js"></script>
 {% endblock %}
 
 {% block jscontent %}
-
     function Employee ( name, position, salary, office ) {
     this.name = name;
     this.position = position;

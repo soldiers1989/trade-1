@@ -103,8 +103,7 @@
 			<script type="text/javascript">
 				try{ace.settings.loadState('main-container')}catch(e){}
 			</script>
-
-			<div id="sidebar" class="sidebar responsive ace-save-state">
+			<div class="sidebar responsive ace-save-state" id="sidebar">
 				<script type="text/javascript">
 					try{ace.settings.loadState('sidebar')}catch(e){}
 				</script>
@@ -148,11 +147,13 @@
 					<i id="sidebar-toggle-icon" class="ace-icon fa fa-angle-double-left ace-save-state" data-icon1="ace-icon fa fa-angle-double-left" data-icon2="ace-icon fa fa-angle-double-right"></i>
 				</div>
 			</div>
-
 			<div class="main-content">
-                <div class="page-content">{% block pagecontent %}{% endblock %}</div>
+                {% include 'themes.html' %}
+                {% include 'bread.html' %}
+                <div class="main-content-inner">
+                    <div class="page-content">{% block pagecontent %}{% endblock %}</div>
+                </div>
 			</div><!-- /.main-content -->
-
 			<div class="footer">
 				<div class="footer-inner">
 					<div class="footer-content">
