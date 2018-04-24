@@ -167,9 +167,9 @@
 
                 var params = 'username='+username+'&password='+password+'&remember='+remember;
 
-                $.get('/cms/api/login/', params, function(resp){
+                $.get('{% url 'cms.api.login' %}', params, function(resp){
                     if(resp.status){
-                        window.location.assign('/cms/index/');
+                        window.location.assign('{% url 'cms.index' %}');
                     } else {
                        $('#hint').html(resp.message);
                     }

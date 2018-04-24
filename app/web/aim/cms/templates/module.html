@@ -1,5 +1,56 @@
 {% extends 'base.html' %}
 
 {% block pagecontent %}
-    <h1 class="text-center">模块管理{{ platform }} </h1>
+    <div id="container">
+        <table id="example" class="table table-hover table-striped table-bordered"></table>
+    </div>
+{% endblock %}
+
+{% block jsfiles %}
+		<script src="/assets/js/jquery.dataTables.min.js"></script>
+		<script src="/assets/js/jquery.dataTables.bootstrap.min.js"></script>
+		<script src="/assets/js/dataTables.buttons.min.js"></script>
+		<script src="/assets/js/buttons.flash.min.js"></script>
+		<script src="/assets/js/buttons.html5.min.js"></script>
+		<script src="/assets/js/dataTables.select.min.js"></script>
+{% endblock %}
+
+{% block jscontent %}
+
+    function Employee ( name, position, salary, office ) {
+    this.name = name;
+    this.position = position;
+    this.salary = salary;
+    this._office = office;
+
+    this.office = function () {
+        return this._office;
+    }
+};
+
+$('#example').DataTable( {
+    data: [
+        new Employee( "Tiger Nixon", "System Architect", "$3,120", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
+        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" )
+    ],
+    columns: [
+        { data: 'name' },
+        { data: 'salary' },
+        { data: 'office' },
+        { data: 'position' }
+    ]
+} );
 {% endblock %}

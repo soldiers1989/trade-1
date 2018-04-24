@@ -12,8 +12,6 @@
 		<link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
 		<link rel="stylesheet" href="/assets/font-awesome/4.5.0/css/font-awesome.min.css" />
 
-		<!-- page specific plugin styles -->
-
 		<!-- text fonts -->
 		<link rel="stylesheet" href="/assets/css/fonts.googleapis.com.css" />
 
@@ -57,7 +55,7 @@
 				</button>
 
 				<div class="navbar-header pull-left">
-					<a href="/cms/index/" class="navbar-brand">
+					<a href="{% url 'cms.index' %}" class="navbar-brand">
 						<small>
 							<i class="fa fa-leaf"></i>
 							{{ platform }}
@@ -89,7 +87,7 @@
 								<li class="divider"></li>
 
 								<li>
-									<a href="/cms/logout/">
+									<a href="{% url 'cms.logout' %}">
 										<i class="ace-icon fa fa-power-off"></i>
 										退出
 									</a>
@@ -111,64 +109,37 @@
 					try{ace.settings.loadState('sidebar')}catch(e){}
 				</script>
 
-				<div class="sidebar-shortcuts" id="sidebar-shortcuts">
-					<div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
-						<button class="btn btn-success">
-							<i class="ace-icon fa fa-signal"></i>
-						</button>
-
-						<button class="btn btn-info">
-							<i class="ace-icon fa fa-pencil"></i>
-						</button>
-
-						<button class="btn btn-warning">
-							<i class="ace-icon fa fa-users"></i>
-						</button>
-
-						<button class="btn btn-danger">
-							<i class="ace-icon fa fa-cogs"></i>
-						</button>
-					</div>
-
-					<div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini">
-						<span class="btn btn-success"></span>
-
-						<span class="btn btn-info"></span>
-
-						<span class="btn btn-warning"></span>
-
-						<span class="btn btn-danger"></span>
-					</div>
-				</div><!-- /.sidebar-shortcuts -->
-
 				<ul class="nav nav-list">
                     {% for module in modules %}
-                        <li class="{{ module.active }}">
-                            <a href="{{ module.path }}" class="dropdown-toggle">
+                        <li {% if module.id in actives %}class="active open"{% endif %}>
+                            {% url module.path as murl %}
+                            <a href="{{ murl|default:'#' }}" class="dropdown-toggle">
 
                                 <i class="menu-icon fa {{ module.icon }}"></i>
                                 <span class="menu-text">
                                     {{ module.name }}
                                 </span>
 
-                                <b class="arrow fa {{ module.down }}"></b>
+                                <b class="arrow{% if module.childs %} fa fa-angle-down{% endif %}"></b>
 
                             </a>
 
                             <b class="arrow"></b>
-
-                            {% for child in module.childs %}
+                            {% if module.childs %}
                                 <ul class="submenu">
-                                    <li class="{{ child.active }}">
-                                        <a href="{{ child.path }}">
+                                    {% for child in module.childs %}
+                                    <li {% if child.id in actives %}class="active"{% endif %}>
+                                        {% url child.path as curl %}
+                                        <a href="{{ curl|default:'#' }}">
                                             <i class="menu-icon fa fa-caret-right"></i>
                                             {{ child.name }}
                                         </a>
 
                                         <b class="arrow"></b>
                                     </li>
+                                    {% endfor %}
                                 </ul>
-                            {% endfor %}
+                            {% endif %}
                         </li>
                     {% endfor %}
 				</ul><!-- /.nav-list -->
@@ -179,83 +150,6 @@
 			</div>
 
 			<div class="main-content">
-				<div class="main-content-inner">
-					<div class="breadcrumbs ace-save-state" id="breadcrumbs">
-						<ul class="breadcrumb">
-							<li>
-								<i class="ace-icon fa fa-home home-icon"></i>
-								<a href="#">{{ modulename }}</a>
-							</li>
-							<li class="active">{{ submodule }}</li>
-						</ul><!-- /.breadcrumb -->
-					</div>
-				</div>
-                <div class="ace-settings-container" id="ace-settings-container">
-							<div class="btn btn-app btn-xs btn-warning ace-settings-btn" id="ace-settings-btn">
-								<i class="ace-icon fa fa-cog bigger-130"></i>
-							</div>
-
-							<div class="ace-settings-box clearfix" id="ace-settings-box">
-								<div class="pull-left width-50">
-									<div class="ace-settings-item">
-										<div class="pull-left">
-											<select id="skin-colorpicker" class="hide">
-												<option data-skin="no-skin" value="#438EB9">#438EB9</option>
-												<option data-skin="skin-1" value="#222A2D">#222A2D</option>
-												<option data-skin="skin-2" value="#C6487E">#C6487E</option>
-												<option data-skin="skin-3" value="#D0D0D0">#D0D0D0</option>
-											</select>
-										</div>
-										<span>&nbsp; Choose Skin</span>
-									</div>
-
-									<div class="ace-settings-item">
-										<input type="checkbox" class="ace ace-checkbox-2 ace-save-state" id="ace-settings-navbar" autocomplete="off" />
-										<label class="lbl" for="ace-settings-navbar"> Fixed Navbar</label>
-									</div>
-
-									<div class="ace-settings-item">
-										<input type="checkbox" class="ace ace-checkbox-2 ace-save-state" id="ace-settings-sidebar" autocomplete="off" />
-										<label class="lbl" for="ace-settings-sidebar"> Fixed Sidebar</label>
-									</div>
-
-									<div class="ace-settings-item">
-										<input type="checkbox" class="ace ace-checkbox-2 ace-save-state" id="ace-settings-breadcrumbs" autocomplete="off" />
-										<label class="lbl" for="ace-settings-breadcrumbs"> Fixed Breadcrumbs</label>
-									</div>
-
-									<div class="ace-settings-item">
-										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-rtl" autocomplete="off" />
-										<label class="lbl" for="ace-settings-rtl"> Right To Left (rtl)</label>
-									</div>
-
-									<div class="ace-settings-item">
-										<input type="checkbox" class="ace ace-checkbox-2 ace-save-state" id="ace-settings-add-container" autocomplete="off" />
-										<label class="lbl" for="ace-settings-add-container">
-											Inside
-											<b>.container</b>
-										</label>
-									</div>
-								</div><!-- /.pull-left -->
-
-								<div class="pull-left width-50">
-									<div class="ace-settings-item">
-										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-hover" autocomplete="off" />
-										<label class="lbl" for="ace-settings-hover"> Submenu on Hover</label>
-									</div>
-
-									<div class="ace-settings-item">
-										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-compact" autocomplete="off" />
-										<label class="lbl" for="ace-settings-compact"> Compact Sidebar</label>
-									</div>
-
-									<div class="ace-settings-item">
-										<input type="checkbox" class="ace ace-checkbox-2" id="ace-settings-highlight" autocomplete="off" />
-										<label class="lbl" for="ace-settings-highlight"> Alt. Active Item</label>
-									</div>
-								</div><!-- /.pull-left -->
-							</div><!-- /.ace-settings-box -->
-						</div><!-- /.ace-settings-container -->
                 <div class="page-content">{% block pagecontent %}{% endblock %}</div>
 			</div><!-- /.main-content -->
 
@@ -269,13 +163,7 @@
 					</div>
 				</div>
 			</div>
-
-			<a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
-				<i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
-			</a>
 		</div><!-- /.main-container -->
-
-		<!-- basic scripts -->
 
 		<!--[if !IE]> -->
 		<script src="/assets/js/jquery-2.1.4.min.js"></script>
@@ -285,13 +173,21 @@
 		<!--[if IE]>
         <script src="/assets/js/jquery-1.11.3.min.js"></script>
         <![endif]-->
-		<script type="text/javascript">
-			if('ontouchstart' in document.documentElement) document.write("<script src='assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
-		</script>
 		<script src="/assets/js/bootstrap.min.js"></script>
+
+        <!-- page specific plugin scripts -->
+        {% block jsfiles %}{% endblock %}
 
 		<!-- ace scripts -->
 		<script src="/assets/js/ace-elements.min.js"></script>
 		<script src="/assets/js/ace.min.js"></script>
+
+    	<script type="text/javascript">
+			if('ontouchstart' in document.documentElement) document.write("<script src='/assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
+		</script>
+
+        <script type="text/javascript">
+        {% block jscontent %}{% endblock %}
+        </script>
 	</body>
 </html>

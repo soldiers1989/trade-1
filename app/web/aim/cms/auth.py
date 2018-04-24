@@ -1,9 +1,10 @@
 """
      authority control
 """
-from cms import forms, hint
 from pub import models
+from cms import forms, hint
 
+from django.urls import reverse
 from django.shortcuts import redirect
 
 
@@ -52,17 +53,55 @@ class User:
             return request.session.get(sid.UMODULES)
 
     @staticmethod
-    def has_module(request):
+    def parents(request, mpath=None):
+        """
+
+        :param request:
+        :param mpath:
+        :return:
+        """
+        return user._parents(user.modules(request), mpath)
+
+    @staticmethod
+    def _parents(modules, mpath):
+        """
+
+        :param modules:
+        :param mpath:
+        :return:
+        """
+        parents = []
+
+        for mdl in modules:
+            # compare current
+            parents.append(mdl['id'])
+            if mdl['path'] == mpath:
+                return parents
+
+            # find childs
+            results = user._parents(mdl['childs'], mpath)
+            if len(results) > 0:
+                parents.extend(results)
+                return parents
+
+            # find next
+            parents.pop()
+
+        return parents
+
+
+    @staticmethod
+    def has_module(request, module):
         """
 
         :param modules:
         :return:
         """
-        modules = request.session.get('_umodules')
-        return user._has_module(modules, request.path)
+        modules = request.session.get(sid.UMODULES)
+        return user._has_module(modules, module)
 
     @staticmethod
-    def _has_module(modules, path):
+    def _has_module(modules, mdl):
         """
 
         :param modules:
@@ -71,13 +110,13 @@ class User:
         """
         for module in modules:
             # compare current
-            if module['path'] == path:
+            if module['path'] == mdl:
                 return True
 
             # compare childs
             childs = module['childs']
-            if childs is not None:
-                return user._has_module(childs, path)
+            if childs is not None and user._has_module(childs, mdl):
+                return True
 
         return False
 
@@ -94,22 +133,17 @@ class User:
         # filter child modules
         for obj in mobjs:
             if obj.parent_id == parent:
-                module_id = obj.module_id
-                parent = obj.parent_id
-                name = obj.name
-                icon = obj.icon
-                order = obj.order
-                disable = obj.disable
-                ctime = obj.ctime
+                child = {'id': obj.module_id,
+                         'parent': obj.parent_id,
+                         'name': obj.name,
+                         'path': obj.path,
+                         'icon': obj.icon,
+                         'order': obj.order,
+                         'disable': obj.disable,
+                         'ctime': obj.ctime,
+                         'childs': []}
 
-                childs.append({'id':module_id,
-                                'parent':parent,
-                                'name':name,
-                                'icon':icon,
-                                'order':order,
-                                'disable':disable,
-                                'ctime':ctime,
-                                'childs':[]})
+                childs.append(child)
 
         # sort child modules by order
         childs.sort(key=lambda x: x['order'], reverse=True)
@@ -125,19 +159,21 @@ class User:
 user = User
 
 
-def has_auth(func):
+def has_auth(module):
     """
         module authority decorator
     :param request:
     :return:
     """
-    def _has_auth(request):
-        if is_login(request):
-            if user.has_module(request):
-                return func(request)
-            return redirect('cms.index')
-        else:
-            return redirect('cms.login')
+    def _has_auth(func):
+        def __has_auth(request):
+            if is_login(request):
+                if user.has_module(request, module):
+                    return func(request)
+                return redirect('cms.index')
+            else:
+                return redirect('cms.login')
+        return __has_auth
     return _has_auth
 
 

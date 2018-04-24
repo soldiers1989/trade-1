@@ -19,8 +19,8 @@ class B(models.Model):
 
 class C(models.Model):
     c_id = models.AutoField(primary_key=True)
-    a = models.ForeignKey(A)
-    b = models.ForeignKey(B)
+    a = models.ForeignKey(A, on_delete=models.CASCADE)
+    b = models.ForeignKey(B, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'tb_c'

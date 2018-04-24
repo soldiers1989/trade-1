@@ -1,3 +1,4 @@
+from django.urls import reverse
 from django.shortcuts import render, redirect
 
 from cms import auth, config
@@ -5,16 +6,19 @@ from cms import auth, config
 
 class Ctx:
     @staticmethod
-    def default(request):
+    def default(request, mpath=None):
         # user not login
         if not auth.is_login(request):
             return config.default_context
+
+
 
         # user has login
         ctx = {
             'userid': auth.user.id(request),
             'username': auth.user.name(request),
-            'modules': auth.user.modules(request)
+            'modules': auth.user.modules(request),
+            'actives': auth.user.parents(request, mpath)
         }
 
         ctx.update(config.default_context)
@@ -49,7 +53,7 @@ def logout(request):
         auth.logout(request)
 
     # goto login page
-    return redirect(request, 'cms.login')
+    return redirect('cms.login')
 
 
 @auth.has_login
@@ -59,23 +63,25 @@ def index(request):
     :param request:
     :return:
     """
-    return render(request, 'index.html', context=ctx.default(request))
+
+    return render(request, 'index.html', context=ctx.default(request, 'cms.index'))
 
 
-@auth.has_auth
-def admin_list(request):
+@auth.has_auth('cms.auth.admin.list')
+def auth_admin_list(request):
     """
 
     :param request:
     :return:
     """
-    return render(request, 'admin.html', context=ctx.default(request))
+    return render(request, 'admin.html', context=ctx.default(request, 'cms.auth.admin.list'))
 
-@auth.has_auth
-def module_list(request):
+
+@auth.has_auth('cms.auth.module.list')
+def auth_module_list(request):
     """
 
     :param request:
     :return:
     """
-    return render(request, 'module.html', context=ctx.default(request))
+    return render(request, 'module.html', context=ctx.default(request, 'cms.auth.module.list'))

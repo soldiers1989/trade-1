@@ -1,14 +1,15 @@
-from django.conf.urls import url
+from django.urls import path
 from cms import apis, views
 
 urlpatterns = [
-    url(r'^index/$', views.index, name='cms.index'),
+    path('index/', views.index, name='cms.index'),
 
-    url(r'^login/$', views.login, name='cms.login'),
-    url(r'^logout/$', views.logout, name='cms.logout'),
+    path('login/', views.login, name='cms.login'),
+    path('logout/', views.logout, name='cms.logout'),
 
-    url(r'^auth/admin/$', views.admin_list, name='cms.auth.admin.list'),
-    url(r'^auth/module/$', views.module_list, name='cms.auth.module.list'),
+    path('auth/admin/list/', views.auth_admin_list, name='cms.auth.admin.list'),
 
-    url(r'^api/login/$', apis.login, name="cms.api.login")
+    path('auth/module/list/', views.auth_module_list, name='cms.auth.module.list'),
+
+    path('api/login/', apis.login, name="cms.api.login")
 ]

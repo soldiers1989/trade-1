@@ -4,6 +4,6 @@
 
 # default common context for all template
 default_context = {
-    'g_platform': '运营管理平台',
-    'g_company': '天合'
+    'platform': '运营管理平台',
+    'company': '天合'
 }
