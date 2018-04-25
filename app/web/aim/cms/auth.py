@@ -70,22 +70,22 @@ class User:
         :param mpath:
         :return:
         """
-        parents = []
+        parents = {}
 
         for mdl in modules:
             # compare current
-            parents.append(mdl['id'])
+            parents[mdl['id']] = mdl
             if mdl['path'] == mpath:
                 return parents
 
             # find childs
             results = user._parents(mdl['childs'], mpath)
             if len(results) > 0:
-                parents.extend(results)
+                parents.update(results)
                 return parents
 
             # find next
-            parents.pop()
+            parents.pop(mdl['id'])
 
         return parents
 

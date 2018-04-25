@@ -1,7 +1,16 @@
 {% extends 'base.html' %}
 
 {% block pagecontent %}
-    <table id="example" class="table table-hover table-bordered"></table>
+    <table id="example" class="table table-bordered table-hover" style="width: 100%">
+           <thead>
+            <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Office</th>
+                <th>Age</th>
+            </tr>
+        </thead>
+    </table>
 {% endblock %}
 
 {% block jsfiles %}
@@ -14,40 +23,28 @@
 {% endblock %}
 
 {% block jscontent %}
-    function Employee ( name, position, salary, office ) {
-    this.name = name;
-    this.position = position;
-    this.salary = salary;
-    this._office = office;
+    $('#example').DataTable( {
+        select: true,
+        ajax: '{% url 'cms.api.auth.module.list' %}',
+        buttons: ['excel', 'pdf'],
+        language: {
+            info: '当前第_START_-_END_条, 总计_TOTAL_条',
+            infoEmpty: '没有相关记录',
 
-    this.office = function () {
-        return this._office;
-    }
-};
+            select: {
+                rows: ', 已选 %d 条'
+            },
 
-$('#example').DataTable( {
-    data: [
-        new Employee( "Tiger Nixon", "System Architect", "$3,120", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" ),
-        new Employee( "Garrett Winters", "Director", "$5,300", "Edinburgh" )
-    ],
-    columns: [
-        { data: 'name' },
-        { data: 'salary' },
-        { data: 'office' },
-        { data: 'position' }
-    ]
-} );
+            paginate: {
+                first: '首页',
+                last: '末页',
+                previous: '上一页',
+                next: '下一页'
+            },
+
+            search: '搜索:',
+            lengthMenu: '每页 _MENU_ 条',
+            loadingRecords: '正在加载数据, 请稍后...',
+        }
+    } );
 {% endblock %}

@@ -12,6 +12,9 @@
 		<link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
 		<link rel="stylesheet" href="/assets/font-awesome/4.5.0/css/font-awesome.min.css" />
 
+        <!-- page specific plugin styles -->
+        {% block cssfiles %} {% endblock %}
+
 		<!-- text fonts -->
 		<link rel="stylesheet" href="/assets/css/fonts.googleapis.com.css" />
 
@@ -27,8 +30,6 @@
 		<!--[if lte IE 9]>
 		  <link rel="stylesheet" href="/assets/css/ace-ie.min.css" />
 		<![endif]-->
-
-		<!-- inline styles related to this page -->
 
 		<!-- ace settings handler -->
 		<script src="/assets/js/ace-extra.min.js"></script>
@@ -148,9 +149,8 @@
 				</div>
 			</div>
 			<div class="main-content">
-                {% include 'themes.html' %}
-                {% include 'bread.html' %}
                 <div class="main-content-inner">
+                    {% include 'bread.html' %}
                     <div class="page-content">{% block pagecontent %}{% endblock %}</div>
                 </div>
 			</div><!-- /.main-content -->

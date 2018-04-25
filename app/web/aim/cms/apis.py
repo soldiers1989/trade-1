@@ -55,3 +55,34 @@ def login(request):
         return success(message=msg)
     else:
         return failure(message=msg)
+
+
+def auth_admin_list(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    admins = [[1,2,3,4]]
+
+    resp = json.dumps(admins).encode('utf-8')
+    return HttpResponse(resp, content_type='application/json;charset=utf8')
+
+
+def auth_module_list(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+
+    data = []
+    for i in range(0, 100):
+        data.append([i,i,i,i])
+
+    modules = {
+                'data':data
+            }
+
+    resp = json.dumps(modules).encode('utf-8')
+    return HttpResponse(resp, content_type='application/json;charset=utf8')

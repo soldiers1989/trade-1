@@ -11,5 +11,7 @@ urlpatterns = [
 
     path('auth/module/list/', views.auth_module_list, name='cms.auth.module.list'),
 
-    path('api/login/', apis.login, name="cms.api.login")
+    path('api/login/', apis.login, name="cms.api.login"),
+    path('api/auth/admin/list/', apis.auth_admin_list, name="cms.api.auth.admin.list"),
+    path('api/auth/module/list/', apis.auth_module_list, name="cms.api.auth.module.list")
 ]

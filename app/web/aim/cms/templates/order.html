@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block cssfiles %}
+
+{% endblock %}
+
+{% block pagecontent %}
+      <table id="admin-list" class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th field="itemid" width="80">Item ID</th>
+                <th field="productid" width="80">Product ID</th>
+                <th field="listprice" width="80" align="right" formatter="formatPrice">List Price</th>
+                <th field="unitcost" width="80" align="right">Unit Cost</th>
+            </tr>
+        </thead>
+      </table>
+{% endblock %}
+
+{% block jsfiles %}
+
+{% endblock %}
