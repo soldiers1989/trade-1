@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block pagecontent %}
+    <div class="dt-buttons">
+        <button class="dt-button buttons-create" tabindex="0" aria-controls="example"><span>New</span></button>
+    </div>
     <table id="example" class="table table-bordered table-hover" style="width: 100%">
            <thead>
             <tr>
@@ -25,6 +28,7 @@
 {% block jscontent %}
     $('#example').DataTable( {
         select: true,
+        filter: true,
         ajax: '{% url 'cms.api.auth.module.list' %}',
         buttons: ['excel', 'pdf'],
         language: {

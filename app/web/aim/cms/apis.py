@@ -63,7 +63,14 @@ def auth_admin_list(request):
     :param request:
     :return:
     """
-    admins = [[1,2,3,4]]
+    data = []
+    for i in range(0, 30):
+        data.append({'ids':0,'code':i, 'name':i, 'title':i, 'price':i})
+
+    admins = {
+        'total': 124,
+        'rows': data
+    }
 
     resp = json.dumps(admins).encode('utf-8')
     return HttpResponse(resp, content_type='application/json;charset=utf8')
