@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="sys\dump.cpp" />
     <ClCompile Include="http\applet.cpp" />
     <ClCompile Include="http\charset.cpp" />
     <ClCompile Include="http\config.cpp" />
@@ -78,6 +79,7 @@
     <ClCompile Include="net\worker.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="sys\dump.h" />
     <ClInclude Include="http\applet.h" />
     <ClInclude Include="http\charset.h" />
     <ClInclude Include="http\config.h" />

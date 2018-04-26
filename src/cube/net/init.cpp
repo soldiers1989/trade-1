@@ -1,6 +1,5 @@
 #include "cube\net\init.h"
 #include "cube\sys\error.h"
-#include <WinSock2.h>
 BEGIN_CUBE_NET_NS
 init::init() {
 	/*start up windows socket environment*/

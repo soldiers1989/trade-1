@@ -1,4 +1,5 @@
 #pragma once
+#include <WinSock2.h>
 #include "cube\ns.h"
 BEGIN_CUBE_NET_NS
 //class for initialize windows socket everiment
