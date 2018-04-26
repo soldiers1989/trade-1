@@ -1,102 +1,69 @@
 {% extends 'base.html' %}
 
 {% block cssfiles %}
-    <link rel="stylesheet" href="/assets/css/bootstrap-table.min.css" />
+    <link rel="stylesheet" href="/assets/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="/assets/css/rowReorder.dataTables.min.css" />
 {% endblock %}
 
 {% block pagecontent %}
-    <table id="adminlist" data-toggle="adminlist" class="table table-bordered table-hover" data-search="true" data-show-refresh="true" data-show-columns="true" data-toolbar="#toolbar">
-        <thead>
-        <tr>
-            <th data-field="id" width="80">Item ID</th>
-            <th data-field="name" width="80">Product ID</th>
-            <th data-field="title" width="80" align="right" formatter="formatPrice">List Price</th>
-            <th data-field="price" width="80" align="right">Unit Cost</th>
-        </tr>
+    <table id="adminlist" class="table table-bordered table-hover text-center" style="width: 100%;border-collapse:collapse">
+           <thead>
+            <tr>
+                <th class="center">ID</th>
+                <th class="center">用户</th>
+                <th class="center">姓名</th>
+                <th class="center">手机</th>
+                <th class="center">禁用</th>
+                <th class="center">创建时间</th>
+                <th class="center sorting_disabled">操作</th>
+            </tr>
         </thead>
     </table>
-    <div id="toolbar">
-        <div class="btn-group">
-            <button class="btn btn-danger smaller">
-                <i class="ui-menu-icon fa fa-desktop"></i>
-            </button>
-            <button class="btn btn-default">
-                <i class="glyphicon-heart" id="heartBtn"></i>
-            </button>
-            <button class="btn btn-default">
-                <i class="glyphicon glyphicon-trash"></i>
-            </button>
-        </div>
-        <div class="form-group">
-            <label class="control-label">性别：</label>
-            <label class="radio-inline">
-                <input type="radio" name="sex" value="男"/> 男
-            </label>
-            <label class="radio-inline">
-                <input type="radio" name="sex" value="女"/> 女
-            </label>
-        </div>
-    </div>
-{% endblock %}
-
-{% block jscontent %}
-    $('#adminlist').bootstrapTable({
-        method: 'get',
-        url: '{% url 'cms.api.auth.admin.list' %}',
-
-        pagination: true,
-        pageList: [15, 20, 30, 50],
-        pageSize: 15,
-        pageNumber: 1,
-        sidePagination: 'server',
-        clickToSelect: true,
-        //showToggle: true,
-
-        onLoadSuccess: function() {
-            console.info("加载成功");
-        },
-
-        onLoadError: function() {
-            console.info('加载数据失败');
-        },
-
-        columns: [
-            {
-                checkbox: true,
-                visible: true,
-                align: 'center',
-            },
-            {
-                field: 'code',
-                title: '编号',
-                align: 'center',
-                valign: 'middle',
-                sortable: true
-            },
-            {
-                field: 'name',
-                title: '名称',
-                align: 'center',
-                valign: 'middle',
-                sortable: true
-            },
-            {
-                field: 'title',
-                title: '标题',
-                align: 'center',
-                valign: 'middle'
-            },
-            {
-                field: 'price',
-                title: '价格',
-                align: 'center',
-                valign: 'middle'
-            }
-        ]
-    })
 {% endblock %}
 
 {% block jsfiles %}
-    <script src="/assets/js/bootstrap-table.min.js"></script>
-    <script src="/assets/js/bootstrap-table/locale/bootstrap-table-zh-CN.js"></script>
+    <script src="/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/js/jquery.dataTables.bootstrap.min.js"></script>
+    <script src="/assets/js/dataTables.rowReorder.min.js"></script>
+    <script src="/assets/js/dataTables.buttons.min.js"></script>
+    <script src="/assets/js/dataTables.select.min.js"></script>
+{% endblock %}
+
+{% block jscontent %}
+    $('#adminlist').DataTable( {
+        ajax: '{% url 'cms.api.auth.admin.list' %}',
+
+        buttons: ['excel', 'pdf'],
+
+        select: false,
+        filter: true,
+
+        language: {
+            url: '/assets/json/zh_cn.json?2018'
+        },
+
+        columns: [
+            {"data": 0},
+            {"data": 1},
+            {"data": 2},
+            {"data": 3},
+            {"data": 4},
+            {"data": 5},
+            {"data": 6}
+        ],
+
+        columnDefs: [
+            {
+                targets: 6,
+                data: function(row, type, val, meta){
+                    return row;
+                },
+                defaultContent: '<div class="hidden-sm hidden-xs action-buttons"><a href="#" class="blue"><i class="ace-icon fa fa-search-plus bigger-130"></i> </a></div>'
+            }
+        ]
+    } );
+
+    $('#adminlist').on( 'click', 'tbody tr td', function () {
+        alert($(this).val());
+    } );
 {% endblock %}

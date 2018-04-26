@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block pagecontent %}
+    <table id="modulelist" class="table table-bordered table-hover" style="width: 100%">
+           <thead>
+            <tr>
+                <th>Name</th>
+                <th>Position</th>
+                <th>Office</th>
+                <th>Age</th>
+            </tr>
+        </thead>
+    </table>
+{% endblock %}
+
+{% block jsfiles %}
+    <script src="/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/js/jquery.dataTables.bootstrap.min.js"></script>
+    <script src="/assets/js/dataTables.buttons.min.js"></script>
+    <script src="/assets/js/buttons.flash.min.js"></script>
+    <script src="/assets/js/buttons.html5.min.js"></script>
+    <script src="/assets/js/dataTables.select.min.js"></script>
+{% endblock %}
+
+{% block jscontent %}
+    $('#example').DataTable( {
+        select: true,
+        filter: true,
+        ajax: '{% url 'cms.api.auth.module.list' %}',
+        buttons: ['excel', 'pdf'],
+        language: {
+            info: '当前第_START_-_END_条, 总计_TOTAL_条',
+            infoEmpty: '没有相关记录',
+
+            select: {
+                rows: ', 已选 %d 条'
+            },
+
+            paginate: {
+                first: '首页',
+                last: '末页',
+                previous: '上一页',
+                next: '下一页'
+            },
+
+            search: '搜索:',
+            lengthMenu: '每页 _MENU_ 条',
+            loadingRecords: '正在加载数据, 请稍后...',
+        }
+    } );
+{% endblock %}
