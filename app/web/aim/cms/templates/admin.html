@@ -1,20 +1,20 @@
 {% extends 'base.html' %}
 
 {% block cssfiles %}
-    <link rel="stylesheet" href="/assets/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="/assets/css/jquery.dataTables.css" />
     <link rel="stylesheet" href="/assets/css/rowReorder.dataTables.min.css" />
 {% endblock %}
 
-{% block pagecontent %}
-    <table id="adminlist" class="table table-bordered table-hover text-center" style="width: 100%;border-collapse:collapse">
+{% block pagecontent %}\
+    <table id="adminlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
            <thead>
             <tr>
-                <th class="center">ID</th>
-                <th class="center">用户</th>
-                <th class="center">姓名</th>
-                <th class="center">手机</th>
-                <th class="center">禁用</th>
-                <th class="center">创建时间</th>
+                <th>ID</th>
+                <th>用户</th>
+                <th>姓名</th>
+                <th>手机</th>
+                <th>禁用</th>
+                <th>创建时间</th>
                 <th class="center sorting_disabled">操作</th>
             </tr>
         </thead>
@@ -22,48 +22,87 @@
 {% endblock %}
 
 {% block jsfiles %}
-    <script src="/assets/js/jquery.dataTables.min.js"></script>
+    <script src="/assets/js/jquery.dataTables.js"></script>
     <script src="/assets/js/jquery.dataTables.bootstrap.min.js"></script>
     <script src="/assets/js/dataTables.rowReorder.min.js"></script>
     <script src="/assets/js/dataTables.buttons.min.js"></script>
     <script src="/assets/js/dataTables.select.min.js"></script>
+    <script src="/assets/js/bootstrap-confirmation.js"></script>
 {% endblock %}
 
 {% block jscontent %}
-    $('#adminlist').DataTable( {
+    var table = $('#adminlist').DataTable( {
         ajax: '{% url 'cms.api.auth.admin.list' %}',
 
         buttons: ['excel', 'pdf'],
 
         select: false,
         filter: true,
+        processing: true,
+        rowId: 0,
 
         language: {
             url: '/assets/json/zh_cn.json?2018'
         },
 
-        columns: [
-            {"data": 0},
-            {"data": 1},
-            {"data": 2},
-            {"data": 3},
-            {"data": 4},
-            {"data": 5},
-            {"data": 6}
+        columnDefs:[
+            {
+                data: 0,
+                targets: 6,
+                render: function(data, type, row, meta) {
+                    return '<div class="hidden-sm hidden-xs action-buttons">'+
+                                '<a class="blue show_detail" href="javascript:void(0)" data-value="' + data + '">' +
+                                    '<i class="ace-icon fa fa-search-plus bigger-130"></i>' +
+                                '</a>'+
+                                '<a class="green show_modify" href="javascript:void(0)" data-value="' + data + '">' +
+                                    '<i class="ace-icon fa fa-pencil bigger-130"></i>' +
+                                '</a>'+
+                                '<a class="btn btn-mini show_delete" data-toggle="confirmation" data-value="' + data + '">' +
+                                    '<i class="ace-icon fa fa-trash bigger-130"></i>' +
+                                '</a>'+
+                            '</div>';
+                }
+            }
         ],
 
-        columnDefs: [
-            {
-                targets: 6,
-                data: function(row, type, val, meta){
-                    return row;
-                },
-                defaultContent: '<div class="hidden-sm hidden-xs action-buttons"><a href="#" class="blue"><i class="ace-icon fa fa-search-plus bigger-130"></i> </a></div>'
-            }
-        ]
+        initComplete: function(settings, json) {
+            $('.show_detail').on('click', function(e){
+                var id = $(this).data('value');
+                show_detail(id);
+            });
+
+            $('.show_modify').on('click', function(e){
+                var id = $(this).data('value');
+                show_modify(id);
+            });
+
+            $('.show_delete').on('click', function(e){
+                var id = $(this).data('value');
+                show_delete(id);
+            });
+
+        }
     } );
 
-    $('#adminlist').on( 'click', 'tbody tr td', function () {
-        alert($(this).val());
-    } );
+    function show_detail(id){
+        alert('detail '+id);
+        console.log(table.rows().ids());
+    }
+
+    function show_modify(id) {
+        alert('modify '+id);
+    }
+
+    function show_delete(id){
+        var params = 'id='+id;
+
+        $.get('{% url 'cms.api.auth.admin.del' %}', params, function(resp){
+            if(resp.status){
+                table.row('#'+id).remove();
+                table.draw();
+            } else {
+               alert(resp.message);
+            }
+        }, "json");
+    }
 {% endblock %}

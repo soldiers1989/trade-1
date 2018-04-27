@@ -79,6 +79,77 @@ def auth_admin_list(request):
     return HttpResponse(content, content_type='application/json;charset=utf8')
 
 
+def auth_admin_get(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    admins = models.Admin.objects.filter().all()
+
+    resp = {
+        'data': []
+    }
+
+    for admin in admins:
+        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
+
+    content = json.dumps(resp).encode('utf-8')
+
+    return HttpResponse(content, content_type='application/json;charset=utf8')
+
+
+def auth_admin_add(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    admins = models.Admin.objects.filter().all()
+
+    resp = {
+        'data': []
+    }
+
+    for admin in admins:
+        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
+
+    content = json.dumps(resp).encode('utf-8')
+
+    return HttpResponse(content, content_type='application/json;charset=utf8')
+
+
+def auth_admin_del(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    admins = models.Admin.objects.filter().all()
+
+    return failure('not exist')
+
+
+def auth_admin_mod(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    admins = models.Admin.objects.filter().all()
+
+    resp = {
+        'data': []
+    }
+
+    for admin in admins:
+        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
+
+    content = json.dumps(resp).encode('utf-8')
+
+    return HttpResponse(content, content_type='application/json;charset=utf8')
+
+
 def auth_module_list(request):
     """
         login api

@@ -1,22 +1,102 @@
 {% extends 'base.html' %}
 
 {% block cssfiles %}
-
+    <link rel="stylesheet" href="/assets/css/bootstrap-table.min.css" />
 {% endblock %}
 
 {% block pagecontent %}
-      <table id="admin-list" class="table table-bordered table-hover">
+    <table id="adminlist" data-toggle="adminlist" class="table table-bordered table-hover" data-search="true" data-show-refresh="true" data-show-columns="true" data-toolbar="#toolbar">
         <thead>
-            <tr>
-                <th field="itemid" width="80">Item ID</th>
-                <th field="productid" width="80">Product ID</th>
-                <th field="listprice" width="80" align="right" formatter="formatPrice">List Price</th>
-                <th field="unitcost" width="80" align="right">Unit Cost</th>
-            </tr>
+        <tr>
+            <th data-field="id" width="80">Item ID</th>
+            <th data-field="name" width="80">Product ID</th>
+            <th data-field="title" width="80" align="right" formatter="formatPrice">List Price</th>
+            <th data-field="price" width="80" align="right">Unit Cost</th>
+        </tr>
         </thead>
-      </table>
+    </table>
+    <div id="toolbar">
+        <div class="btn-group">
+            <button class="btn btn-danger smaller">
+                <i class="ui-menu-icon fa fa-desktop"></i>
+            </button>
+            <button class="btn btn-default">
+                <i class="glyphicon-heart" id="heartBtn"></i>
+            </button>
+            <button class="btn btn-default">
+                <i class="glyphicon glyphicon-trash"></i>
+            </button>
+        </div>
+        <div class="form-group">
+            <label class="control-label">性别：</label>
+            <label class="radio-inline">
+                <input type="radio" name="sex" value="男"/> 男
+            </label>
+            <label class="radio-inline">
+                <input type="radio" name="sex" value="女"/> 女
+            </label>
+        </div>
+    </div>
+{% endblock %}
+
+{% block jscontent %}
+    $('#adminlist').bootstrapTable({
+        method: 'get',
+        url: '{% url 'cms.api.auth.admin.list' %}',
+
+        pagination: true,
+        pageList: [15, 20, 30, 50],
+        pageSize: 15,
+        pageNumber: 1,
+        sidePagination: 'server',
+        clickToSelect: true,
+        //showToggle: true,
+
+        onLoadSuccess: function() {
+            console.info("加载成功");
+        },
+
+        onLoadError: function() {
+            console.info('加载数据失败');
+        },
+
+        columns: [
+            {
+                checkbox: true,
+                visible: true,
+                align: 'center',
+            },
+            {
+                field: 'code',
+                title: '编号',
+                align: 'center',
+                valign: 'middle',
+                sortable: true
+            },
+            {
+                field: 'name',
+                title: '名称',
+                align: 'center',
+                valign: 'middle',
+                sortable: true
+            },
+            {
+                field: 'title',
+                title: '标题',
+                align: 'center',
+                valign: 'middle'
+            },
+            {
+                field: 'price',
+                title: '价格',
+                align: 'center',
+                valign: 'middle'
+            }
+        ]
+    })
 {% endblock %}
 
 {% block jsfiles %}
-
+    <script src="/assets/js/bootstrap-table.min.js"></script>
+    <script src="/assets/js/bootstrap-table/locale/bootstrap-table-zh-CN.js"></script>
 {% endblock %}

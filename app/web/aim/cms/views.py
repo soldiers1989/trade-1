@@ -28,6 +28,15 @@ class Ctx:
 ctx = Ctx
 
 
+def test(request):
+    """
+        administrator login
+    :param request:
+    :return:
+    """
+    return render(request, 'test.html', context=ctx.default(request))
+
+
 def login(request):
     """
         administrator login
@@ -85,3 +94,13 @@ def auth_module_list(request):
     :return:
     """
     return render(request, 'module.html', context=ctx.default(request, 'cms.auth.module.list'))
+
+
+@auth.has_auth('cms.order.order.list')
+def order_order_list(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'order.html', context=ctx.default(request, 'cms.order.order.list'))
