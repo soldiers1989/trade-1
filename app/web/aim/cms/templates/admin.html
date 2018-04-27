@@ -27,6 +27,7 @@
     <script src="/assets/js/dataTables.rowReorder.min.js"></script>
     <script src="/assets/js/dataTables.buttons.min.js"></script>
     <script src="/assets/js/dataTables.select.min.js"></script>
+    <script src="/assets/js/bootstrap-tooltip.js"></script>
     <script src="/assets/js/bootstrap-confirmation.js"></script>
 {% endblock %}
 
@@ -78,9 +79,23 @@
 
             $('.show_delete').on('click', function(e){
                 var id = $(this).data('value');
-                show_delete(id);
+                //show_delete(id);
             });
 
+            $('.show_delete').confirmation({
+                animation: true,
+                placement: "top",
+                title: "确定要删除吗？",
+                btnOkLabel: '确定',
+                btnCancelLabel: '取消',
+                onConfirm: function () {
+
+                    alert("点击了确定");
+                },
+                onCancel: function () {
+                    alert("点击了取消");
+                }
+            });
         }
     } );
 
@@ -105,4 +120,6 @@
             }
         }, "json");
     }
+
+
 {% endblock %}
