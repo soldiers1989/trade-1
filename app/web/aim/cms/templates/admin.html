@@ -1,11 +1,14 @@
 {% extends 'base.html' %}
 
 {% block cssfiles %}
-    <link rel="stylesheet" href="/assets/css/jquery.dataTables.css" />
-    <link rel="stylesheet" href="/assets/css/rowReorder.dataTables.min.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/select1.2.5/select.bootstrap.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/buttons1.5.1/buttons.bootstrap.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/editor1.7.3/editor.bootstrap.css" />
+
 {% endblock %}
 
-{% block pagecontent %}\
+{% block pagecontent %}
     <table id="adminlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
            <thead>
             <tr>
@@ -22,43 +25,167 @@
 {% endblock %}
 
 {% block jsfiles %}
-    <script src="/assets/js/jquery.dataTables.js"></script>
-    <script src="/assets/js/jquery.dataTables.bootstrap.min.js"></script>
-    <script src="/assets/js/dataTables.rowReorder.min.js"></script>
-    <script src="/assets/js/dataTables.buttons.min.js"></script>
-    <script src="/assets/js/dataTables.select.min.js"></script>
-    <script src="/assets/js/bootstrap-tooltip.js"></script>
-    <script src="/assets/js/bootstrap-confirmation.js"></script>
+    <script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
+    <script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
+    <script src="/assets/js/datatables/ext/buttons1.5.1/dataTables.buttons.js"></script>
+    <script src="/assets/js/datatables/ext/buttons1.5.1/buttons.bootstrap.js"></script>
+    <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
+    <script src="/assets/js/datatables/ext/editor1.7.3/dataTables.editor.js"></script>
+    <script src="/assets/js/datatables/ext/editor1.7.3/editor.bootstrap.js"></script>
+    <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
+    <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
 {% endblock %}
 
 {% block jscontent %}
+<script type="text/javascript">  
+    var editor = new $.fn.dataTable.Editor( {
+        ajax: {
+            create: {
+                type: 'GET',
+                url: "{% url 'cms.api.auth.admin.add' %}",
+            },
+            edit: {
+                type: 'GET',
+                url: "{% url 'cms.api.auth.admin.add' %}",
+            },
+            remove: {
+                url: "{% url 'cms.api.auth.admin.add' %}",
+            }   
+        },
+        
+        table: "#adminlist",
+        idSrc: 'id',
+
+        fields: [ {
+                label: "用户:",
+                name: "user",
+                def: ""
+            }, {
+                label: "密码:",
+                name: "pwd",
+                type: "password"
+            }, {
+                label: "姓名:",
+                name: "name"
+            }, {
+                label: "手机:",
+                name: "phone"
+            }, {
+                type: "select",
+                label: "禁用:",
+                name: "disable",
+                options: [
+                    {label: "是", value: true},
+                    {label: "否", value: false}
+                ]
+            }
+        ],
+
+        i18n: {
+            create: {
+                button: "新建",
+                title:  "新建用户",
+                submit: "提交"
+            },
+        }
+    } );
+
+    var editormod = new $.fn.dataTable.Editor( {
+        ajax: "{% url 'cms.api.auth.admin.mod' %}",
+        table: "#adminlist",
+        fields: [ {
+                label: "用户:",
+                name: "user"
+            }, {
+                label: "密码:",
+                name: "pwd"
+            }, {
+                label: "姓名:",
+                name: "name"
+            }, {
+                label: "手机:",
+                name: "phone"
+            }, {
+                type: "select",
+                label: "禁用:",
+                name: "disable",
+                options: [
+                    {label: "是", value: true},
+                    {lable: "否", value: false}
+                ]
+            }
+        ]
+    } );
+
     var table = $('#adminlist').DataTable( {
         ajax: '{% url 'cms.api.auth.admin.list' %}',
 
-        buttons: ['excel', 'pdf'],
-
-        select: false,
         filter: true,
         processing: true,
-        rowId: 0,
+        rowId: 'id',
+        dom: '<"btn-group"B>frtip',
 
+        select: {
+            style: 'single'
+        },
+        
+        buttons: [ { 
+                extend: "create", editor: editor 
+            },  { 
+                extend: "edit", editor: editor
+            }, {
+                text: '刷新',
+                action: function(e, dt, node, config) {
+                    dt.ajax.reload();
+                }
+            }
+        ],
+        
         language: {
             url: '/assets/json/zh_cn.json?2018'
         },
 
-        columnDefs:[
-            {
-                data: 0,
-                targets: 6,
+        columns: [ {
+                data: 'id'
+            }, {
+                data: 'user'
+            }, {
+                data: 'name'
+            }, {
+                data: 'phone'
+            }, {
+                data: 'disable',
                 render: function(data, type, row, meta) {
-                    return '<div class="hidden-sm hidden-xs action-buttons">'+
-                                '<a class="blue show_detail" href="javascript:void(0)" data-value="' + data + '">' +
+                    if(type != 'display')
+                        return data;
+
+                    if(data)
+                        return '是';
+                    else
+                        return '否';
+                }
+            }, {
+                data: 'ctime',
+                render: function(data, type, row, meta) {
+                    if(type != 'display')
+                        return data;
+
+                    var cdate = new Date();
+                    cdate.setTime(data*1000);
+                    return cdate.toLocaleString();
+                }
+            }, {
+                data: 'id',
+                orderable: false,
+                render: function(data, type, row, meta) {
+                    return '<div class="hidden-sm hidden-xs btn-group" style="display: block">'+
+                                '<a class="btn btn-xs btn-success show_detail" href="javascript:void(0)" data-value="' + data + '">' +
                                     '<i class="ace-icon fa fa-search-plus bigger-130"></i>' +
                                 '</a>'+
-                                '<a class="green show_modify" href="javascript:void(0)" data-value="' + data + '">' +
+                                '<a class="btn btn-xs btn-info show_modify" href="javascript:void(0)" data-value="' + data + '">' +
                                     '<i class="ace-icon fa fa-pencil bigger-130"></i>' +
                                 '</a>'+
-                                '<a class="btn btn-mini show_delete" data-toggle="confirmation" data-value="' + data + '">' +
+                                '<a class="btn btn-xs btn-danger show_delete" href="javascript:void(0)" data-toggle="confirmation" data-href="javascript:show_delete(' + data + ')">' +
                                     '<i class="ace-icon fa fa-trash bigger-130"></i>' +
                                 '</a>'+
                             '</div>';
@@ -77,24 +204,14 @@
                 show_modify(id);
             });
 
-            $('.show_delete').on('click', function(e){
-                var id = $(this).data('value');
-                //show_delete(id);
-            });
-
             $('.show_delete').confirmation({
                 animation: true,
+                singleton: true,
+                popout: true,
                 placement: "top",
                 title: "确定要删除吗？",
                 btnOkLabel: '确定',
                 btnCancelLabel: '取消',
-                onConfirm: function () {
-
-                    alert("点击了确定");
-                },
-                onCancel: function () {
-                    alert("点击了取消");
-                }
             });
         }
     } );
@@ -113,13 +230,15 @@
 
         $.get('{% url 'cms.api.auth.admin.del' %}', params, function(resp){
             if(resp.status){
+                alert(id);
                 table.row('#'+id).remove();
                 table.draw();
             } else {
                alert(resp.message);
             }
         }, "json");
+
+        $('.show_delete').confirmation('hide');
     }
-
-
+</script>
 {% endblock %}

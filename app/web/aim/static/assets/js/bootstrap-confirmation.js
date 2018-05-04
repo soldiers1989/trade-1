@@ -248,7 +248,7 @@
 				'<div class="arrow"></div>' +
 				'<h3 class="popover-title"></h3>' +
 				'<div class="popover-content text-center">' +
-				'<div class="btn-group">' +
+				'<div class="btn-group" style="padding-bottom：10px">' +
 				'<a class="btn btn-small" href="" target=""></a>' +
 				'<a class="btn btn-small" data-dismiss="confirmation"></a>' +
 				'</div>' +

@@ -4,9 +4,9 @@
 import json
 
 from cms import auth
+from cms import forms
 from pub import models
 
-from django.core import serializers
 from django.http import HttpResponse
 
 
@@ -67,16 +67,19 @@ def auth_admin_list(request):
     """
     admins = models.Admin.objects.filter().all()
 
-    resp = {
-        'data': []
-    }
+    data = []
 
     for admin in admins:
-        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
+        data.append( {
+            'id': admin.admin_id,
+            'user': admin.user,
+            'name': admin.name,
+            'phone': admin.phone,
+            'disable': admin.disable,
+            'ctime': admin.ctime
+        } )
 
-    content = json.dumps(resp).encode('utf-8')
-
-    return HttpResponse(content, content_type='application/json;charset=utf8')
+    return success(data=data)
 
 
 def auth_admin_get(request):
@@ -105,6 +108,8 @@ def auth_admin_add(request):
     :param request:
     :return:
     """
+    form = forms.AddAdminForm(request.GET)
+
     admins = models.Admin.objects.filter().all()
 
     resp = {
@@ -127,7 +132,7 @@ def auth_admin_del(request):
     """
     admins = models.Admin.objects.filter().all()
 
-    return failure('not exist')
+    return success('not exist')
 
 
 def auth_admin_mod(request):
