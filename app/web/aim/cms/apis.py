@@ -79,6 +79,16 @@ def auth_admin_list(request):
             'ctime': admin.ctime
         } )
 
+    for i in range(0, 100):
+        data.append( {
+            'id': i+10,
+            'user': 'test'+str(i),
+            'name': 'test'+str(i),
+            'phone': '131268866'+str(i),
+            'disable': True,
+            'ctime': 0
+        } )
+
     return success(data=data)
 
 

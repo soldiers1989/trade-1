@@ -2,16 +2,12 @@
 
 {% block cssfiles %}
     <link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/buttons1.5.1/buttons.bootstrap.css" />
     <link rel="stylesheet" href="/assets/css/datatables/ext/select1.2.5/select.bootstrap.css" />
 
 {% endblock %}
 
 {% block pagecontent %}
-    <div class="btn-group" style="padding-bottom: 5px">
-        <button type="button" class="btn btn-success">新建</button>
-        <button type="button" class="btn btn-info">修改</button>
-        <button type="button" class="btn btn-danger">删除</button>
-    </div>
     <table id="adminlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
            <thead>
             <tr>
@@ -27,11 +23,17 @@
     </table>
 {% endblock %}
 
+{% block modals %}
+    {% include "auth/admin/add.html" %}
+    {% include "auth/admin/del.html" %}
+{% endblock %}
+
 {% block jsfiles %}
     <script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
     <script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
-    <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
     <script src="/assets/js/datatables/ext/buttons1.5.1/dataTables.buttons.js"></script>
+    <script src="/assets/js/datatables/ext/buttons1.5.1/buttons.bootstrap.js"></script>
+    <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
 {% endblock %}
@@ -40,16 +42,15 @@
 <script type="text/javascript">  
     var table = $('#adminlist').DataTable( {
         ajax: {
-            url: '{% url 'cms.api.auth.admin.list' %}'
-
-
+            url: '{% url 'cms.api.auth.admin.list' %}',
+            type: 'POST'
         },
 
         filter: true,
         processing: true,
         rowId: 'id',
-        dom: 'Brtip',
-        serverSide: true,
+        dom: 'Bfrtip',
+        serverSide: false,
 
         select: {
             style: 'single'
@@ -60,6 +61,33 @@
             url: '/assets/json/zh_cn.json?2018'
         },
 
+        buttons: [
+            {
+                text: '新建',
+                className: 'btn btn-success btn-sm',
+                action: function(e, dt, node, config) {
+                    $('#modal_auth_admin_add').modal();
+                }
+
+            }, {
+                text: '修改',
+                className: 'btn btn-info btn-sm',
+                action: function(e, dt, node, config) {
+                    $('#modal_auth_admin_add').modal();
+                }
+            }, {
+                text: '删除',
+                className: 'btn btn-danger btn-sm',
+                action: function(e, dt, node, config) {
+                    var row = dt.row({selected: true}).data();
+                    if(!row)
+                        return;
+
+                    $('#modal_auth_admin_del_user').text(row.name);
+                    $('#modal_auth_admin_del').modal();
+                }
+            }
+        ],
 
         columns: [ {
                 data: 'id'
@@ -93,6 +121,7 @@
             }, {
                 data: 'id',
                 orderable: false,
+                selectable: false,
                 render: function(data, type, row, meta) {
                     return '<div class="hidden-sm hidden-xs btn-group" style="display: block">'+
                                 '<a class="btn btn-xs btn-success show_detail" href="javascript:void(0)" data-value="' + data + '">' +
@@ -108,7 +137,6 @@
                 }
             }
         ],
-
 
         initComplete: function(settings, json) {
             $('.show_detail').on('click', function(e){

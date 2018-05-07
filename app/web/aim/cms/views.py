@@ -83,7 +83,7 @@ def auth_admin_list(request):
     :param request:
     :return:
     """
-    return render(request, 'admin.html', context=ctx.default(request, 'cms.auth.admin.list'))
+    return render(request, 'auth/admin/list.html', context=ctx.default(request, 'cms.auth.admin.list'))
 
 
 @auth.has_auth('cms.auth.module.list')

@@ -6,9 +6,11 @@
 
 {% endblock %}
 
+{% include "auth_admin_add.html" %}
+
 {% block pagecontent %}
     <div class="btn-group" style="padding-bottom: 5px">
-        <button type="button" class="btn btn-success">新建</button>
+        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modal_auth_admin_add">新建</button>
         <button type="button" class="btn btn-info">修改</button>
         <button type="button" class="btn btn-danger">删除</button>
     </div>
@@ -31,7 +33,6 @@
     <script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
     <script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
     <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
-    <script src="/assets/js/datatables/ext/buttons1.5.1/dataTables.buttons.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
 {% endblock %}
@@ -39,17 +40,12 @@
 {% block jscontent %}
 <script type="text/javascript">  
     var table = $('#adminlist').DataTable( {
-        ajax: {
-            url: '{% url 'cms.api.auth.admin.list' %}'
-
-
-        },
+        ajax: '{% url 'cms.api.auth.admin.list' %}',
 
         filter: true,
         processing: true,
         rowId: 'id',
-        dom: 'Brtip',
-        serverSide: true,
+        dom: 'rtip',
 
         select: {
             style: 'single'
@@ -59,7 +55,6 @@
         language: {
             url: '/assets/json/zh_cn.json?2018'
         },
-
 
         columns: [ {
                 data: 'id'
@@ -108,7 +103,6 @@
                 }
             }
         ],
-
 
         initComplete: function(settings, json) {
             $('.show_detail').on('click', function(e){
