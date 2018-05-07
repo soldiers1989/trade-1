@@ -1,102 +1,244 @@
 {% extends 'base.html' %}
 
 {% block cssfiles %}
-    <link rel="stylesheet" href="/assets/css/bootstrap-table.min.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/select1.2.5/select.bootstrap.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/buttons1.5.1/buttons.bootstrap.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/editor1.7.3/editor.bootstrap.css" />
+
 {% endblock %}
 
 {% block pagecontent %}
-    <table id="adminlist" data-toggle="adminlist" class="table table-bordered table-hover" data-search="true" data-show-refresh="true" data-show-columns="true" data-toolbar="#toolbar">
-        <thead>
-        <tr>
-            <th data-field="id" width="80">Item ID</th>
-            <th data-field="name" width="80">Product ID</th>
-            <th data-field="title" width="80" align="right" formatter="formatPrice">List Price</th>
-            <th data-field="price" width="80" align="right">Unit Cost</th>
-        </tr>
+    <table id="adminlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
+           <thead>
+            <tr>
+                <th>ID</th>
+                <th>用户</th>
+                <th>姓名</th>
+                <th>手机</th>
+                <th>禁用</th>
+                <th>创建时间</th>
+                <th class="center sorting_disabled">操作</th>
+            </tr>
         </thead>
     </table>
-    <div id="toolbar">
-        <div class="btn-group">
-            <button class="btn btn-danger smaller">
-                <i class="ui-menu-icon fa fa-desktop"></i>
-            </button>
-            <button class="btn btn-default">
-                <i class="glyphicon-heart" id="heartBtn"></i>
-            </button>
-            <button class="btn btn-default">
-                <i class="glyphicon glyphicon-trash"></i>
-            </button>
-        </div>
-        <div class="form-group">
-            <label class="control-label">性别：</label>
-            <label class="radio-inline">
-                <input type="radio" name="sex" value="男"/> 男
-            </label>
-            <label class="radio-inline">
-                <input type="radio" name="sex" value="女"/> 女
-            </label>
-        </div>
-    </div>
-{% endblock %}
-
-{% block jscontent %}
-    $('#adminlist').bootstrapTable({
-        method: 'get',
-        url: '{% url 'cms.api.auth.admin.list' %}',
-
-        pagination: true,
-        pageList: [15, 20, 30, 50],
-        pageSize: 15,
-        pageNumber: 1,
-        sidePagination: 'server',
-        clickToSelect: true,
-        //showToggle: true,
-
-        onLoadSuccess: function() {
-            console.info("加载成功");
-        },
-
-        onLoadError: function() {
-            console.info('加载数据失败');
-        },
-
-        columns: [
-            {
-                checkbox: true,
-                visible: true,
-                align: 'center',
-            },
-            {
-                field: 'code',
-                title: '编号',
-                align: 'center',
-                valign: 'middle',
-                sortable: true
-            },
-            {
-                field: 'name',
-                title: '名称',
-                align: 'center',
-                valign: 'middle',
-                sortable: true
-            },
-            {
-                field: 'title',
-                title: '标题',
-                align: 'center',
-                valign: 'middle'
-            },
-            {
-                field: 'price',
-                title: '价格',
-                align: 'center',
-                valign: 'middle'
-            }
-        ]
-    })
 {% endblock %}
 
 {% block jsfiles %}
-    <script src="/assets/js/bootstrap-table.min.js"></script>
-    <script src="/assets/js/bootstrap-table/locale/bootstrap-table-zh-CN.js"></script>
+    <script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
+    <script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
+    <script src="/assets/js/datatables/ext/buttons1.5.1/dataTables.buttons.js"></script>
+    <script src="/assets/js/datatables/ext/buttons1.5.1/buttons.bootstrap.js"></script>
+    <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
+    <script src="/assets/js/datatables/ext/editor1.7.3/dataTables.editor.js"></script>
+    <script src="/assets/js/datatables/ext/editor1.7.3/editor.bootstrap.js"></script>
+    <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
+    <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript">  
+    var editor = new $.fn.dataTable.Editor( {
+        ajax: {
+            create: {
+                type: 'GET',
+                url: "{% url 'cms.api.auth.admin.add' %}",
+            },
+            edit: {
+                type: 'GET',
+                url: "{% url 'cms.api.auth.admin.add' %}",
+            },
+            remove: {
+                url: "{% url 'cms.api.auth.admin.add' %}",
+            }   
+        },
+        
+        table: "#adminlist",
+        idSrc: 'id',
+
+        fields: [ {
+                label: "用户:",
+                name: "user",
+                def: ""
+            }, {
+                label: "密码:",
+                name: "pwd",
+                type: "password"
+            }, {
+                label: "姓名:",
+                name: "name"
+            }, {
+                label: "手机:",
+                name: "phone"
+            }, {
+                type: "select",
+                label: "禁用:",
+                name: "disable",
+                options: [
+                    {label: "是", value: true},
+                    {label: "否", value: false}
+                ]
+            }
+        ],
+
+        i18n: {
+            create: {
+                button: "新建",
+                title:  "新建用户",
+                submit: "提交"
+            },
+        }
+    } );
+
+    var editormod = new $.fn.dataTable.Editor( {
+        ajax: "{% url 'cms.api.auth.admin.mod' %}",
+        table: "#adminlist",
+        fields: [ {
+                label: "用户:",
+                name: "user"
+            }, {
+                label: "密码:",
+                name: "pwd"
+            }, {
+                label: "姓名:",
+                name: "name"
+            }, {
+                label: "手机:",
+                name: "phone"
+            }, {
+                type: "select",
+                label: "禁用:",
+                name: "disable",
+                options: [
+                    {label: "是", value: true},
+                    {lable: "否", value: false}
+                ]
+            }
+        ]
+    } );
+
+    var table = $('#adminlist').DataTable( {
+        ajax: '{% url 'cms.api.auth.admin.list' %}',
+
+        filter: true,
+        processing: true,
+        rowId: 'id',
+        dom: '<"btn-group"B>frtip',
+
+        select: {
+            style: 'single'
+        },
+        
+        buttons: [ { 
+                extend: "create", editor: editor 
+            },  { 
+                extend: "edit", editor: editor
+            }, {
+                text: '刷新',
+                action: function(e, dt, node, config) {
+                    dt.ajax.reload();
+                }
+            }
+        ],
+        
+        language: {
+            url: '/assets/json/zh_cn.json?2018'
+        },
+
+        columns: [ {
+                data: 'id'
+            }, {
+                data: 'user'
+            }, {
+                data: 'name'
+            }, {
+                data: 'phone'
+            }, {
+                data: 'disable',
+                render: function(data, type, row, meta) {
+                    if(type != 'display')
+                        return data;
+
+                    if(data)
+                        return '是';
+                    else
+                        return '否';
+                }
+            }, {
+                data: 'ctime',
+                render: function(data, type, row, meta) {
+                    if(type != 'display')
+                        return data;
+
+                    var cdate = new Date();
+                    cdate.setTime(data*1000);
+                    return cdate.toLocaleString();
+                }
+            }, {
+                data: 'id',
+                orderable: false,
+                render: function(data, type, row, meta) {
+                    return '<div class="hidden-sm hidden-xs btn-group" style="display: block">'+
+                                '<a class="btn btn-xs btn-success show_detail" href="javascript:void(0)" data-value="' + data + '">' +
+                                    '<i class="ace-icon fa fa-search-plus bigger-130"></i>' +
+                                '</a>'+
+                                '<a class="btn btn-xs btn-info show_modify" href="javascript:void(0)" data-value="' + data + '">' +
+                                    '<i class="ace-icon fa fa-pencil bigger-130"></i>' +
+                                '</a>'+
+                                '<a class="btn btn-xs btn-danger show_delete" href="javascript:void(0)" data-toggle="confirmation" data-href="javascript:show_delete(' + data + ')">' +
+                                    '<i class="ace-icon fa fa-trash bigger-130"></i>' +
+                                '</a>'+
+                            '</div>';
+                }
+            }
+        ],
+
+        initComplete: function(settings, json) {
+            $('.show_detail').on('click', function(e){
+                var id = $(this).data('value');
+                show_detail(id);
+            });
+
+            $('.show_modify').on('click', function(e){
+                var id = $(this).data('value');
+                show_modify(id);
+            });
+
+            $('.show_delete').confirmation({
+                animation: true,
+                singleton: true,
+                popout: true,
+                placement: "top",
+                title: "确定要删除吗？",
+                btnOkLabel: '确定',
+                btnCancelLabel: '取消',
+            });
+        }
+    } );
+
+    function show_detail(id){
+        alert('detail '+id);
+        console.log(table.rows().ids());
+    }
+
+    function show_modify(id) {
+        alert('modify '+id);
+    }
+
+    function show_delete(id){
+        var params = 'id='+id;
+
+        $.get('{% url 'cms.api.auth.admin.del' %}', params, function(resp){
+            if(resp.status){
+                alert(id);
+                table.row('#'+id).remove();
+                table.draw();
+            } else {
+               alert(resp.message);
+            }
+        }, "json");
+
+        $('.show_delete').confirmation('hide');
+    }
+</script>
 {% endblock %}

@@ -3,7 +3,9 @@
 """
 import json
 
-from cms import auth, hint, forms
+from cms import auth
+from cms import forms
+from pub import models
 
 from django.http import HttpResponse
 
@@ -63,17 +65,94 @@ def auth_admin_list(request):
     :param request:
     :return:
     """
-    data = []
-    for i in range(0, 30):
-        data.append({'ids':0,'code':i, 'name':i, 'title':i, 'price':i})
+    admins = models.Admin.objects.filter().all()
 
-    admins = {
-        'total': 124,
-        'rows': data
+    data = []
+
+    for admin in admins:
+        data.append( {
+            'id': admin.admin_id,
+            'user': admin.user,
+            'name': admin.name,
+            'phone': admin.phone,
+            'disable': admin.disable,
+            'ctime': admin.ctime
+        } )
+
+    return success(data=data)
+
+
+def auth_admin_get(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    admins = models.Admin.objects.filter().all()
+
+    resp = {
+        'data': []
     }
 
-    resp = json.dumps(admins).encode('utf-8')
-    return HttpResponse(resp, content_type='application/json;charset=utf8')
+    for admin in admins:
+        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
+
+    content = json.dumps(resp).encode('utf-8')
+
+    return HttpResponse(content, content_type='application/json;charset=utf8')
+
+
+def auth_admin_add(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    form = forms.AddAdminForm(request.GET)
+
+    admins = models.Admin.objects.filter().all()
+
+    resp = {
+        'data': []
+    }
+
+    for admin in admins:
+        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
+
+    content = json.dumps(resp).encode('utf-8')
+
+    return HttpResponse(content, content_type='application/json;charset=utf8')
+
+
+def auth_admin_del(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    admins = models.Admin.objects.filter().all()
+
+    return success('not exist')
+
+
+def auth_admin_mod(request):
+    """
+        login api
+    :param request:
+    :return:
+    """
+    admins = models.Admin.objects.filter().all()
+
+    resp = {
+        'data': []
+    }
+
+    for admin in admins:
+        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
+
+    content = json.dumps(resp).encode('utf-8')
+
+    return HttpResponse(content, content_type='application/json;charset=utf8')
 
 
 def auth_module_list(request):
@@ -83,13 +162,15 @@ def auth_module_list(request):
     :return:
     """
 
-    data = []
-    for i in range(0, 100):
-        data.append([i,i,i,i])
+    modules = models.Module.objects.filter().all()
 
-    modules = {
-                'data':data
-            }
+    resp = {
+        'data': []
+    }
 
-    resp = json.dumps(modules).encode('utf-8')
-    return HttpResponse(resp, content_type='application/json;charset=utf8')
+    for module in modules:
+        resp['data'].append([module.module_id, module.name, module.path, module.icon, module.order, module.disable, module.ctime])
+
+    content = json.dumps(resp).encode('utf-8')
+
+    return HttpResponse(content, content_type='application/json;charset=utf8')

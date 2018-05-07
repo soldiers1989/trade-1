@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css" />
+    <script src="/assets/js/jquery-2.1.4.min.js"></script>
+    <script src="/assets/js/bootstrap.min.js"></script>
+    <script src="/assets/js/bootstrap-tooltip.js"></script>
+    <script src="/assets/js/bootstrap-confirmation.js"></script>
+</head>
+<body>
+<button type="button" id="btn_submit1" class="btn btn-primary" style="margin: 100px;">
+<span class="glyphicon glyphicon-remove" aria-hidden="true">
+</span>删除</button>
+
+<script type="text/javascript">
+ $(function () {
+  $('#btn_submit1').confirmation({
+   animation: true,
+   placement: "top",
+   title: "确定要删除吗？",
+   btnOkLabel: '确定',
+   btnCancelLabel: '取消',
+   onConfirm: function () {
+    alert("点击了确定");
+   },
+   onCancel: function () {
+    alert("点击了取消");
+
+   }
+  })
+
+ });
+
+
+</script>
+</body>
+</html>
