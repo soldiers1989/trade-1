@@ -104,4 +104,8 @@ void set(level lvl) {
 void set(output out, const char *dir, const char *name, roll ropt, uint fszlimit) {
 	g_logger.set(out, dir, name, ropt, fszlimit);
 }
+
+void add(output out, const char *dir, const char *name, roll ropt, uint fszlimit) {
+	g_logger.add(out, dir, name, ropt, fszlimit);
+}
 END_CUBE_LOG_NS

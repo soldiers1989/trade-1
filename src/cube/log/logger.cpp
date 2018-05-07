@@ -118,8 +118,7 @@ void logger::print(level lvl, const char *msg) {
 	}
 
 	//print message to output
-	if (_printer != 0)
-		_printer->print(msg);
+	_printers.print(msg);
 }
 
 void logger::set(level lvl) {
@@ -129,23 +128,46 @@ void logger::set(level lvl) {
 
 void logger::set(output out, const char *dir/* = "."*/, const char *name/* = "log"*/, roll ropt/* = roll::none*/, uint fszlimit/* = -1*/) {
 	std::lock_guard<std::mutex> lock(_mutex);
-	//free old printer
-	if (_printer != 0) {
-		delete _printer;
-	}
+	
+	printer *printer = 0;
 
 	//create new printer
 	switch (out) {
 	case output::console:
-		_printer = new console_printer();
+		printer = new console_printer();
 		break;
 	case output::file:
-		_printer = new file_printer(dir, name, ropt, fszlimit);
+		printer = new file_printer(dir, name, ropt, fszlimit);
 		break;
 	default:
-		_printer = 0;
+		printer = 0;
 		break;
 	}
+
+	if (printer != 0)
+		_printers.set(printer);
+}
+
+void logger::add(output out, const char *dir/* = "."*/, const char *name/* = "log"*/, roll ropt/* = roll::none*/, uint fszlimit/* = -1*/) {
+	std::lock_guard<std::mutex> lock(_mutex);
+
+	printer *printer = 0;
+
+	//create new printer
+	switch (out) {
+	case output::console:
+		printer = new console_printer();
+		break;
+	case output::file:
+		printer = new file_printer(dir, name, ropt, fszlimit);
+		break;
+	default:
+		printer = 0;
+		break;
+	}
+
+	if (printer != 0)
+		_printers.add(printer);
 }
 
 uint logger::thread_id() {

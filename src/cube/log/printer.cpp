@@ -7,6 +7,32 @@
 #include "cube\log\printer.h"
 BEGIN_CUBE_LOG_NS
 //////////////////////////////console printer//////////////////////////////
+void printers::print(const char *msg) {
+	std::list<printer*>::iterator iter = _printers.begin(), iterend = _printers.end();
+	while (iter != iterend) {
+		(*iter)->print(msg);
+		iter++;
+	}
+}
+
+void printers::add(printer *p) {
+	_printers.push_back(p);
+}
+
+void printers::set(printer *p) {
+	free();
+	add(p);
+}
+
+void printers::free() {
+	std::list<printer*>::iterator iter = _printers.begin(), iterend = _printers.end();
+	while (iter != iterend) {
+		delete *iter;
+		iter++;
+	}
+}
+
+//////////////////////////////console printer//////////////////////////////
 void console_printer::print(const char *msg) {
 	std::cout << msg;
 }

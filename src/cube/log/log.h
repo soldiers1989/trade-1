@@ -33,4 +33,5 @@ void set(level lvl);
 *	void
 */
 void set(output out, const char *dir = ".", const char *name = "log", roll ropt = roll::none, uint fszlimit = -1);
+void add(output out, const char *dir = ".", const char *name = "log", roll ropt = roll::none, uint fszlimit = -1);
 END_CUBE_LOG_NS

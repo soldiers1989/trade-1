@@ -11,13 +11,8 @@ enum class output { console = 0, file = 1 };
 //log class
 class logger {
 public:
-	logger() : _level(level::debug), _printer(new console_printer()) { }
-	~logger() {
-		if (_printer != 0) {
-			delete _printer;
-			_printer = 0;
-		}
-	}
+	logger() : _level(level::debug) { add(output::console); }
+	~logger() {	}
 
 	/*
 	*	log method with 5 level
@@ -57,7 +52,7 @@ public:
 	*	void
 	*/
 	void set(output out, const char *dir = ".", const char *name = "log", roll ropt = roll::none, uint fszlimit = -1);
-
+	void add(output out, const char *dir = ".", const char *name = "log", roll ropt = roll::none, uint fszlimit = -1);
 private:
 	/*
 	*	get current thread id
@@ -66,7 +61,7 @@ private:
 
 private:
 	//output printer for log
-	printer *_printer;
+	printers _printers;
 
 	//mutex for log
 	std::mutex _mutex;
