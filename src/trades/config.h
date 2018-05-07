@@ -32,6 +32,19 @@ public:
 	//response data code page
 	static int codepage;
 
+	//logger output type
+	static int logtype;
+	//logger output level
+	static int loglvl;
+	//logger output directory
+	static std::string logdir;
+	//logger file name
+	static std::string logname;
+	//logger file roll type
+	static int logroll;
+	//logger file size limit
+	static uint logfsz;
+
 public:
 	//load configure file
 	static int load(const std::string &path);

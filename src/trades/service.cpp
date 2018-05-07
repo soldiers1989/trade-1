@@ -10,10 +10,10 @@ cube::http::applet service::applet;
 cube::svc::http_server service::server;
 
 int service::start() {
-	std::string emsg("");
-	cube::log::info("start trade service...");
+
 
 	//load configure file
+	cube::log::info("load config file...");
 	const char *config_file = "trade.ini";
 	int err = config::load(config_file);
 	if (err != 0) {
@@ -22,6 +22,10 @@ int service::start() {
 	}
 	cube::log::info("load config file: %s, loaded.", config_file);
 
+	//set logger if configure log type is file
+	if(config::logtype == (int)cube::log::output::file)
+		cube::log::add((cube::log::output)config::logtype, config::logdir.c_str(), config::logname.c_str(), (cube::log::roll)config::logroll, config::logfsz);
+	
 	//set lang codepage and charset
 	lang::instance()->set(config::codepage, config::charset);
 	if (lang::instance()->needconv()) {
@@ -43,6 +47,7 @@ int service::start() {
 	cube::svc::http_config::max_idle_time = config::idle;
 	
 	//start http server
+	cube::log::info("start trade service...");
 	err = server.start(config::port, config::workers, &applet);
 	if (err != 0) {
 		cube::log::error("start trade service on port %d failed.", config::port);

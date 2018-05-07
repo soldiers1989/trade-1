@@ -1,4 +1,5 @@
 #pragma once
+#include <list>
 #include <string>
 #include <fstream>
 #include "cube\type.h"
@@ -11,6 +12,26 @@ enum class roll { none = 0, sized = 1, daily = 2 };
 class printer {
 public:
 	virtual void print(const char *msg) = 0;
+};
+
+//printers class
+class printers : public printer{
+public:
+	printers() {}
+	virtual ~printers() {
+		free();
+	}
+
+	void print(const char *msg);
+
+	void add(printer *p);
+	void set(printer *p);
+
+private:
+	void free();
+
+private:
+	std::list<printer*> _printers;
 };
 
 //console printer class

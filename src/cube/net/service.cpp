@@ -176,7 +176,7 @@ void service::ioloop() {
 		} else {
 			if (res.error != WAIT_TIMEOUT) {
 				//free session object
-				delete s;
+				//delete s; !Note: we need to know other errors!
 
 				log::error("iocp: other error with errno %d", res.error);
 			}

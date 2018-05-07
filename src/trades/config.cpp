@@ -1,4 +1,5 @@
 #include "trades\config.h"
+#include "cube\log\logger.h"
 BEGIN_TRADES_NAMESPACE
 //initalize default config
 std::string config::wdir = "./";
@@ -13,6 +14,13 @@ std::string config::alias_config = "./alias.ini";
 std::string config::charset = "gbk";
 std::string config::locale = "chs";
 int config::codepage = 54936; //gb18030
+
+int config::logtype = (int)cube::log::output::file;
+int config::loglvl = (int)cube::log::level::debug;
+std::string config::logdir = "./log";
+std::string config::logname = "trade";
+int config::logroll = (int)cube::log::roll::daily;
+uint config::logfsz = (uint)-1;
 
 //initalize static object
 cube::cfg::ini config::_ini;
@@ -36,6 +44,13 @@ int config::load(const std::string &path) {
 	config::charset = _ini.get_string_value("lang", "charset", config::charset.c_str());
 	config::locale = _ini.get_string_value("lang", "locale", config::locale.c_str());
 	config::codepage = _ini.get_integer_value("lang", "codepage", config::codepage);
+
+	config::logtype = _ini.get_integer_value("log", "type", config::logtype);
+	config::loglvl = _ini.get_integer_value("log", "level", config::loglvl);
+	config::logdir = _ini.get_string_value("log", "dir", config::logdir.c_str());
+	config::logname = _ini.get_string_value("log", "name", config::logname.c_str());
+	config::logroll = _ini.get_integer_value("log", "roll", config::logroll);
+	config::logfsz = (uint)_ini.get_integer_value("log", "size", config::logfsz);
 
 	return 0;
 }
