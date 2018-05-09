@@ -1,0 +1,39 @@
+[
+    {
+        "model": "cms.module",
+        "pk": 1,
+        "fields": {
+            "name": "权限管理",
+            "icon": "fa-desktop",
+            "order": 0,
+            "disable": 0,
+            "ctime": 0
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 2,
+        "fields": {
+            "parent_id": 1,
+            "name": "用户管理",
+            "path": "cms.auth.admin.list",
+            "icon": "fa-desktop",
+            "order": 0,
+            "disable": 0,
+            "ctime": 0
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 3,
+        "fields": {
+            "parent_id": 1,
+            "name": "模块管理",
+            "path": "cms.auth.module.list",
+            "icon": "fa-desktop",
+            "order": 0,
+            "disable": 0,
+            "ctime": 0
+        }
+    }
+]
