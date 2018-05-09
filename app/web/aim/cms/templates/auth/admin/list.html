@@ -150,7 +150,7 @@
                                 '<button class="btn btn-xs btn-info" onclick="modify_item(this,'+data+')">' +
                                     '<i class="ace-icon fa fa-pencil bigger-130"></i>' +
                                 '</button>'+
-                                '<button class="btn btn-xs btn-danger" onclick="delete_item(this,'+data+')">' +
+                                '<button class="btn btn-xs btn-danger" onclick="delitem(this,'+data+')">' +
                                     '<i class="ace-icon fa fa-trash bigger-130"></i>' +
                                 '</button>'+
                             '</div>';
@@ -171,8 +171,9 @@
                url: '{% url "cms.api.auth.admin.add" %}',
                type: 'post',
                success: function(resp) {
+                    alert(resp.status);
                     if(resp.status){
-                        $('#modal_auth_admin_del').modal('hide');
+                        $('#modal_auth_admin_add').modal('hide');
                     } else {
                         $('#err_auth_admin_add').text(resp.message);
                     }
@@ -187,20 +188,26 @@
 
     function delitem(elmt, id){
         var params = 'id='+id;
-        alert(params);
-        return;
 
-        $.get('{% url "cms.api.auth.admin.del" %}', params, function(resp){
-            if(resp.status){
-                alert(id);
-                table.row('#'+id).remove();
-                table.draw();
-            } else {
-               alert(resp.message);
+        $(elmt).confirmation({
+            'singleton': true,
+            'title': '确定删除该用户么？',
+            'onConfirm': function() {
+               $.get('{% url "cms.api.auth.admin.del" %}', params, function(resp){
+                    if(resp.status){
+                        alert(id);
+                        table.row('#'+id).remove();
+                        table.draw();
+                    } else {
+                       alert(resp.message);
+                    }
+                }, "json");
+
+                $(elmt).confirmation('hide');
             }
-        }, "json");
+        });
 
-        $('.show_delete').confirmation('hide');
+        $(elmt).confirmation('show');
     }
 
     function showitem(elmt, id){

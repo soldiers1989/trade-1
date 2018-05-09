@@ -71,7 +71,7 @@ def auth_admin_list(request):
 
     for admin in admins:
         data.append( {
-            'id': admin.admin_id,
+            'id': admin.id,
             'user': admin.user,
             'name': admin.name,
             'phone': admin.phone,
@@ -109,13 +109,14 @@ def auth_admin_add(request):
     :param request:
     :return:
     """
-    form = forms.AddAdminForm(request.POST)
+    form = forms.Admin(request.POST)
     if form.is_valid():
-        item = models.Admin(user=form['user'],
-                            pwd=form['pwd'],
-                            name=form['name'],
-                            phone=form['phone'],
-                            disable=form['disable']);
+        disable = form.cleaned_data['disable']
+        item = models.Admin(user=form.cleaned_data['user'],
+                            pwd=form.cleaned_data['pwd'],
+                            name=form.cleaned_data['name'],
+                            phone=form.cleaned_data['phone'],
+                            disable=form.cleaned_data['disable']);
         print(item);
 
         item.save()

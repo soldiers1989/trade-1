@@ -132,7 +132,7 @@ class User:
         # filter child modules
         for obj in mobjs:
             if obj.parent_id == parent:
-                child = {'id': obj.module_id,
+                child = {'id': obj.id,
                          'parent': obj.parent_id,
                          'name': obj.name,
                          'path': obj.path,
