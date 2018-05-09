@@ -38,9 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'cms.apps.CmsConfig',
-    'api.apps.ApiConfig',
     'app.apps.AppConfig',
-    'pub.apps.PubConfig',
 ]
 
 MIDDLEWARE = [
@@ -80,7 +78,7 @@ WSGI_APPLICATION = 'aim.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aim',
+        'NAME': 'aim1',
         'USER': 'root',
         'PASSWORD': 'root',
         'HOST': 'localhost',

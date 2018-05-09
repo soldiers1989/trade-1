@@ -1,73 +1,56 @@
+import time
 from django.db  import models
 
-class A(models.Model):
-    a_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=32, blank=False, default='a')
+
+# tb_module
+class Module(models.Model):
+    id = models.AutoField(primary_key=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
+    name = models.CharField(max_length=32, null=False)
+    path = models.CharField(max_length=128, null=True)
+    icon = models.CharField(max_length=32, null=True)
+    order = models.IntegerField(null=False, default=0)
+    disable = models.BooleanField(null=False, default=False)
+    ctime = models.BigIntegerField(null=False)
 
     class Meta:
-        db_table = 'tb_a'
+        db_table = 'tb_module'
 
 
-class B(models.Model):
-    b_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=32, null=False, default='b')
-    # bs = models.ManyToManyField(A, through='E')
-
-    class Meta:
-        db_table = 'tb_b'
-
-
-class C(models.Model):
-    c_id = models.AutoField(primary_key=True)
-    a = models.ForeignKey(A, on_delete=models.CASCADE)
-    b = models.ForeignKey(B, on_delete=models.CASCADE)
+# tb_admin
+class Admin(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.CharField(max_length=32, null=False)
+    pwd = models.CharField(max_length=32, null=False)
+    name = models.CharField(max_length=32, null=False)
+    phone = models.CharField(max_length=16, null=False)
+    disable = models.BooleanField(null=False, default=False)
+    ctime = models.BigIntegerField(null=False, default=int(time.time()))
 
     class Meta:
-        db_table = 'tb_c'
-
-"""
-class A(models.Model):
-    a_id = models.AutoField(primary_key=True)
-    namea = models.CharField(max_length=32, blank=False, default='a')
-
-    class Meta:
-        db_table = 'tb_a'
+        db_table = 'tb_admin'
 
 
-class B(models.Model):
-    b_id = models.AutoField(primary_key=True)
-    nameb = models.CharField(max_length=32, null=False, blank=True)
-    bs = models.ManyToManyField(A, through='E')
+# tb_authority
+class Authority(models.Model):
+    id = models.AutoField(primary_key=True)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, null=False)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE, null=False)
+    disable = models.BooleanField(null=False, default=False)
+    ctime = models.BigIntegerField(null=False)
 
     class Meta:
-        db_table = 'tb_b'
+        db_table = 'tb_auth'
 
 
-class C(models.Model):
-    c_id = models.AutoField(primary_key=True)
-    namec = models.CharField(max_length=32, null=False, blank=True)
-    #relatea = models.ForeignKey(A, null=True)
-    cs = models.ManyToManyField(A, through='E', db_column='ccc')
-
-    class Meta:
-        db_table = 'tb_c'
-
-
-class D(models.Model):
-    d_id = models.OneToOneField(A, null=False, db_column='d_id')
-    named = models.CharField(max_length=32, null=True, blank=True)
+# tb_file
+class File(models.Model):
+    id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=32, null=False)
+    name = models.CharField(max_length=256, null=False)
+    size = models.BigIntegerField(null=False)
+    path = models.TextField(null=False)
+    ctime = models.BigIntegerField(null=False)
 
     class Meta:
-        db_table = 'tb_d'
-
-
-class E(models.Model):
-    e_id = models.AutoField(primary_key=True)
-    namee = models.CharField(max_length=32, null=False, blank=True)
-    a = models.ForeignKey(A)
-    b = models.ForeignKey(B)
-    c = models.ForeignKey(C)
-
-    class Meta:
-        db_table = 'tb_e'
-"""
+        db_table = 'tb_file'

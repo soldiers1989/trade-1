@@ -10,29 +10,28 @@
     <script src="/assets/js/bootstrap-confirmation.js"></script>
 </head>
 <body>
-<button type="button" id="btn_submit1" class="btn btn-primary" style="margin: 100px;">
+<button type="button" id="btn_submit1" class="btn btn-primary" onclick="javascript:show(this,1)" style="margin: 100px;">
 <span class="glyphicon glyphicon-remove" aria-hidden="true">
 </span>删除</button>
 
 <script type="text/javascript">
- $(function () {
-  $('#btn_submit1').confirmation({
+
+function show(btn, id){
+   $(btn).confirmation({
    animation: true,
    placement: "top",
    title: "确定要删除吗？",
    btnOkLabel: '确定',
    btnCancelLabel: '取消',
    onConfirm: function () {
-    alert("点击了确定");
+    alert("点击了确定"+id);
    },
    onCancel: function () {
     alert("点击了取消");
 
    }
-  })
-
- });
-
+  }) 
+}
 
 </script>
 </body>

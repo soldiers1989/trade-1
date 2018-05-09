@@ -1,8 +1,7 @@
 """
      authority control
 """
-from pub import models
-from cms import forms, hint
+from cms import forms, hint, models, config
 
 from django.urls import reverse
 from django.shortcuts import redirect
@@ -213,12 +212,31 @@ def login(request):
     :return:
     """
     try:
-        login_form = forms.LoginForm(request.GET)
+        login_form = forms.Login(request.GET)
         if login_form.is_valid():
             # get login data form user input
             username = login_form.cleaned_data.get('username')
             password = login_form.cleaned_data.get('password')
             remember = login_form.cleaned_data.get('remember')
+
+            # super admin login
+            if username == config.super_admin['user']:
+                if password == config.super_admin['password']:
+                    # set session expire for not remember choice
+                    if not remember:
+                        request.session.set_expiry(0)
+
+                    # get user modules
+                    mobjs = models.Module.objects.filter(disable=False).all()
+
+                    # set user session
+                    user.id(request, config.super_admin['id'])
+                    user.name(request, config.super_admin['name'])
+                    user.modules(request, mobjs)
+
+                    return True, hint.MSG_LOGIN_SUCCESS
+                else:
+                    return False, hint.ERR_LOGIN_PASSWORD
 
             # get user data from database
             admin = models.Admin.objects.get(user=username)

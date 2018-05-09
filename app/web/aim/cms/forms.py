@@ -1,7 +1,7 @@
 from django import forms
 
 
-class LoginForm(forms.Form):
+class Login(forms.Form):
     """
         login form
     """
@@ -10,7 +10,7 @@ class LoginForm(forms.Form):
     remember = forms.BooleanField()
 
 
-class AddAdminForm(forms.Form):
+class Admin(forms.Form):
     user = forms.CharField(max_length=32, min_length=1)
     pwd = forms.CharField(max_length=32, min_length=6)
     name = forms.CharField(max_length=32, min_length=0)

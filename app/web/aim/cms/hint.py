@@ -10,3 +10,5 @@ ERR_LOGIN_INPUT = '请输入正确的用户名和密码'
 ERR_LOGIN_USER = '用户名错误'
 ERR_LOGIN_DISABLED = '用户被禁用'
 ERR_LOGIN_PASSWORD = '密码错误'
+
+ERR_FORM_DATA = '操作失败，请检查您的输入数据'

@@ -29,6 +29,9 @@
 {% endblock %}
 
 {% block jsfiles %}
+    <script src="/assets/js/jquery/ext/validate/1.17.0/jquery.form.js"></script>
+    <script src="/assets/js/jquery/ext/validate/1.17.0/jquery.validate.js"></script>
+    <script src="/assets/js/jquery/ext/validate/1.17.0/messages_zh.js"></script>
     <script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
     <script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
     <script src="/assets/js/datatables/ext/buttons1.5.1/dataTables.buttons.js"></script>
@@ -53,7 +56,8 @@
         serverSide: false,
 
         select: {
-            style: 'single'
+            style: 'single',
+            blurable: true
         },
         
         
@@ -79,9 +83,25 @@
                 text: '删除',
                 className: 'btn btn-danger btn-sm',
                 action: function(e, dt, node, config) {
+                    console.log(e);
+                    console.log(dt);
+                    console.log(node);
                     var row = dt.row({selected: true}).data();
-                    if(!row)
+                    if(!row){
+                        var btn = node[0];
+                        node.attr('title', 'acbd');
+                        node.attr('data-container', 'body');
+                        node.attr('data-toggle', 'popover');
+                        node.attr('data-content', 'abc');
+                        node.attr('data-placement', 'top');
+      
+                        node.popover('show');
+                        setTimeout(function(){
+                            node.popover('hide');
+                        },1000);
+
                         return;
+                    }
 
                     $('#modal_auth_admin_del_user').text(row.name);
                     $('#modal_auth_admin_del').modal();
@@ -124,56 +144,53 @@
                 selectable: false,
                 render: function(data, type, row, meta) {
                     return '<div class="hidden-sm hidden-xs btn-group" style="display: block">'+
-                                '<a class="btn btn-xs btn-success show_detail" href="javascript:void(0)" data-value="' + data + '">' +
+                                '<button class="btn btn-xs btn-success" onclick="show_item(this,'+data+')">' +
                                     '<i class="ace-icon fa fa-search-plus bigger-130"></i>' +
-                                '</a>'+
-                                '<a class="btn btn-xs btn-info show_modify" href="javascript:void(0)" data-value="' + data + '">' +
+                                '</button>'+
+                                '<button class="btn btn-xs btn-info" onclick="modify_item(this,'+data+')">' +
                                     '<i class="ace-icon fa fa-pencil bigger-130"></i>' +
-                                '</a>'+
-                                '<a class="btn btn-xs btn-danger show_delete" href="javascript:void(0)" data-toggle="confirmation" data-href="javascript:show_delete(' + data + ')">' +
+                                '</button>'+
+                                '<button class="btn btn-xs btn-danger" onclick="delete_item(this,'+data+')">' +
                                     '<i class="ace-icon fa fa-trash bigger-130"></i>' +
-                                '</a>'+
+                                '</button>'+
                             '</div>';
                 }
             }
-        ],
-
-        initComplete: function(settings, json) {
-            $('.show_detail').on('click', function(e){
-                var id = $(this).data('value');
-                show_detail(id);
-            });
-
-            $('.show_modify').on('click', function(e){
-                var id = $(this).data('value');
-                show_modify(id);
-            });
-
-            $('.show_delete').confirmation({
-                animation: true,
-                singleton: true,
-                popout: true,
-                placement: "top",
-                title: "确定要删除吗？",
-                btnOkLabel: '确定',
-                btnCancelLabel: '取消',
-            });
-        }
+        ]
     } );
 
-    function show_detail(id){
-        alert('detail '+id);
-        console.log(table.rows().ids());
+    $("#form_auth_admin_add").validate({
+        debug: true,
+        errorClass: 'text text-danger'
+    });
+
+    function additem() {
+        var form = $('#form_auth_admin_add');
+        if(form.valid()){
+            form.ajaxSubmit({
+               url: '{% url "cms.api.auth.admin.add" %}',
+               type: 'post',
+               success: function(resp) {
+                    if(resp.status){
+                        $('#modal_auth_admin_del').modal('hide');
+                    } else {
+                        $('#err_auth_admin_add').text(resp.message);
+                    }
+               }
+            });
+        }
     }
 
-    function show_modify(id) {
-        alert('modify '+id);
+    function moditem(elmt, id) {
+        alert('modify:'+id);
     }
 
-    function show_delete(id){
+    function delitem(elmt, id){
         var params = 'id='+id;
+        alert(params);
+        return;
 
-        $.get('{% url 'cms.api.auth.admin.del' %}', params, function(resp){
+        $.get('{% url "cms.api.auth.admin.del" %}', params, function(resp){
             if(resp.status){
                 alert(id);
                 table.row('#'+id).remove();
@@ -184,6 +201,10 @@
         }, "json");
 
         $('.show_delete').confirmation('hide');
+    }
+
+    function showitem(elmt, id){
+       alert('show:'+id);
     }
 </script>
 {% endblock %}

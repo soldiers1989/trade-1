@@ -293,6 +293,7 @@ table.dataTable td {
   padding-top: 0.25em;
 }
 .dataTables_wrapper .dataTables_paginate .paginate_button {
+  border:0 none !important;
   box-sizing: border-box;
   /*display: inline-block;*/
   min-width: 1.5em;

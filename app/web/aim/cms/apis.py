@@ -1,13 +1,13 @@
 """
     api for cms
 """
-import json
+import json, time
 
-from cms import auth
-from cms import forms
-from pub import models
+from cms import models
+from cms import auth, hint, forms
 
 from django.http import HttpResponse
+from django.forms import modelform_factory
 
 
 def success(message='success', data={}):
@@ -79,16 +79,6 @@ def auth_admin_list(request):
             'ctime': admin.ctime
         } )
 
-    for i in range(0, 100):
-        data.append( {
-            'id': i+10,
-            'user': 'test'+str(i),
-            'name': 'test'+str(i),
-            'phone': '131268866'+str(i),
-            'disable': True,
-            'ctime': 0
-        } )
-
     return success(data=data)
 
 
@@ -98,6 +88,7 @@ def auth_admin_get(request):
     :param request:
     :return:
     """
+    AdminForm = modelform_factory(models.Admin, fields=['admin_id'])
     admins = models.Admin.objects.filter().all()
 
     resp = {
@@ -118,20 +109,20 @@ def auth_admin_add(request):
     :param request:
     :return:
     """
-    form = forms.AddAdminForm(request.GET)
+    form = forms.AddAdminForm(request.POST)
+    if form.is_valid():
+        item = models.Admin(user=form['user'],
+                            pwd=form['pwd'],
+                            name=form['name'],
+                            phone=form['phone'],
+                            disable=form['disable']);
+        print(item);
 
-    admins = models.Admin.objects.filter().all()
-
-    resp = {
-        'data': []
-    }
-
-    for admin in admins:
-        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
-
-    content = json.dumps(resp).encode('utf-8')
-
-    return HttpResponse(content, content_type='application/json;charset=utf8')
+        item.save()
+        return success()
+    else:
+        errs = form.errors
+        return failure(hint.ERR_FORM_DATA)
 
 
 def auth_admin_del(request):
