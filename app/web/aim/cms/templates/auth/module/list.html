@@ -8,13 +8,15 @@
 {% endblock %}
 
 {% block pagecontent %}
-    <table id="adminlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
+    <table id="modulelist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
            <thead>
             <tr>
                 <th>ID</th>
-                <th>用户</th>
-                <th>姓名</th>
-                <th>手机</th>
+                <th>上级</th>
+                <th>名称</th>
+                <th>路径</th>
+                <th>图标</th>
+                <th>排序</th>
                 <th>状态</th>
                 <th>创建时间</th>
                 <th class="center sorting_disabled">操作</th>
@@ -24,10 +26,10 @@
 {% endblock %}
 
 {% block modals %}
-    {% include "auth/admin/add.html" %}
-    {% include "auth/admin/det.html" %}
-    {% include "auth/admin/del.html" %}
-    {% include "auth/admin/mod.html" %}
+    {% include "auth/module/add.html" %}
+    {% include "auth/module/det.html" %}
+    {% include "auth/module/del.html" %}
+    {% include "auth/module/mod.html" %}
 {% endblock %}
 
 {% block jsfiles %}
@@ -47,9 +49,9 @@
 
 {% block jscontent %}
 <script type="text/javascript">  
-    var table = $('#adminlist').DataTable( {
+    var table = $('#modulelist').DataTable( {
         ajax: {
-            url: '{% url 'cms.apis.auth.admin.list' %}',
+            url: '{% url 'cms.apis.auth.module.list' %}',
             type: 'POST'
         },
 
@@ -74,7 +76,7 @@
                 text: '新建',
                 className: 'btn btn-success btn-sm',
                 action: function(e, dt, node, config) {
-                    $('#modal_auth_admin_add').modal();
+                    $('#modal_auth_module_add').modal();
                 }
 
             }, {
@@ -99,13 +101,15 @@
                     }
 
                     $('#det_id').val(row.id);
-                    $('#det_user').val(row.user);
+                    $('#det_parent').val(row.parent);
                     $('#det_name').val(row.name);
-                    $('#det_phone').val(row.phone);
+                    $('#det_path').val(row.path);
+                    $('#det_icon').val(row.icon);
+                    $('#det_order').val(row.order);
                     $('#det_disable').val(String(row.disable));
                     $('#det_ctime').val(cube.time.localstr(row.ctime));
 
-                    $('#modal_auth_admin_det').modal();
+                    $('#modal_auth_module_det').modal();
                 }
             }, {
                 text: '修改',
@@ -130,13 +134,15 @@
 
                     $('#mod_id_hidden').val(row.id);
                     $('#mod_id').val(row.id);
-                    $('#mod_user').val(row.user);
+                    $('#mod_parent').val(row.parent);
                     $('#mod_name').val(row.name);
-                    $('#mod_phone').val(row.phone);
+                    $('#mod_path').val(row.path);
+                    $('#mod_icon').val(row.icon);
+                    $('#mod_order').val(row.order);
                     $('#mod_disable').val(String(row.disable));
                     $('#mod_ctime').val(cube.time.localstr(row.ctime));
 
-                    $('#modal_auth_admin_mod').modal();
+                    $('#modal_auth_module_mod').modal();
                 }
             }, {
                 text: '删除',
@@ -159,8 +165,8 @@
                         return;
                     }
                     $('#del_id').val(row.id);
-                    $('#modal_auth_admin_del_user').text(row.user);
-                    $('#modal_auth_admin_del').modal();
+                    $('#modal_auth_module_del_user').text(row.user);
+                    $('#modal_auth_module_del').modal();
                 }
             }
         ],
@@ -168,11 +174,15 @@
         columns: [ {
                 data: 'id'
             }, {
-                data: 'user'
+                data: 'parent'
             }, {
                 data: 'name'
             }, {
-                data: 'phone'
+                data: 'path'
+            }, {
+                data: 'icon'
+            }, {
+                data: 'order'
             }, {
                 data: 'disable',
                 render: function(data, type, row, meta) {
@@ -216,12 +226,12 @@
     } );
 
     //init add validation
-    $("#form_auth_admin_add").validate({
+    $("#form_auth_module_add").validate({
         debug: false,
         errorClass: 'text text-danger'
     });
 
-    $("#form_auth_admin_mod").validate({
+    $("#form_auth_module_mod").validate({
         debug: false,
         errorClass: 'text text-danger'
     });
@@ -235,17 +245,17 @@
 
     //process modal add item
     function additem() {
-        var form = $('#form_auth_admin_add');
+        var form = $('#form_auth_module_add');
         if(form.valid()){
             form.ajaxSubmit({
-               url: '{% url "cms.apis.auth.admin.add" %}',
+               url: '{% url "cms.apis.auth.module.add" %}',
                type: 'post',
                success: function(resp) {
                     if(resp.status){
-                        $('#modal_auth_admin_add').modal('hide');
+                        $('#modal_auth_module_add').modal('hide');
                         table.row.add(resp.data).draw();
                     } else {
-                        $('#err_auth_admin_add').text(resp.message);
+                        $('#err_auth_module_add').text(resp.message);
                     }
                }
             });
@@ -254,17 +264,17 @@
 
     //process modal mod item
     function moditem() {
-        var form = $('#form_auth_admin_mod');
+        var form = $('#form_auth_module_mod');
         if(form.valid()){
             form.ajaxSubmit({
-               url: '{% url "cms.apis.auth.admin.mod" %}',
+               url: '{% url "cms.apis.auth.module.mod" %}',
                type: 'post',
                success: function(resp) {
                     if(resp.status){
-                        $('#modal_auth_admin_mod').modal('hide');
+                        $('#modal_auth_module_mod').modal('hide');
                         table.row('#'+resp.data.id).data(resp.data).draw();
                     } else {
-                        $('#err_auth_admin_mod').text(resp.message);
+                        $('#err_auth_module_mod').text(resp.message);
                     }
                }
             });
@@ -274,17 +284,17 @@
     //process modal del item
     function delitem() {
         id = $('#del_id').val();
-        var form = $('#form_auth_admin_del');
+        var form = $('#form_auth_module_del');
         if(form.valid()){
             form.ajaxSubmit({
-               url: '{% url "cms.apis.auth.admin.del" %}',
+               url: '{% url "cms.apis.auth.module.del" %}',
                type: 'post',
                success: function(resp) {
                     if(resp.status){
-                        $('#modal_auth_admin_del').modal('hide');
+                        $('#modal_auth_module_del').modal('hide');
                         table.row('#'+id).remove().draw();
                     } else {
-                        $('#err_auth_admin_del').text(resp.message);
+                        $('#err_auth_module_del').text(resp.message);
                     }
                }
             });
@@ -296,13 +306,15 @@
         row = table.row('#'+id).data();
 
         $('#det_id').val(row.id);
-        $('#det_user').val(row.user);
+        $('#det_parent').val(row.parent);
         $('#det_name').val(row.name);
-        $('#det_phone').val(row.phone);
+        $('#det_path').val(row.path);
+        $('#det_icon').val(row.icon);
+        $('#det_order').val(row.order);
         $('#det_disable').val(String(row.disable));
         $('#det_ctime').val(cube.time.localstr(row.ctime));
 
-        $('#modal_auth_admin_det').modal();
+        $('#modal_auth_module_det').modal();
     }
 
 
@@ -312,13 +324,15 @@
 
         $('#mod_id_hidden').val(row.id);
         $('#mod_id').val(row.id);
-        $('#mod_user').val(row.user);
+        $('#mod_parent').val(row.parent);
         $('#mod_name').val(row.name);
-        $('#mod_phone').val(row.phone);
+        $('#mod_path').val(row.path);
+        $('#mod_icon').val(row.icon);
+        $('#mod_order').val(row.order);
         $('#mod_disable').val(String(row.disable));
         $('#mod_ctime').val(cube.time.localstr(row.ctime));
 
-        $('#modal_auth_admin_mod').modal();
+        $('#modal_auth_module_mod').modal();
     }
 
     //process icon delete item
@@ -326,12 +340,12 @@
         $(elmt).confirmation({
             'singleton': true,
             'popout': true,
-            'title': '确定删除该用户？',
+            'title': '确定删除该项目？',
             'btnOkLabel': '确定',
             'btnCancelLabel': '取消',
             'onConfirm': function() {
                 var params = 'id='+id;
-                $.post('{% url "cms.apis.auth.admin.del" %}', params, function(resp){
+                $.post('{% url "cms.apis.auth.module.del" %}', params, function(resp){
                     if(resp.status){
                         table.row('#'+id).remove();
                         table.draw();

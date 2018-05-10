@@ -1,0 +1,64 @@
+<form class="form-horizontal" id="form_auth_module_mod" method="post" role="form">
+  <div class="modal fade"  id="modal_auth_module_mod" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">模块详情</h4>
+        </div>
+        <div class="modal-body">
+        <div class="form-group">
+          <label for="mod_id" class="col-sm-2 control-label">ID</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="mod_id" name="id" readonly>
+          </div>
+        </div> 
+          <div class="form-group">
+            <label for="mod_parent" class="col-sm-2 control-label">上级</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="mod_parent" name="parent">
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="mod_name" class="col-sm-2 control-label">名称</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="mod_name" name="name" required>
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="mod_path" class="col-sm-2 control-label">路径</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="mod_path" name="path">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="mod_icon" class="col-sm-2 control-label">图标</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="mod_icon" name="icon">
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="mod_order" class="col-sm-2 control-label">排序</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="mod_order" name="order" required>
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="mod_disable" class="col-sm-2 control-label">状态</label>
+            <div class="col-sm-10">
+              <select id="mod_disable" name="disable" required>
+                <option value="false" selected="">启用</option>
+                <option value="true">禁用</option>
+              </select>
+            </div>
+          </div>
+          <div><p class="text text-danger" id="err_auth_module_mod" style="text-align: right;"></p></div> 
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="moditem()">保存</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+</form>   

@@ -1,0 +1,58 @@
+<form class="form-horizontal" id="form_auth_module_add" method="post" role="form">
+  <div class="modal fade"  id="modal_auth_module_add" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">新建模块</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="add_parent" class="col-sm-2 control-label">上级</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="add_parent" name="parent" placeholder="请输入上级ID">
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="add_name" class="col-sm-2 control-label">名称</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="add_name" name="name" placeholder="请输入模块名" required>
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="add_path" class="col-sm-2 control-label">路径</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="add_path" name="path" placeholder="请输入模块路径">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="add_icon" class="col-sm-2 control-label">图标</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="add_icon" name="icon" placeholder="请输入模块图标">
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="add_order" class="col-sm-2 control-label">排序</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="add_order" name="order" value="0" placeholder="请输入排序值" required>
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="add_disable" class="col-sm-2 control-label">状态</label>
+            <div class="col-sm-10">
+              <select id="add_disable" name="disable" required="">
+                <option value="false" selected="">启用</option>
+                <option value="true">禁用</option>
+              </select>
+            </div>
+          </div>
+          <div><p class="text text-danger" id="err_auth_module_add" style="text-align: right;"></p></div> 
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="additem()">保存</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+</form>   

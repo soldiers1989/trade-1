@@ -212,7 +212,7 @@ def login(request):
     :return:
     """
     try:
-        login_form = forms.Login(request.GET)
+        login_form = forms.Login(request.POST)
         if login_form.is_valid():
             # get login data form user input
             username = login_form.cleaned_data.get('username')

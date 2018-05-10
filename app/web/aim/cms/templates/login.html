@@ -166,7 +166,7 @@
 
                 var params = 'username='+username+'&password='+password+'&remember='+remember;
 
-                $.get('{% url 'cms.api.login' %}', params, function(resp){
+                $.post('{% url 'cms.apis.auth.admin.login' %}', params, function(resp){
                     if(resp.status){
                         window.location.assign('{% url 'cms.index' %}');
                     } else {

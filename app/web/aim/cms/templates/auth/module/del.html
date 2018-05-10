@@ -1,0 +1,21 @@
+<form class="form-horizontal" id="form_auth_module_del" method="post" role="form">
+  <input type="hidden" id="del_id" name="id">
+  <div class="modal fade"  id="modal_auth_module_del" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">删除模块</h4>
+        </div>
+        <div class="modal-body">
+            <h5 class"text-center">确定删除模块 <strong class="text-danger" id="modal_auth_module_del_user"></strong>?</h5>
+        </div>
+        <div><p class="text text-danger" id="err_auth_module_del" style="text-align: right;"></p></div> 
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" onclick="delitem()">确定</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+</form> 

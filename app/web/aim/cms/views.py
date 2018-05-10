@@ -93,7 +93,7 @@ def auth_module_list(request):
     :param request:
     :return:
     """
-    return render(request, 'module.html', context=ctx.default(request, 'cms.auth.module.list'))
+    return render(request, 'auth/module/list.html', context=ctx.default(request, 'cms.auth.module.list'))
 
 
 @auth.has_auth('cms.order.order.list')

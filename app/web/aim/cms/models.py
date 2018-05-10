@@ -1,4 +1,3 @@
-import json
 from django.db  import models
 
 
@@ -16,6 +15,11 @@ class Module(models.Model):
     class Meta:
         db_table = 'tb_module'
 
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        if items['parent'] is not None:
+            items['parent'] = items['parent'].id
+        return items
 
 # tb_admin
 class Admin(models.Model):
