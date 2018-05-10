@@ -7,7 +7,7 @@ class Login(forms.Form):
     """
     username = forms.CharField(max_length=32, min_length=1)
     password = forms.CharField(max_length=32, min_length=6)
-    remember = forms.BooleanField()
+    remember = forms.BooleanField(required=False)
 
 
 class AdminAdd(forms.Form):
