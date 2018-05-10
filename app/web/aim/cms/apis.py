@@ -65,21 +65,17 @@ def auth_admin_list(request):
     :param request:
     :return:
     """
-    admins = models.Admin.objects.filter().all()
+    try:
+        admins = models.Admin.objects.filter().all()
 
-    data = []
+        data = []
 
-    for admin in admins:
-        data.append( {
-            'id': admin.id,
-            'user': admin.user,
-            'name': admin.name,
-            'phone': admin.phone,
-            'disable': admin.disable,
-            'ctime': admin.ctime
-        } )
+        for admin in admins:
+            data.append(admin.dict())
 
-    return success(data=data)
+        return success(data=data)
+    except Exception as e:
+        return failure(str(e))
 
 
 def auth_admin_get(request):
@@ -109,21 +105,44 @@ def auth_admin_add(request):
     :param request:
     :return:
     """
-    form = forms.Admin(request.POST)
-    if form.is_valid():
-        disable = form.cleaned_data['disable']
-        item = models.Admin(user=form.cleaned_data['user'],
-                            pwd=form.cleaned_data['pwd'],
-                            name=form.cleaned_data['name'],
-                            phone=form.cleaned_data['phone'],
-                            disable=form.cleaned_data['disable']);
-        print(item);
+    try:
+        form = forms.AdminAdd(request.POST)
+        if form.is_valid():
+            item = models.Admin(user=form.cleaned_data['user'],
+                                pwd=form.cleaned_data['pwd'],
+                                name=form.cleaned_data['name'],
+                                phone=form.cleaned_data['phone'],
+                                disable=form.cleaned_data['disable'],
+                                ctime=int(time.time()));
+            item.save()
+            return success(data=item.dict())
+        else:
+            errs = form.errors
+            return failure(hint.ERR_FORM_DATA)
+    except Exception as e:
+        return failure(str(e))
 
-        item.save()
-        return success()
-    else:
-        errs = form.errors
-        return failure(hint.ERR_FORM_DATA)
+
+def auth_admin_mod(request):
+    """
+        modify admin
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.AdminMod(request.POST)
+        if form.is_valid():
+            id = form.cleaned_data['id']
+            models.Admin.objects.filter(id=id).update(name=form.cleaned_data['name'],
+                                                      phone=form.cleaned_data['phone'],
+                                                      disable=form.cleaned_data['disable']);
+            item = models.Admin.objects.get(id=id)
+            return success(data=item.dict())
+        else:
+            errs = form.errors
+            return failure(hint.ERR_FORM_DATA)
+    except Exception as e:
+        return failure(str(e))
 
 
 def auth_admin_del(request):
@@ -132,29 +151,12 @@ def auth_admin_del(request):
     :param request:
     :return:
     """
-    admins = models.Admin.objects.filter().all()
-
-    return success('not exist')
-
-
-def auth_admin_mod(request):
-    """
-        login api
-    :param request:
-    :return:
-    """
-    admins = models.Admin.objects.filter().all()
-
-    resp = {
-        'data': []
-    }
-
-    for admin in admins:
-        resp['data'].append([admin.admin_id, admin.user, admin.name, admin.phone, admin.disable, admin.ctime])
-
-    content = json.dumps(resp).encode('utf-8')
-
-    return HttpResponse(content, content_type='application/json;charset=utf8')
+    try:
+        id = request.POST['id']
+        models.Admin.objects.filter(id=id).delete()
+        return success()
+    except Exception as e:
+        return failure(str(e))
 
 
 def auth_module_list(request):

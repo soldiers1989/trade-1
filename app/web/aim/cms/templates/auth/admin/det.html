@@ -1,0 +1,56 @@
+<form class="form-horizontal" id="form_auth_admin_det" method="post" role="form">
+<div class="modal fade"  id="modal_auth_admin_det" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">用户详情</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="det_id" class="col-sm-2 control-label">ID</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="det_id" name="id" readonly>
+          </div>
+        </div>           
+        <div class="form-group">
+          <label for="det_user" class="col-sm-2 control-label">用户</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="det_user" name="user" readonly>
+          </div>
+        </div> 
+        <div class="form-group">
+          <label for="det_name" class="col-sm-2 control-label">姓名</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="det_name" name="name" readonly>
+          </div>
+        </div> 
+        <div class="form-group">
+          <label for="det_phone" class="col-sm-2 control-label">手机号</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="det_phone" name="phone" readonly>
+          </div>
+        </div> 
+        <div class="form-group">
+          <label for="det_disable" class="col-sm-2 control-label">状态</label>
+          <div class="col-sm-10">
+            <select id="det_disable" name="disable" disabled>
+              <option value="false" selected="">启用</option>
+              <option value="true">禁用</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="det_ctime" class="col-sm-2 control-label">创建时间</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="det_ctime" name="ctime" readonly>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+</form>

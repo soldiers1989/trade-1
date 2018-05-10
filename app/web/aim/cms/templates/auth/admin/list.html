@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
     <link rel="stylesheet" href="/assets/css/datatables/ext/buttons1.5.1/buttons.bootstrap.css" />
     <link rel="stylesheet" href="/assets/css/datatables/ext/select1.2.5/select.bootstrap.css" />
-
+    <link rel="stylesheet" href="/assets/css/bootstrap/ext/toastr.css" />
 {% endblock %}
 
 {% block pagecontent %}
@@ -25,7 +25,9 @@
 
 {% block modals %}
     {% include "auth/admin/add.html" %}
+    {% include "auth/admin/det.html" %}
     {% include "auth/admin/del.html" %}
+    {% include "auth/admin/mod.html" %}
 {% endblock %}
 
 {% block jsfiles %}
@@ -39,6 +41,8 @@
     <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
+    <script src="/assets/js/bootstrap/ext/toastr.js"></script>
+    <script src="/assets/js/cube/cube.js"></script>
 {% endblock %}
 
 {% block jscontent %}
@@ -74,36 +78,88 @@
                 }
 
             }, {
-                text: '修改',
+                text: '详情',
                 className: 'btn btn-info btn-sm',
                 action: function(e, dt, node, config) {
-                    $('#modal_auth_admin_add').modal();
+                    var row = dt.row({selected: true}).data();
+                    if(!row){
+                        var btn = node[0];
+                        node.attr('title', '提示');
+                        node.attr('data-container', 'body');
+                        node.attr('data-toggle', 'popover');
+                        node.attr('data-content', '请选择用户');
+                        node.attr('data-placement', 'top');
+      
+                        node.popover('show');
+                        setTimeout(function(){
+                            node.popover('destroy');
+                        }, 500);
+
+                        return;
+                    }
+
+                    $('#det_id').text(row.id);
+                    $('#det_user').val(row.user);
+                    $('#det_name').val(row.name);
+                    $('#det_phone').val(row.phone);
+                    $('#det_disable').val(String(row.disable));
+                    $('#det_ctime').val(cube.time.localstr(row.ctime));
+
+                    $('#modal_auth_admin_det').modal();
+                }
+            }, {
+                text: '修改',
+                className: 'btn btn-warning btn-sm',
+                action: function(e, dt, node, config) {
+                    var row = dt.row({selected: true}).data();
+                    if(!row){
+                        var btn = node[0];
+                        node.attr('title', '提示');
+                        node.attr('data-container', 'body');
+                        node.attr('data-toggle', 'popover');
+                        node.attr('data-content', '请选择用户');
+                        node.attr('data-placement', 'top');
+      
+                        node.popover('show');
+                        setTimeout(function(){
+                            node.popover('destroy');
+                        }, 500);
+
+                        return;
+                    }
+
+                    $('#mod_id_hidden').val(row.id);
+                    $('#mod_id').val(row.id);
+                    $('#mod_user').val(row.user);
+                    $('#mod_name').val(row.name);
+                    $('#mod_phone').val(row.phone);
+                    $('#mod_disable').val(String(row.disable));
+                    $('#mod_ctime').val(cube.time.localstr(row.ctime));
+
+                    $('#modal_auth_admin_mod').modal();
                 }
             }, {
                 text: '删除',
                 className: 'btn btn-danger btn-sm',
                 action: function(e, dt, node, config) {
-                    console.log(e);
-                    console.log(dt);
-                    console.log(node);
                     var row = dt.row({selected: true}).data();
                     if(!row){
                         var btn = node[0];
-                        node.attr('title', 'acbd');
+                        node.attr('title', '提示');
                         node.attr('data-container', 'body');
                         node.attr('data-toggle', 'popover');
-                        node.attr('data-content', 'abc');
+                        node.attr('data-content', '请选择用户');
                         node.attr('data-placement', 'top');
       
                         node.popover('show');
                         setTimeout(function(){
-                            node.popover('hide');
-                        },1000);
+                            node.popover('destroy');
+                        }, 500);
 
                         return;
                     }
-
-                    $('#modal_auth_admin_del_user').text(row.name);
+                    $('#del_id').val(row.id);
+                    $('#modal_auth_admin_del_user').text(row.user);
                     $('#modal_auth_admin_del').modal();
                 }
             }
@@ -144,13 +200,13 @@
                 selectable: false,
                 render: function(data, type, row, meta) {
                     return '<div class="hidden-sm hidden-xs btn-group" style="display: block">'+
-                                '<button class="btn btn-xs btn-success" onclick="show_item(this,'+data+')">' +
+                                '<button class="btn btn-xs btn-success" onclick="onshowitem(this,'+data+')">' +
                                     '<i class="ace-icon fa fa-search-plus bigger-130"></i>' +
                                 '</button>'+
-                                '<button class="btn btn-xs btn-info" onclick="modify_item(this,'+data+')">' +
+                                '<button class="btn btn-xs btn-info" onclick="onmoditem(this,'+data+')">' +
                                     '<i class="ace-icon fa fa-pencil bigger-130"></i>' +
                                 '</button>'+
-                                '<button class="btn btn-xs btn-danger" onclick="delitem(this,'+data+')">' +
+                                '<button class="btn btn-xs btn-danger" onclick="ondelitem(this,'+data+')">' +
                                     '<i class="ace-icon fa fa-trash bigger-130"></i>' +
                                 '</button>'+
                             '</div>';
@@ -159,11 +215,25 @@
         ]
     } );
 
+    //init add validation
     $("#form_auth_admin_add").validate({
-        debug: true,
+        debug: false,
         errorClass: 'text text-danger'
     });
 
+    $("#form_auth_admin_mod").validate({
+        debug: false,
+        errorClass: 'text text-danger'
+    });
+
+    //init toastr position
+    toastr.options = {
+        'positionClass': 'toast-top-center',
+        'timeOut': 1000,
+    };
+
+
+    //process modal add item
     function additem() {
         var form = $('#form_auth_admin_add');
         if(form.valid()){
@@ -171,9 +241,9 @@
                url: '{% url "cms.api.auth.admin.add" %}',
                type: 'post',
                success: function(resp) {
-                    alert(resp.status);
                     if(resp.status){
                         $('#modal_auth_admin_add').modal('hide');
+                        table.row.add(resp.data).draw();
                     } else {
                         $('#err_auth_admin_add').text(resp.message);
                     }
@@ -182,36 +252,102 @@
         }
     }
 
-    function moditem(elmt, id) {
-        alert('modify:'+id);
+    //process modal mod item
+    function moditem() {
+        var form = $('#form_auth_admin_mod');
+        if(form.valid()){
+            form.ajaxSubmit({
+               url: '{% url "cms.api.auth.admin.mod" %}',
+               type: 'post',
+               success: function(resp) {
+                    if(resp.status){
+                        $('#modal_auth_admin_mod').modal('hide');
+                        table.row('#'+resp.data.id).data(resp.data).draw();
+                    } else {
+                        $('#err_auth_admin_mod').text(resp.message);
+                    }
+               }
+            });
+        }
     }
 
-    function delitem(elmt, id){
-        var params = 'id='+id;
+    //process modal del item
+    function delitem() {
+        id = $('#del_id').val();
+        var form = $('#form_auth_admin_del');
+        if(form.valid()){
+            form.ajaxSubmit({
+               url: '{% url "cms.api.auth.admin.del" %}',
+               type: 'post',
+               success: function(resp) {
+                    if(resp.status){
+                        $('#modal_auth_admin_del').modal('hide');
+                        table.row('#'+id).remove().draw();
+                    } else {
+                        $('#err_auth_admin_del').text(resp.message);
+                    }
+               }
+            });
+        }        
+    }
 
+    //process icon show item
+    function onshowitem(elmt, id) {
+        row = table.row('#'+id).data();
+
+        $('#det_id').val(row.id);
+        $('#det_user').val(row.user);
+        $('#det_name').val(row.name);
+        $('#det_phone').val(row.phone);
+        $('#det_disable').val(String(row.disable));
+        $('#det_ctime').val(cube.time.localstr(row.ctime));
+
+        $('#modal_auth_admin_det').modal();
+    }
+
+
+    //process icon modify item
+    function onmoditem(elmt, id) {
+        row = table.row('#'+id).data();
+
+        $('#mod_id_hidden').val(row.id);
+        $('#mod_id').val(row.id);
+        $('#mod_user').val(row.user);
+        $('#mod_name').val(row.name);
+        $('#mod_phone').val(row.phone);
+        $('#mod_disable').val(String(row.disable));
+        $('#mod_ctime').val(cube.time.localstr(row.ctime));
+
+        $('#modal_auth_admin_mod').modal();
+    }
+
+    //process icon delete item
+    function ondelitem(elmt, id){
         $(elmt).confirmation({
             'singleton': true,
-            'title': '确定删除该用户么？',
+            'popout': true,
+            'title': '确定删除该用户？',
+            'btnOkLabel': '确定',
+            'btnCancelLabel': '取消',
             'onConfirm': function() {
-               $.get('{% url "cms.api.auth.admin.del" %}', params, function(resp){
+                var params = 'id='+id;
+                $.post('{% url "cms.api.auth.admin.del" %}', params, function(resp){
                     if(resp.status){
-                        alert(id);
                         table.row('#'+id).remove();
                         table.draw();
                     } else {
-                       alert(resp.message);
+                       toastr.error(resp.message);
                     }
                 }, "json");
 
-                $(elmt).confirmation('hide');
+                $(elmt).confirmation('destroy');
+            },
+            'onCancel': function() {
+                $(elmt).confirmation('destroy');  
             }
         });
 
         $(elmt).confirmation('show');
-    }
-
-    function showitem(elmt, id){
-       alert('show:'+id);
     }
 </script>
 {% endblock %}

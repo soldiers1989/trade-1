@@ -10,9 +10,16 @@ class Login(forms.Form):
     remember = forms.BooleanField()
 
 
-class Admin(forms.Form):
+class AdminAdd(forms.Form):
     user = forms.CharField(max_length=32, min_length=1)
     pwd = forms.CharField(max_length=32, min_length=6)
+    name = forms.CharField(max_length=32, min_length=0)
+    phone = forms.CharField(max_length=16, min_length=0)
+    disable = forms.BooleanField(required=False)
+
+
+class AdminMod(forms.Form):
+    id = forms.IntegerField()
     name = forms.CharField(max_length=32, min_length=0)
     phone = forms.CharField(max_length=16, min_length=0)
     disable = forms.BooleanField(required=False)

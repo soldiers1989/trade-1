@@ -1,4 +1,4 @@
-import time
+import json
 from django.db  import models
 
 
@@ -20,15 +20,18 @@ class Module(models.Model):
 # tb_admin
 class Admin(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.CharField(max_length=32, null=False)
+    user = models.CharField(max_length=32, null=False, unique=True)
     pwd = models.CharField(max_length=32, null=False)
     name = models.CharField(max_length=32, null=False)
     phone = models.CharField(max_length=16, null=False)
     disable = models.BooleanField(null=False, default=False)
-    ctime = models.BigIntegerField(null=False, default=int(time.time()))
+    ctime = models.BigIntegerField(null=False, default=0)
 
     class Meta:
         db_table = 'tb_admin'
+
+    def dict(self):
+        return dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
 
 
 # tb_authority
