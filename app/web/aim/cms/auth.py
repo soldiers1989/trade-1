@@ -1,11 +1,10 @@
 """
      authority control
 """
-from cms import forms, hint, models, config
-
-from django.urls import reverse
+import re
 from django.shortcuts import redirect
 
+from cms import forms, hint, models, cfg
 
 class Sid:
     UID = 'g_uid'
@@ -52,21 +51,21 @@ class User:
             return request.session.get(sid.UMODULES)
 
     @staticmethod
-    def parents(request, mpath=None):
+    def parents(request, mcode=None):
         """
 
         :param request:
-        :param mpath:
+        :param mcode:
         :return:
         """
-        return user._parents(user.modules(request), mpath)
+        return user._parents(user.modules(request), mcode)
 
     @staticmethod
-    def _parents(modules, mpath):
+    def _parents(modules, mcode):
         """
 
         :param modules:
-        :param mpath:
+        :param mcode:
         :return:
         """
         parents = {}
@@ -74,11 +73,11 @@ class User:
         for mdl in modules:
             # compare current
             parents[mdl['id']] = mdl
-            if mdl['path'] == mpath:
+            if mdl['code'] == mcode:
                 return parents
 
             # find childs
-            results = user._parents(mdl['childs'], mpath)
+            results = user._parents(mdl['childs'], mcode)
             if len(results) > 0:
                 parents.update(results)
                 return parents
@@ -90,17 +89,17 @@ class User:
 
 
     @staticmethod
-    def has_module(request, module):
+    def has_module(request):
         """
 
         :param modules:
         :return:
         """
         modules = request.session.get(sid.UMODULES)
-        return user._has_module(modules, module)
+        return user._has_module(modules, request.path)
 
     @staticmethod
-    def _has_module(modules, mdl):
+    def _has_module(modules, path):
         """
 
         :param modules:
@@ -109,12 +108,13 @@ class User:
         """
         for module in modules:
             # compare current
-            if module['path'] == mdl:
+            cpath = module['path']
+            if cpath and re.match(cpath, path):
                 return True
 
             # compare childs
             childs = module['childs']
-            if childs is not None and user._has_module(childs, mdl):
+            if childs is not None and user._has_module(childs, path):
                 return True
 
         return False
@@ -134,6 +134,7 @@ class User:
             if obj.parent_id == parent:
                 child = {'id': obj.id,
                          'parent': obj.parent_id,
+                         'code': obj.code,
                          'name': obj.name,
                          'path': obj.path,
                          'icon': obj.icon,
@@ -158,21 +159,14 @@ class User:
 user = User
 
 
-def has_auth(module):
-    """
-        module authority decorator
-    :param request:
-    :return:
-    """
-    def _has_auth(func):
-        def __has_auth(request):
-            if is_login(request):
-                if user.has_module(request, module):
-                    return func(request)
-                return redirect('cms.index')
-            else:
-                return redirect('cms.login')
-        return __has_auth
+def protect(func):
+    def _has_auth(request):
+        if is_login(request):
+            if user.has_module(request):
+                return func(request)
+            return redirect('cms.index')
+        else:
+            return redirect('cms.login')
     return _has_auth
 
 
@@ -212,7 +206,7 @@ def login(request):
     :return:
     """
     try:
-        login_form = forms.Login(request.POST)
+        login_form = forms.auth.admin.Login(request.POST)
         if login_form.is_valid():
             # get login data form user input
             username = login_form.cleaned_data.get('username')
@@ -220,8 +214,8 @@ def login(request):
             remember = login_form.cleaned_data.get('remember')
 
             # super admin login
-            if username == config.super_admin['user']:
-                if password == config.super_admin['password']:
+            if username == cfg.super_admin['user']:
+                if password == cfg.super_admin['password']:
                     # set session expire for not remember choice
                     if not remember:
                         request.session.set_expiry(0)
@@ -230,8 +224,8 @@ def login(request):
                     mobjs = models.Module.objects.filter(disable=False).all()
 
                     # set user session
-                    user.id(request, config.super_admin['id'])
-                    user.name(request, config.super_admin['name'])
+                    user.id(request, cfg.super_admin['id'])
+                    user.name(request, cfg.super_admin['name'])
                     user.modules(request, mobjs)
 
                     return True, hint.MSG_LOGIN_SUCCESS
@@ -252,10 +246,10 @@ def login(request):
                     request.session.set_expiry(0)
 
                 # get user modules
-                mobjs = models.Module.objects.filter(authority__admin_id=1, authority__disable=False, disable=False).all()
+                mobjs = models.Module.objects.filter(authority__admin_id=admin.id, authority__disable=False, disable=False).all()
 
                 # set user session
-                user.id(request, admin.admin_id)
+                user.id(request, admin.id)
                 user.name(request, admin.user)
                 user.modules(request, mobjs)
 

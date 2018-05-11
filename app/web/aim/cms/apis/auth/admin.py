@@ -20,6 +20,7 @@ def login(request):
         return resp.failure(message=msg)
 
 
+@auth.protect
 def list(request):
     """
         list api
@@ -39,6 +40,7 @@ def list(request):
         return resp.failure(str(e))
 
 
+@auth.protect
 def get(request):
     """
         get api
@@ -53,6 +55,7 @@ def get(request):
         return resp.failure(str(e))
 
 
+@auth.protect
 def add(request):
     """
         add api
@@ -60,7 +63,7 @@ def add(request):
     :return:
     """
     try:
-        form = forms.AdminAdd(request.POST)
+        form = forms.auth.admin.Add(request.POST)
         if form.is_valid():
             item = models.Admin(user=form.cleaned_data['user'],
                                 pwd=form.cleaned_data['pwd'],
@@ -77,6 +80,7 @@ def add(request):
         return resp.failure(str(e))
 
 
+@auth.protect
 def modify(request):
     """
         modify admin
@@ -84,7 +88,7 @@ def modify(request):
     :return:
     """
     try:
-        form = forms.AdminMod(request.POST)
+        form = forms.auth.admin.Modify(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
             models.Admin.objects.filter(id=id).update(name=form.cleaned_data['name'],
@@ -98,6 +102,7 @@ def modify(request):
         return resp.failure(str(e))
 
 
+@auth.protect
 def delete(request):
     """
         delete api

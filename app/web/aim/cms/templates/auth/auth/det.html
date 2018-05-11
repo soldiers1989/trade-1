@@ -1,0 +1,39 @@
+<form class="form-horizontal" id="form_auth_auth_det" method="post" role="form">
+  <div class="modal fade"  id="modal_auth_auth_det" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">权限详情</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="det_admin" class="col-sm-2 control-label">用户ID</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="det_admin" name="admin" readonly>
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="det_module" class="col-sm-2 control-label">模块ID</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" id="det_module" name="module" readonly>
+            </div>
+          </div> 
+          <div class="form-group">
+            <label for="det_disable" class="col-sm-2 control-label">状态</label>
+            <div class="col-sm-10">
+              <select id="det_disable" name="disable" disabled>
+                <option value="false" selected="">启用</option>
+                <option value="true">禁用</option>
+              </select>
+            </div>
+          </div>
+          <div><p class="text text-danger" id="err_auth_auth_det" style="text-align: right;"></p></div> 
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+</form>   

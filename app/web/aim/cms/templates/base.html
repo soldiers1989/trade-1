@@ -113,7 +113,7 @@
 				<ul class="nav nav-list">
                     {% for module in modules %}
                         <li {% if module.id in actives %}class="active open"{% endif %}>
-                            {% url module.path as murl %}
+                            {% url module.code as murl %}
                             <a href="{{ murl|default:'#' }}" class="dropdown-toggle">
 
                                 <i class="menu-icon fa {{ module.icon }}"></i>
@@ -130,7 +130,7 @@
                                 <ul class="submenu">
                                     {% for child in module.childs %}
                                     <li {% if child.id in actives %}class="active"{% endif %}>
-                                        {% url child.path as curl %}
+                                        {% url child.code as curl %}
                                         <a href="{{ curl|default:'#' }}">
                                             <i class="menu-icon fa fa-caret-right"></i>
                                             {{ child.name }}

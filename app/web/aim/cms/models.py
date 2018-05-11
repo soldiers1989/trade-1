@@ -5,6 +5,7 @@ from django.db  import models
 class Module(models.Model):
     id = models.AutoField(primary_key=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True)
+    code = models.CharField(max_length=64, null=True)
     name = models.CharField(max_length=32, null=False)
     path = models.CharField(max_length=128, null=True)
     icon = models.CharField(max_length=32, null=True)
@@ -20,6 +21,7 @@ class Module(models.Model):
         if items['parent'] is not None:
             items['parent'] = items['parent'].id
         return items
+
 
 # tb_admin
 class Admin(models.Model):
@@ -48,6 +50,14 @@ class Authority(models.Model):
 
     class Meta:
         db_table = 'tb_auth'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+
+        items['admin'] = items['admin'].id if items['admin'] is not None else None
+        items['module'] = items['module'].id if items['module'] is not None else None
+
+        return items
 
 
 # tb_file

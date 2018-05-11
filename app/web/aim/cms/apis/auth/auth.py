@@ -15,7 +15,7 @@ def list(request):
     :return:
     """
     try:
-        items = models.Module.objects.filter().all()
+        items = models.Authority.objects.filter().all()
 
         data = []
 
@@ -36,7 +36,7 @@ def get(request):
     """
     try:
         id = request.POST['id']
-        item = models.Module.objects.get(id=id)
+        item = models.Authority.objects.get(id=id)
         return resp.success(data=item.dict())
     except Exception as e:
         return resp.failure(str(e))
@@ -50,16 +50,12 @@ def add(request):
     :return:
     """
     try:
-        form = forms.auth.module.Add(request.POST)
+        form = forms.auth.auth.Add(request.POST)
         if form.is_valid():
-            item = models.Module(parent_id=form.cleaned_data['parent'],
-                                code=form.cleaned_data['code'],
-                                name=form.cleaned_data['name'],
-                                path=form.cleaned_data['path'],
-                                icon=form.cleaned_data['icon'],
-                                order=form.cleaned_data['order'],
-                                disable=form.cleaned_data['disable'],
-                                ctime=int(time.time()));
+            item = models.Authority(admin_id=form.cleaned_data['admin'],
+                                    module_id=form.cleaned_data['module'],
+                                    disable=form.cleaned_data['disable'],
+                                    ctime=int(time.time()));
             item.save()
             return resp.success(data=item.dict())
         else:
@@ -77,17 +73,13 @@ def modify(request):
     :return:
     """
     try:
-        form = forms.auth.module.Modify(request.POST)
+        form = forms.auth.auth.Modify(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
-            models.Module.objects.filter(id=id).update(parent_id=form.cleaned_data['parent'],
-                                                        code=form.cleaned_data['code'],
-                                                        name=form.cleaned_data['name'],
-                                                        path=form.cleaned_data['path'],
-                                                        icon=form.cleaned_data['icon'],
-                                                        order=form.cleaned_data['order'],
-                                                        disable=form.cleaned_data['disable']);
-            item = models.Module.objects.get(id=id)
+            models.Authority.objects.filter(id=id).update(admin_id=form.cleaned_data['admin'],
+                                                          module_id=form.cleaned_data['module'],
+                                                          disable=form.cleaned_data['disable']);
+            item = models.Authority.objects.get(id=id)
             return resp.success(data=item.dict())
         else:
             return resp.failure(hint.ERR_FORM_DATA)
@@ -104,7 +96,7 @@ def delete(request):
     """
     try:
         id = request.POST['id']
-        models.Module.objects.filter(id=id).delete()
+        models.Authority.objects.filter(id=id).delete()
         return resp.success()
     except Exception as e:
         return resp.failure(str(e))

@@ -1,23 +1,20 @@
 from django.urls import path
 from cms import apis, views
 
-urlpatterns = [
-    path('index/', views.index, name='cms.index'),
 
-    path('test/', views.test, name='cms.test'),
+urlviews = [
+    path('index/', views.home.index, name='cms.index'),
 
-    path('login/', views.login, name='cms.login'),
-    path('logout/', views.logout, name='cms.logout'),
+    path('login/', views.auth.admin.login, name='cms.login'),
+    path('logout/', views.auth.admin.logout, name='cms.logout'),
 
-    path('auth/admin/add/', views.auth_admin_list, name='cms.auth.admin.add'),
-    path('auth/admin/delete/', views.auth_admin_list, name='cms.auth.admin.delete'),
-    path('auth/admin/modify/', views.auth_admin_list, name='cms.auth.admin.modify'),
-    path('auth/admin/list/', views.auth_admin_list, name='cms.auth.admin.list'),
+    path('auth/admin/list/', views.auth.admin.list, name='cms.auth.admin.list'),
+    path('auth/module/list/', views.auth.module.list, name='cms.auth.module.list'),
+    path('auth/auth/list/', views.auth.auth.list, name='cms.auth.auth.list')
+]
 
-    path('auth/module/list/', views.auth_module_list, name='cms.auth.module.list'),
 
-    path('order/order/list/', views.order_order_list, name='cms.order.order.list'),
-
+urlapis = [
     path('apis/auth/admin/login/', apis.auth.admin.login, name="cms.apis.auth.admin.login"),
     path('apis/auth/admin/list/', apis.auth.admin.list, name="cms.apis.auth.admin.list"),
     path('apis/auth/admin/get/', apis.auth.admin.get, name="cms.apis.auth.admin.get"),
@@ -30,4 +27,12 @@ urlpatterns = [
     path('apis/auth/module/add/', apis.auth.module.add, name="cms.apis.auth.module.add"),
     path('apis/auth/module/del/', apis.auth.module.delete, name="cms.apis.auth.module.del"),
     path('apis/auth/module/mod/', apis.auth.module.modify, name="cms.apis.auth.module.mod"),
+
+    path('apis/auth/auth/list/', apis.auth.auth.list, name="cms.apis.auth.auth.list"),
+    path('apis/auth/auth/get/', apis.auth.auth.get, name="cms.apis.auth.auth.get"),
+    path('apis/auth/auth/add/', apis.auth.auth.add, name="cms.apis.auth.auth.add"),
+    path('apis/auth/auth/del/', apis.auth.auth.delete, name="cms.apis.auth.auth.del"),
+    path('apis/auth/auth/mod/', apis.auth.auth.modify, name="cms.apis.auth.auth.mod")
 ]
+
+urlpatterns = urlviews + urlapis

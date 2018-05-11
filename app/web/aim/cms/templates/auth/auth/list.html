@@ -8,16 +8,12 @@
 {% endblock %}
 
 {% block pagecontent %}
-    <table id="modulelist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
+    <table id="authlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
            <thead>
             <tr>
                 <th>ID</th>
-                <th>上级</th>
-                <th>名称</th>
-                <th>代码</th>
-                <th>路径</th>
-                <th>图标</th>
-                <th>排序</th>
+                <th>用户</th>
+                <th>模块</th>
                 <th>状态</th>
                 <th>创建时间</th>
                 <th class="center sorting_disabled">操作</th>
@@ -27,10 +23,10 @@
 {% endblock %}
 
 {% block modals %}
-    {% include "auth/module/add.html" %}
-    {% include "auth/module/det.html" %}
-    {% include "auth/module/del.html" %}
-    {% include "auth/module/mod.html" %}
+    {% include "auth/auth/add.html" %}
+    {% include "auth/auth/det.html" %}
+    {% include "auth/auth/del.html" %}
+    {% include "auth/auth/mod.html" %}
 {% endblock %}
 
 {% block jsfiles %}
@@ -50,9 +46,9 @@
 
 {% block jscontent %}
 <script type="text/javascript">  
-    var table = $('#modulelist').DataTable( {
+    var table = $('#authlist').DataTable( {
         ajax: {
-            url: '{% url 'cms.apis.auth.module.list' %}',
+            url: '{% url 'cms.apis.auth.auth.list' %}',
             type: 'POST'
         },
 
@@ -77,7 +73,7 @@
                 text: '新建',
                 className: 'btn btn-success btn-sm',
                 action: function(e, dt, node, config) {
-                    $('#modal_auth_module_add').modal();
+                    $('#modal_auth_auth_add').modal();
                 }
 
             }, {
@@ -102,16 +98,12 @@
                     }
 
                     $('#det_id').val(row.id);
-                    $('#det_parent').val(row.parent);
-                    $('#det_name').val(row.name);
-                    $('#det_code').val(row.code);
-                    $('#det_path').val(row.path);
-                    $('#det_icon').val(row.icon);
-                    $('#det_order').val(row.order);
+                    $('#det_admin').val(row.admin);
+                    $('#det_module').val(row.module);
                     $('#det_disable').val(String(row.disable));
                     $('#det_ctime').val(cube.time.localstr(row.ctime));
 
-                    $('#modal_auth_module_det').modal();
+                    $('#modal_auth_auth_det').modal();
                 }
             }, {
                 text: '修改',
@@ -136,16 +128,12 @@
 
                     $('#mod_id_hidden').val(row.id);
                     $('#mod_id').val(row.id);
-                    $('#mod_parent').val(row.parent);
-                    $('#mod_name').val(row.name);
-                    $('#mod_code').val(row.code);
-                    $('#mod_path').val(row.path);
-                    $('#mod_icon').val(row.icon);
-                    $('#mod_order').val(row.order);
+                    $('#mod_admin').val(row.admin);
+                    $('#mod_module').val(row.module);
                     $('#mod_disable').val(String(row.disable));
                     $('#mod_ctime').val(cube.time.localstr(row.ctime));
 
-                    $('#modal_auth_module_mod').modal();
+                    $('#modal_auth_auth_mod').modal();
                 }
             }, {
                 text: '删除',
@@ -168,8 +156,8 @@
                         return;
                     }
                     $('#del_id').val(row.id);
-                    $('#modal_auth_module_del_user').text(row.user);
-                    $('#modal_auth_module_del').modal();
+                    $('#modal_auth_auth_del_user').text(row.user);
+                    $('#modal_auth_auth_del').modal();
                 }
             }
         ],
@@ -177,17 +165,9 @@
         columns: [ {
                 data: 'id'
             }, {
-                data: 'parent'
+                data: 'admin'
             }, {
-                data: 'name'
-            }, {
-                data: 'code'
-            }, {
-                data: 'path'
-            }, {
-                data: 'icon'
-            }, {
-                data: 'order'
+                data: 'module'
             }, {
                 data: 'disable',
                 render: function(data, type, row, meta) {
@@ -231,12 +211,12 @@
     } );
 
     //init add validation
-    $("#form_auth_module_add").validate({
+    $("#form_auth_auth_add").validate({
         debug: false,
         errorClass: 'text text-danger'
     });
 
-    $("#form_auth_module_mod").validate({
+    $("#form_auth_auth_mod").validate({
         debug: false,
         errorClass: 'text text-danger'
     });
@@ -250,17 +230,17 @@
 
     //process modal add item
     function additem() {
-        var form = $('#form_auth_module_add');
+        var form = $('#form_auth_auth_add');
         if(form.valid()){
             form.ajaxSubmit({
-               url: '{% url "cms.apis.auth.module.add" %}',
+               url: '{% url "cms.apis.auth.auth.add" %}',
                type: 'post',
                success: function(resp) {
                     if(resp.status){
-                        $('#modal_auth_module_add').modal('hide');
+                        $('#modal_auth_auth_add').modal('hide');
                         table.row.add(resp.data).draw();
                     } else {
-                        $('#err_auth_module_add').text(resp.message);
+                        $('#err_auth_auth_add').text(resp.message);
                     }
                }
             });
@@ -269,17 +249,17 @@
 
     //process modal mod item
     function moditem() {
-        var form = $('#form_auth_module_mod');
+        var form = $('#form_auth_auth_mod');
         if(form.valid()){
             form.ajaxSubmit({
-               url: '{% url "cms.apis.auth.module.mod" %}',
+               url: '{% url "cms.apis.auth.auth.mod" %}',
                type: 'post',
                success: function(resp) {
                     if(resp.status){
-                        $('#modal_auth_module_mod').modal('hide');
+                        $('#modal_auth_auth_mod').modal('hide');
                         table.row('#'+resp.data.id).data(resp.data).draw();
                     } else {
-                        $('#err_auth_module_mod').text(resp.message);
+                        $('#err_auth_auth_mod').text(resp.message);
                     }
                }
             });
@@ -289,17 +269,17 @@
     //process modal del item
     function delitem() {
         id = $('#del_id').val();
-        var form = $('#form_auth_module_del');
+        var form = $('#form_auth_auth_del');
         if(form.valid()){
             form.ajaxSubmit({
-               url: '{% url "cms.apis.auth.module.del" %}',
+               url: '{% url "cms.apis.auth.auth.del" %}',
                type: 'post',
                success: function(resp) {
                     if(resp.status){
-                        $('#modal_auth_module_del').modal('hide');
+                        $('#modal_auth_auth_del').modal('hide');
                         table.row('#'+id).remove().draw();
                     } else {
-                        $('#err_auth_module_del').text(resp.message);
+                        $('#err_auth_auth_del').text(resp.message);
                     }
                }
             });
@@ -311,16 +291,13 @@
         row = table.row('#'+id).data();
 
         $('#det_id').val(row.id);
-        $('#det_parent').val(row.parent);
-        $('#det_name').val(row.name);
-        $('#det_code').val(row.code);
-        $('#det_path').val(row.path);
-        $('#det_icon').val(row.icon);
-        $('#det_order').val(row.order);
+        $('#det_admin').val(row.admin);
+        $('#det_module').val(row.module);
         $('#det_disable').val(String(row.disable));
         $('#det_ctime').val(cube.time.localstr(row.ctime));
 
-        $('#modal_auth_module_det').modal();
+
+        $('#modal_auth_auth_det').modal();
     }
 
 
@@ -330,16 +307,12 @@
 
         $('#mod_id_hidden').val(row.id);
         $('#mod_id').val(row.id);
-        $('#mod_parent').val(row.parent);
-        $('#mod_name').val(row.name);
-        $('#mod_code').val(row.code);
-        $('#mod_path').val(row.path);
-        $('#mod_icon').val(row.icon);
-        $('#mod_order').val(row.order);
+        $('#mod_admin').val(row.admin);
+        $('#mod_module').val(row.module);
         $('#mod_disable').val(String(row.disable));
         $('#mod_ctime').val(cube.time.localstr(row.ctime));
 
-        $('#modal_auth_module_mod').modal();
+        $('#modal_auth_auth_mod').modal();
     }
 
     //process icon delete item
@@ -352,7 +325,7 @@
             'btnCancelLabel': '取消',
             'onConfirm': function() {
                 var params = 'id='+id;
-                $.post('{% url "cms.apis.auth.module.del" %}', params, function(resp){
+                $.post('{% url "cms.apis.auth.auth.del" %}', params, function(resp){
                     if(resp.status){
                         table.row('#'+id).remove();
                         table.draw();
