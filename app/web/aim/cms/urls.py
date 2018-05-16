@@ -10,7 +10,9 @@ urlviews = [
 
     path('auth/admin/list/', views.auth.admin.list, name='cms.auth.admin.list'),
     path('auth/module/list/', views.auth.module.list, name='cms.auth.module.list'),
-    path('auth/auth/list/', views.auth.auth.list, name='cms.auth.auth.list')
+    path('auth/auth/list/', views.auth.auth.list, name='cms.auth.auth.list'),
+
+    path('order/lever/list/', views.order.lever.list, name='cms.order.lever.list')
 ]
 
 
@@ -32,7 +34,13 @@ urlapis = [
     path('apis/auth/auth/get/', apis.auth.auth.get, name="cms.apis.auth.auth.get"),
     path('apis/auth/auth/add/', apis.auth.auth.add, name="cms.apis.auth.auth.add"),
     path('apis/auth/auth/del/', apis.auth.auth.delete, name="cms.apis.auth.auth.del"),
-    path('apis/auth/auth/mod/', apis.auth.auth.modify, name="cms.apis.auth.auth.mod")
+    path('apis/auth/auth/mod/', apis.auth.auth.modify, name="cms.apis.auth.auth.mod"),
+
+    path('apis/order/lever/list/', apis.order.lever.list, name="cms.apis.order.lever.list"),
+    path('apis/order/lever/get/', apis.order.lever.get, name="cms.apis.order.lever.get"),
+    path('apis/order/lever/add/', apis.order.lever.add, name="cms.apis.order.lever.add"),
+    path('apis/order/lever/del/', apis.order.lever.delete, name="cms.apis.order.lever.del"),
+    path('apis/order/lever/mod/', apis.order.lever.modify, name="cms.apis.order.lever.mod")
 ]
 
 urlpatterns = urlviews + urlapis

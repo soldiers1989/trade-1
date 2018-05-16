@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+
+{% block cssfiles %}
+    <link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/buttons1.5.1/buttons.bootstrap.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/select1.2.5/select.bootstrap.css" />
+    <link rel="stylesheet" href="/assets/css/bootstrap/ext/toastr.css" />
+{% endblock %}
+
+{% block pagecontent %}
+    <table id="leverlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
+           <thead>
+            <tr>
+                <th>ID</th>
+                <th>杠杆</th>
+                <th>预警线</th>
+                <th>止损线</th>
+                <th>保底费用</th>
+                <th>建仓费率</th>
+                <th>延期费率</th>
+                <th>盈利分成</th>
+                <th>最低限额</th>
+                <th>最高限额</th>
+                <th>排序</th>
+                <th>状态</th>
+                <th>创建时间</th>
+                <th class="center sorting_disabled">操作</th>
+            </tr>
+        </thead>
+    </table>
+{% endblock %}
+
+{% block modals %}
+  <div class="modal fade"  id="id_modal_lever" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="id_modal_title_lever"></h4>
+        </div>
+        <div class="modal-body">
+            <form class="form-horizontal" id="id_form_lever" method="post" role="form">
+                <div class="form-group" id="id_field_id">
+                    <label for="id_id" class="col-sm-2 control-label">ID</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_id" name="id" readonly>
+                    </div>
+                </div> 
+                <div class="form-group">
+                    <label for="id_lever" class="col-sm-2 control-label">杠杆</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_lever" name="lever" placeholder="杠杆比例，1.0~8.0" required>
+                    </div>
+                </div> 
+                <div class="form-group">
+                    <label for="id_wline" class="col-sm-2 control-label">预警线</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_wline" name="wline" placeholder="预警线(百分比)，0~1" required>
+                    </div>
+                </div> 
+                <div class="form-group">
+                    <label for="id_sline" class="col-sm-2 control-label">平仓线</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_sline" name="sline" placeholder="平仓线(百分比)，0~1" required>
+                    </div>
+                </div> 
+                <div class="form-group">
+                    <label for="id_ofmin" class="col-sm-2 control-label">保底费用</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_ofmin" name="ofmin" placeholder="保底费用(元)，>=0.0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_ofrate" class="col-sm-2 control-label">建仓费率</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_ofrate" name="ofrate" placeholder="建仓费率(百分比), >=0.0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_dfrate" class="col-sm-2 control-label">延期费率</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_dfrate" name="dfrate" placeholder="建仓费率(百分比), >=0.0" required>
+                    </div>
+                </div> 
+                <div class="form-group">
+                    <label for="id_psrate" class="col-sm-2 control-label">盈利分成</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_psrate" name="psrate" value="" placeholder="盈利分成(百分比), >=0.0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_mmin" class="col-sm-2 control-label">本金下限</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_mmin" name="mmin" value="" placeholder="本金下限(元), >=0.0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_mmax" class="col-sm-2 control-label">本金上限</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_mmax" name="mmax" value="" placeholder="本金上限(元), >=0.0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_order" class="col-sm-2 control-label">排序值</label>
+                    <div class="col-sm-10">
+                      <input type="text" class="form-control" id="id_order" name="order" value="0" placeholder="请输入排序值" required>
+                    </div>
+                </div> 
+                <div class="form-group">
+                    <label for="id_disable" class="col-sm-2 control-label">状态</label>
+                    <div class="col-sm-10">
+                      <select id="id_disable" name="disable" required>
+                        <option value="false" selected="">启用</option>
+                        <option value="true">禁用</option>
+                      </select>
+                    </div>
+                </div>
+                <div><p class="text text-danger" id="id_err_form_lever" style="text-align: right;"></p></div> 
+            </form> 
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="id_form_save">保存</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+{% endblock %}
+
+{% block jsfiles %}
+    <script src="/assets/js/jquery/ext/validate/1.17.0/jquery.form.js"></script>
+    <script src="/assets/js/jquery/ext/validate/1.17.0/jquery.validate.js"></script>
+    <script src="/assets/js/jquery/ext/validate/1.17.0/messages_zh.js"></script>
+    <script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
+    <script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
+    <script src="/assets/js/datatables/ext/buttons1.5.1/dataTables.buttons.js"></script>
+    <script src="/assets/js/datatables/ext/buttons1.5.1/buttons.bootstrap.js"></script>
+    <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
+    <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
+    <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
+    <script src="/assets/js/bootstrap/ext/toastr.js"></script>
+    <script src="/assets/js/cube/cube.js"></script>
+{% endblock %}
+
+{% block jscontent %}
+<script type="text/javascript">  
+    var table = $('#leverlist').DataTable( {
+        ajax: {
+            url: '{% url 'cms.apis.order.lever.list' %}',
+            type: 'POST'
+        },
+
+        filter: true,
+        processing: true,
+        rowId: 'id',
+        dom: 'Bfrt',
+        serverSide: false,
+
+        language: {
+            url: '/assets/json/zh_cn.json?2018'
+        },
+
+        buttons: [
+            {
+                text: '新建',
+                className: 'btn btn-success btn-sm',
+                action: function(e, dt, node, config) {
+                    onadditem();
+                }
+
+            }
+        ],
+
+        columns: [ {
+                data: 'id'
+            }, {
+                data: 'lever'
+            }, {
+                data: 'wline'
+            }, {
+                data: 'sline'
+            }, {
+                data: 'ofmin'
+            }, {
+                data: 'ofrate'
+            }, {
+                data: 'dfrate'
+            }, {
+                data: 'psrate'
+            }, {
+                data: 'mmin'
+            }, {
+                data: 'mmax'
+            },{
+                data: 'order',
+                visible: false
+            }, {
+                data: 'disable',
+                render: function(data, type, row, meta) {
+                    if(type != 'display')
+                        return data;
+
+                    if(data)
+                        return '<span class="label label-danger">禁用</span>';
+                    else
+                        return '<span class="label label-success">启用</span>';
+                }
+            }, {
+                data: 'ctime',
+                render: function(data, type, row, meta) {
+                    if(type != 'display')
+                        return data;
+
+                    var cdate = new Date();
+                    cdate.setTime(data*1000);
+                    return cdate.toLocaleString();
+                }
+            }, {
+                data: 'id',
+                orderable: false,
+                selectable: false,
+                render: function(data, type, row, meta) {
+                    return '<div class="hidden-sm hidden-xs btn-group" style="display: block">'+
+                                '<button class="btn btn-xs btn-success" onclick="onshowitem(this,'+data+')">' +
+                                    '<i class="ace-icon fa fa-search-plus bigger-130"></i>' +
+                                '</button>'+
+                                '<button class="btn btn-xs btn-info" onclick="onmoditem(this,'+data+')">' +
+                                    '<i class="ace-icon fa fa-pencil bigger-130"></i>' +
+                                '</button>'+
+                                '<button class="btn btn-xs btn-danger" onclick="ondelitem(this,'+data+')">' +
+                                    '<i class="ace-icon fa fa-trash bigger-130"></i>' +
+                                '</button>'+
+                            '</div>';
+                }
+            }
+        ]
+    } );
+
+    //init toastr position
+    toastr.options = {
+        'positionClass': 'toast-top-center',
+        'timeOut': 1000,
+    };
+
+    //init form validation
+    $("#id_form_lever").validate({
+        debug: false,
+        errorClass: 'text text-danger'
+    });
+        
+    //process modal add item
+    function additem() {
+        var form = $('#id_form_lever');
+        if(form.valid()){
+            form.ajaxSubmit({
+               url: '{% url "cms.apis.order.lever.add" %}',
+               type: 'post',
+               success: function(resp) {
+                    if(resp.status){
+                        $('#id_modal_lever').modal('hide');
+                        table.row.add(resp.data).draw();
+                    } else {
+                        //display form field error message
+                        if(resp.data.errors){
+                            console.log(resp.data.errors);
+                            for(field_name in resp.data.errors) {
+                                field_id = 'id_'+field_name;
+                                var label_id = field_id+"-error";
+                                var errmsg = resp.data.errors[field_name][0];
+                                $('#'+field_id).after('<label id="'+label_id+'" class="text text-danger" for="'+field_id+'" style="display: inline-block;">'+errmsg+'</label>'
+                                );
+                            }
+                        }
+
+                        //show response message
+                        $('#id_err_form_lever').text(resp.message);
+                    }
+               }
+            });
+        }
+    }
+
+    //process modal mod item
+    function moditem() {
+        var form = $('#form_auth_module_mod');
+        if(form.valid()){
+            form.ajaxSubmit({
+               url: '{% url "cms.apis.auth.module.mod" %}',
+               type: 'post',
+               success: function(resp) {
+                    if(resp.status){
+                        $('#modal_auth_module_mod').modal('hide');
+                        table.row('#'+resp.data.id).data(resp.data).draw();
+                    } else {
+                        $('#err_auth_module_mod').text(resp.message);
+                    }
+               }
+            });
+        }
+    }
+    
+    //show add item modal
+    function onadditem() {
+        //reset form validator message
+        $("#id_form_lever").validate().resetForm();
+
+        //set modal title
+        $('#id_modal_title_lever').text('新建杠杆');
+
+        //reset error message
+        $('#id_err_form_lever').text('');
+
+        //hide unused field
+        $('#id_field_id').hide();
+
+        //clear form
+        $('#id_lever').val('');
+        $('#id_wline').val('');
+        $('#id_sline').val('');
+        $('#id_ofmin').val('0.00');
+        $('#id_ofrate').val('');
+        $('#id_dfrate').val('');
+        $('#id_psrate').val('0.00');
+        $('#id_mmin').val('0.00');
+        $('#id_mmax').val('1000000.00');
+        $('#id_order').val('0');
+        $('#id_disable').val('true');
+
+        //set action
+        $('#id_form_save').attr('onclick', 'additem()');
+        $('#id_form_save').show();
+
+        
+        //display modal
+        $('#id_modal_lever').modal();    
+    }
+ 
+    //show item detail modal
+    function onshowitem(elmt, id) {
+        row = table.row('#'+id).data();
+
+        $('#det_id').val(row.id);
+        $('#det_parent').val(row.parent);
+        $('#det_name').val(row.name);
+        $('#det_code').val(row.code);
+        $('#det_path').val(row.path);
+        $('#det_icon').val(row.icon);
+        $('#det_order').val(row.order);
+        $('#det_disable').val(String(row.disable));
+        $('#det_ctime').val(cube.time.localstr(row.ctime));
+
+        $('#modal_auth_module_det').modal();
+    }
+
+
+    //process icon modify item
+    function onmoditem(elmt, id) {
+        row = table.row('#'+id).data();
+
+        $('#mod_id_hidden').val(row.id);
+        $('#mod_id').val(row.id);
+        $('#mod_parent').val(row.parent);
+        $('#mod_name').val(row.name);
+        $('#mod_code').val(row.code);
+        $('#mod_path').val(row.path);
+        $('#mod_icon').val(row.icon);
+        $('#mod_order').val(row.order);
+        $('#mod_disable').val(String(row.disable));
+        $('#mod_ctime').val(cube.time.localstr(row.ctime));
+
+        $('#modal_auth_module_mod').modal();
+    }
+
+    //process icon delete item
+    function ondelitem(elmt, id){
+        $(elmt).confirmation({
+            'singleton': true,
+            'popout': true,
+            'title': '确定删除该项目？',
+            'btnOkLabel': '确定',
+            'btnCancelLabel': '取消',
+            'onConfirm': function() {
+                var params = 'id='+id;
+                $.post('{% url "cms.apis.auth.module.del" %}', params, function(resp){
+                    if(resp.status){
+                        table.row('#'+id).remove();
+                        table.draw();
+                    } else {
+                       toastr.error(resp.message);
+                    }
+                }, "json");
+
+                $(elmt).confirmation('destroy');
+            },
+            'onCancel': function() {
+                $(elmt).confirmation('destroy');  
+            }
+        });
+
+        $(elmt).confirmation('show');
+    }
+</script>
+{% endblock %}

@@ -1,9 +1,16 @@
 """
     api for cms
 """
-import json
+import json, decimal
 
 from django.http import HttpResponse
+
+
+class JEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return float(o)
+        return super(JEncoder, self).default(o)
 
 
 def success(message='success', data={}):
@@ -19,7 +26,7 @@ def success(message='success', data={}):
         'data': data
     }
 
-    resp = json.dumps(resp).encode('utf-8')
+    resp = json.dumps(resp, cls=JEncoder).encode('utf-8')
 
     return HttpResponse(resp, content_type='application/json;charset=utf8')
 
@@ -37,6 +44,6 @@ def failure(message='failure', data={}):
         'data': data
     }
 
-    resp = json.dumps(resp).encode('utf-8')
+    resp = json.dumps(resp, cls=JEncoder).encode('utf-8')
 
     return HttpResponse(resp, content_type='application/json;charset=utf8')

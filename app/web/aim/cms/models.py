@@ -71,3 +71,29 @@ class File(models.Model):
 
     class Meta:
         db_table = 'tb_file'
+
+
+#tb_lever
+class Lever(models.Model):
+    id = models.AutoField(primary_key=True)
+    lever = models.IntegerField(null=True)
+    wline = models.DecimalField(max_digits=2, decimal_places=2, null=True)
+    sline = models.DecimalField(max_digits=2, decimal_places=2, null=True)
+    ofmin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    ofrate = models.DecimalField(max_digits=6, decimal_places=6, null=True)
+    dfrate = models.DecimalField(max_digits=6, decimal_places=6, null=True)
+    psrate = models.DecimalField(max_digits=6, decimal_places=6, null=True)
+    mmin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    mmax = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    order = models.IntegerField(null=True, default=0)
+    disable = models.BooleanField(null=False, default=True)
+    ctime = models.BigIntegerField(null=True)
+    mtime = models.BigIntegerField(null=True)
+
+    class Meta:
+        db_table = 'tb_lever'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        return items
+
