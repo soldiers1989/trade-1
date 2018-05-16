@@ -9,7 +9,8 @@ from django.http import HttpResponse
 class JEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, decimal.Decimal):
-            return float(o)
+            return str(o)
+
         return super(JEncoder, self).default(o)
 
 

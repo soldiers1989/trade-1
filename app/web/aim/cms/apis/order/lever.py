@@ -35,8 +35,12 @@ def get(request):
     :return:
     """
     try:
-        id = request.POST['id']
+        if request.method != 'GET':
+            return resp.failure(message='method not support')
+
+        id = request.GET['id']
         item = models.Lever.objects.get(id=id)
+
         return resp.success(data=item.dict())
     except Exception as e:
         return resp.failure(str(e))
@@ -71,8 +75,7 @@ def add(request):
             item.save()
             return resp.success(data=item.dict())
         else:
-            errs = form.errors
-            return resp.failure(hint.ERR_FORM_DATA, data={'errors':errs})
+            return resp.failure(hint.ERR_FORM_DATA, data={'errors':form.errors})
     except Exception as e:
         return resp.failure(str(e))
 
@@ -103,7 +106,7 @@ def modify(request):
             item = models.Lever.objects.get(id=id)
             return resp.success(data=item.dict())
         else:
-            return resp.failure(hint.ERR_FORM_DATA)
+            return resp.failure(hint.ERR_FORM_DATA, data={'errors': form.errors})
     except Exception as e:
         return resp.failure(str(e))
 

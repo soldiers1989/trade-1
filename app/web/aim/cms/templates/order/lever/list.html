@@ -110,7 +110,7 @@
                     <label for="id_disable" class="col-sm-2 control-label">状态</label>
                     <div class="col-sm-10">
                       <select id="id_disable" name="disable" required>
-                        <option value="false" selected="">启用</option>
+                        <option value="false">启用</option>
                         <option value="true">禁用</option>
                       </select>
                     </div>
@@ -119,7 +119,7 @@
             </form> 
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal" id="id_form_cancel">取消</button>
           <button type="button" class="btn btn-primary" id="id_form_save">保存</button>
         </div>
       </div><!-- /.modal-content -->
@@ -262,7 +262,6 @@
                     } else {
                         //display form field error message
                         if(resp.data.errors){
-                            console.log(resp.data.errors);
                             for(field_name in resp.data.errors) {
                                 field_id = 'id_'+field_name;
                                 var label_id = field_id+"-error";
@@ -282,17 +281,29 @@
 
     //process modal mod item
     function moditem() {
-        var form = $('#form_auth_module_mod');
+        var form = $('#id_form_lever');
         if(form.valid()){
             form.ajaxSubmit({
-               url: '{% url "cms.apis.auth.module.mod" %}',
+               url: '{% url "cms.apis.order.lever.mod" %}',
                type: 'post',
                success: function(resp) {
                     if(resp.status){
-                        $('#modal_auth_module_mod').modal('hide');
+                        $('#id_modal_lever').modal('hide');
                         table.row('#'+resp.data.id).data(resp.data).draw();
                     } else {
-                        $('#err_auth_module_mod').text(resp.message);
+                        //display form field error message
+                        if(resp.data.errors){
+                            for(field_name in resp.data.errors) {
+                                field_id = 'id_'+field_name;
+                                var label_id = field_id+"-error";
+                                var errmsg = resp.data.errors[field_name][0];
+                                $('#'+field_id).after('<label id="'+label_id+'" class="text text-danger" for="'+field_id+'" style="display: inline-block;">'+errmsg+'</label>'
+                                );
+                            }
+                        }
+
+                        //show response message
+                        $('#id_err_form_lever').text(resp.message);
                     }
                }
             });
@@ -326,10 +337,10 @@
         $('#id_order').val('0');
         $('#id_disable').val('true');
 
-        //set action
+        //set action buttons
+        $('#id_form_cancel').text('取消');
         $('#id_form_save').attr('onclick', 'additem()');
         $('#id_form_save').show();
-
         
         //display modal
         $('#id_modal_lever').modal();    
@@ -337,38 +348,102 @@
  
     //show item detail modal
     function onshowitem(elmt, id) {
-        row = table.row('#'+id).data();
+        {% url "cms.apis.order.lever.get" as path %}
+        url = '{{path}}?id='+id;
+        $.get(
+            url, 
+            function(resp, status){
+                if(resp.status) {
+                    //reset form validator message
+                    $("#id_form_lever").validate().resetForm();
 
-        $('#det_id').val(row.id);
-        $('#det_parent').val(row.parent);
-        $('#det_name').val(row.name);
-        $('#det_code').val(row.code);
-        $('#det_path').val(row.path);
-        $('#det_icon').val(row.icon);
-        $('#det_order').val(row.order);
-        $('#det_disable').val(String(row.disable));
-        $('#det_ctime').val(cube.time.localstr(row.ctime));
+                    //set modal title
+                    $('#id_modal_title_lever').text('杠杆详情');
 
-        $('#modal_auth_module_det').modal();
+                    //reset error message
+                    $('#id_err_form_lever').text('');
+
+                    //clear form
+                    $('#id_id').val(resp.data.id);
+                    $('#id_lever').val(resp.data.lever);
+                    $('#id_wline').val(resp.data.wline);
+                    $('#id_sline').val(resp.data.sline);
+                    $('#id_ofmin').val(resp.data.ofmin);
+                    $('#id_ofrate').val(resp.data.ofrate);
+                    $('#id_dfrate').val(resp.data.dfrate);
+                    $('#id_psrate').val(resp.data.psrate);
+                    $('#id_mmin').val(resp.data.mmin);
+                    $('#id_mmax').val(resp.data.mmax);
+                    $('#id_order').val(resp.data.order);
+                    $('#id_disable').val(String(resp.data.disable));
+
+                    //disable input
+                    $('#id_form_lever').find('input').attr('readonly', true);
+                    $('#id_form_lever').find('select').attr('disabled', true);
+
+                    //set action buttons
+                    $('#id_form_cancel').text('关闭');
+                    $('#id_form_save').hide();
+
+                    //display modal
+                    $('#id_modal_lever').modal();
+                } else {
+                    toastr.error(resp.message);
+                }
+            }
+        )
     }
 
 
     //process icon modify item
     function onmoditem(elmt, id) {
-        row = table.row('#'+id).data();
+       {% url "cms.apis.order.lever.get" as path %}
+        url = '{{path}}?id='+id;
+        $.get(
+            url, 
+            function(resp, status){
+                if(resp.status) {
+                    //reset form validator message
+                    $("#id_form_lever").validate().resetForm();
 
-        $('#mod_id_hidden').val(row.id);
-        $('#mod_id').val(row.id);
-        $('#mod_parent').val(row.parent);
-        $('#mod_name').val(row.name);
-        $('#mod_code').val(row.code);
-        $('#mod_path').val(row.path);
-        $('#mod_icon').val(row.icon);
-        $('#mod_order').val(row.order);
-        $('#mod_disable').val(String(row.disable));
-        $('#mod_ctime').val(cube.time.localstr(row.ctime));
+                    //set modal title
+                    $('#id_modal_title_lever').text('修改杠杆');
 
-        $('#modal_auth_module_mod').modal();
+                    //reset error message
+                    $('#id_err_form_lever').text('');
+
+                    //clear form
+                    $('#id_id').val(resp.data.id);
+                    $('#id_lever').val(resp.data.lever);
+                    $('#id_wline').val(resp.data.wline);
+                    $('#id_sline').val(resp.data.sline);
+                    $('#id_ofmin').val(resp.data.ofmin);
+                    $('#id_ofrate').val(resp.data.ofrate);
+                    $('#id_dfrate').val(resp.data.dfrate);
+                    $('#id_psrate').val(resp.data.psrate);
+                    $('#id_mmin').val(resp.data.mmin);
+                    $('#id_mmax').val(resp.data.mmax);
+                    $('#id_order').val(resp.data.order);
+                    $('#id_disable').val(String(resp.data.disable));
+
+                    $('#id_id').attr('readonly', 'readonly');
+    
+                    //enable input
+                    $('#id_form_lever').find('input').attr('readonly', false);
+                    $('#id_form_lever').find('select').attr('disabled', false);
+
+                    //set action buttons
+                    $('#id_form_cancel').text('取消');
+                    $('#id_form_save').attr('onclick', 'moditem()');
+                    $('#id_form_save').show();
+
+                    //display modal
+                    $('#id_modal_lever').modal();
+                } else {
+                    toastr.error(resp.message);
+                }
+            }
+        )
     }
 
     //process icon delete item
@@ -381,7 +456,7 @@
             'btnCancelLabel': '取消',
             'onConfirm': function() {
                 var params = 'id='+id;
-                $.post('{% url "cms.apis.auth.module.del" %}', params, function(resp){
+                $.post('{% url "cms.apis.order.lever.del" %}', params, function(resp){
                     if(resp.status){
                         table.row('#'+id).remove();
                         table.draw();

@@ -16,7 +16,8 @@
         "fields": {
             "parent_id": 1,
             "name": "用户管理",
-            "path": "cms.auth.admin.list",
+            "code": "cms.auth.admin.list",
+            "path": ".*/auth.admin/.*",
             "icon": "fa-desktop",
             "order": 0,
             "disable": 0,
@@ -29,7 +30,8 @@
         "fields": {
             "parent_id": 1,
             "name": "模块管理",
-            "path": "cms.auth.module.list",
+            "code": "cms.auth.module.list",
+            "path": ".*/auth/module/.*",
             "icon": "fa-desktop",
             "order": 0,
             "disable": 0,
