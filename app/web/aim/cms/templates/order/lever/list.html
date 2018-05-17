@@ -4,6 +4,8 @@
     <link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
     <link rel="stylesheet" href="/assets/css/datatables/ext/buttons1.5.1/buttons.bootstrap.css" />
     <link rel="stylesheet" href="/assets/css/datatables/ext/select1.2.5/select.bootstrap.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/scroller1.4.4/scroller.bootstrap.css" />
+    <link rel="stylesheet" href="/assets/css/datatables/ext/rowreorder1.2.3/rowReorder.bootstrap.css" />
     <link rel="stylesheet" href="/assets/css/bootstrap/ext/toastr.css" />
 {% endblock %}
 
@@ -11,6 +13,7 @@
     <table id="leverlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
            <thead>
             <tr>
+                <th>序号</th>
                 <th>ID</th>
                 <th>杠杆</th>
                 <th>预警线</th>
@@ -21,7 +24,6 @@
                 <th>盈利分成</th>
                 <th>最低限额</th>
                 <th>最高限额</th>
-                <th>排序</th>
                 <th>状态</th>
                 <th>创建时间</th>
                 <th class="center sorting_disabled">操作</th>
@@ -136,6 +138,9 @@
     <script src="/assets/js/datatables/ext/buttons1.5.1/dataTables.buttons.js"></script>
     <script src="/assets/js/datatables/ext/buttons1.5.1/buttons.bootstrap.js"></script>
     <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
+    <script src="/assets/js/datatables/ext/rowreorder1.2.3/dataTables.rowReorder.js"></script>
+    <script src="/assets/js/datatables/ext/scroller1.4.4/dataTables.scroller.js"></script>
+    <script src="/assets/js/datatables/ext/fixedcolumns3.2.4/dataTables.fixedColumns.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
     <script src="/assets/js/bootstrap/ext/toastr.js"></script>
@@ -152,9 +157,15 @@
 
         filter: true,
         processing: true,
-        rowId: 'id',
+        rowId: 'seq',
         dom: 'Bfrt',
         serverSide: false,
+
+        rowReorder: {
+            enable: true,
+            dataSrc: 'seq',
+            selector: 'td:not(:last-child)'
+        },
 
         language: {
             url: '/assets/json/zh_cn.json?2018'
@@ -171,10 +182,20 @@
             }
         ],
 
+
         columns: [ {
+                data: 'seq',
+                visible: true
+            }, {
                 data: 'id'
             }, {
-                data: 'lever'
+                data: 'lever',
+                render: function(data, type, row, meta) {
+                    if(type != 'display')
+                        return data;
+
+                    return data+'倍';
+                }
             }, {
                 data: 'wline'
             }, {
@@ -192,9 +213,6 @@
             }, {
                 data: 'mmax'
             },{
-                data: 'order',
-                visible: false
-            }, {
                 data: 'disable',
                 render: function(data, type, row, meta) {
                     if(type != 'display')
@@ -207,6 +225,7 @@
                 }
             }, {
                 data: 'ctime',
+                visible: false,
                 render: function(data, type, row, meta) {
                     if(type != 'display')
                         return data;
@@ -216,7 +235,7 @@
                     return cdate.toLocaleString();
                 }
             }, {
-                data: 'id',
+                data: 'seq',
                 orderable: false,
                 selectable: false,
                 render: function(data, type, row, meta) {
@@ -247,6 +266,17 @@
         debug: false,
         errorClass: 'text text-danger'
     });
+
+    table.on('row-reorder', function ( e, diff, edit ) {
+        iords = [];
+        for (seq in edit.values) {
+            id = table.row('#'+seq).data().id;
+            ord = edit.values[seq];
+            iords.push([id, ord]);
+        }
+
+        orditem(iords);
+    } );
         
     //process modal add item
     function additem() {
@@ -258,6 +288,7 @@
                success: function(resp) {
                     if(resp.status){
                         $('#id_modal_lever').modal('hide');
+                        resp.data.seq = table.data().length;
                         table.row.add(resp.data).draw();
                     } else {
                         //display form field error message
@@ -280,7 +311,7 @@
     }
 
     //process modal mod item
-    function moditem() {
+    function moditem(seq) {
         var form = $('#id_form_lever');
         if(form.valid()){
             form.ajaxSubmit({
@@ -289,7 +320,8 @@
                success: function(resp) {
                     if(resp.status){
                         $('#id_modal_lever').modal('hide');
-                        table.row('#'+resp.data.id).data(resp.data).draw();
+                        resp.data.seq = seq;
+                        table.row('#'+seq).data(resp.data).draw();
                     } else {
                         //display form field error message
                         if(resp.data.errors){
@@ -308,6 +340,41 @@
                }
             });
         }
+    }
+
+    //process delete id
+    function delitem(seq) {
+        id = table.row('#'+seq).data().id;
+        var params = 'id='+id;
+        $.post('{% url "cms.apis.order.lever.del" %}', params, function(resp){
+            if(resp.status){
+                table.row('#'+seq).remove();
+                table.draw();
+            } else {
+               toastr.error(resp.message);
+            }
+        }, "json");
+
+    }
+
+    //process reorder item
+    //iords: [[id, ord], [id, ord], ...]
+    function orditem(iords) {
+        params = [];
+        for (i=0; i<iords.length; i++) {
+            params.push('id='+iords[i][0]);
+            params.push('ord='+iords[i][1]);
+        }
+
+        if(params.length == 0)
+            return;
+
+        params = params.join('&');    
+        $.post('{% url "cms.apis.order.lever.ord" %}', params, function(resp){
+            if(!resp.status){
+               toastr.error(resp.message);
+            }
+        }, "json");
     }
     
     //show add item modal
@@ -347,7 +414,8 @@
     }
  
     //show item detail modal
-    function onshowitem(elmt, id) {
+    function onshowitem(elmt, seq) {
+        id = table.row('#'+seq).data().id;
         {% url "cms.apis.order.lever.get" as path %}
         url = '{{path}}?id='+id;
         $.get(
@@ -396,8 +464,9 @@
 
 
     //process icon modify item
-    function onmoditem(elmt, id) {
-       {% url "cms.apis.order.lever.get" as path %}
+    function onmoditem(elmt, seq) {
+        id = table.row('#'+seq).data().id;
+        {% url "cms.apis.order.lever.get" as path %}
         url = '{{path}}?id='+id;
         $.get(
             url, 
@@ -434,7 +503,7 @@
 
                     //set action buttons
                     $('#id_form_cancel').text('取消');
-                    $('#id_form_save').attr('onclick', 'moditem()');
+                    $('#id_form_save').attr('onclick', 'moditem('+seq+')');
                     $('#id_form_save').show();
 
                     //display modal
@@ -447,7 +516,8 @@
     }
 
     //process icon delete item
-    function ondelitem(elmt, id){
+    function ondelitem(elmt, seq){
+        id = table.row('#'+seq).data().id;
         $(elmt).confirmation({
             'singleton': true,
             'popout': true,
@@ -455,16 +525,9 @@
             'btnOkLabel': '确定',
             'btnCancelLabel': '取消',
             'onConfirm': function() {
-                var params = 'id='+id;
-                $.post('{% url "cms.apis.order.lever.del" %}', params, function(resp){
-                    if(resp.status){
-                        table.row('#'+id).remove();
-                        table.draw();
-                    } else {
-                       toastr.error(resp.message);
-                    }
-                }, "json");
-
+                //delete item
+                delitem(seq);
+                //destroy confirmation
                 $(elmt).confirmation('destroy');
             },
             'onCancel': function() {

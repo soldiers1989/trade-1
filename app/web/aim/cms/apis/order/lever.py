@@ -15,12 +15,16 @@ def list(request):
     :return:
     """
     try:
-        items = models.Lever.objects.filter().all()
+        items = models.Lever.objects.filter().order_by('order')
 
         data = []
 
+        seq = 0
         for item in items:
-            data.append(item.dict())
+            d = item.dict()
+            d['seq'] = seq
+            data.append(d)
+            seq += 1
 
         return resp.success(data=data)
     except Exception as e:
@@ -88,6 +92,9 @@ def modify(request):
     :return:
     """
     try:
+        if request.method != 'POST':
+            return resp.failure(message='method not support')
+
         form = forms.order.lever.Lever(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
@@ -119,8 +126,40 @@ def delete(request):
     :return:
     """
     try:
+        if request.method != 'POST':
+            return resp.failure(message='method not support')
+
         id = request.POST['id']
         models.Lever.objects.filter(id=id).delete()
         return resp.success()
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.protect
+def reorder(request):
+    """
+        order api
+    :param request:
+    :return:
+    """
+    try:
+        if request.method != 'POST':
+            return resp.failure(message='method not support')
+
+        ids = request.POST.getlist('id')
+        ords = request.POST.getlist('ord')
+
+        if len(ids) != len(ords):
+            return resp.failure(hint.ERR_FORM_DATA)
+
+        iords = []
+        for i in range(0, len(ids)):
+            iords.append([ids[i], ords[i]])
+
+        for id, ord in iords:
+            models.Lever.objects.filter(id=id).update(order=ord)
+
+        return resp.success(data={'iords': iords})
     except Exception as e:
         return resp.failure(str(e))
