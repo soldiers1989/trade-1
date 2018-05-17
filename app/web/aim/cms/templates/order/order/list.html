@@ -10,26 +10,36 @@
 {% endblock %}
 
 {% block pagecontent %}
-    <table id="leverlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
-           <thead>
-            <tr>
-                <th>序号</th>
-                <th>ID</th>
-                <th>杠杆</th>
-                <th>预警线</th>
-                <th>止损线</th>
-                <th>保底费用</th>
-                <th>建仓费率</th>
-                <th>延期费率</th>
-                <th>盈利分成</th>
-                <th>最低限额</th>
-                <th>最高限额</th>
-                <th>状态</th>
-                <th>创建时间</th>
-                <th class="center sorting_disabled">操作</th>
-            </tr>
-        </thead>
-    </table>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <table id="leverlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>ID</th>
+                            <th>杠杆</th>
+                            <th>预警线</th>
+                            <th>止损线</th>
+                            <th>保底费用</th>
+                            <th>建仓费率</th>
+                            <th>延期费率</th>
+                            <th>盈利分成</th>
+                            <th>最低限额</th>
+                            <th>最高限额</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th class="center sorting_disabled">操作</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="col-lg-4">
+
+            </div>
+        </div>
+
+    </div>
 {% endblock %}
 
 {% block modals %}
