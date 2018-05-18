@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'aim.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aim1',
+        'NAME': 'aim2',
         'USER': 'root',
         'PASSWORD': 'root',
         'HOST': 'localhost',
