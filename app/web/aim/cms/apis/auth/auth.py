@@ -52,8 +52,8 @@ def add(request):
     try:
         form = forms.auth.auth.Add(request.POST)
         if form.is_valid():
-            item = models.Authority(admin_id=form.cleaned_data['admin'],
-                                    module_id=form.cleaned_data['module'],
+            item = models.Authority(admin=form.cleaned_data['admin'],
+                                    module=form.cleaned_data['module'],
                                     disable=form.cleaned_data['disable'],
                                     ctime=int(time.time()));
             item.save()
@@ -76,8 +76,8 @@ def modify(request):
         form = forms.auth.auth.Modify(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
-            models.Authority.objects.filter(id=id).update(admin_id=form.cleaned_data['admin'],
-                                                          module_id=form.cleaned_data['module'],
+            models.Authority.objects.filter(id=id).update(admin=form.cleaned_data['admin'],
+                                                          module=form.cleaned_data['module'],
                                                           disable=form.cleaned_data['disable']);
             item = models.Authority.objects.get(id=id)
             return resp.success(data=item.dict())

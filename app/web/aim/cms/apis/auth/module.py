@@ -52,7 +52,7 @@ def add(request):
     try:
         form = forms.auth.module.Add(request.POST)
         if form.is_valid():
-            item = models.Module(parent_id=form.cleaned_data['parent'],
+            item = models.Module(parent=form.cleaned_data['parent'],
                                 code=form.cleaned_data['code'],
                                 name=form.cleaned_data['name'],
                                 path=form.cleaned_data['path'],
@@ -80,7 +80,7 @@ def modify(request):
         form = forms.auth.module.Modify(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
-            models.Module.objects.filter(id=id).update(parent_id=form.cleaned_data['parent'],
+            models.Module.objects.filter(id=id).update(parent=form.cleaned_data['parent'],
                                                         code=form.cleaned_data['code'],
                                                         name=form.cleaned_data['name'],
                                                         path=form.cleaned_data['path'],

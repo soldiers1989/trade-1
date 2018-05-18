@@ -131,9 +131,9 @@ class User:
 
         # filter child modules
         for obj in mobjs:
-            if obj.parent_id == parent:
+            if obj.parent == parent:
                 child = {'id': obj.id,
-                         'parent': obj.parent_id,
+                         'parent': obj.parent,
                          'code': obj.code,
                          'name': obj.name,
                          'path': obj.path,
@@ -246,7 +246,7 @@ def login(request):
                     request.session.set_expiry(0)
 
                 # get user modules
-                mobjs = models.Module.objects.filter(authority__admin_id=admin.id, authority__disable=False, disable=False).all()
+                mobjs = models.Module.objects.filter(authority__admin=admin.id, authority__disable=False, disable=False).all()
 
                 # set user session
                 user.id(request, admin.id)
@@ -261,7 +261,7 @@ def login(request):
     except models.Admin.DoesNotExist:
         return False, hint.ERR_LOGIN_USER
     except Exception as e:
-        return False, hint.ERR_EXCEPTION
+        return False, str(e)
 
 
 def logout(request):

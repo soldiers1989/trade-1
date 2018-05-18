@@ -14,7 +14,7 @@
         "model": "cms.module",
         "pk": 2,
         "fields": {
-            "parent_id": 1,
+            "parent": 1,
             "name": "用户管理",
             "code": "cms.auth.admin.list",
             "path": ".*/auth.admin/.*",
@@ -28,10 +28,24 @@
         "model": "cms.module",
         "pk": 3,
         "fields": {
-            "parent_id": 1,
+            "parent": 1,
             "name": "模块管理",
             "code": "cms.auth.module.list",
             "path": ".*/auth/module/.*",
+            "icon": "fa-desktop",
+            "order": 0,
+            "disable": 0,
+            "ctime": 0
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 4,
+        "fields": {
+            "parent": 1,
+            "name": "权限管理",
+            "code": "cms.auth.auth.list",
+            "path": ".*/auth/auth/.*",
             "icon": "fa-desktop",
             "order": 0,
             "disable": 0,

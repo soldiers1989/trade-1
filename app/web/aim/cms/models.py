@@ -35,7 +35,7 @@ class Admin(models.Model):
 class Module(models.Model):
     id = models.AutoField(primary_key=True)
     parent = models.IntegerField(null=True)
-    code = models.CharField(max_length=32, blank=True, unique=True)
+    code = models.CharField(max_length=32, blank=True)
     name = models.CharField(max_length=32)
     path = models.CharField(max_length=128, blank=True)
     icon = models.CharField(max_length=32, blank=True)

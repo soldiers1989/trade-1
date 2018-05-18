@@ -74,6 +74,14 @@
                 text: '新建',
                 className: 'btn btn-success btn-sm',
                 action: function(e, dt, node, config) {
+                    $('#add_user').val('');
+                    $('#add_pwd').val('');
+                    $('#add_name').val('');
+                    $('#add_phone').val('');
+                    $('#add_disable').val('false');
+                    
+                    $('form_auth_admin_add').resetForm();
+
                     $('#modal_auth_admin_add').modal();
                 }
 
