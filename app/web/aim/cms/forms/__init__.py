@@ -1,1 +1,1 @@
-from cms.forms import auth
+from cms.forms import auth, order
