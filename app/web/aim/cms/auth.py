@@ -146,7 +146,7 @@ class User:
                 childs.append(child)
 
         # sort child modules by order
-        childs.sort(key=lambda x: x['order'], reverse=True)
+        childs.sort(key=lambda x: x['order'], reverse=False)
 
         # process child's child modules
         for child in childs:
@@ -221,7 +221,7 @@ def login(request):
                         request.session.set_expiry(0)
 
                     # get user modules
-                    mobjs = models.Module.objects.filter(disable=False).all()
+                    mobjs = models.Module.objects.filter(disable=False).order_by('order')
 
                     # set user session
                     user.id(request, cfg.super_admin['id'])
@@ -246,7 +246,7 @@ def login(request):
                     request.session.set_expiry(0)
 
                 # get user modules
-                mobjs = models.Module.objects.filter(authority__admin=admin.id, authority__disable=False, disable=False).all()
+                mobjs = models.Module.objects.filter(authority__admin=admin.id, authority__disable=False, disable=False).order_by('order')
 
                 # set user session
                 user.id(request, admin.id)

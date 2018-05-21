@@ -12,7 +12,9 @@ urlviews = [
     path('auth/module/list/', views.auth.module.list, name='cms.auth.module.list'),
     path('auth/auth/list/', views.auth.auth.list, name='cms.auth.auth.list'),
 
-    path('order/lever/list/', views.order.lever.list, name='cms.order.lever.list')
+    path('order/lever/list/', views.order.lever.list, name='cms.order.lever.list'),
+
+    path('order/order/mgmt/', views.order.order.mgmt, name='cms.order.order.mgmt')
 ]
 
 
