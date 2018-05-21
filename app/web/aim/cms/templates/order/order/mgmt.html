@@ -1,11 +1,6 @@
 {% extends 'base.html' %}
 
 {% block cssfiles %}
-    <link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
-    <link rel="stylesheet" href="/assets/css/datatables/ext/buttons1.5.1/buttons.bootstrap.css" />
-    <link rel="stylesheet" href="/assets/css/datatables/ext/select1.2.5/select.bootstrap.css" />
-    <link rel="stylesheet" href="/assets/css/datatables/ext/scroller1.4.4/scroller.bootstrap.css" />
-    <link rel="stylesheet" href="/assets/css/datatables/ext/rowreorder1.2.3/rowReorder.bootstrap.css" />
     <link rel="stylesheet" href="/assets/css/bootstrap/ext/toastr.css" />
 {% endblock %}
 
@@ -21,22 +16,23 @@
     <script src="/assets/js/jquery/ext/validate/1.17.0/jquery.form.js"></script>
     <script src="/assets/js/jquery/ext/validate/1.17.0/jquery.validate.js"></script>
     <script src="/assets/js/jquery/ext/validate/1.17.0/messages_zh.js"></script>
-    <script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
-    <script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
-    <script src="/assets/js/datatables/ext/buttons1.5.1/dataTables.buttons.js"></script>
-    <script src="/assets/js/datatables/ext/buttons1.5.1/buttons.bootstrap.js"></script>
-    <script src="/assets/js/datatables/ext/select1.2.5/dataTables.select.js"></script>
-    <script src="/assets/js/datatables/ext/rowreorder1.2.3/dataTables.rowReorder.js"></script>
-    <script src="/assets/js/datatables/ext/scroller1.4.4/dataTables.scroller.js"></script>
-    <script src="/assets/js/datatables/ext/fixedcolumns3.2.4/dataTables.fixedColumns.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
     <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
+    <script src="/assets/js/bootstrap/ext/bootstrap-datepicker.min.js"></script>
     <script src="/assets/js/bootstrap/ext/toastr.js"></script>
     <script src="/assets/js/cube/cube.js"></script>
 {% endblock %}
 
 {% block jscontent %}
 <script type="text/javascript">  
+    $('.date-picker').datepicker({
+                    autoclose: true,
+                    todayHighlight: true
+                })
+                //show datepicker when clicking on the icon
+                .next().on(ace.click_event, function(){
+                    $(this).prev().focus();
+                });
 
 </script>
 {% endblock %}
