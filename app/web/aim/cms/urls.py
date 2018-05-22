@@ -43,7 +43,9 @@ urlapis = [
     path('apis/order/lever/add/', apis.order.lever.add, name="cms.apis.order.lever.add"),
     path('apis/order/lever/del/', apis.order.lever.delete, name="cms.apis.order.lever.del"),
     path('apis/order/lever/mod/', apis.order.lever.modify, name="cms.apis.order.lever.mod"),
-    path('apis/order/lever/ord/', apis.order.lever.reorder, name="cms.apis.order.lever.ord")
+    path('apis/order/lever/ord/', apis.order.lever.reorder, name="cms.apis.order.lever.ord"),
+
+    path('apis/order/order/list/', apis.order.order.list, name="cms.apis.order.order.list")
 ]
 
 urlpatterns = urlviews + urlapis

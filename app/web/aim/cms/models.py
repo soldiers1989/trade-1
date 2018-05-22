@@ -14,27 +14,10 @@ class File(models.Model):
         db_table = 'tb_file'
 
 
-# tb_admin
-class Admin(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.CharField(max_length=32, unique=True)
-    pwd = models.CharField(max_length=32)
-    name = models.CharField(max_length=32, blank=True)
-    phone = models.CharField(max_length=16, blank=True)
-    disable = models.BooleanField(default=False)
-    ctime = models.BigIntegerField()
-
-    class Meta:
-        db_table = 'tb_admin'
-
-    def dict(self):
-        return dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-
-
 # tb_module
 class Module(models.Model):
     id = models.AutoField(primary_key=True)
-    parent = models.IntegerField(null=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, related_name='+')
     code = models.CharField(max_length=32, blank=True)
     name = models.CharField(max_length=32)
     path = models.CharField(max_length=128, blank=True)
@@ -48,14 +31,33 @@ class Module(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['parent'] = items['parent'].id if items['parent'] else None
         return items
+
+
+# tb_admin
+class Admin(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.CharField(max_length=32, unique=True)
+    pwd = models.CharField(max_length=32)
+    name = models.CharField(max_length=32, blank=True)
+    phone = models.CharField(max_length=16, blank=True)
+    disable = models.BooleanField(default=False)
+    ctime = models.BigIntegerField()
+    modules = models.ManyToManyField('Module', through='Authority', through_fields=('admin', 'module'))
+
+    class Meta:
+        db_table = 'tb_admin'
+
+    def dict(self):
+        return dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
 
 
 # tb_authority
 class Authority(models.Model):
     id = models.AutoField(primary_key=True)
-    module = models.IntegerField()
-    admin = models.IntegerField()
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
+    admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
     disable = models.BooleanField(default=False)
     ctime = models.BigIntegerField()
 
@@ -64,6 +66,8 @@ class Authority(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['admin'] = items['admin'].id if items['admin'] else None
+        items['module'] = items['module'].id if items['module'] else None
         return items
 
 
@@ -93,10 +97,11 @@ class TradeAccount(models.Model):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
+
 # tb_lever
 class Lever(models.Model):
     id = models.AutoField(primary_key=True)
-    lever = models.IntegerField()
+    lever = models.IntegerField(unique=True)
     wline = models.DecimalField(max_digits=2, decimal_places=2)
     sline = models.DecimalField(max_digits=2, decimal_places=2)
     ofmin = models.DecimalField(max_digits=10, decimal_places=2)
@@ -117,10 +122,11 @@ class Lever(models.Model):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
+
 # tb_trade_order
 class TradeOrder(models.Model):
     id = models.AutoField(primary_key=True)
-    account = models.IntegerField()
+    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE)
     ordern = models.CharField(max_length=16)
     otype = models.CharField(max_length=8)  # order type
     ptype = models.CharField(max_length=8)  # price type
@@ -140,6 +146,7 @@ class TradeOrder(models.Model):
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
+
 
 # tb_quote_agent
 class QuoteAgent(models.Model):
@@ -162,7 +169,7 @@ class QuoteAgent(models.Model):
 # tb_quote_server
 class QuoteServer(models.Model):
     id = models.AutoField(primary_key=True)
-    agent = models.IntegerField()
+    agent = models.ForeignKey('QuoteAgent', on_delete=models.CASCADE)
     name = models.CharField(max_length=16)
     ip = models.CharField(max_length=16)
     port = models.IntegerField()
@@ -180,7 +187,7 @@ class QuoteServer(models.Model):
 # tb_trade_agent
 class TradeAgent(models.Model):
     id = models.AutoField(primary_key=True)
-    account = models.IntegerField()
+    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE)
     name = models.CharField(max_length=16)
     ip = models.CharField(max_length=16)
     port = models.IntegerField()
@@ -199,7 +206,7 @@ class TradeAgent(models.Model):
 # tb_trade_server
 class TradeServer(models.Model):
     id = models.AutoField(primary_key=True)
-    agent = models.IntegerField()
+    agent = models.ForeignKey('TradeAgent', on_delete=models.CASCADE)
     name = models.CharField(max_length=16)
     ip = models.CharField(max_length=16)
     port = models.IntegerField()
@@ -255,7 +262,7 @@ class User(models.Model):
 # tb_user_coupon
 class UserCoupon(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.IntegerField()
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     name = models.CharField(max_length=64)
     money = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=16, default='unused') #unused-未使用, used-已使用, deleted-已删除,  expired-已失效
@@ -274,7 +281,7 @@ class UserCoupon(models.Model):
 # tb_user_bank
 class UserBank(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.IntegerField()
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     bank = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     account = models.CharField(max_length=32)
@@ -293,7 +300,7 @@ class UserBank(models.Model):
 # tb_user_bill
 class UserBill(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.IntegerField()
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     code = models.CharField(max_length=16, unique=True)
     item = models.CharField(max_length=16)
     detail = models.CharField(max_length=64)
@@ -330,7 +337,7 @@ class PayGateway(models.Model):
 # tb_pay_account
 class PayAccount(models.Model):
     id = models.AutoField(primary_key=True)
-    gateway = models.IntegerField()
+    gateway = models.ForeignKey('PayGateway', on_delete=models.CASCADE)
     bank = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     account = models.CharField(max_length=32)
@@ -349,8 +356,8 @@ class PayAccount(models.Model):
 # tb_user_charge
 class UserCharge(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.IntegerField()
-    account = models.IntegerField()
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    account = models.ForeignKey('PayAccount', on_delete=models.CASCADE)
     code = models.CharField(max_length=16, unique=True)
     money = models.DecimalField(max_digits=10, decimal_places=2)  # bill money
     status = models.CharField(max_length=16, default='paying')
@@ -367,7 +374,7 @@ class UserCharge(models.Model):
 # tb_user_draw
 class UserDraw(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.IntegerField()
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
     code = models.CharField(max_length=16, unique=True)
     money = models.DecimalField(max_digits=10, decimal_places=2)
     bank = models.CharField(max_length=16)
@@ -387,8 +394,8 @@ class UserDraw(models.Model):
 # tb_user_stock
 class UserStock(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.IntegerField()
-    stock = models.CharField(max_length=8)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
     deleted = models.BooleanField(default=False)
     ctime = models.BigIntegerField()  # create time
     dtime = models.BigIntegerField()  # delete time
@@ -404,9 +411,9 @@ class UserStock(models.Model):
 # tb_user_trade
 class UserTrade(models.Model):
     id = models.AutoField(primary_key=True)
-    user = models.IntegerField()
-    stock = models.CharField(max_length=8)
-    coupon = models.IntegerField()
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
+    coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE)
     code = models.CharField(max_length=16, unique=True)
     hcount = models.IntegerField(default=0) # holding count
     fcount = models.IntegerField(default=0) # free count, sell able
@@ -435,7 +442,7 @@ class UserTrade(models.Model):
 
 # tb_trade_lever
 class TradeLever(models.Model):
-    trade = models.IntegerField(primary_key=True)
+    trade = models.OneToOneField('UserTrade', on_delete=models.CASCADE)
     lever = models.IntegerField()
     wline = models.DecimalField(max_digits=2, decimal_places=2)
     sline = models.DecimalField(max_digits=2, decimal_places=2)
@@ -457,7 +464,7 @@ class TradeLever(models.Model):
 # tb_trade_margin
 class TradeMargin(models.Model):
     id = models.AutoField(primary_key=True)
-    trade = models.IntegerField()
+    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
     item = models.CharField(max_length=16)
     money = models.DecimalField(max_digits=10, decimal_places=2)
     ctime = models.BigIntegerField()  # create time
@@ -469,7 +476,7 @@ class TradeMargin(models.Model):
 # tb_trade_fee
 class TradeFee(models.Model):
     id = models.AutoField(primary_key=True)
-    trade = models.IntegerField()
+    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
     item = models.CharField(max_length=8)
     detail = models.CharField(max_length=64, blank=True)
     nmoney = models.DecimalField(max_digits=10, decimal_places=2) # need pay money

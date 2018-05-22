@@ -52,8 +52,8 @@ def add(request):
     try:
         form = forms.auth.auth.Add(request.POST)
         if form.is_valid():
-            item = models.Authority(admin=form.cleaned_data['admin'],
-                                    module=form.cleaned_data['module'],
+            item = models.Authority(admin=models.Admin(id=form.cleaned_data['admin']),
+                                    module=models.Module(id=form.cleaned_data['module']),
                                     disable=form.cleaned_data['disable'],
                                     ctime=int(time.time()));
             item.save()

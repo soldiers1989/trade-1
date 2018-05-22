@@ -3,9 +3,9 @@
     <div class="col-md-12">
         <div class="row">
             <div class="col-md-12">
-                <form class="form-inline input-sm btn-sm" id="form_order_list" style="margin-bottom: 10px; padding-right: 0px;float: right;">
-                    <input type="hidden" id="id_size" name="size">
-                    <input type="hidden" id="id_page" name="page">
+                <form class="form-inline input-sm btn-sm" id="id_form_order_list" style="margin-bottom: 10px; padding-right: 0px;float: right;">
+                    <input type="hidden" name="page" value="0">
+                    <input type="hidden" name="size" value="15">
                     <div class="form-group">
                         <div class="input-group">
                             <input type="text" class="form-control date-picker" id="id_sdate" name="sdate" size="10" placeholder="起始日期">
@@ -32,7 +32,7 @@
 
         <div class="row">
             <div class="col-md-12">
-                <table id="orderlist" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse;margin-bottom: 5px">
+                <table id="id_table_order_list" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse;margin-bottom: 5px">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -52,7 +52,6 @@
                             <th>延期费</th>
                             <th>状态</th>
                             <th>日期</th>
-                            <th class="center sorting_disabled">操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -63,17 +62,76 @@
         </div>
 
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-4">
+                <span>0-N条, 共N条; 第X页, 共N页</span>
+                <span>|</span>
+                <span>每页
+                    <select name="page">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="30">30</option>
+                    </select>
+                    条
+                </span>
+            </div>
+            <div class="col-md-8">
                 <ul class="pagination" style="float: right; margin: 0px;">
-                    <li class="page-item"><a class="page-link" href="#">上一页</a></li>
+                    <li class="page-item"><a class="page-link" href="#">&lt;&lt;</a></li>
+                    <li class="page-item"><a class="page-link" href="#">&lt;</a></li>
                     <li class="page-item"><a class="page-link" href="#">1</a></li>
                     <li class="page-item active"><a class="page-link" href="#">2</a></li>
                     <li class="page-item"><a class="page-link" href="#">3</a></li>
                     <li class="page-item"><a class="page-link" href="#">4</a></li>
                     <li class="page-item"><a class="page-link" href="#">5</a></li>
-                    <li class="page-item"><a class="page-link" href="#">下一页</a></li>
+                    <li class="page-item"><a class="page-link" href="#">&gt;</a></li>
+                    <li class="page-item"><a class="page-link" href="#">&gt;&gt;</a></li>
                   </ul>
             </div>
         </div>
     </div>
 </div>
+
+<script type="text/javascript">
+
+
+
+    // render table data
+    function renderTable(data) {
+
+    }
+
+    // render page data
+    function renderPage(data) {
+
+    }
+
+    // render size selector
+    function renderSize(data) {
+
+    } 
+
+    // render items information
+    function renderInfo(data) {
+
+    }
+
+    // query table data
+    function loadData() {
+        //form to submit
+        var form = $('#id_form_order_list');
+
+        //check form data
+        if(form.valid()){
+            form.ajaxSubmit({
+               url: '{% url "cms.apis.order.order.list" %}',
+               type: 'get',
+               success: function(resp) {
+                    if(resp.status){
+                        renderTable(resp.data.content);   
+                    } else {
+                    }
+               }
+            });
+        }
+    }
+</script>
