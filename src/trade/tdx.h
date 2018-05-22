@@ -13,7 +13,7 @@ public:
 //tdx comunication configure
 class tdxcfg {
 public:
-	static const int BATCH_LIMIT = 20;
+	static const int BATCH_LIMIT = 8;
 	static const int BUFFER_SIZE_RESULT;
 	static const int BUFFER_SIZE_ERROR;
 	static const char* RESULT_ROW_SEP;
