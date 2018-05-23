@@ -1,11 +1,12 @@
-
 <div class="row">
     <div class="col-md-12">
         <div class="row">
             <div class="col-md-12">
-                <form class="form-inline input-sm btn-sm" id="id_form_order_list" style="margin-bottom: 10px; padding-right: 0px;float: right;">
-                    <input type="hidden" name="page" value="0">
-                    <input type="hidden" name="size" value="15">
+                <form class="form-inline input-sm btn-sm" id="id_order_table_form" style="margin-bottom: 10px; padding-right: 0px;float: right;">
+                    <input type="hidden" name="page">
+                    <input type="hidden" name="size">
+                    <input type="hidden" name="ordby">
+                    <input type="hidden" name="order">
                     <div class="form-group">
                         <div class="input-group">
                             <input type="text" class="form-control date-picker" id="id_sdate" name="sdate" size="10" placeholder="起始日期">
@@ -25,16 +26,16 @@
                             <input type="text" class="form-control" id="id_words" name="words" placeholder="用户/股票">
                         </div>
                     </div>
-                    <button type="button" class="btn btn-primary btn-sm">查询</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="id_order_table_search">查询</button>
                 </form>        
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-12">
-                <table id="id_table_order_list" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse;margin-bottom: 5px">
+                <table id="id_order_table" class="table table-bordered table-hover" style="width: 100%;border-collapse:collapse;margin-bottom: 5px">
                     <thead>
-                        <tr>
+                        <tr id="id_order_table_head">
                             <th>ID</th>
                             <th>用户</th>
                             <th>股票</th>
@@ -54,84 +55,65 @@
                             <th>日期</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr class="odd"><td valign="top" colspan="19" class="dataTables_empty" style="text-align: center;">表中数据为空</td></tr>
+                    <tbody id="id_order_table_body">
+                        <tr class="odd"><td valign="top" colspan="19" class="dataTables_empty" style="text-align: center;">正在加载数据...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="row">
-            <div class="col-md-4">
-                <span>0-N条, 共N条; 第X页, 共N页</span>
-                <span>|</span>
-                <span>每页
-                    <select name="page">
-                        <option value="10">10</option>
-                        <option value="20" selected>20</option>
-                        <option value="30">30</option>
-                    </select>
-                    条
-                </span>
+            <div class="col-md-6" id="id_order_table_detail">
             </div>
-            <div class="col-md-8">
-                <ul class="pagination" style="float: right; margin: 0px;">
-                    <li class="page-item"><a class="page-link" href="#">&lt;&lt;</a></li>
-                    <li class="page-item"><a class="page-link" href="#">&lt;</a></li>
-                    <li class="page-item"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item active"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">4</a></li>
-                    <li class="page-item"><a class="page-link" href="#">5</a></li>
-                    <li class="page-item"><a class="page-link" href="#">&gt;</a></li>
-                    <li class="page-item"><a class="page-link" href="#">&gt;&gt;</a></li>
-                  </ul>
+            <div class="col-md-6" id="id_order_table_pager">
             </div>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
+    // init date input widget
+    $('.date-picker').datepicker({
+        autoclose: true,
+        todayHighlight: true
+    }).next().on(ace.click_event, function(){
+        $(this).prev().focus();
+    });
 
+    //init table
+    ordertable = new CubeTable({
+        id: 'id_order_table', 
+        url: '{% url "cms.apis.order.order.list" %}',
+        sizes: [10, 20, 30],
+        columns: [
+            {data: 'id'},
+            {data: 'user'},
+            {data: 'stock'},
+            {data: 'ocount'},
+            {data: 'oprice'},
+            {data: 'hcount'},
+            {data: 'fcount'},
+            {data: 'bcount'},
+            {data: 'bprice'},
+            {data: 'scount'},
+            {data: 'sprice'},
+            {data: 'hdays'},
+            {data: 'margin'},
+            {data: 'ofee'},
+            {data: 'dfee'},
+            {data: 'status'},
+            {data: 'date'}
+        ]
+    });
 
+    //load data
+    ordertable.load();
 
-    // render table data
-    function renderTable(data) {
-
-    }
-
-    // render page data
-    function renderPage(data) {
-
-    }
-
-    // render size selector
-    function renderSize(data) {
-
-    } 
-
-    // render items information
-    function renderInfo(data) {
-
-    }
-
-    // query table data
-    function loadData() {
-        //form to submit
-        var form = $('#id_form_order_list');
-
-        //check form data
-        if(form.valid()){
-            form.ajaxSubmit({
-               url: '{% url "cms.apis.order.order.list" %}',
-               type: 'get',
-               success: function(resp) {
-                    if(resp.status){
-                        renderTable(resp.data.content);   
-                    } else {
-                    }
-               }
-            });
+    $('#id_order_table_search').click(
+        function(){
+            console.log(ordertable);
+            ordertable.load();
         }
-    }
+    );
 </script>
+

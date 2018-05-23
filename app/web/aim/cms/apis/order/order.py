@@ -17,14 +17,19 @@ def list(request):
     try:
         items = models.Lever.objects.filter().order_by('order')
 
-        data = []
+        data = {
+            'total': 100,
+            'size': 10,
+            'page': 1,
+            'items': [
+            ]
+        }
 
-        seq = 0
-        for item in items:
-            d = item.dict()
-            d['seq'] = seq
-            data.append(d)
-            seq += 1
+        for i in range(0, 10):
+            item = {'id': i, 'user': i, 'stock': i, 'ocount': i, 'oprice': i, 'hcount': i, 'fcount': i,
+                    'bcount': i, 'bprice': i, 'scount': i, 'sprice': i, 'hdays': i, 'margin': i, 'ofee': i,
+                    'dfee': i, 'status': i, 'date': i}
+            data['items'].append(item)
 
         return resp.success(data=data)
     except Exception as e:

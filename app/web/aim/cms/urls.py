@@ -1,5 +1,5 @@
 from django.urls import path
-from cms import apis, views
+from cms import apis, views, widgets
 
 
 urlviews = [
@@ -48,4 +48,10 @@ urlapis = [
     path('apis/order/order/list/', apis.order.order.list, name="cms.apis.order.order.list")
 ]
 
-urlpatterns = urlviews + urlapis
+
+urlwidgets = [
+    path('widgets/order/order/list/', widgets.order.order.list, name='cms.widgets.order.order.list')
+]
+
+
+urlpatterns = urlviews + urlapis + urlwidgets

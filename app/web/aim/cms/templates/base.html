@@ -41,6 +41,20 @@
 		<script src="/assets/js/ace/html5shiv.min.js"></script>
 		<script src="/assets/js/ace/respond.min.js"></script>
 		<![endif]-->
+
+		<!--[if !IE]> -->
+		<script src="/assets/js/jquery/2.1.4/jquery.min.js"></script>
+		<!-- <![endif]-->
+
+		<!--[if IE]>
+        <script src="/assets/js/jquery/jquery-1.11.3.min.js"></script>
+        <![endif]-->
+
+		<script src="/assets/js/bootstrap/3.3.7/bootstrap.min.js"></script>
+
+        <!-- page specific plugin scripts -->
+        {% block jsfiles %}{% endblock %}
+        
 	</head>
 
 	<body class="no-skin">
@@ -168,19 +182,6 @@
 		</div><!-- /.main-container -->
 
  		{% block modals %}{% endblock %}
-
-		<!--[if !IE]> -->
-		<script src="/assets/js/jquery/2.1.4/jquery.min.js"></script>
-		<!-- <![endif]-->
-
-		<!--[if IE]>
-        <script src="/assets/js/jquery/jquery-1.11.3.min.js"></script>
-        <![endif]-->
-
-		<script src="/assets/js/bootstrap/3.3.7/bootstrap.min.js"></script>
-
-        <!-- page specific plugin scripts -->
-        {% block jsfiles %}{% endblock %}
 
 		<!-- ace scripts -->
 		<script src="/assets/js/ace/ext/ace-elements.min.js"></script>
