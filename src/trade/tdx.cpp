@@ -7,7 +7,7 @@ BEGIN_TRADE_NAMESPACE
 const char* tdxerr::ERR_ACCOUNT_CONFLICT = "登录账户不一致";
 const char* tdxerr::ERR_BATCH_COUNT = "批量请求数组过大";
 
-const int tdxcfg::BUFFER_SIZE_RESULT = 64 * 1024;
+const int tdxcfg::BUFFER_SIZE_RESULT = 4 * 1024 * 1024;
 const int tdxcfg::BUFFER_SIZE_ERROR = 4 * 1024;
 const char* tdxcfg::RESULT_ROW_SEP = "\n";
 const char* tdxcfg::RESULT_COL_SEP = "\t";
