@@ -5,6 +5,7 @@
 */
 
 function CubeTable(init) {
+  this.tableid = init.id;
 	this.tableform = $('#'+init.id+"_form");
   this.tablebody = $('#'+init.id+"_body");
   this.tabledetail = $('#'+init.id+"_detail");
@@ -12,6 +13,7 @@ function CubeTable(init) {
 
   this.tablecols = init.columns;
 
+  this.tablesize = init.size;
   this.tablesizes = init.sizes;
 
   this.requesturl = init.url;
@@ -109,11 +111,11 @@ CubeTable.prototype = {
       nextstatus = ' disabled';
 
     html = '<ul class="pagination" style="' + style + '">\n'
-            + '\t<li class="page-item'+prestatus+'"><a class="page-link" href="#">&lt;&lt;</a></li>\n'
-            + '\t<li class="page-item'+prestatus+'"><a class="page-link" href="#">&lt;</a></li>\n'
-            + '\t<li class="page-item'+currstatus+'"><a class="page-link" href="#">'+page+'</a></li>\n'
-            + '\t<li class="page-item'+nextstatus+'"><a class="page-link" href="#">&gt;</a></li>\n'
-            + '\t<li class="page-item'+nextstatus+'"><a class="page-link" href="#">&gt;&gt;</a></li>\n'
+            + '\t<li class="page-item'+prestatus+'"><a class="page-link" tbl="'+this.tableid+'" act="first">&lt;&lt;</a></li>\n'
+            + '\t<li class="page-item'+prestatus+'"><a class="page-link" tbl="'+this.tableid+'" act="pre" href="#">&lt;</a></li>\n'
+            + '\t<li class="page-item'+currstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="curr" href="#">'+page+'</a></li>\n'
+            + '\t<li class="page-item'+nextstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="next" href="#">&gt;</a></li>\n'
+            + '\t<li class="page-item'+nextstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="last" href="#">&gt;&gt;</a></li>\n'
             + '</ul>';
 
     return html;
@@ -169,8 +171,36 @@ CubeTable.prototype = {
     this.tablepager.html(this.renderPage(data.page, data.total, data.size));
   },
 
+
+  // go to first page
+  gotoFirstPage: function() {
+    alert('goto first page');
+  },
+
+  // go to last page
+  gotoLastPage: function() {
+    alert('goto last page');
+  },
+
+  // go to pre page
+  gotoPrePage: function() {
+    alert('goto pre page');
+  },
+
+  // go to next page
+  gotoNextPage: function() {
+    alert('goto next page');
+  },
+
+  // change page size
+  changePageSize: function() {
+    alert('change page size');
+  },
+
   // query table data
   load: function() {
+      //set form default input value
+
       //check form data
       if(this.tableform.valid()){
           this.tableform.ajaxSubmit({
@@ -179,7 +209,17 @@ CubeTable.prototype = {
              table: this,
              success: function(resp) {
                   if(resp.status){
+                    // render table
                     this.table.render(resp.data);
+
+                    // add change page event
+                    $('.page-link').click(function(){
+                      tableid = $(this).attr('tbl');
+                      pageact = $(this).attr('act');
+                    });
+
+
+                    // add change page size event
                   } else {
                     alert(resp.status);
                   }

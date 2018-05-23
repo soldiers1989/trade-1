@@ -3,10 +3,10 @@
         <div class="row">
             <div class="col-md-12">
                 <form class="form-inline input-sm btn-sm" id="id_order_table_form" style="margin-bottom: 10px; padding-right: 0px;float: right;">
-                    <input type="hidden" name="page">
-                    <input type="hidden" name="size">
-                    <input type="hidden" name="ordby">
-                    <input type="hidden" name="order">
+                    <input type="hidden" id="id_order_table_curr_page" name="page">
+                    <input type="hidden" id="id_order_table_page_size" name="size">
+                    <input type="hidden" id="id_order_table_order_by" name="ordby">
+                    <input type="hidden" id="id_order_table_order" name="order">
                     <div class="form-group">
                         <div class="input-group">
                             <input type="text" class="form-control date-picker" id="id_sdate" name="sdate" size="10" placeholder="起始日期">
@@ -84,6 +84,7 @@
     ordertable = new CubeTable({
         id: 'id_order_table', 
         url: '{% url "cms.apis.order.order.list" %}',
+        size: 20,
         sizes: [10, 20, 30],
         columns: [
             {data: 'id'},
