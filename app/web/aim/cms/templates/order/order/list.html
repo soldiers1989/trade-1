@@ -3,9 +3,9 @@
         <div class="row">
             <div class="col-md-12">
                 <form class="form-inline input-sm btn-sm" id="id_order_table_form" style="margin-bottom: 10px; padding-right: 0px;float: right;">
-                    <input type="hidden" id="id_order_table_curr_page" name="page">
-                    <input type="hidden" id="id_order_table_page_size" name="size">
-                    <input type="hidden" id="id_order_table_order_by" name="ordby">
+                    <input type="hidden" id="id_order_table_start" name="start">
+                    <input type="hidden" id="id_order_table_count" name="count">
+                    <input type="hidden" id="id_order_table_order_by" name="orderby">
                     <input type="hidden" id="id_order_table_order" name="order">
                     <div class="form-group">
                         <div class="input-group">
@@ -26,7 +26,7 @@
                             <input type="text" class="form-control" id="id_words" name="words" placeholder="用户/股票">
                         </div>
                     </div>
-                    <button type="button" class="btn btn-primary btn-sm" id="id_order_table_search">查询</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="id_order_table_query">查询</button>
                 </form>        
             </div>
         </div>
@@ -63,9 +63,11 @@
         </div>
 
         <div class="row">
-            <div class="col-md-6" id="id_order_table_detail">
+            <div class="col-md-4" id="id_order_table_info" style="padding-top: 5px">
             </div>
-            <div class="col-md-6" id="id_order_table_pager">
+            <div class="col-md-4" id="id_order_table_page">
+            </div>
+            <div class="col-md-4" id="id_order_table_size">
             </div>
         </div>
     </div>
@@ -75,17 +77,18 @@
     // init date input widget
     $('.date-picker').datepicker({
         autoclose: true,
-        todayHighlight: true
+        todayHighlight: true,
+        format: 'yyyy/mm/dd'
     }).next().on(ace.click_event, function(){
         $(this).prev().focus();
     });
 
     //init table
-    ordertable = new CubeTable({
+    var ordertable = new CubeTable({
         id: 'id_order_table', 
         url: '{% url "cms.apis.order.order.list" %}',
-        size: 20,
-        sizes: [10, 20, 30],
+        pagesize: 20,
+        pagesizes: [10, 20, 30],
         columns: [
             {data: 'id'},
             {data: 'user'},
@@ -107,14 +110,6 @@
         ]
     });
 
-    //load data
-    ordertable.load();
-
-    $('#id_order_table_search').click(
-        function(){
-            console.log(ordertable);
-            ordertable.load();
-        }
-    );
+    ordertable.init();
 </script>
 

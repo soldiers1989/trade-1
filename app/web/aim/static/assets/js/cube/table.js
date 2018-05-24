@@ -5,39 +5,91 @@
 */
 
 function CubeTable(init) {
-  this.tableid = init.id;
-	this.tableform = $('#'+init.id+"_form");
-  this.tablebody = $('#'+init.id+"_body");
-  this.tabledetail = $('#'+init.id+"_detail");
-  this.tablepager = $('#'+init.id+"_pager");
+  //table id
+  this.id = init.id;
 
-  this.tablecols = init.columns;
+  //ajax url
+  this.url = init.url;
 
-  this.tablesize = init.size;
-  this.tablesizes = init.sizes;
+  //table elements
+  this.dom = {
+    form: $('#'+this.id+"_form"),
+    body: $('#'+this.id+"_body"),
+    info: $('#'+this.id+"_info"),
+    page: $('#'+this.id+"_page"),
+    size: $('#'+this.id+"_size"), 
+    input: {
+      start: $('#'+init.id+"_start"),
+      count: $('#'+init.id+"_count"),
+      order: $('#'+init.id+"_order"),
+      orderby: $('#'+init.id+"_order_by")
+    },
+    query: $('#'+init.id+"_query")
+  };
 
-  this.requesturl = init.url;
+  //table data
+  this.data = {
+    total: 0,
+    start: 0,
+    end: 0,
+    items: {}
+  };
+
+  //table page
+  this.page = {
+    size: 20,
+    total: 0,
+    current: 1,
+    options: [10, 20, 30, 50, 100, 200, 500],
+    style: 'float: center; margin: 0px;'
+  };
+
+  //table info
+  this.info = {
+    style: 'float: left'
+  };
+
+  //table size
+  this.size = {
+    style: 'float: right'
+  };
+
+  //table columns
+  this.columns = init.columns;
 }
 
 CubeTable.prototype = {
 	constructor: CubeTable,
 
-  /**
-  * @method
-  * @param rowitems: array, table row items data
-  *   [{'name1': data1, 'name2': data2, ...}, ...]
-  * @param columns: array, table column definiation
-  *   [{'name': 'name or index in data item', 'render': function(data)}, ...]
-  * @return: str, row/col html text 
-  */
-  renderRows: function(items) {
+  renderEmpty: function() {
+    html = '<tr class="odd"><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">没有数据</td></tr>';
+    this.dom.body.html(html);
+  },
+
+  renderLoading: function() {
+    html = '<tr class="odd"><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">正在加载数据...</td></tr>';
+    this.dom.body.html(html);
+  },
+
+  renderFailure: function(msg) {
+    html = '<tr class="odd"><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">'+msg+'</td></tr>';
+    this.dom.body.html(html);
+  },
+
+  renderRows: function() {
+    //epmpty data
+    if(this.data.items.length == 0){
+      this.renderEmpty();
+      return;
+    }
+
     //html row array
     htmlrows = [];
 
     //process each row item data
-    for (i=0; i<items.length; i++){
+    for (i=0; i<this.data.items.length; i++){
       //current row data
-      item = items[i];
+      item = this.data.items[i];
 
       //row columns
       htmlcols = []
@@ -46,8 +98,8 @@ CubeTable.prototype = {
       htmlrow = '<tr>\n'
 
       //extract column data for row
-      for (j=0; j<this.tablecols.length; j++){
-        column = this.tablecols[j];
+      for (j=0; j<this.columns.length; j++){
+        column = this.columns[j];
         
         name = j;
         if (column.data)
@@ -88,144 +140,187 @@ CubeTable.prototype = {
       htmlrows.push(htmlrow);
     }
 
-    return htmlrows.join('\n');
+    //body html
+    html = htmlrows.join('\n');
+
+    //render body
+    this.dom.body.html(html);
   },
 
   // render page data
-  renderPage: function(page, total, size, style) {
-    pages = Math.ceil(total/size);
-    if (page > pages)
-      page = pages;
-
-    if (page < 0 || pages == 0)
-      page = 0;
-
-    if (!style)
-      style = 'float: right; margin: 0px;';
-
-    prestatus = '', nextstatus = '', currstatus = ' disabled';
-    if (page <= 1)
+  renderPage: function() {  
+    prestatus = '', nextstatus = '';
+    if (this.page.current <= 1)
       prestatus = ' disabled';
 
-    if (page == pages)
+    if (this.page.current >= this.page.total)
       nextstatus = ' disabled';
 
-    html = '<ul class="pagination" style="' + style + '">\n'
-            + '\t<li class="page-item'+prestatus+'"><a class="page-link" tbl="'+this.tableid+'" act="first">&lt;&lt;</a></li>\n'
-            + '\t<li class="page-item'+prestatus+'"><a class="page-link" tbl="'+this.tableid+'" act="pre" href="#">&lt;</a></li>\n'
-            + '\t<li class="page-item'+currstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="curr" href="#">'+page+'</a></li>\n'
-            + '\t<li class="page-item'+nextstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="next" href="#">&gt;</a></li>\n'
-            + '\t<li class="page-item'+nextstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="last" href="#">&gt;&gt;</a></li>\n'
+    html = '<ul class="pagination" style="' + this.page.style + '">\n'
+            + '\t<li class="'+prestatus+'"><a linktbl="'+this.id+'" act="first">&lt;&lt;</a></li>\n'
+            + '\t<li class="'+prestatus+'"><a linktbl="'+this.id+'" act="previous" href="#">&lt;</a></li>\n'
+            + '\t<li class="disabled"><a href="#">'+this.page.current+'</a></li>\n'
+            + '\t<li class="'+nextstatus+'"><a linktbl="'+this.id+'" act="next" href="#">&gt;</a></li>\n'
+            + '\t<li class="'+nextstatus+'"><a linktbl="'+this.id+'" act="last" href="#">&gt;&gt;</a></li>\n'
             + '</ul>';
 
-    return html;
+    //render
+    this.dom.page.html(html);
   },
 
   // render size selector
-  renderSize: function(size) {
-    html = '<span>每页\n'
-            + '\t<select name="page">\n';
+  renderSize: function() {
+    html = '<span style="'+this.size.style+'">每页\n'
+            + '\t<select sztbl="'+this.id+'">\n';
 
-    for (i=0; i<this.tablesizes.length; i++){
-      if (size == this.tablesizes[i])
-        html += '\t\t<option value="'+this.tablesizes[i]+'" selected>'+this.tablesizes[i]+'</option>\n';
+    for (i=0; i<this.page.options.length; i++){
+      if (this.page.size == this.page.options[i])
+        html += '\t\t<option value="'+this.page.options[i]+'" selected>'+this.page.options[i]+'</option>\n';
       else
-        html += '\t\t<option value="'+this.tablesizes[i]+'">'+this.tablesizes[i]+'</option>\n';
+        html += '\t\t<option value="'+this.page.options[i]+'">'+this.page.options[i]+'</option>\n';
     }
     
     html += '\t</select>\n';
     html += '条</span>';
 
-    return html;
+    //render
+    this.dom.size.html(html);
   },
 
   // render items information
-  renderInfo: function(page, total, size) {
-    pages = Math.ceil(total/size);
-    spos = (page-1)*size, epos = page*size;
-    if (spos < 0)
-      spos = 0;
-    if (epos > total)
-      epos = total;
-
-    html = '<span>第'+spos+'-'+epos+'条, 共'+total+'条; 第'+page+'页, 共'+pages+'页</span>';
-    return html;
+  renderInfo: function() {
+    html = '<span style="'+this.info.style+'">第'+this.data.start+'-'+this.data.end+'条, 共'+this.data.total+'条; 第'+this.page.current+'页, 共'+this.page.total+'页</span>';
+    //render
+    this.dom.info.html(html);
   },
 
-  // render table info&size html
-  renderDetail: function(page, total, size) {
-    htmlsep = '\n<span>|</span>\n';
-    return this.renderInfo(page, total, size) + htmlsep + this.renderSize(size, this.tablesizes);
+ // add page event
+  addPageEvent: function() {
+    $('a[linktbl="'+this.id+'"]').on('click', {table: this}, function(e){
+      act = $(this).attr('act');
+      e.data.table.goto(act);
+    });
+  },
+
+  // add size event
+  addSizeEvent: function() {
+    $('select[sztbl="'+this.id+'"]').on('change', {table: this}, function(e){
+      e.data.table.resize();
+    });
   },
 
 
   // render table
-  render: function(data) {
+  render: function() {
     // render table body
-    this.tablebody.html(this.renderRows(data.items));
+    this.renderRows();
 
-    // render table detail
-    this.tabledetail.html(this.renderDetail(data.page, data.total, data.size));
+    // render table info
+    this.renderInfo();
+
+    // render table size
+    this.renderSize();
 
     // render table pager
-    this.tablepager.html(this.renderPage(data.page, data.total, data.size));
+    this.renderPage();
   },
 
+   // go to page
+  goto: function(act) {
+    //change current page
+    if(act == 'first'){
+      this.page.current = 1;      
+    }
+    else if ( act == 'previous') {
+      if(this.page.current > 1)
+        this.page.current--;
+    }
+    else if( act == 'next'){
+      if(this.page.current < this.page.total)
+        this.page.current++;
+    }
+    else if( act == 'last'){
+      this.page.current = this.page.total;
+    }
+    else
+      ;
 
-  // go to first page
-  gotoFirstPage: function() {
-    alert('goto first page');
-  },
-
-  // go to last page
-  gotoLastPage: function() {
-    alert('goto last page');
-  },
-
-  // go to pre page
-  gotoPrePage: function() {
-    alert('goto pre page');
-  },
-
-  // go to next page
-  gotoNextPage: function() {
-    alert('goto next page');
+    //load table data
+    this.load();
   },
 
   // change page size
-  changePageSize: function() {
-    alert('change page size');
+  resize: function() {
+    //reset page size
+    this.page.size = $('select[sztbl="'+this.id+'"]').val();
+
+    //reset current page
+    this.page.current = 1;
+
+    //reload table data
+    this.load();
+  },
+
+  // update table
+  update: function() {
+    //update total page
+    this.page.total = Math.ceil(this.data.total / this.page.size);
+
+    //update current page
+    this.page.current = Math.ceil(this.data.start / this.page.size);
   },
 
   // query table data
   load: function() {
-      //set form default input value
+    //set loading tips
+    this.renderLoading();
 
-      //check form data
-      if(this.tableform.valid()){
-          this.tableform.ajaxSubmit({
-             url: this.requesturl,
-             type: 'get',
-             table: this,
-             success: function(resp) {
-                  if(resp.status){
-                    // render table
-                    this.table.render(resp.data);
+    //set hidden input
+    this.dom.input.start.val(this.page.size*(this.page.current-1));
+    this.dom.input.count.val(this.page.size);
 
-                    // add change page event
-                    $('.page-link').click(function(){
-                      tableid = $(this).attr('tbl');
-                      pageact = $(this).attr('act');
-                    });
+    //check form data
+    if(this.dom.form.valid()){
+      this.dom.form.ajaxSubmit({
+         url: this.url,
+         type: 'get',
+         table: this,
+         success: function(resp) {
+            if(resp.status){
+              // table data
+              this.table.data = resp.data;
 
+              // update table
+              this.table.update();
 
-                    // add change page size event
-                  } else {
-                    alert(resp.status);
-                  }
-             }
-          });
-      }
+              // render table
+              this.table.render();
+
+              // add change page event
+              this.table.addPageEvent();
+
+              // add change page size event
+              this.table.addSizeEvent();
+            } else {
+              this.table.setFailureInfo(resp.message);
+            }
+         }
+      });
+    }
+  },
+
+  // init table
+  init: function() {
+    // set search event
+    $(this.dom.query).on('click', {table: this}, function(e){
+      //reset page
+      e.data.table.page.current = 1;
+      //load data
+      e.data.table.load();
+    });
+
+    //load data
+    this.load();
   }
 };
 

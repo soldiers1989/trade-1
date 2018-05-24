@@ -19,8 +19,8 @@ def list(request):
 
         data = {
             'total': 100,
-            'size': 10,
-            'page': 1,
+            'start': 30,
+            'end': 39,
             'items': [
             ]
         }
