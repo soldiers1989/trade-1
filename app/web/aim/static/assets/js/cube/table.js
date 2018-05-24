@@ -4,9 +4,13 @@
 * 
 */
 
+// cube table
 function CubeTable(init) {
   //table id
   this.id = init.id;
+
+  //row id name
+  this.rowid = init.rowid;
 
   //ajax url
   this.url = init.url;
@@ -14,6 +18,7 @@ function CubeTable(init) {
   //table elements
   this.dom = {
     form: $('#'+this.id+"_form"),
+    head: $('#'+this.id+"_head"),
     body: $('#'+this.id+"_body"),
     info: $('#'+this.id+"_info"),
     page: $('#'+this.id+"_page"),
@@ -54,28 +59,69 @@ function CubeTable(init) {
     style: 'float: right'
   };
 
+  //column sort
+  this.sort = {
+    seq: '',
+    by: '',
+    order: ''
+  },
+
   //table columns
   this.columns = init.columns;
 }
 
+// cube table prototype
 CubeTable.prototype = {
 	constructor: CubeTable,
 
   renderEmpty: function() {
-    html = '<tr class="odd"><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">没有数据</td></tr>';
+    html = '<tr><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">没有数据</td></tr>';
     this.dom.body.html(html);
   },
 
   renderLoading: function() {
-    html = '<tr class="odd"><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">正在加载数据...</td></tr>';
+    html = '<tr><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">正在加载数据...</td></tr>';
     this.dom.body.html(html);
   },
 
   renderFailure: function(msg) {
-    html = '<tr class="odd"><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">'+msg+'</td></tr>';
+    html = '<tr><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">'+msg+'</td></tr>';
     this.dom.body.html(html);
   },
 
+  //render table head
+  renderHead: function() {
+    // get heads
+    heads = $(this.dom.head).children('th');
+
+    // add attrs
+    for (i=0; i<heads.length; i++){
+      //set head name with original name
+      $(heads[i]).html(this.columns[i].name);
+      //set head sequence
+      $(heads[i]).attr('seq', i);
+
+      //add sortable style
+      if (this.columns[i].sortable){
+        $(heads[i]).attr('style', 'cursor: pointer;');
+        $(heads[i]).attr('sortable', 'true');
+        $(heads[i]).html(this.columns[i].name+'&#8597;');
+      }
+
+      //add sort flag
+      if (this.sort.by == this.columns[i].id){
+        //set head name with sort flag
+        if (this.sort.order == 'asc')
+          $(heads[i]).html(this.columns[i].name+'&#8593;');
+        else if (this.sort.order == 'desc')
+          $(heads[i]).html(this.columns[i].name+'&#8595;');
+        else
+          $(heads[i]).html(this.columns[i].name+'&#8597;');
+      }
+    }
+  },
+
+  //render table rows
   renderRows: function() {
     //epmpty data
     if(this.data.items.length == 0){
@@ -101,9 +147,9 @@ CubeTable.prototype = {
       for (j=0; j<this.columns.length; j++){
         column = this.columns[j];
         
-        name = j;
-        if (column.data)
-          name = column.data;
+        id = j;
+        if (column.id)
+          id = column.id;
 
         render = function(x){
           return x;
@@ -114,7 +160,7 @@ CubeTable.prototype = {
         data = '';
         // column original data
         if (name) {
-          data = item[name];
+          data = item[id];
         } else {
           data = item[j];
         }
@@ -194,24 +240,11 @@ CubeTable.prototype = {
     this.dom.info.html(html);
   },
 
- // add page event
-  addPageEvent: function() {
-    $('a[linktbl="'+this.id+'"]').on('click', {table: this}, function(e){
-      act = $(this).attr('act');
-      e.data.table.goto(act);
-    });
-  },
-
-  // add size event
-  addSizeEvent: function() {
-    $('select[sztbl="'+this.id+'"]').on('change', {table: this}, function(e){
-      e.data.table.resize();
-    });
-  },
-
-
   // render table
   render: function() {
+    // render table head
+    this.renderHead();
+
     // render table body
     this.renderRows();
 
@@ -270,6 +303,70 @@ CubeTable.prototype = {
     this.page.current = Math.ceil(this.data.start / this.page.size);
   },
 
+  // add sort event
+  addSortEvent: function() {
+    sorts = $(this.dom.head).children('th[sortable="true"]');
+    $(sorts).on('click', {table: this}, function(e){
+      // process display
+      i = $(this).attr('seq');
+      if(e.data.table.sort.by == e.data.table.columns[i].id){
+        if(e.data.table.sort.order == 'asc') {
+          e.data.table.sort.order = 'desc';
+          $(this).html(e.data.table.columns[i].name+"&#8595;");
+        }
+        else{
+          e.data.table.sort.order = 'asc';
+          $(this).html(e.data.table.columns[i].name+"&#8593;");
+        }
+      } else {
+        //reset last sort column head
+        lseq = e.data.table.sort.seq;
+        if(lseq != ''){
+          $(this).siblings('th[seq="'+lseq+'"]').html(e.data.table.columns[lseq].name+"&#8597;");
+        }
+
+        //set sort data
+        e.data.table.sort.seq = i;
+        e.data.table.sort.by = e.data.table.columns[i].id;
+        e.data.table.sort.order = 'asc';
+
+        //set current sort column head
+        $(this).html(e.data.table.columns[i].name+"&#8593;");
+      }
+
+      //load data
+      alert('sort');
+      //e.data.table.load();
+    });
+  },
+
+  // add page event
+  addPageEvent: function() {
+    $('a[linktbl="'+this.id+'"]').on('click', {table: this}, function(e){
+      act = $(this).attr('act');
+      e.data.table.goto(act);
+    });
+  },
+
+  // add size event
+  addSizeEvent: function() {
+    $('select[sztbl="'+this.id+'"]').on('change', {table: this}, function(e){
+      e.data.table.resize();
+    });
+  },
+
+  // add event
+  addEvent: function() {
+    // add sort event
+    this.addSortEvent();
+
+    // add change page event
+    this.addPageEvent();
+
+    // add change page size event
+    this.addSizeEvent();
+  },
+
   // query table data
   load: function() {
     //set loading tips
@@ -278,6 +375,8 @@ CubeTable.prototype = {
     //set hidden input
     this.dom.input.start.val(this.page.size*(this.page.current-1));
     this.dom.input.count.val(this.page.size);
+    this.dom.input.orderby.val(this.sort.by);
+    this.dom.input.order.val(this.sort.order);
 
     //check form data
     if(this.dom.form.valid()){
@@ -296,11 +395,8 @@ CubeTable.prototype = {
               // render table
               this.table.render();
 
-              // add change page event
-              this.table.addPageEvent();
-
-              // add change page size event
-              this.table.addSizeEvent();
+              // add event
+              this.table.addEvent();
             } else {
               this.table.setFailureInfo(resp.message);
             }
@@ -309,15 +405,39 @@ CubeTable.prototype = {
     }
   },
 
-  // init table
-  init: function() {
-    // set search event
+  // init head
+  initHead: function() {
+    // init column names for table head
+    heads = $(this.dom.head).children('th');
+    for(i=0; i<heads.length; i++){
+      this.columns[i].name = $(heads[i]).text();
+    }
+  },
+
+  // init query event
+  initQueryEvent: function() {
+    // add query event
     $(this.dom.query).on('click', {table: this}, function(e){
       //reset page
       e.data.table.page.current = 1;
       //load data
       e.data.table.load();
     });
+  },
+
+  // init event
+  initEvent: function() {
+    // add query event
+    this.initQueryEvent();
+  },
+
+  // init table
+  init: function() {
+    // init head
+    this.initHead();
+
+    // init event
+    this.initEvent();
 
     //load data
     this.load();

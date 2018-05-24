@@ -56,7 +56,6 @@
                         </tr>
                     </thead>
                     <tbody id="id_order_table_body">
-                        <tr class="odd"><td valign="top" colspan="19" class="dataTables_empty" style="text-align: center;">正在加载数据...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -86,27 +85,28 @@
     //init table
     var ordertable = new CubeTable({
         id: 'id_order_table', 
+        rowid: 'id',
         url: '{% url "cms.apis.order.order.list" %}',
         pagesize: 20,
         pagesizes: [10, 20, 30],
         columns: [
-            {data: 'id'},
-            {data: 'user'},
-            {data: 'stock'},
-            {data: 'ocount'},
-            {data: 'oprice'},
-            {data: 'hcount'},
-            {data: 'fcount'},
-            {data: 'bcount'},
-            {data: 'bprice'},
-            {data: 'scount'},
-            {data: 'sprice'},
-            {data: 'hdays'},
-            {data: 'margin'},
-            {data: 'ofee'},
-            {data: 'dfee'},
-            {data: 'status'},
-            {data: 'date'}
+            {id: 'id', sortable: true},
+            {id: 'user'},
+            {id: 'stock'},
+            {id: 'ocount', sortable: true},
+            {id: 'oprice'},
+            {id: 'hcount'},
+            {id: 'fcount'},
+            {id: 'bcount'},
+            {id: 'bprice'},
+            {id: 'scount'},
+            {id: 'sprice'},
+            {id: 'hdays'},
+            {id: 'margin'},
+            {id: 'ofee'},
+            {id: 'dfee'},
+            {id: 'status'},
+            {id: 'date'}
         ]
     });
 
