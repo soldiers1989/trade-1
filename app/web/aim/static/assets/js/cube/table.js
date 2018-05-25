@@ -15,6 +15,14 @@ function CubeTable(init) {
   //ajax url
   this.url = init.url;
 
+  //default render
+  if(init.render)
+    this.render = init.render;
+  else
+    this.render = function(d){
+      return d;
+    };
+
   //table elements
   this.dom = {
     form: $('#'+this.id+"_form"),
@@ -36,7 +44,6 @@ function CubeTable(init) {
   this.data = {
     total: 0,
     start: 0,
-    end: 0,
     items: {}
   };
 
@@ -151,9 +158,7 @@ CubeTable.prototype = {
         if (column.id)
           id = column.id;
 
-        render = function(x){
-          return x;
-        };
+        render = this.render;
         if (column.render)
           render = column.render
 
@@ -228,7 +233,15 @@ CubeTable.prototype = {
 
   // render items information
   renderInfo: function() {
-    html = '<span style="'+this.info.style+'">第'+this.data.start+'-'+this.data.end+'条, 共'+this.data.total+'条; 第'+this.page.current+'页, 共'+this.page.total+'页</span>';
+    if(this.data.items.length == 0){
+      start = 0;
+      end = 0;
+    } else {
+      start = this.data.start;
+      end = this.data.start+this.data.items.length-1;
+    }
+
+    html = '<span style="'+this.info.style+'">第'+start+'-'+end+'条, 共'+this.data.total+'条; 第'+this.page.current+'页, 共'+this.page.total+'页</span>';
     //render
     this.dom.info.html(html);
   },
@@ -397,7 +410,13 @@ CubeTable.prototype = {
     this.page.total = Math.ceil(this.data.total / this.page.size);
 
     //update current page
-    this.page.current = Math.ceil(this.data.start / this.page.size);
+    if (this.data.items.length > 0)
+      this.page.current = Math.ceil(this.data.start / this.page.size);
+    else {
+      this.page.start = 0;
+      this.page.current = 0;
+    }
+
 
     //update row data
     this.renderRows();
@@ -415,7 +434,11 @@ CubeTable.prototype = {
     this.renderLoading();
 
     //set hidden input
-    this.dom.input.start.val(this.page.size*(this.page.current-1));
+    start = this.page.size*(this.page.current-1);
+    if(start < 0)
+      start = 1;
+
+    this.dom.input.start.val(start);
     this.dom.input.count.val(this.page.size);
     this.dom.input.orderby.val(this.sort.by);
     this.dom.input.order.val(this.sort.order);
@@ -434,7 +457,7 @@ CubeTable.prototype = {
               // update table
               this.table.update();
             } else {
-              this.table.setFailureInfo(resp.message);
+              this.table.renderFailure(resp.message);
             }
          }
       });

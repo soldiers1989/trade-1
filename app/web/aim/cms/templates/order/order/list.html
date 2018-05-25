@@ -47,9 +47,9 @@
                             <th>买价</th>
                             <th>卖量</th>
                             <th>卖价</th>
-                            <th>天数</th>
                             <th>保证金</th>
                             <th>建仓费</th>
+                            <th>延期日</th>
                             <th>延期费</th>
                             <th>状态</th>
                             <th>日期</th>
@@ -89,6 +89,11 @@
         url: '{% url "cms.apis.order.order.list" %}',
         pagesize: 20,
         pagesizes: [10, 20, 30],
+        render: function(d){
+            if(d == null)
+                return '-';
+            return d;
+        },
         columns: [
             {id: 'id', sortable: true},
             {id: 'user'},
@@ -101,9 +106,9 @@
             {id: 'bprice'},
             {id: 'scount'},
             {id: 'sprice'},
-            {id: 'hdays'},
             {id: 'margin'},
             {id: 'ofee'},
+            {id: 'ddays'},
             {id: 'dfee'},
             {id: 'status'},
             {id: 'date'}

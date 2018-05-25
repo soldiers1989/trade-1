@@ -1,7 +1,8 @@
 """
     api for cms
 """
-import time
+import cube, time, datetime
+
 
 from cms.apis import resp
 from cms import auth, models, hint, forms
@@ -15,23 +16,64 @@ def list(request):
     :return:
     """
     try:
-        items = models.Lever.objects.filter().order_by('order')
+        if request.method != 'GET':
+            return resp.failure(message='method not support')
 
-        data = {
-            'total': 100,
-            'start': 30,
-            'end': 39,
-            'items': [
-            ]
-        }
+        form = forms.order.order.Query(request.GET)
+        if form.is_valid():
+            # query set
+            results = models.UserTrade.objects.all()
 
-        for i in range(0, 10):
-            item = {'id': i, 'user': i, 'stock': i, 'ocount': i, 'oprice': i, 'hcount': i, 'fcount': i,
-                    'bcount': i, 'bprice': i, 'scount': i, 'sprice': i, 'hdays': i, 'margin': i, 'ofee': i,
-                    'dfee': i, 'status': i, 'date': i}
-            data['items'].append(item)
+            # form parameters
+            params = form.cleaned_data
 
-        return resp.success(data=data)
+            # filter
+            sdate, edate, words = params['sdate'], params['edate'], params['words']
+            if sdate:
+                results = results.filter(ctime__gte=cube.time.utime(sdate))
+            if edate:
+                results = results.filter(ctime__lt=cube.time.utime(edate+datetime.timedelta(days=1)))
+            if words:
+                results = results.filter(user__user=words)
+                results = results.filter(stock__code=words)
+
+            # order
+            orderby, order = params['orderby'], params['order']
+            if orderby and order:
+                order = '-' if order=='desc' else ''
+                results = results.order_by(order+orderby)
+
+            # count
+            total = results.count()
+
+            # limit
+            start = cube.page.start(params['start'], total)
+            count = cube.page.count(params['count'], start, total)
+
+            results = results[start:count]
+
+            # response
+            data = {
+                'total': total,
+                'start': start+1,
+                'items': [
+                ]
+            }
+
+            for result in results:
+                item = {'id': result.id, 'user': result.user.id, 'stock': result.stock.name,
+                        'ocount': result.ocount, 'oprice': result.oprice,
+                        'hcount': result.hcount, 'fcount': result.fcount,
+                        'bcount': result.bcount, 'bprice': result.bprice,
+                        'scount': result.scount, 'sprice': result.sprice,
+                        'margin': result.margin, 'ofee': result.ofee,
+                        'ddays': result.ddays, 'dfee': result.dfee,
+                        'status': result.status, 'date': cube.time.dates(result.ctime)}
+                data['items'].append(item)
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(hint.ERR_FORM_DATA, data={'errors': form.errors})
     except Exception as e:
         return resp.failure(str(e))
 
