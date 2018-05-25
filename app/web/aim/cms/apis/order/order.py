@@ -34,8 +34,7 @@ def list(request):
             if edate:
                 results = results.filter(ctime__lt=cube.time.utime(edate+datetime.timedelta(days=1)))
             if words:
-                results = results.filter(user__user=words)
-                results = results.filter(stock__code=words)
+                results = results.filter(user__user=words) | results.filter(stock__id=words) | results.filter(stock__name__contains=words)
 
             # order
             orderby, order = params['orderby'], params['order']
@@ -48,20 +47,20 @@ def list(request):
 
             # limit
             start = cube.page.start(params['start'], total)
-            count = cube.page.count(params['count'], start, total)
+            count = cube.page.count(params['count'])
 
-            results = results[start:count]
+            results = results[start:start+count]
 
             # response
             data = {
                 'total': total,
-                'start': start+1,
+                'start': start,
                 'items': [
                 ]
             }
 
             for result in results:
-                item = {'id': result.id, 'user': result.user.id, 'stock': result.stock.name,
+                item = {'id': result.id, 'user': result.user.user, 'stock': result.stock.name,
                         'ocount': result.ocount, 'oprice': result.oprice,
                         'hcount': result.hcount, 'fcount': result.fcount,
                         'bcount': result.bcount, 'bprice': result.bprice,

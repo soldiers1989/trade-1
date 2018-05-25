@@ -1,0 +1,78 @@
+[
+  {
+    "model": "cms.usertrade",
+    "pk": 1,
+    "fields": {
+      "user_id": 1,
+      "stock_id": "000001",
+      "coupon_id": 1,
+      "code": "0001",
+      "hcount": 1000,
+      "fcount": 1000,
+      "oprice": 10.02,
+      "ocount": 1000,
+      "bprice": 10.02,
+      "bcount": 1000,
+      "sprice": 10.30,
+      "scount": 1000,
+      "margin": 2000.00,
+      "ofee": 200.00,
+      "ddays": 0,
+      "dfee": 0.0,
+      "tprofit": 1000.00,
+      "sprofit": 200.00,
+      "status": "holding",
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "cms.usertrade",
+    "pk": 2,
+    "fields": {
+      "user_id": 2,
+      "stock_id": "000002",
+      "code": "0002",
+      "hcount": 1000,
+      "fcount": 1000,
+      "oprice": 10.02,
+      "ocount": 1000,
+      "bprice": 10.02,
+      "bcount": 1000,
+      "sprice": 10.30,
+      "scount": 1000,
+      "margin": 2000.00,
+      "ofee": 200.00,
+      "ddays": 0,
+      "dfee": 0.0,
+      "tprofit": 1000.00,
+      "sprofit": 200.00,
+      "status": "tobuy",
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "cms.usertrade",
+    "pk": 3,
+    "fields": {
+      "user_id": 3,
+      "stock_id": "000003",
+      "code": "0003",
+      "hcount": 1000,
+      "fcount": 1000,
+      "oprice": 10.02,
+      "ocount": 1000,
+      "bprice": 10.02,
+      "bcount": 1000,
+      "sprice": 10.30,
+      "scount": 1000,
+      "margin": 2000.00,
+      "ofee": 200.00,
+      "ddays": 0,
+      "dfee": 0.0,
+      "tprofit": 1000.00,
+      "sprofit": 200.00,
+      "status": "tobuy",
+      "ctime": 1527261052
+    }
+  }
+]

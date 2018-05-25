@@ -4,34 +4,36 @@
 
 DEFAULT_PAGE_SIZE = 20
 
-def start(spos, total):
-    """
 
-    :param spos:
-    :param total:
-    :return:
+def start(s, total):
     """
-    if spos is None or spos < 0:
-        spos = 0
-    elif spos >= total:
-        spos = total
-    elif spos > 0:
-        spos = spos - 1;
+       get corrent start pos for page
+    :param s: int, start pos from front
+    :param total: int, total records
+    :return: int, correct start value
+    """
+    if s is None or s < 0:
+        s = 0
+    elif s > total:
+        s = total
     else:
         pass
 
-    return spos
+    return s
 
 
-def count(count, spos, total):
+def count(count):
     """
-
-    :param count:
-    :param spos:
-    :param total:
-    :return:
+        get corrent count for page
+    :param start: int, start pos from front
+    :param count: int, want count
+    :param total: int, total records
+    :return: int, correct count value
     """
     if count is None:
         return DEFAULT_PAGE_SIZE
+
+    if count < 0:
+        count = 0;
 
     return count

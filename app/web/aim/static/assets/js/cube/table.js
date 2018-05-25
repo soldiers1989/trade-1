@@ -37,7 +37,8 @@ function CubeTable(init) {
       order: $('#'+init.id+"_order"),
       orderby: $('#'+init.id+"_order_by")
     },
-    query: $('#'+init.id+"_query")
+    query: $('#'+init.id+"_query"),
+    reset: $('#'+init.id+"_reset")
   };
 
   //table data
@@ -49,9 +50,12 @@ function CubeTable(init) {
 
   //table page
   this.page = {
+    total: 0, // total pages index
+    curr: 0, //current page index
+    goto: 1,  //will goto page index
+
+
     size: 20,
-    total: 0,
-    current: 1,
     options: [10, 20, 30, 50, 100, 200, 500],
     style: 'float: center; margin: 0px;'
   };
@@ -203,7 +207,7 @@ CubeTable.prototype = {
     html = '<ul class="pagination" style="' + this.page.style + '">\n'
             + '\t<li><a linktbl="'+this.id+'" act="first">&lt;&lt;</a></li>\n'
             + '\t<li><a linktbl="'+this.id+'" act="previous">&lt;</a></li>\n'
-            + '\t<li><a linktbl="'+this.id+'" act="current">'+this.page.current+'</a></li>\n'
+            + '\t<li><a linktbl="'+this.id+'" act="current">'+this.page.curr+'</a></li>\n'
             + '\t<li><a linktbl="'+this.id+'" act="next">&gt;</a></li>\n'
             + '\t<li><a linktbl="'+this.id+'" act="last">&gt;&gt;</a></li>\n'
             + '</ul>';
@@ -237,11 +241,11 @@ CubeTable.prototype = {
       start = 0;
       end = 0;
     } else {
-      start = this.data.start;
-      end = this.data.start+this.data.items.length-1;
+      start = this.data.start+1;
+      end = this.data.start+this.data.items.length;
     }
 
-    html = '<span style="'+this.info.style+'">第'+start+'-'+end+'条, 共'+this.data.total+'条; 第'+this.page.current+'页, 共'+this.page.total+'页</span>';
+    html = '<span style="'+this.info.style+'">第'+start+'-'+end+'条, 共'+this.data.total+'条; 第'+this.page.curr+'页, 共'+this.page.total+'页</span>';
     //render
     this.dom.info.html(html);
   },
@@ -250,8 +254,21 @@ CubeTable.prototype = {
   addQueryEvent: function() {
     // add query event
     $(this.dom.query).on('click', {table: this}, function(e){
-      //reset page
-      e.data.table.page.current = 1;
+      //goto first page
+      e.data.table.page.goto = 1;
+      //load data
+      e.data.table.load();
+    });
+  },
+
+  // init query event
+  addResetEvent: function() {
+    // add query event
+    $(this.dom.reset).on('click', {table: this}, function(e){
+      //reset form
+      $(e.data.table.dom.form)[0].reset();
+      //goto first page
+      e.data.table.page.goto = 1;
       //load data
       e.data.table.load();
     });
@@ -322,6 +339,9 @@ CubeTable.prototype = {
     // add query event
     this.addQueryEvent();
 
+    // add reset event
+    this.addResetEvent();
+
     // add sort event
     this.addSortEvent();
 
@@ -335,11 +355,11 @@ CubeTable.prototype = {
   //update page
   updatePage: function() {
     //update current page
-    $('a[linktbl="'+this.id+'"][act="current"]').text(this.page.current);
+    $('a[linktbl="'+this.id+'"][act="current"]').text(this.page.curr);
     $('a[linktbl="'+this.id+'"][act="current"]').parent().attr('class', 'active');
 
     //update previous&first buttons
-    if(this.page.current <= 1){
+    if(this.page.curr <= 1){
       $('a[linktbl="'+this.id+'"][act="first"]').parent().attr('class', 'disabled');
       $('a[linktbl="'+this.id+'"][act="previous"]').parent().attr('class', 'disabled');
     } else {
@@ -348,7 +368,7 @@ CubeTable.prototype = {
     }
 
     //update next&last buttons
-    if(this.page.current >= this.page.total) {
+    if(this.page.curr >= this.page.total) {
       $('a[linktbl="'+this.id+'"][act="next"]').parent().attr('class', 'disabled');
       $('a[linktbl="'+this.id+'"][act="last"]').parent().attr('class', 'disabled');
     } else {
@@ -361,32 +381,36 @@ CubeTable.prototype = {
   goto: function(act) {
     //change current page
     if(act == 'first'){
-      if(this.page.current == 1)
+      if(this.page.curr == 1)
         return;
-      this.page.current = 1;    
+      this.page.goto = 1;    
     }
     else if ( act == 'previous') {
-      if(this.page.current == 1)
+      if(this.page.curr == 1)
         return;
 
-      if(this.page.current > 1)
-        this.page.current--;
+      if(this.page.curr > 1)
+        this.page.goto = this.page.curr-1;
     }
     else if( act == 'next'){
-      if(this.page.current >= this.page.total)
+      if(this.page.curr >= this.page.total)
         return;
 
-      if(this.page.current < this.page.total)
-        this.page.current++;
+      if(this.page.curr < this.page.total)
+        this.page.goto = this.page.curr+1;
     }
     else if( act == 'last'){
-      if(this.page.current >= this.page.total)
+      if(this.page.curr >= this.page.total)
         return;
 
-      this.page.current = this.page.total;
+      this.page.goto = this.page.total;
     }
     else
       return;
+
+    //check goto value
+    if(this.page.goto < 1)
+      this.page.goto = 1;
 
     //load table data
     this.load();
@@ -398,7 +422,7 @@ CubeTable.prototype = {
     this.page.size = $('select[sztbl="'+this.id+'"]').val();
 
     //reset current page
-    this.page.current = 1;
+    this.page.goto = 1;
 
     //reload table data
     this.load();
@@ -411,10 +435,10 @@ CubeTable.prototype = {
 
     //update current page
     if (this.data.items.length > 0)
-      this.page.current = Math.ceil(this.data.start / this.page.size);
+      this.page.curr = Math.ceil(this.data.start / this.page.size)+1;
     else {
       this.page.start = 0;
-      this.page.current = 0;
+      this.page.curr = 0;
     }
 
 
@@ -434,11 +458,7 @@ CubeTable.prototype = {
     this.renderLoading();
 
     //set hidden input
-    start = this.page.size*(this.page.current-1);
-    if(start < 0)
-      start = 1;
-
-    this.dom.input.start.val(start);
+    this.dom.input.start.val(this.page.size*(this.page.goto-1));
     this.dom.input.count.val(this.page.size);
     this.dom.input.orderby.val(this.sort.by);
     this.dom.input.order.val(this.sort.order);
