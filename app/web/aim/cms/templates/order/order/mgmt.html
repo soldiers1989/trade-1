@@ -38,7 +38,8 @@
 
 
 {% block jscontent %}
-<script type="text/javascript">  
+<script type="text/javascript">
+    //get order list
     $.get(
         '{% url "cms.widgets.order.order.list" %}',
         function(data, status) {
@@ -48,6 +49,6 @@
                 $('#id_order_list').text('请求数据失败');
             }
         }
-    )
+    );
 </script>
 {% endblock %}

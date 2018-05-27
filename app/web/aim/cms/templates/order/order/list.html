@@ -86,7 +86,6 @@
     //init table
     var ordertable = new CubeTable({
         id: 'id_order_table', 
-        rowid: 'id',
         url: '{% url "cms.apis.order.order.list" %}',
         pagesize: 20,
         pagesizes: [10, 20, 30],
@@ -95,6 +94,15 @@
                 return '-';
             return d;
         },
+
+        rows: {
+            id: 'id',
+            detail: {
+                container: 'id_order_detail',
+                url: '{% url "cms.widgets.order.order.detail" %}'
+            }
+        },
+
         columns: [
             {id: 'id', sortable: true},
             {id: 'user'},
@@ -113,7 +121,8 @@
             {id: 'dfee'},
             {id: 'status'},
             {id: 'date'}
-        ]
+        ],
+
     });
 
     ordertable.init();

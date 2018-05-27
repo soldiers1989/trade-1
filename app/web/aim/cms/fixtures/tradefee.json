@@ -1,0 +1,50 @@
+[
+    {
+        "model": "cms.tradefee",
+        "pk": 1,
+        "fields": {
+            "trade_id": "1",
+            "item": "建仓费",
+            "detail":"xx策略建仓",
+            "nmoney": 50.0,
+            "amoney": 50.0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.tradefee",
+        "pk": 2,
+        "fields": {
+            "trade_id": "1",
+            "item": "延期费",
+            "detail":"20180525中国平安",
+            "nmoney": 50.0,
+            "amoney": 50.0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.tradefee",
+        "pk": 3,
+        "fields": {
+            "trade_id": "1",
+            "item": "延期费",
+            "detail":"20180526中国平安",
+            "nmoney": 50.0,
+            "amoney": 50.0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.tradefee",
+        "pk": 4,
+        "fields": {
+            "trade_id": "2",
+            "item": "建仓费",
+            "detail":"中国平安",
+            "nmoney": 50.0,
+            "amoney": 50.0,
+            "ctime": 1527261052
+        }
+    }
+  ]

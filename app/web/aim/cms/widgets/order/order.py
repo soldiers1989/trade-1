@@ -24,6 +24,6 @@ def detail(request):
     :return:
     """
     try:
-        return render(request, 'order/order/list.html', context=ctx.default(request, '*.order.order.*'))
+        return render(request, 'order/order/detail.html', context=ctx.default(request, '*.order.order.*'))
     except Exception as e:
         return str(e)

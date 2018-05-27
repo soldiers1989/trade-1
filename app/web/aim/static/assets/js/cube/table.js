@@ -9,9 +9,6 @@ function CubeTable(init) {
   //table id
   this.id = init.id;
 
-  //row id name
-  this.rowid = init.rowid;
-
   //ajax url
   this.url = init.url;
 
@@ -76,6 +73,9 @@ function CubeTable(init) {
     by: '',
     order: ''
   },
+
+  //table rows
+  this.rows = init.rows;
 
   //table columns
   this.columns = init.columns;
@@ -152,7 +152,7 @@ CubeTable.prototype = {
       htmlcols = []
 
       //add row start
-      htmlrow = '<tr>\n'
+      htmlrow = '<tr rowid="'+item[this.rows.id]+'">\n'
 
       //extract column data for row
       for (j=0; j<this.columns.length; j++){
@@ -250,6 +250,21 @@ CubeTable.prototype = {
     this.dom.info.html(html);
   },
 
+  // render row detail
+  renderRowDetail: function(id) {
+    detailElmt = $('#'+this.rows.detail.container);
+    $.get(
+      this.rows.detail.url,
+      function(data, status) {
+        if(status == 'success'){
+            detailElmt.html(data);
+        } else {
+            detailElmt.text('请求数据失败');
+        }
+      }
+    );
+  },
+
   // init query event
   addQueryEvent: function() {
     // add query event
@@ -325,6 +340,18 @@ CubeTable.prototype = {
     });
   },
 
+  // add row select event
+  addRowClickEvent: function() {
+    if(this.data.items.length == 0)
+      return;
+
+    rows = $(this.dom.body).children('tr');
+    $(rows).on('click', {table: this}, function(e) {
+      id = $(this).attr('rowid');
+      e.data.table.renderRowDetail(id);
+    });
+  },
+
   // init head
   initHead: function() {
     // init column names for table head
@@ -350,6 +377,12 @@ CubeTable.prototype = {
 
     // add change page size event
     this.addSizeEvent();
+  },
+
+  // update event
+  updateEvent: function() {
+    // update row click event
+    this.addRowClickEvent();
   },
 
   //update page
@@ -450,6 +483,9 @@ CubeTable.prototype = {
 
     //update table page
     this.updatePage();
+
+    //update event
+    this.updateEvent();
   },
 
   // query table data

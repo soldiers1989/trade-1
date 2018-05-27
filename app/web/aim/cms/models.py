@@ -438,6 +438,10 @@ class UserTrade(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['user'] = items['user'].user if items['user'] else None
+        items['stock'] = items['stock'].name if items['stock'] else None
+        items['coupon'] = items['coupon'].money if items['coupon'] else None
+        items['lever'] = self.tradelever.dict()
         return items
 
 
@@ -459,6 +463,8 @@ class TradeLever(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        del items['id']
+        del items['trade']
         return items
 
 
@@ -473,6 +479,11 @@ class TradeMargin(models.Model):
     class Meta:
         db_table = 'tb_trade_margin'
 
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'] = items['trade'].id if items['trade'] else None
+        return items
+
 
 # tb_trade_fee
 class TradeFee(models.Model):
@@ -486,3 +497,8 @@ class TradeFee(models.Model):
 
     class Meta:
         db_table = 'tb_trade_fee'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'] = items['trade'].id if items['trade'] else None
+        return items

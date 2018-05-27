@@ -80,7 +80,7 @@ def list(request):
 @auth.protect
 def get(request):
     """
-        get api
+        get order
     :param request:
     :return:
     """
@@ -89,7 +89,9 @@ def get(request):
             return resp.failure(message='method not support')
 
         id = request.GET['id']
-        item = models.Lever.objects.get(id=id)
+
+        # get order detail
+        item = models.UserTrade.objects.get(id=id)
 
         return resp.success(data=item.dict())
     except Exception as e:
