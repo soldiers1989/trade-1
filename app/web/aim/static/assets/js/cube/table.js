@@ -8,18 +8,6 @@
 function CubeTable(init) {
   //table id
   this.id = init.id;
-
-  //ajax url
-  this.url = init.url;
-
-  //default render
-  if(init.render)
-    this.render = init.render;
-  else
-    this.render = function(d){
-      return d;
-    };
-
   //table elements
   this.dom = {
     form: $('#'+this.id+"_form"),
@@ -29,53 +17,76 @@ function CubeTable(init) {
     page: $('#'+this.id+"_page"),
     size: $('#'+this.id+"_size"), 
     input: {
-      start: $('#'+init.id+"_start"),
-      count: $('#'+init.id+"_count"),
-      order: $('#'+init.id+"_order"),
-      orderby: $('#'+init.id+"_order_by")
+      start: $('#'+this.id+"_start"),
+      count: $('#'+this.id+"_count"),
+      order: $('#'+this.id+"_order"),
+      orderby: $('#'+this.id+"_order_by")
     },
-    query: $('#'+init.id+"_query"),
-    reset: $('#'+init.id+"_reset")
+    query: $('#'+this.id+"_query"),
+    reset: $('#'+this.id+"_reset")
   };
 
+  //ajax url
+  this.url = init.url;
   //table data
   this.data = {
-    total: 0,
-    start: 0,
-    items: {}
+    page: {
+      total: 0, // total pages index
+      curr: 0, //current page index
+      goto: 1,  //will goto page index
+    },
+
+    sort: {
+      by: '', // sort by column
+      order: '' // sort by order
+    },
+
+    total: 0, //total items
+    start: 0, //page start pos
+    items: {}, //page items
+
+    select: {
+      sid: null,
+      rid: null
+    } //current selected row id
   };
 
   //table page
   this.page = {
-    total: 0, // total pages index
-    curr: 0, //current page index
-    goto: 1,  //will goto page index
-
-
     size: 20,
     options: [10, 20, 30, 50, 100, 200, 500],
     style: 'float: center; margin: 0px;'
   };
+  $.extend(this.page, init.page);
 
   //table info
   this.info = {
     style: 'float: left'
   };
+  $.extend(this.info, init.info);
 
   //table size
   this.size = {
     style: 'float: right'
   };
+  $.extend(this.size, init.size);
 
-  //column sort
-  this.sort = {
-    seq: '',
-    by: '',
-    order: ''
-  },
+  //table cells
+  this.cells = {
+    render: function(cdata) {
+      return cdata;
+    }
+  };
+  $.extend(this.cells, init.cells);
 
   //table rows
-  this.rows = init.rows;
+  this.rows = {
+    id: 'id', // item key in data items
+    onevent: function(t, d) { // (type<click, dblclick>, data<sid, rid>); row event
+      ;
+    }
+  };
+  $.extend(this.rows, init.rows);
 
   //table columns
   this.columns = init.columns;
@@ -120,11 +131,11 @@ CubeTable.prototype = {
       }
 
       //add sort flag
-      if (this.sort.by == this.columns[i].id){
+      if (this.data.sort.by == this.columns[i].id){
         //set head name with sort flag
-        if (this.sort.order == 'asc')
+        if (this.data.sort.order == 'asc')
           $(heads[i]).html(this.columns[i].name+'&#8593;');
-        else if (this.sort.order == 'desc')
+        else if (this.data.sort.order == 'desc')
           $(heads[i]).html(this.columns[i].name+'&#8595;');
         else
           $(heads[i]).html(this.columns[i].name+'&#8597;');
@@ -145,6 +156,11 @@ CubeTable.prototype = {
 
     //process each row item data
     for (i=0; i<this.data.items.length; i++){
+      //odd / even
+      oe = 'odd';
+      if(i%2==0)
+        oe = 'even';
+
       //current row data
       item = this.data.items[i];
 
@@ -152,7 +168,7 @@ CubeTable.prototype = {
       htmlcols = []
 
       //add row start
-      htmlrow = '<tr rowid="'+item[this.rows.id]+'">\n'
+      htmlrow = '<tr class="'+oe+'" sid="'+i+'" rid="'+item[this.rows.id]+'">\n'
 
       //extract column data for row
       for (j=0; j<this.columns.length; j++){
@@ -162,7 +178,7 @@ CubeTable.prototype = {
         if (column.id)
           id = column.id;
 
-        render = this.render;
+        render = this.cells.render;
         if (column.render)
           render = column.render
 
@@ -205,11 +221,11 @@ CubeTable.prototype = {
   // render page data
   renderPage: function() {  
     html = '<ul class="pagination" style="' + this.page.style + '">\n'
-            + '\t<li><a linktbl="'+this.id+'" act="first">&lt;&lt;</a></li>\n'
-            + '\t<li><a linktbl="'+this.id+'" act="previous">&lt;</a></li>\n'
-            + '\t<li><a linktbl="'+this.id+'" act="current">'+this.page.curr+'</a></li>\n'
-            + '\t<li><a linktbl="'+this.id+'" act="next">&gt;</a></li>\n'
-            + '\t<li><a linktbl="'+this.id+'" act="last">&gt;&gt;</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="first">&lt;&lt;</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="previous">&lt;</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="current">'+this.data.page.curr+'</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="next">&gt;</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="last">&gt;&gt;</a></li>\n'
             + '</ul>';
 
     //render
@@ -245,24 +261,9 @@ CubeTable.prototype = {
       end = this.data.start+this.data.items.length;
     }
 
-    html = '<span style="'+this.info.style+'">第'+start+'-'+end+'条, 共'+this.data.total+'条; 第'+this.page.curr+'页, 共'+this.page.total+'页</span>';
+    html = '<span style="'+this.info.style+'">第'+start+'-'+end+'条, 共'+this.data.total+'条; 第'+this.data.page.curr+'页, 共'+this.data.page.total+'页</span>';
     //render
     this.dom.info.html(html);
-  },
-
-  // render row detail
-  renderRowDetail: function(id) {
-    detailElmt = $('#'+this.rows.detail.container);
-    $.get(
-      this.rows.detail.url,
-      function(data, status) {
-        if(status == 'success'){
-            detailElmt.html(data);
-        } else {
-            detailElmt.text('请求数据失败');
-        }
-      }
-    );
   },
 
   // init query event
@@ -341,15 +342,30 @@ CubeTable.prototype = {
   },
 
   // add row select event
-  addRowClickEvent: function() {
+  addRowEvents: function(events) {
     if(this.data.items.length == 0)
       return;
 
     rows = $(this.dom.body).children('tr');
-    $(rows).on('click', {table: this}, function(e) {
-      id = $(this).attr('rowid');
-      e.data.table.renderRowDetail(id);
-    });
+    for (i=0; i<events.length; i++){
+      $(rows).on(events[i], {table: this}, function(e) {
+        // get row id
+        rid = $(this).attr('rid');
+        // get seq id
+        sid = $(this).attr('sid');
+
+        // set row backgroud
+        $(this).siblings('.success').removeClass('success');
+        $(this).addClass('success');
+        
+        // set data select id
+        e.data.table.data.select.rid = rid;
+        e.data.table.data.select.sid = sid;
+
+        // call select function
+        e.data.table.rows.onevent(e.type, e.data.table.data.select);
+      });
+    }
   },
 
   // init head
@@ -382,17 +398,17 @@ CubeTable.prototype = {
   // update event
   updateEvent: function() {
     // update row click event
-    this.addRowClickEvent();
+    this.addRowEvents(['click', 'dblclick']);
   },
 
   //update page
   updatePage: function() {
     //update current page
-    $('a[linktbl="'+this.id+'"][act="current"]').text(this.page.curr);
+    $('a[linktbl="'+this.id+'"][act="current"]').text(this.data.page.curr);
     $('a[linktbl="'+this.id+'"][act="current"]').parent().attr('class', 'active');
 
     //update previous&first buttons
-    if(this.page.curr <= 1){
+    if(this.data.page.curr <= 1){
       $('a[linktbl="'+this.id+'"][act="first"]').parent().attr('class', 'disabled');
       $('a[linktbl="'+this.id+'"][act="previous"]').parent().attr('class', 'disabled');
     } else {
@@ -401,7 +417,7 @@ CubeTable.prototype = {
     }
 
     //update next&last buttons
-    if(this.page.curr >= this.page.total) {
+    if(this.data.page.curr >= this.data.page.total) {
       $('a[linktbl="'+this.id+'"][act="next"]').parent().attr('class', 'disabled');
       $('a[linktbl="'+this.id+'"][act="last"]').parent().attr('class', 'disabled');
     } else {
@@ -414,36 +430,36 @@ CubeTable.prototype = {
   goto: function(act) {
     //change current page
     if(act == 'first'){
-      if(this.page.curr == 1)
+      if(this.data.page.curr == 1)
         return;
-      this.page.goto = 1;    
+      this.data.page.goto = 1;    
     }
     else if ( act == 'previous') {
-      if(this.page.curr == 1)
+      if(this.data.page.curr == 1)
         return;
 
-      if(this.page.curr > 1)
-        this.page.goto = this.page.curr-1;
+      if(this.data.page.curr > 1)
+        this.data.page.goto = this.data.page.curr-1;
     }
     else if( act == 'next'){
-      if(this.page.curr >= this.page.total)
+      if(this.data.page.curr >= this.data.page.total)
         return;
 
-      if(this.page.curr < this.page.total)
-        this.page.goto = this.page.curr+1;
+      if(this.data.page.curr < this.data.page.total)
+        this.data.page.goto = this.data.page.curr+1;
     }
     else if( act == 'last'){
-      if(this.page.curr >= this.page.total)
+      if(this.data.page.curr >= this.data.page.total)
         return;
 
-      this.page.goto = this.page.total;
+      this.data.page.goto = this.data.page.total;
     }
     else
       return;
 
     //check goto value
-    if(this.page.goto < 1)
-      this.page.goto = 1;
+    if(this.data.page.goto < 1)
+      this.data.page.goto = 1;
 
     //load table data
     this.load();
@@ -455,24 +471,31 @@ CubeTable.prototype = {
     this.page.size = $('select[sztbl="'+this.id+'"]').val();
 
     //reset current page
-    this.page.goto = 1;
+    this.data.page.goto = 1;
 
     //reload table data
     this.load();
   },
 
   // update table
-  update: function() {
+  update: function(data) {
+    //update table data
+    $.extend(this.data, data);
+
     //update total page
-    this.page.total = Math.ceil(this.data.total / this.page.size);
+    this.data.page.total = Math.ceil(this.data.total / this.page.size);
 
     //update current page
     if (this.data.items.length > 0)
-      this.page.curr = Math.ceil(this.data.start / this.page.size)+1;
+      this.data.page.curr = Math.ceil(this.data.start / this.page.size)+1;
     else {
       this.page.start = 0;
-      this.page.curr = 0;
+      this.data.page.curr = 0;
     }
+
+    //reset selected data
+    this.data.select.sid = null;
+    this.data.select.rid = null;
 
 
     //update row data
@@ -494,10 +517,10 @@ CubeTable.prototype = {
     this.renderLoading();
 
     //set hidden input
-    this.dom.input.start.val(this.page.size*(this.page.goto-1));
+    this.dom.input.start.val(this.page.size*(this.data.page.goto-1));
     this.dom.input.count.val(this.page.size);
-    this.dom.input.orderby.val(this.sort.by);
-    this.dom.input.order.val(this.sort.order);
+    this.dom.input.orderby.val(this.data.sort.by);
+    this.dom.input.order.val(this.data.sort.order);
 
     //check form data
     if(this.dom.form.valid()){
@@ -507,11 +530,8 @@ CubeTable.prototype = {
          table: this,
          success: function(resp) {
             if(resp.status){
-              // table data
-              this.table.data = resp.data;
-
               // update table
-              this.table.update();
+              this.table.update(resp.data);
             } else {
               this.table.renderFailure(resp.message);
             }

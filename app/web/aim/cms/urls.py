@@ -14,7 +14,8 @@ urlviews = [
 
     path('order/lever/list/', views.order.lever.list, name='cms.order.lever.list'),
 
-    path('order/order/mgmt/', views.order.order.mgmt, name='cms.order.order.mgmt')
+    path('order/order/mgmt/', views.order.order.mgmt, name='cms.order.order.mgmt'),
+    path('order/order/detail/', views.order.order.detail, name='cms.order.order.detail')
 ]
 
 

@@ -1,54 +1,235 @@
 {% extends 'base.html' %}
 
 {% block cssfiles %}
-    <link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
-    <link rel="stylesheet" href="/assets/css/bootstrap/ext/toastr.css" />
+<link rel="stylesheet" href="/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css" />
+<link rel="stylesheet" href="/assets/css/bootstrap/ext/toastr.css" />
 
 {% endblock %}
 
 {% block jsfiles %}
-    <script src="/assets/js/jquery/ext/validate/1.17.0/jquery.form.js"></script>
-    <script src="/assets/js/jquery/ext/validate/1.17.0/jquery.validate.js"></script>
-    <script src="/assets/js/jquery/ext/validate/1.17.0/messages_zh.js"></script>
+<script src="/assets/js/jquery/ext/validate/1.17.0/jquery.form.js"></script>
+<script src="/assets/js/jquery/ext/validate/1.17.0/jquery.validate.js"></script>
+<script src="/assets/js/jquery/ext/validate/1.17.0/messages_zh.js"></script>
 
-    <script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
-    <script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
+<script src="/assets/js/datatables/ext/datatables1.10.16/jquery.dataTables.js"></script>
+<script src="/assets/js/datatables/ext/datatables1.10.16/dataTables.bootstrap.js"></script>
 
-    <script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
-    <script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
-    <script src="/assets/js/bootstrap/ext/bootstrap-datepicker.min.js"></script>
-    <script src="/assets/js/bootstrap/ext/toastr.js"></script>
-    <script src="/assets/js/cube/cube.js"></script>
-    <script src="/assets/js/cube/table.js"></script>
+<script src="/assets/js/bootstrap/ext/bootstrap-tooltip.js"></script>
+<script src="/assets/js/bootstrap/ext/bootstrap-confirmation.js"></script>
+<script src="/assets/js/bootstrap/ext/bootstrap-datepicker.min.js"></script>
+<script src="/assets/js/bootstrap/ext/toastr.js"></script>
+<script src="/assets/js/cube/cube.js"></script>
+<script src="/assets/js/cube/table.js"></script>
 {% endblock %}
 
 {% block pagecontent %}
 
 <div class="row">
-    <div class="col-md-10" id="id_order_list">
-    </div>
-    <div class="col-md-2" id="id_order_detail">
+    <div class="col-md-12" id="id_order_list">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form class="form-inline input-sm" id="id_order_table_form" style="margin-bottom: 10px; padding-right: 0px;float: right;">
+                            <input type="hidden" id="id_order_table_start" name="start">
+                            <input type="hidden" id="id_order_table_count" name="count">
+                            <input type="hidden" id="id_order_table_order_by" name="orderby">
+                            <input type="hidden" id="id_order_table_order" name="order">
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control date-picker" id="id_sdate" name="sdate" size="10" placeholder="起始日期">
+                                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_edate">-</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control date-picker" id="id_edate" name="edate" size="10" placeholder="截止日期">
+                                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                &nbsp;
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="id_words" name="words" placeholder="用户/股票">
+                                </div>
+                            </div>
+                            <div class="btn-group">   
+                                <button type="button" class="btn btn-primary btn-sm" id="id_order_table_query">查询</button>
+                                <button type="button" class="btn btn-normal btn-sm" id="id_order_table_reset">重置</button>
+                            </div>
+                            <div class="btn-group">                    
+                                <button type="button" class="btn btn-success btn-sm dropdown-toggle" id="id_order_operation" data-toggle="dropdown" disabled>操作
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li>
+                                        <a href="#" id="id_show_detail">详情</a>
+                                    </li>
+                                    <li class="divider"></li>
+                                    <li>
+                                        <a href="#">追保</a>
+                                    </li>
+                                    <li>
+                                        <a href="#">扣费</a>
+                                    </li>
+                                    <li>
+                                        <a href="#">状态</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12 table-responsive">
+                        <table id="id_order_table" class="table table-striped table-bordered table-hover" style="width: 100%;border-collapse:collapse;margin-bottom: 5px">
+                            <thead>
+                                <tr id="id_order_table_head">
+                                    <th>ID</th>
+                                    <th>用户</th>
+                                    <th>股票</th>
+                                    <th>数量</th>
+                                    <th>价格</th>
+                                    <th>持仓</th>
+                                    <th>可卖</th>
+                                    <th>买量</th>
+                                    <th>买价</th>
+                                    <th>卖量</th>
+                                    <th>卖价</th>
+                                    <th>保证金</th>
+                                    <th>建仓费</th>
+                                    <th>延期日</th>
+                                    <th>延期费</th>
+                                    <th>状态</th>
+                                    <th>日期</th>
+                                </tr>
+                            </thead>
+                            <tbody id="id_order_table_body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4" id="id_order_table_info" style="padding-top: 5px">
+                    </div>
+                    <div class="col-md-4" id="id_order_table_page">
+                    </div>
+                    <div class="col-md-4" id="id_order_table_size">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block modals %}
-  
+<div class="modal fade"  id="id_modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="id_modal_title"></h4>
+            </div>
+            <div class="modal-body" id="id_modal_body">
+            </div>
+            <div class="modal-footer" id="id_modal_footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="id_modal_save">保存</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
 {% endblock %}
 
 
 {% block jscontent %}
 <script type="text/javascript">
-    //get order list
-    $.get(
-        '{% url "cms.widgets.order.order.list" %}',
-        function(data, status) {
-            if(status == 'success'){
-                $('#id_order_list').html(data);
-            } else {
-                $('#id_order_list').text('请求数据失败');
-            }
-        }
+
+//show detail
+function showdetail(orderid){
+    alert(orderid);
+    $.get('{% url "cms.order.order.detail"%}',
+        {id: orderid},
+        function(data, status){
+            $('#id_modal_title').html('详情');
+            $('#id_modal_body').html(data);       
+            $('#id_modal_save').hide();
+            $('#id_modal').modal();
+        },
+        'html'
     );
+}
+
+//init page
+$(document).ready(function(){
+    // init date input widget
+    $('.date-picker').datepicker({
+        autoclose: true,
+        todayHighlight: true,
+        format: 'yyyy/mm/dd'
+    }).next().on(ace.click_event, function(){
+        $(this).prev().focus();
+    });
+
+    //init table
+    var ordertable = new CubeTable({
+        id: 'id_order_table', 
+        url: '{% url "cms.apis.order.order.list" %}',
+        page: {
+            size: 20,
+            options: [2, 10, 20, 30]
+        },
+
+        cells: {
+            render: function(d){
+                if(d == null)
+                    return '-';
+                return d;
+            }
+        },
+
+        rows: {
+            id: 'id',
+            onevent: function(e, d) {
+                $('#id_order_operation').removeAttr('disabled');
+                if(e=='dblclick')
+                    showdetail(d.rid);
+            }
+        },
+
+        columns: [
+        {id: 'id', sortable: true},
+        {id: 'user'},
+        {id: 'stock'},
+        {id: 'ocount', sortable: true},
+        {id: 'oprice', sortable: true},
+        {id: 'hcount', sortable: true},
+        {id: 'fcount'},
+        {id: 'bcount'},
+        {id: 'bprice'},
+        {id: 'scount'},
+        {id: 'sprice'},
+        {id: 'margin'},
+        {id: 'ofee'},
+        {id: 'ddays'},
+        {id: 'dfee'},
+        {id: 'status'},
+        {id: 'date'}
+        ],
+
+    });
+
+    // init table
+    ordertable.init();
+
+    // init show detail event
+    $('#id_show_detail').on('click', {table:ordertable}, function(e){
+        showdetail(e.data.table.data.select.rid);
+    });
+});
 </script>
 {% endblock %}

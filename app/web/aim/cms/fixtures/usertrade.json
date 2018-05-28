@@ -74,5 +74,22 @@
       "status": "tobuy",
       "ctime": 1527261052
     }
+  },
+  {
+    "model": "cms.usertrade",
+    "pk": 4,
+    "fields": {
+      "user_id": 3,
+      "stock_id": "000003",
+      "code": "0004",
+      "hcount": 1000,
+      "fcount": 1000,
+      "oprice": 10.02,
+      "ocount": 1000,     
+      "margin": 2000.00,
+      "ofee": 200.00,
+      "status": "tobuy",
+      "ctime": 1527261052
+    }
   }
 ]
