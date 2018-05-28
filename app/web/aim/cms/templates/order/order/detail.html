@@ -1,28 +1,133 @@
 <div class="tabbable">
 	<ul class="nav nav-tabs padding-12 tab-color-blue background-blue" id="myTab4">
 		<li class="active">
-			<a data-toggle="tab" href="#home4" aria-expanded="true">Home</a>
+			<a data-toggle="tab" href="#_detail" aria-expanded="true">订单</a>
 		</li>
 
-		<li class="">
-			<a data-toggle="tab" href="#profile4" aria-expanded="false">Profile</a>
+		<li>
+			<a data-toggle="tab" href="#_margin" aria-expanded="false">追保</a>
 		</li>
 
-		<li class="">
-			<a data-toggle="tab" href="#dropdown14" aria-expanded="false">More</a>
+		<li>
+			<a data-toggle="tab" href="#_fee" aria-expanded="false">费用</a>
+		</li>
+		<li>
+			<a data-toggle="tab" href="#_user" aria-expanded="false">用户</a>
 		</li>
 	</ul>
 
-	<div class="tab-content">
-		<div id="home4" class="tab-pane active">
-			<p>Raw denim you probably haven't heard of them jean shorts Austin.</p>
+	<div class="tab-content" style="height: 300px; overflow: auto;">
+		<div id="_detail" class="tab-pane active form-horizontal">
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>杠杆</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.tradelever.lever}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>状态</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.status}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>用户</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.user.user}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>股票</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.stock.name}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>数量</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.ocount}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>价格</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.oprice}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>持仓</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.hcount}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>可卖</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.fcount}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>买量</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.bcount}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>买价</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.bprice}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>卖量</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.scount}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>卖价</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.sprice}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>保证金</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.margin}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>建仓费</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.ofee}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>延期天数</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.ddays}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>延期费</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.dfee}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>交易盈利</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.tprofit}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>平台分成</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.sprofit}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>创建时间</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.ctime}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>完成时间</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{item.ftime}}</p>
+				</div>
+			</div>
 		</div>
 
-		<div id="profile4" class="tab-pane">
+		<div id="_margin" class="tab-pane">
 			<p>Food truck fixie locavore, accusamus mcsweeney's marfa nulla single-origin coffee squid.</p>
 		</div>
 
-		<div id="dropdown14" class="tab-pane">
+		<div id="_fee" class="tab-pane">
+			<p>Etsy mixtape wayfarers, ethical wes anderson tofu before they sold out mcsweeney's organic lomo retro fanny pack lo-fi farm-to-table readymade.</p>
+		</div>
+		<div id="_user" class="tab-pane">
 			<p>Etsy mixtape wayfarers, ethical wes anderson tofu before they sold out mcsweeney's organic lomo retro fanny pack lo-fi farm-to-table readymade.</p>
 		</div>
 	</div>

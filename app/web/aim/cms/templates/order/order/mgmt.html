@@ -151,7 +151,6 @@
 
 //show detail
 function showdetail(orderid){
-    alert(orderid);
     $.get('{% url "cms.order.order.detail"%}',
         {id: orderid},
         function(data, status){

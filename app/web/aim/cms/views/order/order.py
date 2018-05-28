@@ -1,4 +1,4 @@
-from cms import ctx, auth
+from cms import ctx, auth, models
 
 from django.shortcuts import render
 
@@ -21,6 +21,17 @@ def detail(request):
     :return:
     """
     try:
-        return render(request, 'order/order/detail.html', context=ctx.default(request, '*.order.order.*'))
+        if request.method != 'GET':
+            return 'method not support'
+
+        id = request.GET['id']
+
+        # get order detail
+        item = models.UserTrade.objects.get(id=id)
+
+        # set context
+        context = ctx.default(request)
+        context.update({'item': item})
+        return render(request, 'order/order/detail.html', context=context)
     except Exception as e:
         return str(e)
