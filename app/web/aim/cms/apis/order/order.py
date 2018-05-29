@@ -28,7 +28,9 @@ def list(request):
             params = form.cleaned_data
 
             # filter
-            sdate, edate, words = params['sdate'], params['edate'], params['words']
+            status, sdate, edate, words = params['status'], params['sdate'], params['edate'], params['words']
+            if status:
+                results = results.filter(status=status)
             if sdate:
                 results = results.filter(ctime__gte=cube.time.utime(sdate))
             if edate:

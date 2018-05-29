@@ -89,7 +89,17 @@ function CubeTable(init) {
   $.extend(this.rows, init.rows);
 
   //table columns
-  this.columns = init.columns;
+  this.columns = [];
+  for(i=0; i<init.columns.length; i++){
+    column = {
+      id: 0,
+      sortable: false,
+      render: this.cells.render
+    };
+
+    $.extend(column, init.columns[i]);
+    this.columns.push(column);
+  }
 }
 
 // cube table prototype
@@ -161,42 +171,18 @@ CubeTable.prototype = {
       if(i%2==0)
         oe = 'even';
 
-      //current row data
-      item = this.data.items[i];
+       //add row start
+      htmlrow = '<tr class="'+oe+'" sid="'+i+'" rid="'+this.data.items[i][this.rows.id]+'">\n'
 
       //row columns
-      htmlcols = []
-
-      //add row start
-      htmlrow = '<tr class="'+oe+'" sid="'+i+'" rid="'+item[this.rows.id]+'">\n'
-
+      htmlcols = [];
       //extract column data for row
       for (j=0; j<this.columns.length; j++){
-        column = this.columns[j];
-        
-        id = j;
-        if (column.id)
-          id = column.id;
-
-        render = this.cells.render;
-        if (column.render)
-          render = column.render
-
-        data = '';
-        // column original data
-        if (name) {
-          data = item[id];
-        } else {
-          data = item[j];
-        }
-
-        // column rendered data
-        if (render) {
-          data = render(data);
-        }
+        id = this.columns[j].id;
+        render = this.columns[j].render;
 
         // column html data
-        htmlcol = '\t<td>' + data + '</td>';
+        htmlcol = '\t<td>' + render(this.data.items[i][id]) + '</td>';
 
         // add to html columns
         htmlcols.push(htmlcol);
@@ -204,7 +190,6 @@ CubeTable.prototype = {
 
       // add row columns
       htmlrow += htmlcols.join('\n');
-
       // add row end
       htmlrow += '\n</tr>';
 

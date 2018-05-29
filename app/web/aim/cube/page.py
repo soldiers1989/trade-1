@@ -12,10 +12,8 @@ def start(s, total):
     :param total: int, total records
     :return: int, correct start value
     """
-    if s is None or s < 0:
+    if s is None or s < 0 or s > total:
         s = 0
-    elif s > total:
-        s = total
     else:
         pass
 
