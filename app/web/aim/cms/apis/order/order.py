@@ -69,7 +69,7 @@ def list(request):
                         'scount': result.scount, 'sprice': result.sprice,
                         'margin': result.margin, 'ofee': result.ofee,
                         'ddays': result.ddays, 'dfee': result.dfee,
-                        'status': result.status, 'date': cube.time.dates(result.ctime)}
+                        'status': models.UserTrade.cstatus(result.status), 'date': cube.time.dates(result.ctime)}
                 data['items'].append(item)
 
             return resp.success(data=data)

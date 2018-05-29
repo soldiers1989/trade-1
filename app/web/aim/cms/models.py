@@ -444,6 +444,15 @@ class UserTrade(models.Model):
         items['lever'] = self.tradelever.dict()
         return items
 
+    @staticmethod
+    def cstatus(s):
+        cm = {
+                'tobuy': '待买入', 'buying': '买入中', 'holding': '持仓中',
+                'tosell': '待卖出', 'selling': '卖出中', 'toclose': '待平仓', 'closing': '平仓中',
+                'finished': '已结束', 'expired': '已失效'
+              }
+        return cm[s]
+
 
 # tb_trade_lever
 class TradeLever(models.Model):

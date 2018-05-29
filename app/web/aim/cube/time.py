@@ -2,6 +2,7 @@ import time, datetime
 
 
 DEFAULT_DATE_FORMAT = "%Y/%m/%d"
+DEFAULT_DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def utime(date, format=None):
@@ -12,6 +13,9 @@ def utime(date, format=None):
     :return:
         unix timestamp
     """
+    if date is None:
+        return 0;
+
     if isinstance(date, datetime.date):
         return time.mktime(date.timetuple())
     elif isinstance(date, str):
@@ -28,8 +32,20 @@ def dates(tm, format=None):
     :param format: str, date string format
     :return: str, date string
     """
+    if tm is None:
+        return ''
     format = DEFAULT_DATE_FORMAT if format is None else format
     return time.strftime(format, time.gmtime(tm))
 
+def datetms(tm, format=None):
+    """
+        transfer unix timestamp to date string
+    :param tm: int, unix timestamp
+    :param format: str, date string format
+    :return: str, date string
+    """
+    if tm is None:
+        return ''
 
-
+    format = DEFAULT_DATE_TIME_FORMAT if format is None else format
+    return time.strftime(format, time.gmtime(tm))
