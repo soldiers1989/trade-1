@@ -1,1 +1,1 @@
-from cms.views import auth, order, home
+from cms.views import auth, order, home, user

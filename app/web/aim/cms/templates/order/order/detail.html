@@ -7,7 +7,7 @@
 			<a data-toggle="tab" href="#_lever" aria-expanded="false">杠杆</a>
 		</li>
 		<li>
-			<a data-toggle="tab" href="#_margin" aria-expanded="false">追保</a>
+			<a data-toggle="tab" href="#_margin" aria-expanded="false">保证金</a>
 		</li>
 		<li>
 			<a data-toggle="tab" href="#_fee" aria-expanded="false">费用</a>
@@ -20,13 +20,23 @@
 	<div class="tab-content" style="height: 300px; overflow: auto;">
 		<div id="_detail" class="tab-pane active form-horizontal">
 			<div class="form-group">
-				<label class="col-sm-2 control-label"><b>杠杆</b></label>
+				<label class="col-sm-2 control-label"><b>ID</b></label>
 				<div class="col-sm-4">
-					<p class="form-control-static">{{order.tradelever.lever}}</p>
+					<p class="form-control-static">{{order.id}}</p>
 				</div>
 				<label class="col-sm-2 control-label"><b>状态</b></label>
 				<div class="col-sm-4">
 					<p class="form-control-static">{{order.status}}</p>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label"><b>杠杆</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{order.tradelever.lever}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>优惠券</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{order.coupon.money}}</p>
 				</div>
 			</div>
 			<div class="form-group">
@@ -220,12 +230,18 @@
 		<div id="_user" class="tab-pane form-horizontal">
 			<div class="form-group">
 				<label class="col-sm-2 control-label"><b>ID</b></label>
-				<div class="col-sm-4">
+				<div class="col-sm-8">
 					<p class="form-control-static">{{order.user.id}}</p>
 				</div>
+			</div>
+			<div class="form-group">
 				<label class="col-sm-2 control-label"><b>用户</b></label>
 				<div class="col-sm-4">
 					<p class="form-control-static">{{order.user.user}}</p>
+				</div>
+				<label class="col-sm-2 control-label"><b>余额</b></label>
+				<div class="col-sm-4">
+					<p class="form-control-static">{{order.user.money}}</p>
 				</div>
 			</div>
 			<div class="form-group">
