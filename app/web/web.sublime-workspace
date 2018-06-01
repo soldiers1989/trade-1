@@ -187,25 +187,8 @@
 	},
 	"buffers":
 	[
-		{
-			"file": "/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-detailview2.html",
-			"settings":
-			{
-				"buffer_size": 2486,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "aim/cms/models.py",
-			"settings":
-			{
-				"buffer_size": 18877,
-				"encoding": "UTF-8",
-				"line_ending": "Unix"
-			}
-		}
 	],
-	"build_system": "Packages/SublimeREPL/sublimerepl_build_system_hack.sublime-build",
+	"build_system": "",
 	"build_system_choices":
 	[
 		[
@@ -261,6 +244,7 @@
 	},
 	"expanded_folders":
 	[
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm"
 	],
 	"file_history":
 	[
@@ -337,14 +321,13 @@
 	],
 	"find":
 	{
-		"height": 39.0
+		"height": 26.0
 	},
 	"find_in_files":
 	{
 		"height": 101.0,
 		"where_history":
 		[
-			""
 		]
 	},
 	"find_state":
@@ -352,41 +335,6 @@
 		"case_sensitive": false,
 		"find_history":
 		[
-			"item.",
-			"this.page.start",
-			"$.get",
-			"addRowClickEvent",
-			"rowid",
-			"this.render",
-			"this.page.goto",
-			"this.page.toto",
-			"this.page.curr",
-			"this.page.total",
-			"this.sort.order",
-			"this.sort.by",
-			"this.sort.seq",
-			"this.rows",
-			"changePageSize",
-			"gotoPage",
-			"this.pagesize",
-			"this.pagesizes",
-			"this.tableid",
-			"tabledata",
-			"elmt",
-			"tablebody",
-			"tablecols",
-			"tablesize",
-			".module.",
-			"_module_",
-			"add_",
-			"_add",
-			"add_",
-			"_auth_add",
-			"——auth",
-			"_module_",
-			"module_",
-			"mod_",
-			"options"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -394,32 +342,6 @@
 		"regex": false,
 		"replace_history":
 		[
-			"order.",
-			"rid",
-			"this.cells.render",
-			"this.data.page.goto",
-			"this.data.page.curr",
-			"this.data.page.total",
-			"this.data.sort.order",
-			"this.data.sort.by",
-			"resize",
-			"goto",
-			"this.page.size",
-			"this.page.options",
-			"this.id",
-			"data",
-			"dom",
-			"elmt.body",
-			"columns",
-			"pagesize",
-			".auth.",
-			"mod_",
-			"_mod",
-			"det_",
-			"_auth_det",
-			"_auth_",
-			"auth_",
-			"det_"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -430,80 +352,8 @@
 	"groups":
 	[
 		{
-			"selected": 0,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-detailview2.html",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2486,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/HTML/HTML.sublime-syntax",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 0,
-			"sheets":
-			[
-				{
-					"buffer": 1,
-					"file": "aim/cms/models.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 18877,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1689,
-								1689
-							]
-						],
-						"settings":
-						{
-							"SL.17.region_keys":
-							[
-							],
-							"SL.211.region_keys":
-							[
-							],
-							"syntax": "Packages/Python/Python.sublime-syntax",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 7353.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				}
 			]
 		}
 	],
@@ -524,18 +374,11 @@
 				0,
 				1,
 				1
-			],
-			[
-				1,
-				0,
-				2,
-				1
 			]
 		],
 		"cols":
 		[
 			0.0,
-			0.614185463021,
 			1.0
 		],
 		"rows":
@@ -562,10 +405,10 @@
 		"height": 0.0
 	},
 	"pinned_build_system": "Packages/User/javascript.sublime-build",
-	"project": "aim.sublime-project",
+	"project": "web.sublime-project",
 	"replace":
 	{
-		"height": 70.0
+		"height": 48.0
 	},
 	"save_all_on_build": true,
 	"select_file":

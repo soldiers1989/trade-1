@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'cms.apps.CmsConfig',
+    'adb.apps.AdbConfig'
 ]
 
 MIDDLEWARE = [
@@ -55,7 +56,7 @@ ROOT_URLCONF = 'arm.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR+"/cms/tpl"],
+        'DIRS': [BASE_DIR+"/cms/tpls"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

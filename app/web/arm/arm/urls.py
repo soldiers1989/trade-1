@@ -18,6 +18,5 @@ from django.conf import settings
 from django.conf.urls import include, static
 
 urlpatterns = [
-    path('api/', include('cms.api.urls')),
-    path('cms/', include('cms.site.urls'))
+    path('', include('cms.urls'))
 ] + static.static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
