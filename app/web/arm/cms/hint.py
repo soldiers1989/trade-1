@@ -4,6 +4,7 @@
 
 MSG_LOGIN_SUCCESS = '登录成功'
 MSG_LOGOUT_SUCCESS = '退出成功'
+MSG_CHANGEPWD_SUCCESS = '修改密码成功'
 
 ERR_EXCEPTION = '服务器异常'
 

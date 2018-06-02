@@ -1,0 +1,11 @@
+<div class="easyui-accordion" id="modules">
+	{% for module in modules %}
+	<div title="{{ module.name }}">
+		<ul class="easyui-datalist" lines="true">
+			{% for child in module.childs %}
+				<li value="{{ child.path }}">&nbsp;&nbsp;{{ child.name }}</li>
+			{% endfor %}
+		</ul>
+	</div>
+	{% endfor %}
+</div>

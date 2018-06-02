@@ -9,55 +9,42 @@
     <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/jquery.easyui.min.js"></script>
 </head>
 <body class="easyui-layout">
-    <div data-options="region:'north',border:false" style="height:30px;">
-        <span>测试管理平台</span>
-        <span style="float: right;">
-            <span><a href="#" class="easyui-linkbutton">修改密码</a></span>
-            <span><a href="#" class="easyui-linkbutton">退出</a></span>
-        </span>
-    </div>
-    <div data-options="region:'south'" style="height:15px;">
-        <p>abc</p>
+    <div id="header" data-options="region:'north',border:false" style="height:40px;">
+        <div class="easyui-panel" style="padding:5px;">
+            <span>{{name}}, 欢迎你</span>
+            <span style="float: right;">
+                <a href="#" class="easyui-menubutton" data-options="menu:'#mymenu'">我的</a>
+                <div id="mymenu" style="width:100px;">
+                    <div id="changepwd">修改密码</div>
+                    <div id="logout">退出</div>
+                </div>
+            </span>
+        </div>
     </div>
 
-    <div data-options="region:'west',title:'West',split:true" style="width:150px;">
+    <div id="footer" data-options="region:'south'" style="height:20px;">
+        <div style="position: absolute;left: 50%;transform: translateX(-50%);">
+            <span>运营管理系统@2018</span>
+        </div>
+    </div>
+
+    <div id="menus" data-options="region:'west',split:true" style="width:150px;">
         <div class="easyui-accordion" id="modules">
-            <div title="aaa">
+            {% for module in modules %}
+            <div title="{{ module.name }}">
                 <ul class="easyui-datalist" lines="true">
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
+                    {% for child in module.childs %}
+                        <li value="{{ child.path }}">&nbsp;&nbsp;{{ child.name }}</li>
+                    {% endfor %}
                 </ul>
             </div>
-            <div title="aaa">
-                <ul class="easyui-datalist" lines="true">
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                </ul>
-            </div>
-            <div title="aaa">
-                <ul class="easyui-datalist" lines="true">
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                    <li>abcd</li>
-                </ul>
-            </div>
+            {% endfor %}
         </div>
     </div>
 
     <div data-options="region:'center'" style="padding:5px;background:#eee;">
         <div class="easyui-tabs" style="height: 100%">
-            <div title="First Tab" style="padding:10px;">
+            <div title="欢迎" style="padding:10px;">
                 First Tab
             </div>
             <div title="Second Tab" closable="true" style="padding:10px;">
@@ -68,9 +55,107 @@
             </div>
         </div>
     </div>
+
+    <div id="dlg_changepwd">
+        <form id="form_changepwd" method="post">
+            <div style="padding: 10px">
+                <input class="easyui-passwordbox" id="pwd" name="pwd" type="text" data-options="prompt:'请输入密码', required:true, validType:['text', 'length[3,16]']" style="width: 100%">
+            </div>
+            <div style="padding: 10px">
+                <input class="easyui-passwordbox" id="cpwd" name="cpwd" type="password" prompt="请重复密码" validType="equals['#pwd']" style="width: 100%" required="required">
+            </div>
+            <div id='hint'></div>
+        </form>
+    </div>
+
     <script type="text/javascript">
+        //logout
+        function logout() {
+            //alert('logout');
+            $.post('/api/logout/',
+                function(resp, status) {
+                    if(resp.status){
+                        window.location.assign('/cms/login/');
+                    } else {
+                        alert(resp.message);
+                    }
+                },
+                'json'
+            );
+        }
+
+        //init & setup events
         $(function(){
-            //
+            //init mine's menu
+            $('#mymenu').menu({
+                onClick: function(item) {
+                    if(item.id=='logout') {
+                        logout();
+                    } else if(item.id=='changepwd') {
+                        $('#dlg_changepwd').dialog('open');
+                    } else {
+                        alert('wrong command');
+                    }
+                }
+            });
+
+            //init change password dialog
+            $('#dlg_changepwd').dialog({
+                title: '修改密码',
+                width: 300,
+                height:200,
+                closed: true,
+                modal: true,
+                buttons: [
+                {
+                    text: '保存',
+                    iconCls: 'icon-ok',
+                    handler: function(){
+                        $('#form_changepwd').submit();
+                    }
+                },{
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function(){
+                        $('#dlg_changepwd').dialog('close');
+                    }
+                }
+                ]
+            });
+
+            //init change passowrd form
+            $('#form_changepwd').form({
+                url: '/api/changepwd/',
+                type: 'post',
+                novalidate: true,
+                onSubmit: function() {
+                    return $(this).form('enableValidation').form('validate');
+                },
+                success: function (data) {
+                    var resp = JSON.parse(data);
+                    if (resp.status) {
+                        // close change passowrd dialog
+                        $('#dlg_changepwd').dialog('close');
+
+                        // relogin after change passowrd
+                        window.location.assign('/cms/login/');
+                    } else {
+                        $('#hint').html(resp.message);
+                    }
+                }
+            });
+
+
+            //confirm password
+            $.extend($.fn.validatebox.defaults.rules, {
+                equals: {
+                    validator: function(value, param){
+                        var pass = $(param[0]).passwordbox('getValue');
+                        return value == pass;
+                    },
+                    message: '前后输入密码不一致'
+                }
+            });
         });
     </script>
 </body>

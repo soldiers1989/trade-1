@@ -9,3 +9,8 @@ class Login(forms.Form):
     pwd = forms.CharField(max_length=16, min_length=3)
     remember = forms.BooleanField(required=False)
 
+class Password(forms.Form):
+    """
+        change password
+    """
+    pwd = forms.CharField(max_length=16, min_length=3)

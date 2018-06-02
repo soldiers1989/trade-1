@@ -94,6 +94,30 @@ def user(request):
         return resp.failure(e);
 
 
+def changepwd(request):
+    """
+        change password
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.user.Password(request.POST)
+        if form.is_valid():
+            # get new password
+            pwd = cube.hash.sha1(form.cleaned_data['pwd'])
+            # get current user
+            user = auth.get_user(request)
+            # update password
+            models.Admin.objects.filter(id=user['id']).update(pwd=pwd)
+
+            #
+            return resp.success(hint.MSG_CHANGEPWD_SUCCESS)
+        else:
+            return resp.failure(hint.ERR_FORM_DATA)
+    except Exception as e:
+        return resp.failure(e);
+
+
 @auth.need_login
 def logout(request):
     """

@@ -37,7 +37,7 @@
     $().ready(function () {
         // submit form
         $('#login').form({
-            url: '{% url "api.user.login" %}',
+            url: '/api/login/',
             type: 'post',
             onSubmit: function() {
                 return $(this).form('enableValidation').form('validate');
@@ -45,7 +45,7 @@
             success: function (data) {
                 var resp = JSON.parse(data);
                 if (resp.status) {
-                    window.location.assign('{% url 'cms.index' %}');
+                    window.location.assign('/cms/index/');
                 } else {
                     $('#hint').html(resp.message);
                 }

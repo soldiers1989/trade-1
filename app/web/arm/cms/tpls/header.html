@@ -1,0 +1,113 @@
+<div class="easyui-panel" style="padding:5px;">
+	<span>{{name}}, 欢迎你</span>
+	<span style="float: right;">
+		<a href="#" class="easyui-menubutton" data-options="menu:'#mymenu'">我的</a>
+		<div id="mymenu" style="width:100px;">
+			<div id="changepwd">修改密码</div>
+			<div id="logout">退出</div>
+		</div>
+	</span>
+</div>
+
+<div id="dlg_changepwd">
+    <form id="form_changepwd" method="post">
+        <div style="padding: 10px">
+            <input class="easyui-passwordbox" id="pwd" name="pwd" type="text" data-options="prompt:'请输入密码', required:true, validType:['text', 'length[3,16]']" style="width: 100%">
+        </div>
+        <div style="padding: 10px">
+            <input class="easyui-passwordbox" id="cpwd" name="cpwd" type="password" prompt="请重复密码" validType="equals['#pwd']" style="width: 100%" required="required">
+        </div>
+        <div id='hint'></div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    //logout
+    function logout() {
+        //alert('logout');
+        $.post('/api/logout/',
+            function(resp, status) {
+                if(resp.status){
+                    window.location.assign('/cms/login/');
+                } else {
+                    alert(resp.message);
+                }
+            },
+            'json'
+        );
+    }
+
+    //init & setup events
+    $(function(){
+        //init mine's menu
+        $('#mymenu').menu({
+            onClick: function(item) {
+                if(item.id=='logout') {
+                    logout();
+                } else if(item.id=='changepwd') {
+                    $('#dlg_changepwd').dialog('open');
+                } else {
+                    alert('wrong command');
+                }
+            }
+        });
+
+        //init change password dialog
+        $('#dlg_changepwd').dialog({
+            title: '修改密码',
+            width: 300,
+            height:200,
+            closed: true,
+            modal: true,
+            buttons: [
+                {
+                    text: '保存',
+                    iconCls: 'icon-ok',
+                    handler: function(){
+                        $('#form_changepwd').submit();
+                    }
+                },{
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function(){
+                        $('#dlg_changepwd').dialog('close');
+                    }
+                }
+            ]
+        });
+
+        //init change passowrd form
+        $('#form_changepwd').form({
+            url: '/api/changepwd/',
+            type: 'post',
+            novalidate: true,
+            onSubmit: function() {
+                return $(this).form('enableValidation').form('validate');
+            },
+            success: function (data) {
+                var resp = JSON.parse(data);
+                if (resp.status) {
+                    // close change passowrd dialog
+                    $('#dlg_changepwd').dialog('close');
+
+                    // relogin after change passowrd
+                    window.location.assign('/cms/login/');
+                } else {
+                    $('#hint').html(resp.message);
+                }
+            }
+        });
+
+
+        //confirm password
+        $.extend($.fn.validatebox.defaults.rules, {
+            equals: {
+                validator: function(value, param){
+                    var pass = $(param[0]).passwordbox('getValue');
+                    return value == pass;
+                },
+                message: '前后输入密码不一致'
+            }
+        });
+    });
+</script>
