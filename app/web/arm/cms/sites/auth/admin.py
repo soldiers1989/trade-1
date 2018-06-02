@@ -31,7 +31,7 @@ def logout(request):
     return redirect('cms.login')
 
 
-@auth.protect
+@auth.need_permit
 def list(request):
     """
 

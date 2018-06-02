@@ -1,6 +1,6 @@
 [
     {
-        "model": "cms.tradefee",
+        "model": "adb.tradefee",
         "pk": 1,
         "fields": {
             "trade_id": "1",
@@ -12,7 +12,7 @@
         }
     },
     {
-        "model": "cms.tradefee",
+        "model": "adb.tradefee",
         "pk": 2,
         "fields": {
             "trade_id": "1",
@@ -24,7 +24,7 @@
         }
     },
     {
-        "model": "cms.tradefee",
+        "model": "adb.tradefee",
         "pk": 3,
         "fields": {
             "trade_id": "1",
@@ -36,7 +36,7 @@
         }
     },
     {
-        "model": "cms.tradefee",
+        "model": "adb.tradefee",
         "pk": 4,
         "fields": {
             "trade_id": "2",

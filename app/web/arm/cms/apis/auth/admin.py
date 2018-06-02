@@ -21,7 +21,7 @@ def login(request):
         return resp.failure(message=msg)
 
 
-@auth.protect
+@auth.need_permit
 def list(request):
     """
         list api
@@ -41,7 +41,7 @@ def list(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def get(request):
     """
         get api
@@ -56,7 +56,7 @@ def get(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def add(request):
     """
         add api
@@ -81,7 +81,7 @@ def add(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def modify(request):
     """
         modify admin
@@ -103,7 +103,7 @@ def modify(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def delete(request):
     """
         delete api

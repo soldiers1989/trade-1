@@ -3,7 +3,7 @@ from cms import ctx, auth
 from django.shortcuts import render
 
 
-@auth.protect
+@auth.need_permit
 def list(request):
     """
         module list view

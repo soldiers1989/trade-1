@@ -1,6 +1,6 @@
 [
     {
-        "model": "cms.trademargin",
+        "model": "adb.trademargin",
         "pk": 1,
         "fields": {
             "trade_id": "1",
@@ -10,7 +10,7 @@
         }
     },
     {
-        "model": "cms.trademargin",
+        "model": "adb.trademargin",
         "pk": 2,
         "fields": {
             "trade_id": "1",
@@ -20,7 +20,7 @@
         }
     },
     {
-        "model": "cms.trademargin",
+        "model": "adb.trademargin",
         "pk": 3,
         "fields": {
             "trade_id": "1",
@@ -30,7 +30,7 @@
         }
     },
     {
-        "model": "cms.trademargin",
+        "model": "adb.trademargin",
         "pk": 4,
         "fields": {
             "trade_id": "2",

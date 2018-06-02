@@ -1,7 +1,8 @@
 from django.urls import path
-from cms.apis import auth, order
+from cms.apis import user, auth, order
 
 urlpatterns = [
-    path('login/', auth.admin.login, name="cms.api.auth.admin.login"),
-    path('logout/', auth.admin.login, name="cms.api.auth.admin.logout")
+    path('login/', user.login, name="api.user.login"),
+    path('user/', user.user, name="api.user.user"),
+    path('logout/', user.logout, name="api.user.logout")
 ]

@@ -1,91 +1,79 @@
 [
     {
-        "model": "cms.module",
+        "model": "adb.module",
         "pk": 1,
         "fields": {
             "name": "权限管理",
-            "icon": "fa-desktop",
             "order": 1,
             "disable": 0,
             "ctime": 1527261052
         }
     },
     {
-        "model": "cms.module",
+        "model": "adb.module",
         "pk": 2,
         "fields": {
             "parent": 1,
             "name": "用户管理",
-            "code": "cms.auth.admin.list",
-            "path": ".*/auth.admin/.*",
-            "icon": "",
+            "path": "/cms/auth.admin/list",
             "order": 2,
             "disable": 0,
             "ctime": 1527261052
         }
     },
     {
-        "model": "cms.module",
+        "model": "adb.module",
         "pk": 3,
         "fields": {
             "parent": 1,
             "name": "模块管理",
-            "code": "cms.auth.module.list",
-            "path": ".*/auth/module/.*",
-            "icon": "",
+            "path": "/cms/auth/module/list",
             "order": 3,
             "disable": 0,
             "ctime": 1527261052
         }
     },
     {
-        "model": "cms.module",
+        "model": "adb.module",
         "pk": 4,
         "fields": {
             "parent": 1,
             "name": "权限管理",
-            "code": "cms.auth.auth.list",
-            "path": ".*/auth/auth/.*",
-            "icon": "",
+            "path": "/cms/auth/auth/list",
             "order": 4,
             "disable": 0,
             "ctime": 1527261052
         }
     },
     {
-        "model": "cms.module",
+        "model": "adb.module",
         "pk": 5,
         "fields": {
             "name": "订单管理",
-            "icon": "fa-book",
             "order": 5,
             "disable": 0,
             "ctime": 1527261052
         }
     },
     {
-        "model": "cms.module",
+        "model": "adb.module",
         "pk": 6,
         "fields": {
             "parent": 5,
             "name": "订单列表",
-            "code": "cms.order.order.mgmt",
-            "path": ".*/order/order/.*",
-            "icon": "",
+            "path": "/cms/order/order/list",
             "order": 6,
             "disable": 0,
             "ctime": 1527261052
         }
     },
     {
-        "model": "cms.module",
+        "model": "adb.module",
         "pk": 7,
         "fields": {
             "parent": 5,
             "name": "订单杠杆",
-            "code": "cms.order.lever.list",
-            "path": ".*/order/order/.*",
-            "icon": "",
+            "path": "/cms/order/lever/list",
             "order": 7,
             "disable": 0,
             "ctime": 1527261052

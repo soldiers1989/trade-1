@@ -4,7 +4,7 @@ from cms import ctx, auth, models
 from django.shortcuts import render
 
 
-@auth.protect
+@auth.need_permit
 def mgmt(request):
     """
         module list view
@@ -14,7 +14,7 @@ def mgmt(request):
     return render(request, 'order/order/mgmt.html', context=ctx.default(request, 'cms.order.order.mgmt'))
 
 
-@auth.protect
+@auth.need_permit
 def detail(request):
     """
         detail api

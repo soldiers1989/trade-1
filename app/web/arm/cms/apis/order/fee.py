@@ -3,7 +3,7 @@ from adb import models
 from cms import auth
 from cms.apis import resp
 
-@auth.protect
+@auth.need_permit
 def list(request):
     """
         list api

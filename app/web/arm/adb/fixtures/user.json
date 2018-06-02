@@ -1,6 +1,6 @@
 [
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 1,
         "fields": {
             "user": "13126886633",
@@ -13,7 +13,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 2,
         "fields": {
             "user": "13552621014",
@@ -26,7 +26,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 3,
         "fields": {
             "user": "13100000000",
@@ -39,7 +39,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 4,
         "fields": {
             "user": "13100000004",
@@ -52,7 +52,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 5,
         "fields": {
             "user": "13100000005",
@@ -65,7 +65,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 6,
         "fields": {
             "user": "13100000006",
@@ -78,7 +78,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 7,
         "fields": {
             "user": "13100000007",
@@ -91,7 +91,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 8,
         "fields": {
             "user": "13100000008",
@@ -104,7 +104,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 9,
         "fields": {
             "user": "13100000009",
@@ -117,7 +117,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 10,
         "fields": {
             "user": "13100000010",
@@ -130,7 +130,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 11,
         "fields": {
             "user": "13100000011",
@@ -143,7 +143,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 12,
         "fields": {
             "user": "13100000012",
@@ -156,7 +156,7 @@
         }
     },
     {
-        "model": "cms.user",
+        "model": "adb.user",
         "pk": 13,
         "fields": {
             "user": "13100000013",

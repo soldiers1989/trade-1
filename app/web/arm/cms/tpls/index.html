@@ -1,53 +1,77 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
-	<title>Custom DataGrid Pager - jQuery EasyUI Demo</title>
-	<link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/bootstrap/easyui.css">
-	<link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/icon.css">
-	<script type="text/javascript" src="/assets/jquery/1.11.3/jquery.min.js"></script>
-	<script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/jquery.easyui.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Arm-首页</title>
+    <link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/bootstrap/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/icon.css">
+    <script type="text/javascript" src="/assets/jquery/1.11.3/jquery.min.js"></script>
+    <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/jquery.easyui.min.js"></script>
 </head>
-<body>
-	<h2>Custom DataGrid Pager</h2>
-	<p>You can append some buttons to the standard datagrid pager bar.</p>
-	<div style="margin:20px 0;"></div>
-	<table id="dg" title="Custom DataGrid Pager" style="width:700px;height:250px"
-			data-options="rownumbers:true,singleSelect:true,pagination:true,url:'datagrid_data1.json',method:'get'">
-		<thead>
-			<tr>
-				<th data-options="field:'itemid',width:80">Item ID</th>
-				<th data-options="field:'productid',width:100">Product</th>
-				<th data-options="field:'listprice',width:80,align:'right'">List Price</th>
-				<th data-options="field:'unitcost',width:80,align:'right'">Unit Cost</th>
-				<th data-options="field:'attr1',width:240">Attribute</th>
-				<th data-options="field:'status',width:60,align:'center'">Status</th>
-			</tr>
-		</thead>
-	</table>
-	<script type="text/javascript">
-		$(function(){
-			var pager = $('#dg').datagrid().datagrid('getPager');	// get the pager of datagrid
-			pager.pagination({
-				buttons:[{
-					iconCls:'icon-search',
-					handler:function(){
-						alert('search');
-					}
-				},{
-					iconCls:'icon-add',
-					handler:function(){
-						alert('add');
-					}
-				},{
-					iconCls:'icon-edit',
-					handler:function(){
-						alert('edit');
-					}
-				}]
-			});
-		})
-	</script>
+<body class="easyui-layout">
+    <div data-options="region:'north',border:false" style="height:30px;">
+        <span>测试管理平台</span>
+        <span style="float: right;">
+            <span><a href="#" class="easyui-linkbutton">修改密码</a></span>
+            <span><a href="#" class="easyui-linkbutton">退出</a></span>
+        </span>
+    </div>
+    <div data-options="region:'south'" style="height:15px;">
+        <p>abc</p>
+    </div>
+
+    <div data-options="region:'west',title:'West',split:true" style="width:150px;">
+        <div class="easyui-accordion" id="modules">
+            <div title="aaa">
+                <ul class="easyui-datalist" lines="true">
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                </ul>
+            </div>
+            <div title="aaa">
+                <ul class="easyui-datalist" lines="true">
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                </ul>
+            </div>
+            <div title="aaa">
+                <ul class="easyui-datalist" lines="true">
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                    <li>abcd</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div data-options="region:'center'" style="padding:5px;background:#eee;">
+        <div class="easyui-tabs" style="height: 100%">
+            <div title="First Tab" style="padding:10px;">
+                First Tab
+            </div>
+            <div title="Second Tab" closable="true" style="padding:10px;">
+                Second Tab
+            </div>
+            <div title="Third Tab" iconCls="icon-reload" closable="true" style="padding:10px;">
+                Third Tab
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(function(){
+            //
+        });
+    </script>
 </body>
 </html>

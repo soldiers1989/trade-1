@@ -1,0 +1,14 @@
+[
+    {
+        "model": "adb.admin",
+        "pk": 1,
+        "fields": {
+            "user": "admin",
+            "pwd": "7c4a8d09ca3762af61e59520943dc26494f8941b",
+            "name": "admin",
+            "phone": "13126886633",
+            "disable": 0,
+            "ctime": 1527261052
+        }
+    }
+]

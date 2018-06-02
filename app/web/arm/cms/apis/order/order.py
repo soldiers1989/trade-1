@@ -9,7 +9,7 @@ from cms.apis import resp
 from cms import auth, hint, forms
 
 
-@auth.protect
+@auth.need_permit
 def list(request):
     """
         list api
@@ -80,7 +80,7 @@ def list(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def get(request):
     """
         get order
@@ -101,7 +101,7 @@ def get(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def add(request):
     """
         add api
@@ -135,7 +135,7 @@ def add(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def modify(request):
     """
         modify api
@@ -169,7 +169,7 @@ def modify(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def delete(request):
     """
         delete api
@@ -187,7 +187,7 @@ def delete(request):
         return resp.failure(str(e))
 
 
-@auth.protect
+@auth.need_permit
 def reorder(request):
     """
         order api

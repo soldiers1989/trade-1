@@ -1,15 +1,5 @@
 from django import forms
 
-
-class Login(forms.Form):
-    """
-        login form
-    """
-    username = forms.CharField(max_length=32, min_length=1)
-    password = forms.CharField(max_length=32, min_length=6)
-    remember = forms.BooleanField(required=False)
-
-
 class Add(forms.Form):
     user = forms.CharField(max_length=32, min_length=1)
     pwd = forms.CharField(max_length=32, min_length=6)

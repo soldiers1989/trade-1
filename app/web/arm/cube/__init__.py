@@ -1,1 +1,1 @@
-from cube import time, page
+from cube import time, page, hash

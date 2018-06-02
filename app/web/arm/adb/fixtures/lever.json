@@ -1,6 +1,6 @@
 [
   {
-    "model": "cms.lever",
+    "model": "adb.lever",
     "pk": 1,
     "fields": {
       "lever": 5,
@@ -19,7 +19,7 @@
     }
   },
   {
-    "model": "cms.lever",
+    "model": "adb.lever",
     "pk": 2,
     "fields": {
       "lever": 6,
@@ -38,7 +38,7 @@
     }
   },
   {
-    "model": "cms.lever",
+    "model": "adb.lever",
     "pk": 3,
     "fields": {
       "lever": 7,

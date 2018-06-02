@@ -1,6 +1,6 @@
 [
   {
-    "model": "cms.usercoupon",
+    "model": "adb.usercoupon",
     "pk": 1,
     "fields": {
       "user": 1,
@@ -12,7 +12,7 @@
     }
   },
   {
-    "model": "cms.usercoupon",
+    "model": "adb.usercoupon",
     "pk": 2,
     "fields": {
       "user": 1,
@@ -24,7 +24,7 @@
     }
   },
     {
-    "model": "cms.usercoupon",
+    "model": "adb.usercoupon",
     "pk": 3,
     "fields": {
       "user": 2,
@@ -36,7 +36,7 @@
     }
   },
     {
-    "model": "cms.usercoupon",
+    "model": "adb.usercoupon",
     "pk": 4,
     "fields": {
       "user": 3,

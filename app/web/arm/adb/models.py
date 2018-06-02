@@ -17,11 +17,9 @@ class File(models.Model):
 # tb_module
 class Module(models.Model):
     id = models.AutoField(primary_key=True)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, related_name='+')
-    code = models.CharField(max_length=32, blank=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name='+', null=True)
     name = models.CharField(max_length=32)
     path = models.CharField(max_length=128, blank=True)
-    icon = models.CharField(max_length=32, blank=True)
     order = models.IntegerField(default=0)
     disable = models.BooleanField(default=False)
     ctime = models.BigIntegerField()
@@ -39,12 +37,12 @@ class Module(models.Model):
 class Admin(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.CharField(max_length=32, unique=True)
-    pwd = models.CharField(max_length=32)
+    pwd = models.CharField(max_length=64)
     name = models.CharField(max_length=32, blank=True)
     phone = models.CharField(max_length=16, blank=True)
     disable = models.BooleanField(default=False)
     ctime = models.BigIntegerField()
-    modules = models.ManyToManyField('Module', through='Authority', through_fields=('admin', 'module'))
+    modules = models.ManyToManyField(Module, through='Authority', through_fields=('admin', 'module'))
 
     class Meta:
         db_table = 'tb_admin'
@@ -56,9 +54,8 @@ class Admin(models.Model):
 # tb_authority
 class Authority(models.Model):
     id = models.AutoField(primary_key=True)
-    module = models.ForeignKey(Module, on_delete=models.CASCADE)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
-    disable = models.BooleanField(default=False)
+    module = models.ForeignKey(Module, on_delete=models.CASCADE)
     ctime = models.BigIntegerField()
 
     class Meta:

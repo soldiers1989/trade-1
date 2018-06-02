@@ -1,6 +1,6 @@
 [
   {
-    "model": "cms.stock",
+    "model": "adb.stock",
     "pk": "000001",
     "fields": {
       "name": "中国平安",
@@ -13,7 +13,7 @@
     }
   },
   {
-    "model": "cms.stock",
+    "model": "adb.stock",
     "pk": "000002",
     "fields": {
       "name": "平安银行",
@@ -26,7 +26,7 @@
     }
   },
   {
-    "model": "cms.stock",
+    "model": "adb.stock",
     "pk": "000003",
     "fields": {
       "name": "TCL集团",
