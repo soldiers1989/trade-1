@@ -1,7 +1,7 @@
 """
     api for cms
 """
-import time, cube
+import time, cube, datetime
 
 from adb import models
 from cms import auth, resp, hint, forms
@@ -99,26 +99,46 @@ def list(request):
     try:
         form = forms.auth.admin.List(request.POST)
         if form.is_valid():
-            # form parameters
+            ## form parameters ##
             params = form.cleaned_data
 
-            # pagination & sort parameters
-            sdate, edate, words = params['sdate'], params['edate'], params['words']
+            ## filter results ##
+            sdate, edate = params['sdate'], params['edate']
+            filters = {}
+            if sdate:
+                filters['ctime__gte'] = cube.time.utime(sdate)
+            if edate:
+                filters['ctime__lt'] = cube.time.utime(edate+datetime.timedelta(days=1))
+            objects = models.Admin.objects.filter(**filters).all()
 
-            # query objects
-            objects = models.Admin.objects.filter(ctime__gte=cube.time.utime(sdate), ctime__lt=cube).all()
+            ## search words ##
+            words = params['words']
+            if words:
+                objects = objects.filter(id=words) | objects.filter(user__contains=words) | objects.filter(name__contains=words) | objects.filter(phone__contains=words)
 
-            # pagination & sort parameters
-            page, rows, sort, order = params['page'], params['rows'], params['sort'], params['order']
 
+            ## pagination & sort ##
+            page, size, sort, order = params['page'], params['rows'], params['sort'], params['order']
+
+            # order #
+            if sort and order:
+                order = '-' if order=='desc' else ''
+                objects = objects.order_by(order+sort)
+
+            # pagination #
+            total = objects.count()
+            objects = objects[(page-1)*size : size]
+
+            ## make results ##
             rows = []
             for object in objects:
                 item = object.dict()
                 del item['pwd']
                 rows.append(item)
 
+            ## response data ##
             data = {
-                'total': len(rows),
+                'total': total,
                 'rows': rows
             }
 
