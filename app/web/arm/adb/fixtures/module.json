@@ -15,7 +15,7 @@
         "fields": {
             "parent": 1,
             "name": "用户管理",
-            "path": "/cms/auth.admin/list",
+            "path": "/cms/auth/admin/",
             "order": 2,
             "disable": 0,
             "ctime": 1527261052
@@ -27,7 +27,7 @@
         "fields": {
             "parent": 1,
             "name": "模块管理",
-            "path": "/cms/auth/module/list",
+            "path": "/cms/auth/module/",
             "order": 3,
             "disable": 0,
             "ctime": 1527261052
@@ -39,7 +39,7 @@
         "fields": {
             "parent": 1,
             "name": "权限管理",
-            "path": "/cms/auth/auth/list",
+            "path": "/cms/auth/authority/",
             "order": 4,
             "disable": 0,
             "ctime": 1527261052
@@ -61,7 +61,7 @@
         "fields": {
             "parent": 5,
             "name": "订单列表",
-            "path": "/cms/order/order/list",
+            "path": "/cms/order/order/",
             "order": 6,
             "disable": 0,
             "ctime": 1527261052
@@ -73,7 +73,7 @@
         "fields": {
             "parent": 5,
             "name": "订单杠杆",
-            "path": "/cms/order/lever/list",
+            "path": "/cms/order/lever/",
             "order": 7,
             "disable": 0,
             "ctime": 1527261052

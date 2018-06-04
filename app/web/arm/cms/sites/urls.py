@@ -1,13 +1,13 @@
-from cms.sites import home
+from cms.sites import index, login, auth
 from django.urls import path
 
 urlpatterns = [
-    path('login/', home.login, name='cms.login'),
+    path('login/', login.login, name='cms.login'),
 
-    path('', home.index, name='cms'),
-    path('index/', home.index, name='cms.index'),
-    path('index/header/', home.header, name="cms.index.header"),
-    path('index/footer/', home.footer, name="cms.index.footer"),
-    path('index/menus/', home.menus, name="cms.index.menus"),
-    path('index/welcome/', home.header, name="cms.index.welcome"),
+    path('', index.index, name='cms'),
+    path('index/', index.index, name='cms.index'),
+
+    path('auth/admin/', auth.admin, name="cms.auth.admin"),
+    path('auth/module/', auth.module, name="cms.auth.module"),
+    path('auth/authority/', auth.authority, name="cms.auth.module"),
 ]

@@ -2,6 +2,7 @@
      authority control
 """
 from adb import models
+from cms import resp, hint
 from django.shortcuts import redirect
 
 
@@ -54,7 +55,9 @@ def has_permit(request):
 def need_login(func):
     def check_login(request):
         if not has_login(request):
-            redirect('cms.login')
+            if request.path.startswith('/api/'):
+                return resp.failure(hint.ERR_NOT_AUTHORIZED)
+            return redirect('cms.login')
         else:
             return func(request)
     return check_login
@@ -63,7 +66,9 @@ def need_login(func):
 def need_permit(func):
     def check_permit(request):
         if not has_permit(request):
-            redirect('cms.login')
+            if request.path.startswith('/api/'):
+                return resp.failure(hint.ERR_NOT_AUTHORIZED)
+            return redirect('cms.login')
         else:
             return func(request)
     return check_permit

@@ -1,6 +1,5 @@
 from adb import models
-from cms import auth
-from cms.apis import resp
+from cms import auth, resp
 
 
 @auth.need_permit

@@ -1,27 +1,95 @@
 """
     api for cms
 """
-import time
+import time, cube
 
 from adb import models
-from cms.apis import resp
-from cms import auth, hint, forms
+from cms import auth, resp, hint, forms
 
 
 def login(request):
     """
-        login api
+        login
     :param request:
     :return:
     """
-    res, msg = auth.login(request)
-    if res:
-        return resp.success(message=msg)
-    else:
-        return resp.failure(message=msg)
+    try:
+        login_form = forms.auth.admin.Login(request.POST)
+        if login_form.is_valid():
+            # get login data form user input
+            username = login_form.cleaned_data.get('user')
+            password = cube.hash.sha1(login_form.cleaned_data.get('pwd'))
+            remember = login_form.cleaned_data.get('remember')
+
+            # get user data from database
+            admin = models.Admin.objects.get(user=username)
+
+            # check password
+            if admin.pwd == password:
+                # user has been disabled
+                if admin.disable:
+                    return False, hint.ERR_LOGIN_DISABLED
+
+                # set session expire for not remember choice
+                if not remember:
+                    request.session.set_expiry(0)
 
 
-@auth.need_permit
+                # set user session
+                request.session['user'] = {
+                    'id': admin.id,
+                    'name': admin.name,
+                }
+
+                return resp.success(hint.MSG_LOGIN_SUCCESS)
+            else:
+                return resp.failure(hint.ERR_LOGIN_PASSWORD)
+        else:
+            return resp.failure(hint.ERR_LOGIN_INPUT)
+    except Exception as e:
+        return resp.failure(e)
+
+
+@auth.need_login
+def logout(request):
+    """
+        logout
+    :param request:
+    :return:
+    """
+    try:
+        request.session.clear()
+        return resp.success(hint.MSG_LOGOUT_SUCCESS)
+    except Exception as e:
+        return resp.failure(e);
+
+
+@auth.need_login
+def pwd(request):
+    """
+        change password
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.auth.admin.Pwd(request.POST)
+        if form.is_valid():
+            # get new password
+            pwd = cube.hash.sha1(form.cleaned_data['pwd'])
+            # get current user
+            user = auth.get_user(request)
+            # update password
+            models.Admin.objects.filter(id=user['id']).update(pwd=pwd)
+
+            #
+            return resp.success(hint.MSG_CHANGEPWD_SUCCESS)
+        else:
+            return resp.failure(hint.ERR_FORM_DATA)
+    except Exception as e:
+        return resp.failure(e);
+
+
+@auth.need_login
 def list(request):
     """
         list api
@@ -29,14 +97,34 @@ def list(request):
     :return:
     """
     try:
-        items = models.Admin.objects.filter().all()
+        form = forms.auth.admin.List(request.POST)
+        if form.is_valid():
+            # form parameters
+            params = form.cleaned_data
 
-        data = []
+            # pagination & sort parameters
+            sdate, edate, words = params['sdate'], params['edate'], params['words']
 
-        for item in items:
-            data.append(item.dict())
+            # query objects
+            objects = models.Admin.objects.filter(ctime__gte=cube.time.utime(sdate), ctime__lt=cube).all()
 
-        return resp.success(data=data)
+            # pagination & sort parameters
+            page, rows, sort, order = params['page'], params['rows'], params['sort'], params['order']
+
+            rows = []
+            for object in objects:
+                item = object.dict()
+                del item['pwd']
+                rows.append(item)
+
+            data = {
+                'total': len(rows),
+                'rows': rows
+            }
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(hint.ERR_FORM_DATA)
     except Exception as e:
         return resp.failure(str(e))
 

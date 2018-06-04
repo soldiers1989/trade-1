@@ -37,7 +37,7 @@
     $().ready(function () {
         // submit form
         $('#login').form({
-            url: '/api/login/',
+            url: '/api/admin/login',
             type: 'post',
             onSubmit: function() {
                 return $(this).form('enableValidation').form('validate');

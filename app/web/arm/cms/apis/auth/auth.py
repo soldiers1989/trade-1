@@ -4,8 +4,7 @@
 import time
 
 from adb import models
-from cms.apis import resp
-from cms import auth, hint, forms
+from cms import auth, resp, hint, forms
 
 
 @auth.need_permit
