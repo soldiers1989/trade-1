@@ -6,13 +6,41 @@ from cms import resp, hint
 from django.shortcuts import redirect
 
 
-def get_user(request):
+def set_admin_id(request, id):
     """
-        get user information from session
+        save admin information to session
     :param request:
     :return:
     """
-    return request.session.get('user')
+    request.session['id'] = id
+
+
+def get_admin_id(request):
+    """
+        get admin information from session
+    :param request:
+    :return:
+    """
+    return request.session.get('id')
+
+
+def set_admin_modules(request, modules):
+    """
+        save admin modules to session
+    :param request:
+    :param modules:
+    :return:
+    """
+    request.session['modules'] = modules
+
+
+def get_admin_modules(request):
+    """
+        get admin modules from session
+    :param request:
+    :return:
+    """
+    return request.session.get('modules')
 
 
 def has_login(request):
@@ -21,7 +49,7 @@ def has_login(request):
     :param request:
     :return:
     """
-    if request.session.get('user') is None:
+    if get_admin_id(request) is None:
         return False
     return True
 
@@ -36,16 +64,12 @@ def has_permit(request):
     if(not has_login(request)):
         return False
 
-    # get user from session
-    user = get_user(request)
+    # get admin modules from session
+    modules = get_admin_modules(request)
 
-    # check access path's permit
-    admin = models.Admin.objects.get(id=user['id'])
-
-    # get user's enabled modules
-    modules = admin.modules.filter(disable=False).all()
+    # check access permission
     for m in modules:
-        if m.path == request.path:
+        if m['path'] == request.path:
             return True
 
     # has no permission

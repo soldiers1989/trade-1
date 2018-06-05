@@ -1,0 +1,11 @@
+[
+  {
+    "model": "adb.adminrole",
+    "pk": 1,
+    "fields": {
+      "admin_id": 1,
+      "role_id": 1,
+      "ctime": 1527261052
+    }
+  }
+]

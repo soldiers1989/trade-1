@@ -1,19 +1,6 @@
 from django.db  import models
 
 
-# tb_file
-class File(models.Model):
-    id = models.AutoField(primary_key=True)
-    code = models.CharField(max_length=32, unique=True)
-    name = models.CharField(max_length=32)
-    path = models.CharField(max_length=256)
-    size = models.BigIntegerField()
-    ctime = models.BigIntegerField()
-
-    class Meta:
-        db_table = 'tb_file'
-
-
 # tb_module
 class Module(models.Model):
     id = models.AutoField(primary_key=True)
@@ -33,6 +20,22 @@ class Module(models.Model):
         return items
 
 
+# tb_role
+class Role(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=32, blank=True)
+    disable = models.BooleanField(default=False)
+    ctime = models.BigIntegerField()
+    modules = models.ManyToManyField(Module, through='RoleModule', through_fields=('role', 'module'))
+
+    class Meta:
+        db_table = 'tb_role'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        return items
+
+
 # tb_admin
 class Admin(models.Model):
     id = models.AutoField(primary_key=True)
@@ -42,7 +45,7 @@ class Admin(models.Model):
     phone = models.CharField(max_length=16, blank=True)
     disable = models.BooleanField(default=False)
     ctime = models.BigIntegerField()
-    modules = models.ManyToManyField(Module, through='Authority', through_fields=('admin', 'module'))
+    roles = models.ManyToManyField(Role, through='AdminRole', through_fields=('admin', 'role'))
 
     class Meta:
         db_table = 'tb_admin'
@@ -51,19 +54,36 @@ class Admin(models.Model):
         return dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
 
 
-# tb_authority
-class Authority(models.Model):
+# tb_admin_role
+class AdminRole(models.Model):
     id = models.AutoField(primary_key=True)
     admin = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    ctime = models.BigIntegerField()
+
+    class Meta:
+        db_table = 'tb_admin_role'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['role'] = items['role'].id if items['role'] else None
+        items['admin'] = items['admin'].id if items['admin'] else None
+        return items
+
+
+# tb_role_module
+class RoleModule(models.Model):
+    id = models.AutoField(primary_key=True)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
     ctime = models.BigIntegerField()
 
     class Meta:
-        db_table = 'tb_auth'
+        db_table = 'tb_role_module'
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['admin'] = items['admin'].id if items['admin'] else None
+        items['role'] = items['role'].id if items['role'] else None
         items['module'] = items['module'].id if items['module'] else None
         return items
 
@@ -508,3 +528,16 @@ class TradeFee(models.Model):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['trade'] = items['trade'].id if items['trade'] else None
         return items
+
+
+# tb_file
+class File(models.Model):
+    id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=32, unique=True)
+    name = models.CharField(max_length=32)
+    path = models.CharField(max_length=256)
+    size = models.BigIntegerField()
+    ctime = models.BigIntegerField()
+
+    class Meta:
+        db_table = 'tb_file'

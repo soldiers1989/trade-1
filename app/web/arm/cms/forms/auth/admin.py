@@ -5,8 +5,8 @@ class Login(forms.Form):
     """
         login form
     """
-    user = forms.CharField(max_length=16, min_length=3)
-    pwd = forms.CharField(max_length=16, min_length=3)
+    user = forms.CharField(min_length=3, max_length=16)
+    pwd = forms.CharField(min_length=3, max_length=16)
     remember = forms.BooleanField(required=False)
 
 
@@ -14,7 +14,7 @@ class Pwd(forms.Form):
     """
         change password
     """
-    pwd = forms.CharField(max_length=16, min_length=3)
+    pwd = forms.CharField(min_length=3, max_length=16)
 
 
 class List(forms.Form):
@@ -27,16 +27,39 @@ class List(forms.Form):
     words = forms.CharField(required=False)
 
 
-class Add(forms.Form):
-    user = forms.CharField(max_length=32, min_length=1)
-    pwd = forms.CharField(max_length=32, min_length=6)
-    name = forms.CharField(max_length=32, initial='', required=False)
-    phone = forms.CharField(max_length=16, initial='', required=False)
-    disable = forms.BooleanField(required=False)
-
-
-class Modify(forms.Form):
+class Get(forms.Form):
     id = forms.IntegerField()
-    name = forms.CharField(max_length=32, initial='')
-    phone = forms.CharField(max_length=16, initial='')
+
+
+Delete = Get
+
+
+class Add(forms.Form):
+    user = forms.CharField(min_length=3, max_length=16)
+    pwd = forms.CharField(min_length=3, max_length=16)
+    name = forms.CharField(initial='', max_length=16, required=False)
+    phone = forms.CharField(initial='', max_length=16, required=False)
     disable = forms.BooleanField(required=False)
+
+
+class Update(forms.Form):
+    id = forms.IntegerField()
+    name = forms.CharField(initial='', min_length=3, max_length=16)
+    phone = forms.CharField(initial='', max_length=16)
+    disable = forms.BooleanField(required=False)
+
+
+class ResetPwd(forms.Form):
+    id = forms.IntegerField()
+    pwd = forms.CharField(min_length=3, max_length=16)
+
+
+class GetRoles(forms.Form):
+    id = forms.IntegerField(required=False)
+
+
+class AddRoles(forms.Form):
+    id = forms.IntegerField()
+    roles = forms.CharField()
+
+DelRoles = AddRoles

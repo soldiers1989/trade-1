@@ -1,7 +1,7 @@
 [
   {
     "model": "adb.stock",
-    "pk": "000001",
+    "pk": "601318",
     "fields": {
       "name": "中国平安",
       "jianpin": "zgpa",
@@ -14,7 +14,7 @@
   },
   {
     "model": "adb.stock",
-    "pk": "000002",
+    "pk": "000001",
     "fields": {
       "name": "平安银行",
       "jianpin": "payh",
@@ -27,7 +27,7 @@
   },
   {
     "model": "adb.stock",
-    "pk": "000003",
+    "pk": "000100",
     "fields": {
       "name": "TCL集团",
       "jianpin": "tcl",

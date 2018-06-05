@@ -44,3 +44,44 @@ cube.format = new function() {
 		return date.toLocaleString();
 	}
 }
+
+//////////////validatebox extension//////////////
+$.extend($.fn.validatebox.defaults.rules, {
+    /*10:05:02*/
+    time: {
+        validator: function (value) {
+            var a = value.match(/^(\d{1,2})(:)?(\d{1,2})\2(\d{1,2})$/);
+            if (a == null) {
+                return false;
+            } else if (a[1] > 24 || a[3] > 60 || a[4] > 60) {
+                return false;
+            }
+            return true;
+        },
+        message: '时间格式不正确，请重新输入。'
+    },
+
+    /*2017-02-01*/
+    date: {
+        validator: function (value) {
+            var r = value.match(/^(\d{1,4})(-|\/)(\d{1,2})\2(\d{1,2})$/);
+            if (r == null) {
+                return false;
+            }
+            var d = new Date(r[1], r[3] - 1, r[4]);
+            return (d.getFullYear() == r[1] && (d.getMonth() + 1) == r[3] && d.getDate() == r[4]);
+        },
+        message: '时间格式不正确，请重新输入。'
+    },
+
+    /*2014-01-01 13:04:06*/
+    datetime: {
+        validator: function (value) {
+            var r = value.match(/^(\d{1,4})(-|\/)(\d{1,2})\2(\d{1,2}) (\d{1,2}):(\d{1,2}):(\d{1,2})$/);
+            if (r == null) return false;
+            var d = new Date(r[1], r[3] - 1, r[4], r[5], r[6], r[7]);
+            return (d.getFullYear() == r[1] && (d.getMonth() + 1) == r[3] && d.getDate() == r[4] && d.getHours() == r[5] && d.getMinutes() == r[6] && d.getSeconds() == r[7]);
+        },
+        message: '时间格式不正确，请重新输入。'
+    }
+});

@@ -1,139 +1,451 @@
-<table id="admin_datagrid" style="width: 100%"></table>
+<div class="easyui-layout" data-options="fit:true, split:true, border: true">
+    <div data-options="region:'west', split:true" style="width: 80%;">
+        <table id="admin_datagrid" style="height: 100%;"></table>
+    </div>
+    <div data-options="region:'center', split:true, title:'用户角色'" style="width: 20%">
+        <table id="admin_role_datagrid" style="height: 100%;"></table>
+    </div>
+</div>
 
 <div id="admin_toolbar">
     <span>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="addUser()">新建</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="modUser()">编辑</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="delUser()">删除</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="admin.add()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="admin.update()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="admin.delete()">删除</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-lock" plain="true" onclick="admin.resetpwd()">重设密码</a>
     </span>
 
-    <span id="admin_search" style="float: right;">
-        <span>时间</span>
-        <input id="sdate" type="text" class="easyui-datebox">
-        <span>-</span>
-        <input id="edate" type="text" class="easyui-datebox">
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="admin_search_form">
+            <span>时间</span>
+            <input id="sdate" class="easyui-datebox" validType="date">
+            <span>-</span>
+            <input id="edate" class="easyui-datebox" validType="date">
 
-        <input id="words" class="easyui-textbox">
-        <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="searchUser()">查询</a>
+            <input id="words" class="easyui-textbox">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="admin.list()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="admin.reset()">重置</a>
+        </form>
     </span>
 </div>
 
-<div id="admin_dialog" class="easyui-dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-buttons'">
-    <form id="fm" method="post" novalidate style="margin:0;padding:20px 50px">
+<div class="easyui-dialog" id="admin_addedit_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#admin_addedit_dialog_buttons'">
+    <form class="easyui-form" id="admin_addedit_form" method="post" style="margin:0;padding:10px 20px">
         <div style="margin-bottom:10px">
-            <input name="firstname" class="easyui-textbox" required="true" label="First Name:" style="width:100%">
+            <input class="easyui-textbox" id="admin_user" name="user" data-options="label:'用户', prompt:'用户',iconCls:'icon-man', required:true, validType:['text', 'length[3,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px" id="admin_pwd_container" >
+            <input class="easyui-passwordbox" id='admin_pwd' name="pwd" data-options="label:'密码', prompt:'密码', required:true, validType:['text', 'length[3,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input name="lastname" class="easyui-textbox" required="true" label="Last Name:" style="width:100%">
+            <input class="easyui-textbox" name="name"  data-options="label:'姓名', prompt:'姓名', required:true, validType:['text', 'length[0,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input name="phone" class="easyui-textbox" required="true" label="Phone:" style="width:100%">
+            <input class="easyui-textbox" name="phone" data-options="label:'手机', prompt:'手机', required:true, validType:['text', 'length[0,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input name="email" class="easyui-textbox" required="true" validType="email" label="Email:" style="width:100%">
+            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', required:true" style="width: 100%">
+                <option value="false">否</option>
+                <option value="true">是</option>
+            </select>
         </div>
     </form>
 </div>
-<div id="dlg-buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="saveUser()" style="width:90px">Save</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="javascript:$('#dlg').dialog('close')" style="width:90px">Cancel</a>
+
+<div id="admin_addedit_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="admin.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="admin.cancel()" style="width:90px">取消</a>
 </div>
 
+<div class="easyui-dialog" id="admin_resetpwd_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#admin_resetpwd_dialog_buttons'">
+    <form class="easyui-form" id="admin_resetpwd_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-passwordbox" name="pwd" data-options="label:'新密码', prompt:'新密码', required:true, validType:['text', 'length[3,16]']" style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="admin_resetpwd_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="admin.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="admin.cancel()" style="width:90px">取消</a>
+</div>
+
+
 <script type="text/javascript">
-    function searchUser() {
-        $('#admin_datagrid').datagrid('load', {
-            sdate: $('#admin_search').children('#sdate').val(),
-            edate: $('#admin_search').children('#edate').val(),
-            words: $('#admin_search').children('#words').val()
-        });       
-    }
+    // admin list/add/update/delete
+    var admin = {
+        datagrid: $('#admin_datagrid'),
+        dialogs: {
+            addedit: $('#admin_addedit_dialog'),
+            resetpwd: $('#admin_resetpwd_dialog'),
+        },
+         
+        forms: {
+            search: $('#admin_search_form'),
+            addedit: $('#admin_addedit_form'),
+            resetpwd: $('#admin_resetpwd_form'),
+        },
 
-    var url;
-    function addUser(){
-        $('#dlg').dialog('open').dialog('center').dialog('setTitle','New User');
-        $('#fm').form('clear');
-        url = 'save_user.php';
-    }
+        dialog: null,
+        form: null,
+        row: null,
+        action: '',
+        urls: {
+            list: '/api/auth/admin/list',
+            add: '/api/auth/admin/add',
+            update: '/api/auth/admin/update',
+            delete: '/api/auth/admin/delete',
+            resetpwd: '/api/auth/admin/resetpwd',
+        },
 
-    function modUser(){
-        var row = $('#dg').datagrid('getSelected');
-        if (row){
-            $('#dlg').dialog('open').dialog('center').dialog('setTitle','Edit User');
-            $('#fm').form('load',row);
-            url = 'update_user.php?id='+row.id;
-        }
-    }
+        init: function() { //init
+            this.datagrid.datagrid({
+                url: this.urls.list,
+                toolbar: '#admin_toolbar',
+                method: 'post',
+                striped: true,
+                idField: 'id',
+                pagination: true,
+                rownumbers: true,
+                singleSelect: true,
+                fitColumns: true,
 
-    function saveUser(){
-        $('#fm').form('submit',{
-            url: url,
-            onSubmit: function(){
-                return $(this).form('validate');
-            },
-            success: function(result){
-                var result = eval('('+result+')');
-                if (result.errorMsg){
-                    $.messager.show({
-                        title: 'Error',
-                        msg: result.errorMsg
-                    });
-                } else {
-                        $('#dlg').dialog('close');        // close the dialog
-                        $('#dg').datagrid('reload');    // reload the user data
+                pageNumber: 1,
+                pageSize: 20,
+                pageList: [5, 10, 20, 30, 40, 50, 100],
+
+                columns: [[
+                    {field:'id', title:'ID', sortable: true, width: '10%'},
+                    {field:'user', title:'用户', sortable: true, width: '20%'},
+                    {field:'name', title:'姓名', sortable: true, width: '20%'},
+                    {field:'phone', title:'手机', sortable: true, width: '20%'},
+                    {field:'disable', title:'禁用', sortable: true, width: '10%', formatter: cube.format.boolean},
+                    {field:'ctime', title:'时间', sortable: true, width: '20%', formatter: cube.format.date}
+                ]],
+
+                loadFilter: function (resp) {
+                    return resp.data;
+                },
+
+                onLoadSuccess: function(resp) {
+
+                },
+
+                onLoadError: function() {
+                    $.messager.show({title: '错误', msg: '请求管理员数据失败'});
+                },
+
+                onSelect(index, row) {
+                    //alert(index+'|'+JSON.stringify(row));
+                    //set role's current admin id
+                    role.admin = row.id;
+
+                    //reload admin's role
+                    role.load();
+                }
+            });
+        },
+        
+        list: function() { // list
+            //check search form
+            if(!this.forms.search.form('validate'))
+                return;
+
+            //get parameters
+            params = {
+                sdate: this.forms.search.children('#sdate').val(),
+                edate: this.forms.search.children('#edate').val(),
+                words: this.forms.search.children('#words').val()
+            };
+
+            //reload by retrieve conditions
+            this.datagrid.datagrid('load', params);
+        },
+
+        reset: function() { // reset
+            //clear form
+            this.forms.search.form('clear');
+
+            //reload datagrid
+            this.datagrid.datagrid('load', {});
+        },
+
+        add: function() { // add
+            //reset action
+            this.action = 'add';
+
+            //reset input field
+            $('#admin_user').textbox('readonly', false);
+            $('#admin_pwd').textbox('enableValidation');
+            $('#admin_pwd_container').show();
+
+            //reset form
+            this.forms.addedit.form('clear');//.form('disableValidation');
+
+            //open dialog
+            this.dialogs.addedit.dialog('open').dialog('center').dialog('setTitle','添加用户');
+
+            //set current dialog
+            this.dialog = this.dialogs.addedit;
+            this.form = this.forms.addedit;
+        },
+
+        update: function() { // udpate
+            //reset action
+            this.action = 'update';
+            //get selected row data
+            this.row = this.datagrid.datagrid('getSelected');
+            this.row.disable = String(this.row.disable);
+            if (this.row){
+                // clear form
+                this.forms.addedit.form('clear');
+
+                //load form data
+                this.forms.addedit.form('load', this.row);
+
+                //set readonly field
+                $('#admin_user').textbox('readonly', true);
+                $('#admin_pwd').textbox('disableValidation');
+                $('#admin_pwd_container').hide();
+
+                //option dialog
+                this.dialogs.addedit.dialog('open').dialog('center').dialog('setTitle','修改用户');
+
+                //set current dialog
+                this.dialog = this.dialogs.addedit;
+                this.form = this.forms.addedit;
+            }
+        },
+
+
+        resetpwd: function() { // reset password
+            //reset action
+            this.action = 'resetpwd';
+
+            //get selected row data
+            this.row = this.datagrid.datagrid('getSelected'); 
+            if (this.row) {
+                //clear form
+                this.forms.resetpwd.form('clear');
+
+                //option dialog
+                this.dialogs.resetpwd.dialog('open').dialog('center').dialog('setTitle','修改'+this.row.name+'的密码');
+
+                //set current dialog
+                this.dialog = this.dialogs.resetpwd;
+                this.form = this.forms.resetpwd;
+            }
+        },
+
+
+        delete: function() { // delete
+            //get selected row data
+            var row = this.datagrid.datagrid('getSelected');
+            if (row){
+                $.messager.confirm({
+                    title: '确认',
+                    msg: '确认删除用户'+row.name+'?',
+                    url: this.urls.delete,
+                    fn: function(r){
+                        if (r){
+                            $.post(this.url, {id: row.id}, function(resp, status){
+                                if(status == 'success'){
+                                    if (resp.status){
+                                        admin.datagrid.datagrid('reload');
+                                    } else {
+                                        $.messager.show({title: '错误', msg: resp.message});
+                                    }
+                                } else {
+                                    $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                }
+                            },'json');
+                        }
+                    }
+                });
+            }
+        },
+
+        save: function() { // save
+            var url, params={};
+            // get action url
+            if(this.action == 'add') {
+                url = this.urls.add;
+            } else if (this.action == 'update'){
+                params.id = this.row.id;
+                url = this.urls.update;
+            } else if (this.action == 'resetpwd'){
+                params.id = this.row.id;
+                url = this.urls.resetpwd;
+            } else {
+                return;
+            }
+
+            //submit form
+            this.form.form('submit',{
+                url: url,
+                queryParams: params,   
+                onSubmit: function(){
+                    //admin.form.form('enableValidation');
+                    return admin.form.form('validate');
+                },
+                success: function(data){
+                    var resp = eval('('+data+')');
+                    if (resp.status){
+                        admin.dialog.dialog('close');
+                        admin.datagrid.datagrid('reload');
+                    } else {
+                        $.messager.show({ title: '错误',  msg: resp.message });
                     }
                 }
             });
-    }
+        },
 
-    function delUser(){
-        var row = $('#dg').datagrid('getSelected');
-        if (row){
-            $.messager.confirm('Confirm','Are you sure you want to destroy this user?',function(r){
-                if (r){
-                    $.post('destroy_user.php',{id:row.id},function(result){
-                        if (result.success){
-                                $('#dg').datagrid('reload');    // reload the user data
-                            } else {
-                                $.messager.show({    // show error message
-                                    title: 'Error',
-                                    msg: result.errorMsg
-                                });
-                            }
-                        },'json');
-                }
-            });
+        cancel: function() { //cancel
+            //clear action
+            this.action = '';
+
+            //close dialog
+            this.dialog.dialog('close');
+
         }
-    }
+    };
 
+    //init admin role
+    var role = {
+        datagrid: $('#admin_role_datagrid'),
+
+        admin: null, //current selected admin id
+        urls: {
+            list: '/api/auth/admin/role/list',
+            add: '/api/auth/admin/role/add',
+            del: '/api/auth/admin/role/del',
+        },
+
+        init: function() {
+            this.datagrid.datagrid({
+                url: this.urls.list,
+                //toolbar: '#admin_toolbar',
+                method: 'post',
+                //striped: true,
+                idField: 'id',
+                //pagination: true,
+                //rownumbers: false,
+                //singleSelect: true,
+                fitColumns: true,
+
+                //pageNumber: 1,
+                //pageSize: 20,
+                //pageList: [5, 10, 20, 30, 40, 50, 100],
+
+                columns: [[
+                    {field:'id', title:'ID', checkbox:true, width: '10%'},
+                    {field:'name', title:'角色', width: '90%'},
+                ]],
+
+                loadFilter: function (resp) {
+                    //alert(JSON.stringify(resp));
+                    return resp.data;
+                },
+                
+                onLoadSuccess: function(resp) {
+                    //alert(JSON.stringify(resp));
+
+                },
+
+                onLoadError: function() {
+                    $.messager.show({title: '错误', msg: '请求管理员数据失败'});
+                },
+
+                onCheck: function(index, row) {
+                    role.addroles([row.id]);
+                },
+
+                onUncheck: function(index, row) {
+                    role.delroles([row.id]);
+                },
+
+                onCheckAll: function(rows) {
+                    ids = [];
+                    for(i=0; i<rows.length; i++) {
+                        ids.push(rows[i].id);
+                    }
+                    role.addroles(ids);
+                },
+
+                onUncheckAll: function(rows) {
+                    ids = [];
+                    for(i=0; i<rows.length; i++) {
+                        ids.push(rows[i].id);
+                    }
+                    role.delroles(ids);
+                }
+
+            });
+        },
+
+        load: function() {
+            if (!this.admin)
+                return;
+
+            //request parameter
+            params = {id: this.admin};
+
+            //load role for admin
+            this.datagrid.datagrid('load', params);
+        },
+
+
+        addroles: function(ids) {
+            if(!this.admin)
+                return;
+
+            params = {id: this.admin, roles: ids.join()};
+
+            $.post(this.urls.add, params, function(resp, status){
+                    if(status == 'success'){
+                        if (resp.status){
+                            $.messager.show({title: '成功', msg: resp.message});
+                        } else {
+                            $.messager.show({title: '错误', msg: resp.message});
+                        }
+                    } else {
+                        $.messager.show({title: '错误', msg: '请求服务器错误'});
+                    }
+                },
+                'json'
+            );
+        },
+
+        delroles: function(ids) {
+            if(!this.admin)
+                return;
+            
+            params = {id: this.admin, roles: ids.join()};
+            
+            $.post(this.urls.del, params, function(resp, status){
+                    if(status == 'success'){
+                        if (resp.status){
+                            $.messager.show({title: '成功', msg: resp.message});
+                        } else {
+                            $.messager.show({title: '错误', msg: resp.message});
+                        }
+                    } else {
+                        $.messager.show({title: '错误', msg: '请求服务器错误'});
+                    }
+                },
+                'json'
+            );
+        }
+    };
+
+    //init page
     $(function(){
-        $('#admin_datagrid').datagrid({
-            url: '/api/auth/admin/list',
-            toolbar: '#admin_toolbar',
-            method: 'post',
-            striped: true,
-            idField: 'id',
-            pagination: true,
-            rownumbers: true,
-            singleSelect: true,
-            fitColumns: true,
+        //init admin
+        admin.init();
 
-            pageNumber: 1,
-            pageSize: 20,
-            pageList: [10, 20, 30, 40, 50, 100],
-
-            columns: [[
-                {field:'id', title:'ID', sortable: true, width: '10%'},
-                {field:'user', title:'用户', sortable: true, width: '20%'},
-                {field:'name', title:'姓名', sortable: true, width: '20%'},
-                {field:'phone', title:'手机', sortable: true, width: '20%'},
-                {field:'disable', title:'禁用', sortable: true, width: '10%', formatter: cube.format.boolean},
-                {field:'ctime', title:'时间', sortable: true, width: '20%', formatter: cube.format.date}
-            ]],
-
-            loadFilter: function (resp) {
-                return resp.data;
-            }
-        });
+        //init role
+        role.init();
     });
 
 </script>

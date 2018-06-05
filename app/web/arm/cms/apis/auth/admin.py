@@ -21,7 +21,7 @@ def login(request):
             password = cube.hash.sha1(login_form.cleaned_data.get('pwd'))
             remember = login_form.cleaned_data.get('remember')
 
-            # get user data from database
+            # get admin data from database
             admin = models.Admin.objects.get(user=username)
 
             # check password
@@ -34,12 +34,8 @@ def login(request):
                 if not remember:
                     request.session.set_expiry(0)
 
-
-                # set user session
-                request.session['user'] = {
-                    'id': admin.id,
-                    'name': admin.name,
-                }
+                # save admin id to session
+                auth.set_admin_id(request, admin.id)
 
                 return resp.success(hint.MSG_LOGIN_SUCCESS)
             else:
@@ -76,10 +72,10 @@ def pwd(request):
         if form.is_valid():
             # get new password
             pwd = cube.hash.sha1(form.cleaned_data['pwd'])
-            # get current user
-            user = auth.get_user(request)
+            # get current admin
+            id = auth.get_admin_id(request)
             # update password
-            models.Admin.objects.filter(id=user['id']).update(pwd=pwd)
+            models.Admin.objects.filter(id=id).update(pwd=pwd)
 
             #
             return resp.success(hint.MSG_CHANGEPWD_SUCCESS)
@@ -114,8 +110,14 @@ def list(request):
             ## search words ##
             words = params['words']
             if words:
-                objects = objects.filter(id=words) | objects.filter(user__contains=words) | objects.filter(name__contains=words) | objects.filter(phone__contains=words)
+                tmpobjs = None
+                if(words.isdigit()):
+                    tmpobjs = objects.filter(id=int(words))
 
+                if(tmpobjs is None or tmpobjs.count() == 0):
+                    objects = objects.filter(user__contains=words) | objects.filter(name__contains=words) | objects.filter(phone__contains=words)
+                else:
+                    objects = tmpobjs;
 
             ## pagination & sort ##
             page, size, sort, order = params['page'], params['rows'], params['sort'], params['order']
@@ -127,7 +129,9 @@ def list(request):
 
             # pagination #
             total = objects.count()
-            objects = objects[(page-1)*size : size]
+
+            if page and size:
+                objects = objects[(page-1)*size : page*size]
 
             ## make results ##
             rows = []
@@ -149,7 +153,7 @@ def list(request):
         return resp.failure(str(e))
 
 
-@auth.need_permit
+@auth.need_login
 def get(request):
     """
         get api
@@ -164,7 +168,7 @@ def get(request):
         return resp.failure(str(e))
 
 
-@auth.need_permit
+@auth.need_login
 def add(request):
     """
         add api
@@ -174,44 +178,45 @@ def add(request):
     try:
         form = forms.auth.admin.Add(request.POST)
         if form.is_valid():
-            item = models.Admin(user=form.cleaned_data['user'],
-                                pwd=form.cleaned_data['pwd'],
-                                name=form.cleaned_data['name'],
-                                phone=form.cleaned_data['phone'],
-                                disable=form.cleaned_data['disable'],
-                                ctime=int(time.time()));
+            params = form.cleaned_data
+
+            item = models.Admin(user=params['user'],
+                                pwd=cube.hash.sha1(params['pwd']),
+                                name=params['name'],
+                                phone=params['phone'],
+                                disable=params['disable'],
+                                ctime=int(time.time()))
             item.save()
             return resp.success(data=item.dict())
         else:
-            errs = form.errors
-            return resp.failure(hint.ERR_FORM_DATA)
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))
 
 
-@auth.need_permit
-def modify(request):
+@auth.need_login
+def update(request):
     """
         modify admin
     :param request:
     :return:
     """
     try:
-        form = forms.auth.admin.Modify(request.POST)
+        form = forms.auth.admin.Update(request.POST)
         if form.is_valid():
-            id = form.cleaned_data['id']
-            models.Admin.objects.filter(id=id).update(name=form.cleaned_data['name'],
-                                                      phone=form.cleaned_data['phone'],
-                                                      disable=form.cleaned_data['disable']);
-            item = models.Admin.objects.get(id=id)
-            return resp.success(data=item.dict())
+            params = form.cleaned_data
+
+            models.Admin.objects.filter(id=params['id']).update(name=params['name'],
+                                                                phone=params['phone'],
+                                                                disable=params['disable'])
+            return resp.success()
         else:
-            return resp.failure(hint.ERR_FORM_DATA)
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))
 
 
-@auth.need_permit
+@auth.need_login
 def delete(request):
     """
         delete api
@@ -219,8 +224,144 @@ def delete(request):
     :return:
     """
     try:
-        id = request.POST['id']
-        models.Admin.objects.filter(id=id).delete()
-        return resp.success()
+        form = forms.auth.admin.Delete(request.POST)
+        if form.is_valid():
+            id = form.cleaned_data['id']
+            models.Admin.objects.filter(id=id).delete()
+            return resp.success()
+        else:
+            return resp.failure(form.errors)
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
+def resetpwd(request):
+    """
+        delete api
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.auth.admin.ResetPwd(request.POST)
+        if form.is_valid():
+            id = form.cleaned_data['id']
+            pwd = cube.hash.sha1(form.cleaned_data['pwd'])
+
+            models.Admin.objects.filter(id=id).update(pwd=pwd)
+
+            return resp.success()
+        else:
+            return resp.failure(form.errors)
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
+def getroles(request):
+    """
+        get admin
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.auth.admin.Get(request.POST)
+        if form.is_valid():
+            id = form.cleaned_data['id']
+
+            # get admin's roles
+            roleids = []
+            roles = models.Admin.objects.get(id=id).roles.all()
+            for role in roles:
+                roleids.append(role.id)
+
+            # get all roles
+            roles = models.Role.objects.all()
+
+            total = roles.count()
+            rows = []
+
+            for role in roles:
+                items = role.dict()
+
+                if role.id in roleids:
+                    items['checked'] = True
+                else:
+                    items['checked'] = False
+
+                rows.append(items);
+
+            data = {
+                'total': total,
+                'rows': rows
+            }
+
+            return resp.success(data=data)
+        else:
+            roles = models.Role.objects.all()
+
+            total = roles.count()
+            rows = []
+
+            for role in roles:
+                items = role.dict()
+                items['checked'] = False
+                rows.append(items);
+
+            data = {
+                'total': total,
+                'rows': rows
+            }
+            return resp.success(data=data)
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
+def addroles(request):
+    """
+        update roles
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.auth.admin.AddRoles(request.POST)
+        if form.is_valid():
+            params = form.cleaned_data
+            id = params['id']
+            roles = params['roles'].split(',')
+
+            for role in roles:
+                models.AdminRole(admin=models.Admin(id=id), role=models.Role(id=role), ctime=int(time.time())).save()
+
+            return resp.success()
+        else:
+            return resp.failure(form.errors)
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
+def delroles(request):
+    """
+        update roles
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.auth.admin.AddRoles(request.POST)
+        if form.is_valid():
+            params = form.cleaned_data
+            id = params['id']
+            roles = params['roles'].split(',')
+
+            admin = models.Admin.objects.get(id=id)
+
+            for role in roles:
+                pass
+
+            return resp.success()
+        else:
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))

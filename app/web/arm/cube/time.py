@@ -1,7 +1,7 @@
 import time, datetime
 
 
-DEFAULT_DATE_FORMAT = "%Y/%m/%d"
+DEFAULT_DATE_FORMAT = "%Y-%m-%d"
 DEFAULT_DATE_TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 

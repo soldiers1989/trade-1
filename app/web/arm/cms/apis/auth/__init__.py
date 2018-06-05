@@ -1,1 +1,1 @@
-from cms.apis.auth import auth, admin, module
+from cms.apis.auth import auth, admin, module, role
