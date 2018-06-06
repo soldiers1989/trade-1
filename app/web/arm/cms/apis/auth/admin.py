@@ -271,7 +271,7 @@ def getroles(request):
 
             # get admin's roles
             roleids = []
-            roles = models.Admin.objects.get(id=id).roles.all()
+            roles = models.Role.objects.filter(admin__id=id).all()
             for role in roles:
                 roleids.append(role.id)
 

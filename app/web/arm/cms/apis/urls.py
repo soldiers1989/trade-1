@@ -17,4 +17,16 @@ urlpatterns = [
     path('auth/admin/role/del', auth.admin.delroles, name="api.auth.admin.role.del"),
 
     path('auth/role/list', auth.role.list, name="api.auth.role.list"),
+    path('auth/role/add', auth.role.add, name="api.auth.role.add"),
+    path('auth/role/update', auth.role.update, name="api.auth.role.update"),
+    path('auth/role/delete', auth.role.delete, name="api.auth.role.delete"),
+    path('auth/role/module/tree', auth.role.moduletree, name="api.auth.role.module.tree"),
+    path('auth/role/module/add', auth.role.addmodule, name="api.auth.role.module.add"),
+    path('auth/role/module/del', auth.role.delmodule, name="api.auth.role.module.del"),
+
+    path('auth/module/list', auth.module.list, name="api.auth.module.list"),
+    path('auth/module/tree', auth.module.tree, name="api.auth.module.tree"),
+    path('auth/module/add', auth.module.add, name="api.auth.module.add"),
+    path('auth/module/update', auth.module.update, name="api.auth.module.update"),
+    path('auth/module/delete', auth.module.delete, name="api.auth.module.delete"),
 ]

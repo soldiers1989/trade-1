@@ -1,10 +1,231 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<table id="module_treegrid" style="height: 100%;"></table>
 
-</body>
-</html>
+<div id="module_toolbar">
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="module.add()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="module.update()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="module.delete()">删除</a>
+    </span>
+	<span style="float: right; margin-right: 18px;">
+		<a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="module.refresh()">刷新</a>
+	</span>
+</div>
+
+<div class="easyui-dialog" id="module_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#module_dialog_buttons'">
+    <form class="easyui-form" id="module_form" method="post" style="margin:0;padding:10px 20px">
+    	<div style="margin-bottom:10px">
+    		<select class="easyui-combotree" id="module_form_parent" name="parent" style="width: 100%;"></select>
+    	</div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'名称', prompt:'名称', required:true, validType:['text', 'length[3,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="path" data-options="label:'路径', prompt:'路径', validType:['text', 'length[3,128]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', editable:false, required:true" style="width: 100%">
+                <option value="false">否</option>
+                <option value="true">是</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<div id="module_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="module.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="module.cancel()" style="width:90px">取消</a>
+</div>
+
+
+<script type="text/javascript">
+    // module list/add/update/delete
+    var module = {
+        treegrid: $('#module_treegrid'),
+        dialog: $('#module_dialog'),
+        form: $('#module_form'),
+        inputs: {
+        	parent: $('#module_form_parent')
+        },
+
+        row: null,
+        action: '',
+        urls: {
+            list: '/api/auth/module/list',
+            tree: '/api/auth/module/tree',
+            add: '/api/auth/module/add',
+            update: '/api/auth/module/update',
+            delete: '/api/auth/module/delete',
+        },
+
+        init: function() { //init
+        	//init tree grid
+            this.treegrid.treegrid({
+                url: this.urls.list,
+                method: 'post',
+                
+                idField: 'id',
+                treeField: 'name',
+		
+				striped: true,
+				fitColumns: true,
+                pagination: false,
+                rownumbers: false,
+                singleSelect: true,
+                
+
+				toolbar: '#module_toolbar',
+                columns: [[
+                    {field:'name', title:'名称', width: '20%'},
+                    {field:'path', title:'路径', width: '50%'},
+                    {field:'disable', title:'禁用', width: '10%', formatter: cube.format.boolean},
+                    {field:'ctime', title:'时间', width: '20%', formatter: cube.format.date}
+                ]],
+
+                loadFilter: function (resp) {
+                    return resp.data;
+                },
+
+                onLoadSuccess: function(resp) {
+
+                },
+
+                onLoadError: function() {
+                    $.messager.show({title: '错误', msg: '请求管理员数据失败'});
+                }
+            });
+
+            //init parent input
+            this.inputs.parent.combotree({
+            	url: this.urls.tree,
+            	method: 'post',
+
+            	textField: 'name',
+            	editable: false,
+
+            	label: '上级',
+            	prompt: '上级',
+
+            	loadFilter: function (resp) {
+                    return resp.data;
+                },
+            });
+        },
+        
+   
+        refresh: function() { // reset
+            //reload datagrid
+            this.treegrid.treegrid('reload');
+        },
+
+        add: function() { // add
+            //reset action
+            this.action = 'add';
+
+            //reset form
+            this.form.form('clear');//.form('disableValidation');
+
+            //reload parent tree
+            this.inputs.parent.combotree('reload');
+
+            //open dialog
+            this.dialog.dialog('open').dialog('center').dialog('setTitle','添加模块');
+        },
+
+        update: function() { // udpate
+            //reset action
+            this.action = 'update';
+            
+            //get selected row data
+            this.row = this.treegrid.treegrid('getSelected');
+            if (this.row){
+            	// format boolean value
+            	this.row.disable = String(this.row.disable);
+
+                // clear form
+                this.form.form('clear');
+
+                //reload parent tree
+            	this.inputs.parent.combotree('reload');
+
+                //load form data
+                this.form.form('load', this.row);
+
+                //option dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','修改模块');
+            }
+        },
+
+        delete: function() { // delete
+            //get selected row data
+            var row = this.treegrid.treegrid('getSelected');
+            if (row){
+                $.messager.confirm({
+                    title: '确认',
+                    msg: '确认删除模块'+row.name+'?',
+                    url: this.urls.delete,
+                    fn: function(r){
+                        if (r){
+                            $.post(this.url, {id: row.id}, function(resp, status){
+                                if(status == 'success'){
+                                    if (resp.status){
+                                        module.refresh();
+                                    } else {
+                                        $.messager.show({title: '错误', msg: resp.message});
+                                    }
+                                } else {
+                                    $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                }
+                            },'json');
+                        }
+                    }
+                });
+            }
+        },
+
+        save: function() { // save
+            var url, params={};
+            // get action url
+            if(this.action == 'add') {
+                url = this.urls.add;
+            } else if (this.action == 'update'){
+                params.id = this.row.id;
+                url = this.urls.update;
+            } else {
+                return;
+            }
+
+            //submit form
+            this.form.form('submit',{
+                url: url,
+                queryParams: params,   
+                onSubmit: function(){
+                    return module.form.form('validate');
+                },
+                success: function(data){
+                    var resp = eval('('+data+')');
+                    if (resp.status){
+                        module.dialog.dialog('close');
+                        module.treegrid.treegrid('reload');
+                    } else {
+                        $.messager.show({ title: '错误',  msg: resp.message });
+                    }
+                }
+            });
+        },
+
+        cancel: function() { //cancel
+            //clear action
+            this.action = '';
+
+            //close dialog
+            this.dialog.dialog('close');
+        }
+    };
+
+    //init page
+    $(function(){
+        //init module
+        module.init();
+    });
+
+</script>

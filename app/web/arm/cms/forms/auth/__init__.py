@@ -1,1 +1,1 @@
-from cms.forms.auth import auth, admin, module
+from cms.forms.auth import admin, module, role

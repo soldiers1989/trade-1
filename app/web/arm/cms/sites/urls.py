@@ -9,5 +9,5 @@ urlpatterns = [
 
     path('auth/admin/', auth.admin, name="cms.auth.admin"),
     path('auth/module/', auth.module, name="cms.auth.module"),
-    path('auth/authority/', auth.authority, name="cms.auth.module"),
+    path('auth/role/', auth.role, name="cms.auth.role"),
 ]

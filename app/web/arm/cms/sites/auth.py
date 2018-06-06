@@ -24,10 +24,10 @@ def module(request):
 
 
 @auth.need_permit
-def authority(request):
+def role(request):
     """
 
     :param request:
     :return:
     """
-    return render(request, 'auth/authority.html')
+    return render(request, 'auth/role.html')

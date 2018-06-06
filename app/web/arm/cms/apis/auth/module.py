@@ -1,13 +1,13 @@
 """
     api for cms
 """
-import time
+import time, cube
 
 from adb import models
 from cms import auth, resp, hint, forms
 
 
-@auth.need_permit
+@auth.need_login
 def list(request):
     """
         list api
@@ -15,19 +15,52 @@ def list(request):
     :return:
     """
     try:
-        items = models.Module.objects.filter().all()
+        items = models.Module.objects.all()
 
-        data = []
-
+        rows = []
         for item in items:
-            data.append(item.dict())
+            row = item.dict()
+            if(item.parent):
+                row['_parentId'] = row['parent']
+            rows.append(row)
+
+        data = {
+            'total': items.count(),
+            'rows': rows
+        }
 
         return resp.success(data=data)
     except Exception as e:
         return resp.failure(str(e))
 
 
-@auth.need_permit
+@auth.need_login
+def tree(request):
+    """
+
+    :param request:
+    :return:
+    """
+    try:
+        items = models.Module.objects.all()
+
+        rows = []
+        for item in items:
+            row = item.dict()
+            if (item.parent):
+                row['_parentId'] = row['parent']
+            row['text'] = row['name']
+
+            rows.append(row)
+
+        data = cube.tree.make(rows)
+
+        return resp.success(data=data)
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
 def get(request):
     """
         get api
@@ -42,7 +75,7 @@ def get(request):
         return resp.failure(str(e))
 
 
-@auth.need_permit
+@auth.need_login
 def add(request):
     """
         add api
@@ -52,50 +85,45 @@ def add(request):
     try:
         form = forms.auth.module.Add(request.POST)
         if form.is_valid():
-            item = models.Module(parent_id=form.cleaned_data['parent'],
-                                code=form.cleaned_data['code'],
-                                name=form.cleaned_data['name'],
-                                path=form.cleaned_data['path'],
-                                icon=form.cleaned_data['icon'],
-                                order=form.cleaned_data['order'],
-                                disable=form.cleaned_data['disable'],
+            params = form.cleaned_data
+            order = models.Module.objects.count()+1
+            item = models.Module(parent_id=params['parent'],
+                                name=params['name'],
+                                path=params['path'],
+                                order=order,
+                                disable=params['disable'],
                                 ctime=int(time.time()));
             item.save()
             return resp.success(data=item.dict())
         else:
-            errs = form.errors
-            return resp.failure(hint.ERR_FORM_DATA)
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))
 
 
-@auth.need_permit
-def modify(request):
+@auth.need_login
+def update(request):
     """
         modify admin
     :param request:
     :return:
     """
     try:
-        form = forms.auth.module.Modify(request.POST)
+        form = forms.auth.module.Add(request.POST)
         if form.is_valid():
-            id = form.cleaned_data['id']
-            models.Module.objects.filter(id=id).update(parent_id=form.cleaned_data['parent'],
-                                                        code=form.cleaned_data['code'],
-                                                        name=form.cleaned_data['name'],
-                                                        path=form.cleaned_data['path'],
-                                                        icon=form.cleaned_data['icon'],
-                                                        order=form.cleaned_data['order'],
-                                                        disable=form.cleaned_data['disable']);
-            item = models.Module.objects.get(id=id)
-            return resp.success(data=item.dict())
+            params = form.cleaned_data
+
+            module = models.Module.objects.filter(id=params['id'])
+            module.update(parent_id=params['parent'], name=params['name'], path=params['path'], disable=params['disable'], ctime=int(time.time()));
+
+            return resp.success()
         else:
-            return resp.failure(hint.ERR_FORM_DATA)
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))
 
 
-@auth.need_permit
+@auth.need_login
 def delete(request):
     """
         delete api
@@ -103,8 +131,13 @@ def delete(request):
     :return:
     """
     try:
-        id = request.POST['id']
-        models.Module.objects.filter(id=id).delete()
-        return resp.success()
+        form = forms.auth.module.Delete(request.POST)
+        if form.is_valid():
+            id = form.cleaned_data['id']
+            models.Module.objects.filter(id=id).delete()
+            return resp.success()
+        else:
+            return resp.failure(form.errors)
+
     except Exception as e:
         return resp.failure(str(e))

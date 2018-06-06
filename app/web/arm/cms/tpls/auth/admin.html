@@ -45,7 +45,7 @@
             <input class="easyui-textbox" name="phone" data-options="label:'手机', prompt:'手机', required:true, validType:['text', 'length[0,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', required:true" style="width: 100%">
+            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', editable:false, required:true" style="width: 100%">
                 <option value="false">否</option>
                 <option value="true">是</option>
             </select>
@@ -193,8 +193,8 @@
             this.action = 'update';
             //get selected row data
             this.row = this.datagrid.datagrid('getSelected');
-            this.row.disable = String(this.row.disable);
             if (this.row){
+                this.row.disable = String(this.row.disable);
                 // clear form
                 this.forms.addedit.form('clear');
 
