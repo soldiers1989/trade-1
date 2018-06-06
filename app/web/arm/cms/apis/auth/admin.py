@@ -2,7 +2,7 @@
     api for cms
 """
 import time, cube, datetime
-
+from django.db.models import Q
 from adb import models
 from cms import auth, resp, hint, forms
 
@@ -28,7 +28,7 @@ def login(request):
             if admin.pwd == password:
                 # user has been disabled
                 if admin.disable:
-                    return False, hint.ERR_LOGIN_DISABLED
+                    return resp.failure(hint.ERR_LOGIN_DISABLED)
 
                 # set session expire for not remember choice
                 if not remember:
@@ -331,8 +331,10 @@ def addroles(request):
             id = params['id']
             roles = params['roles'].split(',')
 
+            adminroles = models.Admin.objects.get(id=id).roles.all()
             for role in roles:
-                models.AdminRole(admin=models.Admin(id=id), role=models.Role(id=role), ctime=int(time.time())).save()
+                if not adminroles.filter(id=role).exists():
+                    models.AdminRole(admin_id=id, role_id=role, ctime=int(time.time())).save()
 
             return resp.success()
         else:
@@ -353,12 +355,18 @@ def delroles(request):
         if form.is_valid():
             params = form.cleaned_data
             id = params['id']
+
+            qs = None
             roles = params['roles'].split(',')
+            for role in roles:
+                if qs is None:
+                    qs = Q(role__id=role)
+                else:
+                    qs = qs | Q(role__id=role)
 
             admin = models.Admin.objects.get(id=id)
-
-            for role in roles:
-                pass
+            if qs is not None:
+                admin.adminrole_set.filter(qs).delete()
 
             return resp.success()
         else:

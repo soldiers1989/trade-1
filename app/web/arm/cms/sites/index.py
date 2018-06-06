@@ -26,9 +26,11 @@ def index(request):
             mobjs = role.modules.filter(disable=False).all()
         else:
             mobjs = mobjs | role.modules.filter(disable=False).all()
+
     # pack modules to session
-    for mobj in mobjs:
-        modules.append(mobj.dict())
+    if mobjs is not None:
+        for mobj in mobjs:
+            modules.append(mobj.dict())
 
     # save admin modules to session
     auth.set_admin_modules(request, modules)

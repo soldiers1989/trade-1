@@ -138,11 +138,8 @@
 
                 onSelect(index, row) {
                     //alert(index+'|'+JSON.stringify(row));
-                    //set role's current admin id
-                    role.admin = row.id;
-
                     //reload admin's role
-                    role.load();
+                    role.load(row.id);
                 }
             });
         },
@@ -316,6 +313,7 @@
         datagrid: $('#admin_role_datagrid'),
 
         admin: null, //current selected admin id
+        loaded: false, //loaded status for admin
         urls: {
             list: '/api/auth/admin/role/list',
             add: '/api/auth/admin/role/add',
@@ -331,7 +329,9 @@
                 idField: 'id',
                 //pagination: true,
                 //rownumbers: false,
-                //singleSelect: true,
+                singleSelect: false,
+                checkOnSelect: false,
+                selectOnCheck: false,
                 fitColumns: true,
 
                 //pageNumber: 1,
@@ -348,9 +348,26 @@
                     return resp.data;
                 },
                 
-                onLoadSuccess: function(resp) {
-                    //alert(JSON.stringify(resp));
+                onLoadSuccess: function(data) {
+                    //alert(JSON.stringify(data));
+                    //alert('before onloadsuccess');
 
+                    checkall = true;
+                    for(i=0; i<data.rows.length; i++){
+                        if(!data.rows[i].checked){
+                            checkall = false;
+                            break;
+                        }
+                    }
+
+                    //check all
+                    if(checkall)
+                        role.datagrid.datagrid('checkAll');
+
+                    //set loaded status
+                    role.loaded = true;
+
+                    //alert('after onlaodsuccess');
                 },
 
                 onLoadError: function() {
@@ -358,14 +375,23 @@
                 },
 
                 onCheck: function(index, row) {
+                    if(!role.loaded)
+                        return;
+
                     role.addroles([row.id]);
                 },
 
                 onUncheck: function(index, row) {
+                    if(!role.loaded)
+                        return;
+
                     role.delroles([row.id]);
                 },
 
                 onCheckAll: function(rows) {
+                    if(!role.loaded)
+                        return;
+
                     ids = [];
                     for(i=0; i<rows.length; i++) {
                         ids.push(rows[i].id);
@@ -374,6 +400,9 @@
                 },
 
                 onUncheckAll: function(rows) {
+                    if(!role.loaded)
+                        return;
+
                     ids = [];
                     for(i=0; i<rows.length; i++) {
                         ids.push(rows[i].id);
@@ -384,21 +413,38 @@
             });
         },
 
-        load: function() {
-            if (!this.admin)
-                return;
+        load: function(adminid) {
+            //alert('before load');
+            //reset datagrid
+            this.reset();
 
             //request parameter
-            params = {id: this.admin};
+            params = {id: adminid};
 
             //load role for admin
             this.datagrid.datagrid('load', params);
+
+            //set current admin id
+            this.admin = adminid;
+            //alert('after load');
+        },
+
+        reset: function() {
+            //alert('before reset');
+            //reset loaded status
+            this.loaded = false;
+            //reset admin id
+            this.admin = null;
+
+            //clear check status
+            this.datagrid.datagrid('clearChecked').datagrid('clearSelections');
+            //alert('after reset');
         },
 
 
         addroles: function(ids) {
-            if(!this.admin)
-                return;
+            if (this.admin == null)
+                $.messager.show({title: '错误', msg: '请选择管理员'});
 
             params = {id: this.admin, roles: ids.join()};
 
@@ -418,9 +464,9 @@
         },
 
         delroles: function(ids) {
-            if(!this.admin)
-                return;
-            
+            if (this.admin == null)
+                $.messager.show({title: '错误', msg: '请选择管理员'});
+
             params = {id: this.admin, roles: ids.join()};
             
             $.post(this.urls.del, params, function(resp, status){
