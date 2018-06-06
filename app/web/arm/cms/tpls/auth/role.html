@@ -91,7 +91,7 @@
                 onSelect(index, row) {
                     //alert(index+'|'+JSON.stringify(row));
                     //reload role's module
-                    module.load(row.id);
+                    rolemodule.load(row.id);
                 }
             });
         },
@@ -202,7 +202,7 @@
     };
 
     //init role modules
-    var module = {
+    var rolemodule = {
         tree: $('#role_module_tree'),
 
         roleid: null,
@@ -239,9 +239,9 @@
 
                 onCheck: function(node, checked) {
                     if(checked){
-                        module.add(node.id);
+                        rolemodule.add(node.id);
                     } else {
-                        module.del(node.id);
+                        rolemodule.del(node.id);
                     }
                 }
             });

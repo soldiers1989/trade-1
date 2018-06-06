@@ -139,7 +139,7 @@
                 onSelect(index, row) {
                     //alert(index+'|'+JSON.stringify(row));
                     //reload admin's role
-                    role.load(row.id);
+                    adminrole.load(row.id);
                 }
             });
         },
@@ -309,7 +309,7 @@
     };
 
     //init admin role
-    var role = {
+    var adminrole = {
         datagrid: $('#admin_role_datagrid'),
 
         admin: null, //current selected admin id
@@ -362,10 +362,10 @@
 
                     //check all
                     if(checkall)
-                        role.datagrid.datagrid('checkAll');
+                        adminrole.datagrid.datagrid('checkAll');
 
                     //set loaded status
-                    role.loaded = true;
+                    adminrole.loaded = true;
 
                     //alert('after onlaodsuccess');
                 },
@@ -375,39 +375,39 @@
                 },
 
                 onCheck: function(index, row) {
-                    if(!role.loaded)
+                    if(!adminrole.loaded)
                         return;
 
-                    role.addroles([row.id]);
+                    adminrole.addroles([row.id]);
                 },
 
                 onUncheck: function(index, row) {
-                    if(!role.loaded)
+                    if(!adminrole.loaded)
                         return;
 
-                    role.delroles([row.id]);
+                    adminrole.delroles([row.id]);
                 },
 
                 onCheckAll: function(rows) {
-                    if(!role.loaded)
+                    if(!adminrole.loaded)
                         return;
 
                     ids = [];
                     for(i=0; i<rows.length; i++) {
                         ids.push(rows[i].id);
                     }
-                    role.addroles(ids);
+                    adminrole.addroles(ids);
                 },
 
                 onUncheckAll: function(rows) {
-                    if(!role.loaded)
+                    if(!adminrole.loaded)
                         return;
 
                     ids = [];
                     for(i=0; i<rows.length; i++) {
                         ids.push(rows[i].id);
                     }
-                    role.delroles(ids);
+                    adminrole.delroles(ids);
                 }
 
             });
@@ -491,7 +491,7 @@
         admin.init();
 
         //init role
-        role.init();
+        adminrole.init();
     });
 
 </script>
