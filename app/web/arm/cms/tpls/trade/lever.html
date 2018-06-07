@@ -64,11 +64,11 @@
 
         action: '',
         urls: {
-            list: '/api/order/lever/list',
-            add: '/api/order/lever/add',
-            update: '/api/order/lever/update',
-            delete: '/api/order/lever/delete',
-            order: '/api/order/lever/order',
+            list: '/api/trade/lever/list',
+            add: '/api/trade/lever/add',
+            update: '/api/trade/lever/update',
+            delete: '/api/trade/lever/delete',
+            reorder: '/api/trade/lever/reorder',
         },
 
         init: function() { //init
@@ -236,7 +236,7 @@
         },
 
         reorder: function(sid, sorder, tid, torder) { //reorder
-            $.post(this.urls.order, {sid: sid, sorder: sorder, tid: tid, torder: torder}, function(resp, status){
+            $.post(this.urls.reorder, {sid: sid, sorder: sorder, tid: tid, torder: torder}, function(resp, status){
             if(status == 'success'){
                 if (resp.status){
                     lever.refresh();

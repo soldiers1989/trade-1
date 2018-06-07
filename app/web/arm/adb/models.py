@@ -432,17 +432,18 @@ class UserTrade(models.Model):
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True)
     code = models.CharField(max_length=16, unique=True)
-    hcount = models.IntegerField(default=0) # holding count
-    fcount = models.IntegerField(default=0) # free count, sell able
     oprice = models.DecimalField(max_digits=10, decimal_places=2)
     ocount = models.IntegerField()
+    hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    hcount = models.IntegerField(null=True) # holding count
+    fcount = models.IntegerField(null=True) # free count, sell able
     bprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     bcount = models.IntegerField(null=True)
     sprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     scount = models.IntegerField(null=True)
     margin = models.DecimalField(max_digits=10, decimal_places=2)
     ofee = models.DecimalField(max_digits=10, decimal_places=2) # open fee
-    ddays = models.IntegerField(default=0) # delay days
+    ddays = models.IntegerField(null=True) # delay days
     dfee = models.DecimalField(max_digits=10, decimal_places=2, null=True) # delay fee
     tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True) # total profit
     sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True) # share profit

@@ -2,13 +2,12 @@
     api for cms
 """
 import cube, time, datetime
-
+from django.db.models import Q
 from adb import models
-
 from cms import auth, resp, hint, forms
 
 
-@auth.need_permit
+@auth.need_login
 def list(request):
     """
         list api
@@ -16,65 +15,81 @@ def list(request):
     :return:
     """
     try:
-        if request.method != 'GET':
-            return resp.failure(message='method not support')
-
-        form = forms.order.order.Query(request.GET)
+        form = forms.trade.order.List(request.POST)
         if form.is_valid():
-            # query set
-            results = models.UserTrade.objects.all()
-
-            # form parameters
+            ## form parameters ##
             params = form.cleaned_data
 
-            # filter
-            status, sdate, edate, words = params['status'], params['sdate'], params['edate'], params['words']
+            status, sdate, edate = params['status'], params['sdate'], params['edate']
+            ## filters ##
+            filters = {}
             if status:
-                results = results.filter(status=status)
+                filters['status'] = status
             if sdate:
-                results = results.filter(ctime__gte=cube.time.utime(sdate))
+                filters['ctime__gte'] = cube.time.utime(sdate)
             if edate:
-                results = results.filter(ctime__lt=cube.time.utime(edate+datetime.timedelta(days=1)))
+                filters['ctime__lt'] = cube.time.utime(edate+datetime.timedelta(days=1))
+
+            ## search words ##
+            q = Q()
+            words = params['words']
             if words:
-                results = results.filter(user__user=words) | results.filter(stock__id=words) | results.filter(stock__name__contains=words)
+                if words.isdigit() and len(filters) == 0 :
+                    filters['id'] = int(words)
+                else :
+                    q = Q(user__user=words) | Q(stock__id=words) | Q(stock__name__contains=words)
 
-            # order
-            orderby, order = params['orderby'], params['order']
-            if orderby and order:
+            ## get total count ##
+            total = models.UserTrade.objects.filter(q, **filters).count()
+
+
+            # order by#
+            sort, order =  params['sort'], params['order']
+            orderby = None
+            if sort and order:
                 order = '-' if order=='desc' else ''
-                results = results.order_by(order+orderby)
+                orderby = order+sort
 
-            # count
-            total = results.count()
+            ## pagination##
+            page, size, start, end = params['page'], params['rows'], None, None
+            if page and size:
+                start, end = (page-1)*size, page*size
 
-            # limit
-            start = cube.page.start(params['start'], total)
-            count = cube.page.count(params['count'])
+            ## query results ##
+            objects = []
+            if orderby:
+                if start is not None and end is not None:
+                    objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby)[start:end]
+                else:
+                    objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby).all()
+            else:
+                if start is not None and end is not None:
+                    objects = models.UserTrade.objects.filter(q, **filters).all()[start:end]
+                else:
+                    objects = models.UserTrade.objects.filter(q, **filters).all()
 
-            results = results[start:start+count]
+            ## make results ##
+            rows = []
+            for obj in objects:
+                order = {'id': obj.id, 'user': obj.user.user, 'stock': obj.stock.name,
+                        'ocount': obj.ocount, 'oprice': obj.oprice, 'hprice': obj.hprice,
+                        'hcount': obj.hcount, 'fcount': obj.fcount,
+                        'bcount': obj.bcount, 'bprice': obj.bprice,
+                        'scount': obj.scount, 'sprice': obj.sprice,
+                        'margin': obj.margin, 'ofee': obj.ofee,
+                        'ddays': obj.ddays, 'dfee': obj.dfee,
+                        'status': models.UserTrade.cstatus(obj.status), 'date': cube.time.dates(obj.ctime)}
+                rows.append(order)
 
-            # response
+            ## response data ##
             data = {
                 'total': total,
-                'start': start,
-                'items': [
-                ]
+                'rows': rows
             }
-
-            for result in results:
-                item = {'id': result.id, 'user': result.user.user, 'stock': result.stock.name,
-                        'ocount': result.ocount, 'oprice': result.oprice,
-                        'hcount': result.hcount, 'fcount': result.fcount,
-                        'bcount': result.bcount, 'bprice': result.bprice,
-                        'scount': result.scount, 'sprice': result.sprice,
-                        'margin': result.margin, 'ofee': result.ofee,
-                        'ddays': result.ddays, 'dfee': result.dfee,
-                        'status': models.UserTrade.cstatus(result.status), 'date': cube.time.dates(result.ctime)}
-                data['items'].append(item)
 
             return resp.success(data=data)
         else:
-            return resp.failure(hint.ERR_FORM_DATA, data={'errors': form.errors})
+            return resp.failure(hint.ERR_FORM_DATA)
     except Exception as e:
         return resp.failure(str(e))
 
@@ -211,5 +226,51 @@ def reorder(request):
             models.Lever.objects.filter(id=id).update(order=ord)
 
         return resp.success(data={'iords': iords})
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
+def orderfees(request):
+    """
+        list api
+    :param request:
+    :return:
+    """
+    try:
+        # get order id
+        id = request.GET['id']
+
+        # get margin records of order
+        items = models.TradeFee.objects.filter(trade__id=id)
+
+        data = []
+        for item in items:
+            d = item.dict()
+            data.append(d)
+        return resp.success(data=data)
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
+def ordermargins(request):
+    """
+        list api
+    :param request:
+    :return:
+    """
+    try:
+        # get order id
+        id = request.GET['id']
+
+        # get margin records of order
+        items = models.TradeMargin.objects.filter(trade__id=id)
+
+        data = []
+        for item in items:
+            d = item.dict()
+            data.append(d)
+        return resp.success(data=data)
     except Exception as e:
         return resp.failure(str(e))

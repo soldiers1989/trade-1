@@ -4,7 +4,7 @@
 import time
 from django.db.models import F
 from adb import models
-from cms import auth, resp, hint, forms
+from cms import auth, resp, forms
 
 
 @auth.need_login
@@ -39,7 +39,7 @@ def get(request):
     :return:
     """
     try:
-        form = forms.order.lever.Get(request.POST)
+        form = forms.trade.lever.Get(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
             item = models.Lever.objects.get(id=id)
@@ -58,7 +58,7 @@ def add(request):
     :return:
     """
     try:
-        form = forms.order.lever.Add(request.POST)
+        form = forms.trade.lever.Add(request.POST)
         if form.is_valid():
             params = form.cleaned_data
 
@@ -93,7 +93,7 @@ def update(request):
     :return:
     """
     try:
-        form = forms.order.lever.Update(request.POST)
+        form = forms.trade.lever.Update(request.POST)
         if form.is_valid():
             params = form.cleaned_data
             models.Lever.objects.filter(id=params['id']).update(lever=params['lever'],
@@ -122,7 +122,7 @@ def delete(request):
     :return:
     """
     try:
-        form = forms.order.lever.Delete(request.POST)
+        form = forms.trade.lever.Delete(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
             models.Lever.objects.filter(id=id).delete()
@@ -134,14 +134,14 @@ def delete(request):
 
 
 @auth.need_login
-def order(request):
+def reorder(request):
     """
         order api
     :param request:
     :return:
     """
     try:
-        form = forms.order.lever.Order(request.POST)
+        form = forms.trade.lever.Order(request.POST)
         if form.is_valid():
             sid, sorder = form.cleaned_data['sid'], form.cleaned_data['sorder']
             tid, torder = form.cleaned_data['tid'], form.cleaned_data['torder']

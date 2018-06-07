@@ -98,40 +98,52 @@ def list(request):
             ## form parameters ##
             params = form.cleaned_data
 
-            ## filter results ##
+            ## filters ##
             sdate, edate = params['sdate'], params['edate']
             filters = {}
             if sdate:
                 filters['ctime__gte'] = cube.time.utime(sdate)
             if edate:
                 filters['ctime__lt'] = cube.time.utime(edate+datetime.timedelta(days=1))
-            objects = models.Admin.objects.filter(**filters).all()
 
+            q = Q()
             ## search words ##
             words = params['words']
             if words:
-                tmpobjs = None
-                if(words.isdigit()):
-                    tmpobjs = objects.filter(id=int(words))
-
-                if(tmpobjs is None or tmpobjs.count() == 0):
-                    objects = objects.filter(user__contains=words) | objects.filter(name__contains=words) | objects.filter(phone__contains=words)
+                if words.isdigit() and len(filters) == 0:
+                   filters['id']=int(words)
                 else:
-                    objects = tmpobjs;
+                    q = Q(user__contains=words) | Q(name__contains=words) | Q(phone__contains=words)
 
-            ## pagination & sort ##
-            page, size, sort, order = params['page'], params['rows'], params['sort'], params['order']
+            ## get total count ##
+            total = models.Admin.objects.filter(q, **filters).count()
 
-            # order #
+            # order by#
+            sort, order =  params['sort'], params['order']
+            orderby = None
             if sort and order:
                 order = '-' if order=='desc' else ''
-                objects = objects.order_by(order+sort)
+                orderby = order+sort
 
-            # pagination #
-            total = objects.count()
-
+            ## pagination##
+            page, size, start, end = params['page'], params['rows'], None, None
             if page and size:
-                objects = objects[(page-1)*size : page*size]
+                start, end = (page-1)*size, page*size
+
+            ## query results ##
+            objects = []
+            if orderby:
+                if start is not None and end is not None:
+                    objects = models.Admin.objects.filter(q, **filters).order_by(orderby)[start:end]
+                else:
+                    objects = models.Admin.objects.filter(q, **filters).order_by(orderby).all()
+            else:
+                if start is not None and end is not None:
+                    objects = models.Admin.objects.filter(q, **filters).all()[start:end]
+                else:
+                    objects = models.Admin.objects.filter(q, **filters).all()
+
+            s = str(objects.query)
 
             ## make results ##
             rows = []

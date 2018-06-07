@@ -1,5 +1,5 @@
 from django.urls import path
-from cms.apis import auth, order
+from cms.apis import auth, trade
 
 urlpatterns = [
     path('admin/login', auth.admin.login, name="api.admin.login"),
@@ -30,10 +30,12 @@ urlpatterns = [
     path('auth/module/update', auth.module.update, name="api.auth.module.update"),
     path('auth/module/delete', auth.module.delete, name="api.auth.module.delete"),
 
-    path('order/lever/list', order.lever.list, name="api.order.lever.list"),
-    path('order/lever/get', order.lever.get, name="api.order.lever.get"),
-    path('order/lever/add', order.lever.add, name="api.order.lever.add"),
-    path('order/lever/update', order.lever.update, name="api.order.lever.update"),
-    path('order/lever/delete', order.lever.delete, name="api.order.lever.delete"),
-    path('order/lever/order', order.lever.order, name="api.order.lever.order"),
+    path('trade/lever/list', trade.lever.list, name="api.trade.lever.list"),
+    path('trade/lever/get', trade.lever.get, name="api.trade.lever.get"),
+    path('trade/lever/add', trade.lever.add, name="api.trade.lever.add"),
+    path('trade/lever/update', trade.lever.update, name="api.trade.lever.update"),
+    path('trade/lever/delete', trade.lever.delete, name="api.trade.lever.delete"),
+    path('trade/lever/reorder', trade.lever.reorder, name="api.trade.lever.reorder"),
+
+    path('trade/order/list', trade.order.list, name="api.trade.order.list"),
 ]

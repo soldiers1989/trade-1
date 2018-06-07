@@ -1,4 +1,4 @@
-from cms.sites import index, login, auth, order
+from cms.sites import index, login, auth, trade
 from django.urls import path
 
 urlpatterns = [
@@ -11,5 +11,6 @@ urlpatterns = [
     path('auth/module/', auth.module, name="cms.auth.module"),
     path('auth/role/', auth.role, name="cms.auth.role"),
 
-    path('order/lever/', order.lever, name="cms.order.lever"),
+    path('trade/lever/', trade.lever, name="cms.trade.lever"),
+    path('trade/order/', trade.lever, name="cms.trade.order"),
 ]
