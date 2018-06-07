@@ -31,7 +31,7 @@
       "psrate": 0.10,
       "mmin": 2000.00,
       "mmax": 50000.00,
-      "order": 1,
+      "order": 2,
       "disable": 0,
       "ctime": 1527261052,
       "mtime": 1527261052
@@ -50,7 +50,7 @@
       "psrate": 0.10,
       "mmin": 2000.00,
       "mmax": 50000.00,
-      "order": 1,
+      "order": 3,
       "disable": 0,
       "ctime": 1527261052,
       "mtime": 1527261052

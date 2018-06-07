@@ -8,6 +8,7 @@
     <link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/icon.css">
     <script type="text/javascript" src="/assets/jquery/1.11.3/jquery.min.js"></script>
     <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/datagrid-dnd.js"></script>
     <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/locale/easyui-lang-zh_CN.js"></script>
     <script type="text/javascript" src="/assets/cube/cube.js"></script>
 </head>
@@ -36,7 +37,7 @@
                 <ul class="easyui-tree">
                     {% for child in module.childs %}
                         <li>
-                            <a href="#" onclick="opentab('{{ child.name }}','{{ child.path }}')">{{ child.name }}</a>
+                            <a href="javascript:void(0)" onclick="opentab('{{ child.name }}','{{ child.path }}')">{{ child.name }}</a>
                         </li>
                     {% endfor %}
                 </ul>

@@ -83,5 +83,95 @@ $.extend($.fn.validatebox.defaults.rules, {
             return (d.getFullYear() == r[1] && (d.getMonth() + 1) == r[3] && d.getDate() == r[4] && d.getHours() == r[5] && d.getMinutes() == r[6] && d.getSeconds() == r[7]);
         },
         message: '时间格式不正确，请重新输入。'
-    }
+    },
+
+    /*number value*/
+    number: {
+        validator: function( value ) {
+            return /^(?:-?\d+|-?\d{1,3}(?:,\d{3})+)?(?:\.\d+)?$/.test( value );
+        },
+        message: '请输入正确的数值'
+    },
+
+    /*digits value*/
+    digits: {
+        validator: function( value ) {
+            return /^\d+$/.test( value );
+        },
+        message: '请输入正确的数值'
+    },
+
+    /*current input equal with another*/
+    equals: {
+        validator: function(value, param){
+            return value == $(param[0]).val();
+        },
+        message: '两次输入不一致，请重新输入。'
+    },
+
+    /*minimal value*/
+    min: {
+        validator: function( value, param ) {
+            return value >= param[0];
+        },
+
+        message: '请输入正确的数值'
+    },
+
+    /*maximum value*/
+    max: {
+        validator: function( value, param ) {
+            return value <= param[0];
+        },
+        message: '请输入正确的数值'
+    },
+
+    /*range value*/
+    range: {
+        validator: function( value, param ) {
+            return value >= param[0] && value <= param[1];
+        },
+        message: '请输入正确的数值'
+    },
+
+    /*length range*/
+    rangelength: {
+        validator: function( value, param ) {
+            var length = value.length;
+            return ( length >= param[ 0 ] && length <= param[ 1 ] );
+        },
+        message: '输入长度不正确'
+    },
+
+    /*large than*/
+    largethan: {
+        validator: function(value, param) {
+            return value > Number($(param[0]).val());
+        },
+        message: '请输入正确的数值'
+    },
+
+    /*large equal than*/
+    largeequal: {
+        validator: function(value, param) {
+            return value >= Number($(param[0]).val());
+        },
+        message: '请输入正确的数值'
+    },
+
+    /*less than*/
+    lessthan: {
+        validator: function(value, param) {
+            return value < Number($(param[0]).val());
+        },
+        message: '请输入正确的数值'
+    },
+
+    /*less equal than*/
+    lessequal: {
+        validator: function(value, param) {
+            return value <= Number($(param[0]).val());
+        },
+        message: '请输入正确的数值'
+    },
 });

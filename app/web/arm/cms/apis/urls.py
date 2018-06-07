@@ -29,4 +29,11 @@ urlpatterns = [
     path('auth/module/add', auth.module.add, name="api.auth.module.add"),
     path('auth/module/update', auth.module.update, name="api.auth.module.update"),
     path('auth/module/delete', auth.module.delete, name="api.auth.module.delete"),
+
+    path('order/lever/list', order.lever.list, name="api.order.lever.list"),
+    path('order/lever/get', order.lever.get, name="api.order.lever.get"),
+    path('order/lever/add', order.lever.add, name="api.order.lever.add"),
+    path('order/lever/update', order.lever.update, name="api.order.lever.update"),
+    path('order/lever/delete', order.lever.delete, name="api.order.lever.delete"),
+    path('order/lever/order', order.lever.order, name="api.order.lever.order"),
 ]
