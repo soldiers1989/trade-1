@@ -12,5 +12,5 @@ urlpatterns = [
     path('auth/role/', auth.role, name="cms.auth.role"),
 
     path('trade/lever/', trade.lever, name="cms.trade.lever"),
-    path('trade/order/', trade.lever, name="cms.trade.order"),
+    path('trade/order/', trade.order, name="cms.trade.order"),
 ]
