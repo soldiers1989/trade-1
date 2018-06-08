@@ -61,25 +61,17 @@ def list(request):
                 if start is not None and end is not None:
                     objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby)[start:end]
                 else:
-                    objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby).all()
+                    objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby)
             else:
                 if start is not None and end is not None:
-                    objects = models.UserTrade.objects.filter(q, **filters).all()[start:end]
+                    objects = models.UserTrade.objects.filter(q, **filters)[start:end]
                 else:
-                    objects = models.UserTrade.objects.filter(q, **filters).all()
+                    objects = models.UserTrade.objects.filter(q, **filters)
 
             ## make results ##
             rows = []
             for obj in objects:
-                order = {'id': obj.id, 'user': obj.user.user, 'stock': obj.stock.name,
-                        'ocount': obj.ocount, 'oprice': obj.oprice, 'hprice': obj.hprice,
-                        'hcount': obj.hcount, 'fcount': obj.fcount,
-                        'bcount': obj.bcount, 'bprice': obj.bprice,
-                        'scount': obj.scount, 'sprice': obj.sprice,
-                        'margin': obj.margin, 'ofee': obj.ofee,
-                        'ddays': obj.ddays, 'dfee': obj.dfee,
-                        'status': models.UserTrade.cstatus(obj.status), 'date': cube.time.dates(obj.ctime)}
-                rows.append(order)
+                rows.append(obj.dict())
 
             ## response data ##
             data = {

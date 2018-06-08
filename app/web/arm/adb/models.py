@@ -459,7 +459,7 @@ class UserTrade(models.Model):
         items['user'] = items['user'].user if items['user'] else None
         items['stock'] = items['stock'].name if items['stock'] else None
         items['coupon'] = items['coupon'].money if items['coupon'] else None
-        items['lever'] = self.tradelever.dict()
+        items['lever'] = self.tradelever.lever
         return items
 
     @staticmethod
