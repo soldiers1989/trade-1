@@ -43,3 +43,5 @@ Release
 boost
 *.pdb
 .idea
+
+src/trades/log
