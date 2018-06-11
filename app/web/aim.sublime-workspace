@@ -3,28 +3,245 @@
 	{
 		"selected_items":
 		[
+			[
+				"col",
+				"columns\t = 'auto' Style CSS"
+			],
+			[
+				"remov",
+				"removeAttribute\t( name: DOMString ): void Element"
+			],
+			[
+				"showm",
+				"showmodal"
+			],
+			[
+				"sele",
+				"select"
+			],
+			[
+				"sort",
+				"sortable"
+			],
+			[
+				"rend",
+				"renderRows"
+			],
+			[
+				"previ",
+				"previous"
+			],
+			[
+				"pad",
+				"padding-top"
+			],
+			[
+				"curr",
+				"current"
+			],
+			[
+				"setF",
+				"setFailureInfo"
+			],
+			[
+				"table",
+				"tabledata"
+			],
+			[
+				"input",
+				"inputorderby"
+			],
+			[
+				"pa",
+				"page-link"
+			],
+			[
+				"row",
+				"rowitems"
+			],
+			[
+				"console",
+				"console_log"
+			],
+			[
+				"pro",
+				"prototype"
+			],
+			[
+				"op",
+				"option\tTag"
+			],
+			[
+				"u",
+				"ul\tTag"
+			],
+			[
+				"magin",
+				"margin-bottom"
+			],
+			[
+				"mag",
+				"margin"
+			],
+			[
+				"texta",
+				"text-align"
+			],
+			[
+				"magi",
+				"margin-bottom"
+			],
+			[
+				"bt",
+				"btn-sm"
+			],
+			[
+				"inpu",
+				"input-sm"
+			],
+			[
+				"ipu",
+				"input-sm"
+			],
+			[
+				"vi",
+				"visible"
+			],
+			[
+				"con",
+				"description-concat\tString"
+			],
+			[
+				"fie",
+				"field_id"
+			],
+			[
+				"id_mo",
+				"id_modal_lever"
+			],
+			[
+				"id_mod",
+				"id_modal_title_lever"
+			],
+			[
+				"re",
+				"required\tAttr"
+			],
+			[
+				"r",
+				"required\tAttr"
+			],
+			[
+				"F",
+				"False"
+			],
+			[
+				"selec",
+				"selected"
+			],
+			[
+				"cons",
+				"console_log"
+			],
+			[
+				"mod",
+				"modify"
+			],
+			[
+				"tos",
+				"toastr"
+			],
+			[
+				"style",
+				"stylesheet"
+			],
+			[
+				"oncl",
+				"onclick\t: EventHandler Window"
+			],
+			[
+				"pop",
+				"popover"
+			],
+			[
+				"current",
+				"currentTarget\t: EventTarget Event"
+			],
+			[
+				"btn-",
+				"btn-success"
+			],
+			[
+				"sty",
+				"style\t Style CSS"
+			],
+			[
+				"tolocale",
+				"toLocaleString\t(): string Date"
+			],
+			[
+				"toloal",
+				"toLocaleDateString\t(): string Date"
+			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"file": "/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-detailview2.html",
+			"settings":
+			{
+				"buffer_size": 2486,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "aim/cms/models.py",
+			"settings":
+			{
+				"buffer_size": 18877,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		}
 	],
-	"build_system": "",
+	"build_system": "Packages/SublimeREPL/sublimerepl_build_system_hack.sublime-build",
 	"build_system_choices":
 	[
+		[
+			[
+				[
+					"Packages/SublimeREPL/sublimerepl_build_system_hack.sublime-build",
+					""
+				],
+				[
+					"Packages/User/javascript.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/SublimeREPL/sublimerepl_build_system_hack.sublime-build",
+				""
+			]
+		]
 	],
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 276.0,
-		"last_filter": "Package Control: ",
+		"height": 179.0,
+		"last_filter": "Package Control: in",
 		"selected_items":
 		[
+			[
+				"Package Control: in",
+				"Package Control: Install Package"
+			],
 			[
 				"Package Control: ",
 				"Package Control: Install Package"
 			]
 		],
-		"width": 444.0
+		"width": 428.0
 	},
 	"console":
 	{
@@ -44,20 +261,90 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim"
 	],
 	"file_history":
 	[
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/layout/complex.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid/rowediting.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid-dnd/datagrid-dnd.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-detailview.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-scrollview.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-bufferview.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid-cellediting/datagrid-cellediting.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-edatagrid/editable-datagrid.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-scrollview2.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-portal/portal.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid-export/datagrid-export.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid-export/datagrid-export-pdf.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/treegrid-dnd/treegrid-dnd.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid-filter/datagrid-filter.html",
+		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-groupview.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/list.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/fee.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/margin.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/detail.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/mgmt.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/static/assets/js/cube/table.js",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/margin/demo.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/views/order/order.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/urls.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/list.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/fixtures/usertrade.json",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/base.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/module/list.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/module/add.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/static/assets/js/cube/cube.js",
+		"/Users/polly/Library/Application Support/Sublime Text 3/Packages/User/javascript.sublime-build",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/order.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/auth/list.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/apis/order/order.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/forms/order/lever.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/auth/det.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/module/mod.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/models.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/del.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/add.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/det.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/mod.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/views/order/lever.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/apis/auth/auth.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/auth/add.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/auth/del.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/auth/mod.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/apis.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/admin/det.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/admin/mod.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/admin/add.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/admin/list.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/index.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/module/det.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/admin/del.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/admin/edit.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth_admin_list.html",
+		"/Users/polly/Downloads/CodeSeven-toastr-61c48a6/toastr.js",
+		"/Users/polly/Downloads/CodeSeven-toastr-61c48a6/build/toastr.js.map",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/views.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/test.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/static/assets/js/jquery/ext/jquery.validate.min.js",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/static/assets/css/datatables/ext/datatables1.10.16/jquery.dataTables.css",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/static/assets/css/datatables/ext/datatables1.10.16/dataTables.bootstrap.css",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/admin.bak.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/admin.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/module.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth_admin_add.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/static/assets/js/bootstrap/ext/bootstrap-confirmation.js",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/static/assets/js/bootstrap-confirmation.js"
 	],
 	"find":
 	{
-		"height": 0.0
+		"height": 39.0
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 101.0,
 		"where_history":
 		[
+			""
 		]
 	},
 	"find_state":
@@ -65,6 +352,41 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"item.",
+			"this.page.start",
+			"$.get",
+			"addRowClickEvent",
+			"rowid",
+			"this.render",
+			"this.page.goto",
+			"this.page.toto",
+			"this.page.curr",
+			"this.page.total",
+			"this.sort.order",
+			"this.sort.by",
+			"this.sort.seq",
+			"this.rows",
+			"changePageSize",
+			"gotoPage",
+			"this.pagesize",
+			"this.pagesizes",
+			"this.tableid",
+			"tabledata",
+			"elmt",
+			"tablebody",
+			"tablecols",
+			"tablesize",
+			".module.",
+			"_module_",
+			"add_",
+			"_add",
+			"add_",
+			"_auth_add",
+			"——auth",
+			"_module_",
+			"module_",
+			"mod_",
+			"options"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -72,28 +394,126 @@
 		"regex": false,
 		"replace_history":
 		[
+			"order.",
+			"rid",
+			"this.cells.render",
+			"this.data.page.goto",
+			"this.data.page.curr",
+			"this.data.page.total",
+			"this.data.sort.order",
+			"this.data.sort.by",
+			"resize",
+			"goto",
+			"this.page.size",
+			"this.page.options",
+			"this.id",
+			"data",
+			"dom",
+			"elmt.body",
+			"columns",
+			"pagesize",
+			".auth.",
+			"mod_",
+			"_mod",
+			"det_",
+			"_auth_det",
+			"_auth_",
+			"auth_",
+			"det_"
 		],
 		"reverse": false,
 		"show_context": true,
 		"use_buffer2": true,
-		"whole_word": false,
+		"whole_word": true,
 		"wrap": true
 	},
 	"groups":
 	[
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/jquery-easyui-datagridview/datagrid-detailview2.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2486,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 1,
+					"file": "aim/cms/models.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 18877,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1689,
+								1689
+							]
+						],
+						"settings":
+						{
+							"SL.17.region_keys":
+							[
+							],
+							"SL.211.region_keys":
+							[
+							],
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 7353.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				}
 			]
 		}
 	],
 	"incremental_find":
 	{
-		"height": 0.0
+		"height": 26.0
 	},
 	"input":
 	{
-		"height": 0.0
+		"height": 41.0
 	},
 	"layout":
 	{
@@ -104,11 +524,18 @@
 				0,
 				1,
 				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
 			]
 		],
 		"cols":
 		[
 			0.0,
+			0.614185463021,
 			1.0
 		],
 		"rows":
@@ -126,15 +553,19 @@
 	{
 		"height": 102.0
 	},
+	"output.exec":
+	{
+		"height": 235.0
+	},
 	"output.find_results":
 	{
 		"height": 0.0
 	},
-	"pinned_build_system": "",
+	"pinned_build_system": "Packages/User/javascript.sublime-build",
 	"project": "aim.sublime-project",
 	"replace":
 	{
-		"height": 0.0
+		"height": 70.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -172,7 +603,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 150.0,
+	"side_bar_width": 426.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{

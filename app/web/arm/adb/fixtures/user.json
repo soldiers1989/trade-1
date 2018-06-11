@@ -1,0 +1,171 @@
+[
+    {
+        "model": "adb.user",
+        "pk": 1,
+        "fields": {
+            "user": "13126886633",
+            "pwd": "123456",
+            "phone": "13126886633",
+            "money": 0.0,
+            "disable": 0,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 2,
+        "fields": {
+            "user": "13552621014",
+            "pwd": "123456",
+            "phone": "13552621014",
+            "money": 0.0,
+            "disable": 0,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 3,
+        "fields": {
+            "user": "13100000000",
+            "pwd": "123456",
+            "phone": "13100000000",
+            "money": 0.0,
+            "disable": 1,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 4,
+        "fields": {
+            "user": "13100000004",
+            "pwd": "123456",
+            "phone": "13100000004",
+            "money": 1000.0,
+            "disable": 0,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 5,
+        "fields": {
+            "user": "13100000005",
+            "pwd": "123456",
+            "phone": "13100000005",
+            "money": 1000.0,
+            "disable": 0,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 6,
+        "fields": {
+            "user": "13100000006",
+            "pwd": "123456",
+            "phone": "13100000006",
+            "money": 1000.0,
+            "disable": 0,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 7,
+        "fields": {
+            "user": "13100000007",
+            "pwd": "123456",
+            "phone": "13100000007",
+            "money": 1000.0,
+            "disable": 1,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 8,
+        "fields": {
+            "user": "13100000008",
+            "pwd": "123456",
+            "phone": "13100000008",
+            "money": 1000.0,
+            "disable": 1,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 9,
+        "fields": {
+            "user": "13100000009",
+            "pwd": "123456",
+            "phone": "13100000009",
+            "money": 1000.0,
+            "disable": 1,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 10,
+        "fields": {
+            "user": "13100000010",
+            "pwd": "123456",
+            "phone": "13100000010",
+            "money": 1000.0,
+            "disable": 1,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 11,
+        "fields": {
+            "user": "13100000011",
+            "pwd": "123456",
+            "phone": "13100000011",
+            "money": 1000.0,
+            "disable": 1,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 12,
+        "fields": {
+            "user": "13100000012",
+            "pwd": "123456",
+            "phone": "13100000012",
+            "money": 1000.0,
+            "disable": 1,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    },
+    {
+        "model": "adb.user",
+        "pk": 13,
+        "fields": {
+            "user": "13100000013",
+            "pwd": "123456",
+            "phone": "13100000013",
+            "money": 1000.0,
+            "disable": 1,
+            "ctime": 1527261052,
+            "ltime": 1527261052
+        }
+    }
+]

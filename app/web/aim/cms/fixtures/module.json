@@ -1,0 +1,94 @@
+[
+    {
+        "model": "cms.module",
+        "pk": 1,
+        "fields": {
+            "name": "权限管理",
+            "icon": "fa-desktop",
+            "order": 1,
+            "disable": 0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 2,
+        "fields": {
+            "parent": 1,
+            "name": "用户管理",
+            "code": "cms.auth.admin.list",
+            "path": ".*/auth.admin/.*",
+            "icon": "",
+            "order": 2,
+            "disable": 0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 3,
+        "fields": {
+            "parent": 1,
+            "name": "模块管理",
+            "code": "cms.auth.module.list",
+            "path": ".*/auth/module/.*",
+            "icon": "",
+            "order": 3,
+            "disable": 0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 4,
+        "fields": {
+            "parent": 1,
+            "name": "权限管理",
+            "code": "cms.auth.auth.list",
+            "path": ".*/auth/auth/.*",
+            "icon": "",
+            "order": 4,
+            "disable": 0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 5,
+        "fields": {
+            "name": "订单管理",
+            "icon": "fa-book",
+            "order": 5,
+            "disable": 0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 6,
+        "fields": {
+            "parent": 5,
+            "name": "订单列表",
+            "code": "cms.order.order.mgmt",
+            "path": ".*/order/order/.*",
+            "icon": "",
+            "order": 6,
+            "disable": 0,
+            "ctime": 1527261052
+        }
+    },
+    {
+        "model": "cms.module",
+        "pk": 7,
+        "fields": {
+            "parent": 5,
+            "name": "订单杠杆",
+            "code": "cms.order.lever.list",
+            "path": ".*/order/order/.*",
+            "icon": "",
+            "order": 7,
+            "disable": 0,
+            "ctime": 1527261052
+        }
+    }
+]

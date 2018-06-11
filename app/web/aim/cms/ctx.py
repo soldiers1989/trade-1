@@ -12,6 +12,9 @@ def default(request, mcode=None):
     if not auth.is_login(request):
         return cfg.default_context
 
+    # get mcode from request
+    if mcode is None:
+        mcode = request.path.replace('/', '.').strip('.')
 
 
     # user has login

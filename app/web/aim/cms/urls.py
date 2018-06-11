@@ -14,7 +14,8 @@ urlviews = [
 
     path('order/lever/list/', views.order.lever.list, name='cms.order.lever.list'),
 
-    path('order/order/mgmt/', views.order.order.mgmt, name='cms.order.order.mgmt')
+    path('order/order/mgmt/', views.order.order.mgmt, name='cms.order.order.mgmt'),
+    path('order/order/detail/', views.order.order.detail, name='cms.order.order.detail')
 ]
 
 
@@ -45,12 +46,17 @@ urlapis = [
     path('apis/order/lever/mod/', apis.order.lever.modify, name="cms.apis.order.lever.mod"),
     path('apis/order/lever/ord/', apis.order.lever.reorder, name="cms.apis.order.lever.ord"),
 
-    path('apis/order/order/list/', apis.order.order.list, name="cms.apis.order.order.list")
+    path('apis/order/order/list/', apis.order.order.list, name="cms.apis.order.order.list"),
+    path('apis/order/order/get/', apis.order.order.get, name="cms.apis.order.order.get"),
+
+    path('apis/order/fee/list/', apis.order.fee.list, name="cms.apis.order.fee.list"),
+    path('apis/order/margin/list/', apis.order.margin.list, name="cms.apis.order.margin.list")
 ]
 
 
 urlwidgets = [
-    path('widgets/order/order/list/', widgets.order.order.list, name='cms.widgets.order.order.list')
+    path('widgets/order/order/list/', widgets.order.order.list, name='cms.widgets.order.order.list'),
+    path('widgets/order/order/detail/', widgets.order.order.detail, name='cms.widgets.order.order.detail')
 ]
 
 

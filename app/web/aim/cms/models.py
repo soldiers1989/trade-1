@@ -413,7 +413,7 @@ class UserTrade(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
-    coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE)
+    coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True)
     code = models.CharField(max_length=16, unique=True)
     hcount = models.IntegerField(default=0) # holding count
     fcount = models.IntegerField(default=0) # free count, sell able
@@ -425,6 +425,7 @@ class UserTrade(models.Model):
     scount = models.IntegerField(null=True)
     margin = models.DecimalField(max_digits=10, decimal_places=2)
     ofee = models.DecimalField(max_digits=10, decimal_places=2) # open fee
+    ddays = models.IntegerField(default=0) # delay days
     dfee = models.DecimalField(max_digits=10, decimal_places=2, null=True) # delay fee
     tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True) # total profit
     sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True) # share profit
@@ -437,7 +438,20 @@ class UserTrade(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['user'] = items['user'].user if items['user'] else None
+        items['stock'] = items['stock'].name if items['stock'] else None
+        items['coupon'] = items['coupon'].money if items['coupon'] else None
+        items['lever'] = self.tradelever.dict()
         return items
+
+    @staticmethod
+    def cstatus(s):
+        cm = {
+                'tobuy': '待买入', 'buying': '买入中', 'holding': '持仓中',
+                'tosell': '待卖出', 'selling': '卖出中', 'toclose': '待平仓', 'closing': '平仓中',
+                'finished': '已结束', 'expired': '已失效'
+              }
+        return cm[s]
 
 
 # tb_trade_lever
@@ -458,6 +472,8 @@ class TradeLever(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        del items['id']
+        del items['trade']
         return items
 
 
@@ -472,6 +488,11 @@ class TradeMargin(models.Model):
     class Meta:
         db_table = 'tb_trade_margin'
 
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'] = items['trade'].id if items['trade'] else None
+        return items
+
 
 # tb_trade_fee
 class TradeFee(models.Model):
@@ -485,3 +506,8 @@ class TradeFee(models.Model):
 
     class Meta:
         db_table = 'tb_trade_fee'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'] = items['trade'].id if items['trade'] else None
+        return items

@@ -1,0 +1,260 @@
+<table id="lever_datagrid" style="height: 100%;"></table>
+
+<div id="lever_toolbar">
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="lever.add()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="lever.update()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="lever.delete()">删除</a>
+    </span>
+	<span style="float: right; margin-right: 18px;">
+		<a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="lever.refresh()">刷新</a>
+	</span>
+</div>
+
+<div class="easyui-dialog" id="lever_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#lever_dialog_buttons'">
+    <form class="easyui-form" id="lever_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="lever" data-options="label:'杠杆', prompt:'1~10', required:true, validType:['digits', 'range[1, 10]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="wline" data-options="label:'预警线', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="sline" data-options="label:'止损线', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="ofmin" data-options="label:'保底费用', prompt:'>=0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="ofrate" data-options="label:'建仓费率', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="dfrate" data-options="label:'延期费率', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="psrate" data-options="label:'盈利分成', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" id="mmin" name="mmin" data-options="label:'本金下限', prompt:'>=0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="mmax" data-options="label:'本金上限', prompt:'大于等于本金下限', required:true, validType:['number', 'largeequal[\'#mmin\']']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', editable:false, required:true" style="width: 100%">
+                <option value="false">否</option>
+                <option value="true">是</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<div id="lever_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="lever.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="lever.cancel()" style="width:90px">取消</a>
+</div>
+
+
+<script type="text/javascript">
+    // lever list/add/update/delete
+    var lever = {
+        datagrid: $('#lever_datagrid'),
+        dialog: $('#lever_dialog'),
+        form: $('#lever_form'),
+
+        action: '',
+        urls: {
+            list: '/api/trade/lever/list',
+            add: '/api/trade/lever/add',
+            update: '/api/trade/lever/update',
+            delete: '/api/trade/lever/delete',
+            reorder: '/api/trade/lever/reorder',
+        },
+
+        init: function() { //init
+        	//init tree grid
+            this.datagrid.datagrid({
+                url: this.urls.list,
+                method: 'post',
+                
+                idField: 'id',
+ 		
+				striped: true,
+				fitColumns: true,
+                pagination: false,
+                rownumbers: true,
+                singleSelect: true,
+                
+
+				toolbar: '#lever_toolbar',
+                columns: [[
+                    {field:'id', title:'ID', width:'4%'},
+                    {field:'lever', title:'杠杆', width:'6%'},
+                    {field:'wline', title:'预警线', width:'8%'},
+                    {field:'sline', title:'止损线', width:'8%'},
+                    {field:'ofmin', title:'保底费用', width:'8%'},
+                    {field:'ofrate', title:'建仓费率', width:'8%'},
+                    {field:'dfrate', title:'延期费率', width:'8%'},
+                    {field:'psrate', title:'盈利分成', width:'8%'},
+                    {field:'mmin', title:'本金下限', width:'8%'},
+                    {field:'mmax', title:'本金上限', width:'8%'},
+                    {field:'order', title:'排序', width:'4%'},
+                    {field:'disable', title:'禁用', width: '5%', formatter: cube.format.boolean},
+                    {field:'ctime', title:'创建时间', width: '8%', formatter: cube.format.date},
+                    {field:'mtime', title:'修改时间', width: '8%', formatter: cube.format.date}
+                ]],
+
+                onDrop: function(target, source, point) {
+                    lever.reorder(source.id, source.order, target.id, target.order);
+                },
+
+                loadFilter: function (resp) {
+                    return resp.data;
+                },
+
+                onLoadSuccess: function(resp) {
+                    $(this).datagrid('enableDnd');
+                },
+
+                onLoadError: function() {
+                    $.messager.show({title: '错误', msg: '请求管理员数据失败'});
+                }
+            });
+
+            //enable drag/drop
+            //this.datagrid.datagrid('enableDnd');
+        },
+        
+   
+        refresh: function() { // reset
+            //reload datagrid
+            this.datagrid.datagrid('reload');
+        },
+
+        add: function() { // add
+            //reset action
+            this.action = 'add';
+
+            //reset form
+            this.form.form('clear');
+
+            //open dialog
+            this.dialog.dialog('open').dialog('center').dialog('setTitle','添加杠杆');
+        },
+
+        update: function() { // udpate
+            //reset action
+            this.action = 'update';
+            
+            //get selected row data
+            this.row = this.datagrid.datagrid('getSelected');
+            if (this.row){
+            	// format boolean value
+            	this.row.disable = String(this.row.disable);
+
+                // clear form
+                this.form.form('clear');
+
+                //load form data
+                this.form.form('load', this.row);
+
+                //option dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','修改杠杆');
+            }
+        },
+
+        delete: function() { // delete
+            //get selected row data
+            var row = this.datagrid.datagrid('getSelected');
+            if (!row)
+                return;
+        
+            $.messager.confirm({
+                title: '确认',
+                msg: '确认删除杠杆'+row.lever+'?',
+                url: this.urls.delete,
+                fn: function(r){
+                    if (r){
+                        $.post(this.url, {id: row.id}, function(resp, status){
+                            if(status == 'success'){
+                                if (resp.status){
+                                    lever.refresh();
+                                } else {
+                                    $.messager.show({title: '错误', msg: resp.message});
+                                }
+                            } else {
+                                $.messager.show({title: '错误', msg: '请求服务器错误'});
+                            }
+                        },'json');
+                    }
+                }
+            });
+        },
+
+        save: function() { // save
+            //get selected row data
+            var row = this.datagrid.datagrid('getSelected');
+            if (!row)
+                return;
+
+            var url, params={};
+            // get action url
+            if(this.action == 'add') {
+                url = this.urls.add;
+            } else if (this.action == 'update'){
+                params.id = row.id;
+                url = this.urls.update;
+            } else {
+                return;
+            }
+
+            //submit form
+            this.form.form('submit',{
+                url: url,
+                queryParams: params,   
+                onSubmit: function(){
+                    return lever.form.form('validate');
+                },
+                success: function(data){
+                    var resp = eval('('+data+')');
+                    if (resp.status){
+                        lever.dialog.dialog('close');
+                        lever.datagrid.datagrid('reload');
+                    } else {
+                        $.messager.show({ title: '错误',  msg: resp.message });
+                    }
+                }
+            });
+        },
+
+        cancel: function() { //cancel
+            //clear action
+            this.action = '';
+
+            //close dialog
+            this.dialog.dialog('close');
+        },
+
+        reorder: function(sid, sorder, tid, torder) { //reorder
+            $.post(this.urls.reorder, {sid: sid, sorder: sorder, tid: tid, torder: torder}, function(resp, status){
+            if(status == 'success'){
+                if (resp.status){
+                    lever.refresh();
+                } else {
+                    $.messager.show({title: '错误', msg: resp.message});
+                }
+            } else {
+                $.messager.show({title: '错误', msg: '请求服务器错误'});
+            }
+            },'json');
+        }
+
+    };
+
+    //init page
+    $(function(){
+        //init lever
+        lever.init();
+    });
+
+</script>

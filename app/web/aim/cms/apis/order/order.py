@@ -1,7 +1,8 @@
 """
     api for cms
 """
-import time
+import cube, time, datetime
+
 
 from cms.apis import resp
 from cms import auth, models, hint, forms
@@ -15,23 +16,65 @@ def list(request):
     :return:
     """
     try:
-        items = models.Lever.objects.filter().order_by('order')
+        if request.method != 'GET':
+            return resp.failure(message='method not support')
 
-        data = {
-            'total': 100,
-            'size': 10,
-            'page': 1,
-            'items': [
-            ]
-        }
+        form = forms.order.order.Query(request.GET)
+        if form.is_valid():
+            # query set
+            results = models.UserTrade.objects.all()
 
-        for i in range(0, 10):
-            item = {'id': i, 'user': i, 'stock': i, 'ocount': i, 'oprice': i, 'hcount': i, 'fcount': i,
-                    'bcount': i, 'bprice': i, 'scount': i, 'sprice': i, 'hdays': i, 'margin': i, 'ofee': i,
-                    'dfee': i, 'status': i, 'date': i}
-            data['items'].append(item)
+            # form parameters
+            params = form.cleaned_data
 
-        return resp.success(data=data)
+            # filter
+            status, sdate, edate, words = params['status'], params['sdate'], params['edate'], params['words']
+            if status:
+                results = results.filter(status=status)
+            if sdate:
+                results = results.filter(ctime__gte=cube.time.utime(sdate))
+            if edate:
+                results = results.filter(ctime__lt=cube.time.utime(edate+datetime.timedelta(days=1)))
+            if words:
+                results = results.filter(user__user=words) | results.filter(stock__id=words) | results.filter(stock__name__contains=words)
+
+            # order
+            orderby, order = params['orderby'], params['order']
+            if orderby and order:
+                order = '-' if order=='desc' else ''
+                results = results.order_by(order+orderby)
+
+            # count
+            total = results.count()
+
+            # limit
+            start = cube.page.start(params['start'], total)
+            count = cube.page.count(params['count'])
+
+            results = results[start:start+count]
+
+            # response
+            data = {
+                'total': total,
+                'start': start,
+                'items': [
+                ]
+            }
+
+            for result in results:
+                item = {'id': result.id, 'user': result.user.user, 'stock': result.stock.name,
+                        'ocount': result.ocount, 'oprice': result.oprice,
+                        'hcount': result.hcount, 'fcount': result.fcount,
+                        'bcount': result.bcount, 'bprice': result.bprice,
+                        'scount': result.scount, 'sprice': result.sprice,
+                        'margin': result.margin, 'ofee': result.ofee,
+                        'ddays': result.ddays, 'dfee': result.dfee,
+                        'status': models.UserTrade.cstatus(result.status), 'date': cube.time.dates(result.ctime)}
+                data['items'].append(item)
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(hint.ERR_FORM_DATA, data={'errors': form.errors})
     except Exception as e:
         return resp.failure(str(e))
 
@@ -39,7 +82,7 @@ def list(request):
 @auth.protect
 def get(request):
     """
-        get api
+        get order
     :param request:
     :return:
     """
@@ -48,7 +91,9 @@ def get(request):
             return resp.failure(message='method not support')
 
         id = request.GET['id']
-        item = models.Lever.objects.get(id=id)
+
+        # get order detail
+        item = models.UserTrade.objects.get(id=id)
 
         return resp.success(data=item.dict())
     except Exception as e:

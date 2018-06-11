@@ -4,76 +4,185 @@
 * 
 */
 
+// cube table
 function CubeTable(init) {
-  this.tableid = init.id;
-	this.tableform = $('#'+init.id+"_form");
-  this.tablebody = $('#'+init.id+"_body");
-  this.tabledetail = $('#'+init.id+"_detail");
-  this.tablepager = $('#'+init.id+"_pager");
+  //table id
+  this.id = init.id;
+  //table elements
+  this.dom = {
+    form: $('#'+this.id+"_form"),
+    head: $('#'+this.id+"_head"),
+    body: $('#'+this.id+"_body"),
+    info: $('#'+this.id+"_info"),
+    page: $('#'+this.id+"_page"),
+    size: $('#'+this.id+"_size"), 
+    input: {
+      start: $('#'+this.id+"_start"),
+      count: $('#'+this.id+"_count"),
+      order: $('#'+this.id+"_order"),
+      orderby: $('#'+this.id+"_order_by")
+    },
+    query: $('#'+this.id+"_query"),
+    reset: $('#'+this.id+"_reset")
+  };
 
-  this.tablecols = init.columns;
+  //ajax url
+  this.url = init.url;
+  //table data
+  this.data = {
+    page: {
+      total: 0, // total pages index
+      curr: 0, //current page index
+      goto: 1,  //will goto page index
+    },
 
-  this.tablesize = init.size;
-  this.tablesizes = init.sizes;
+    sort: {
+      by: '', // sort by column
+      order: '' // sort by order
+    },
 
-  this.requesturl = init.url;
+    total: 0, //total items
+    start: 0, //page start pos
+    items: {}, //page items
+
+    select: {
+      sid: null,
+      rid: null
+    } //current selected row id
+  };
+
+  //table page
+  this.page = {
+    size: 20,
+    options: [10, 20, 30, 50, 100, 200, 500],
+    style: 'float: center; margin: 0px;'
+  };
+  $.extend(this.page, init.page);
+
+  //table info
+  this.info = {
+    style: 'float: left'
+  };
+  $.extend(this.info, init.info);
+
+  //table size
+  this.size = {
+    style: 'float: right'
+  };
+  $.extend(this.size, init.size);
+
+  //table cells
+  this.cells = {
+    render: function(cdata) {
+      return cdata;
+    }
+  };
+  $.extend(this.cells, init.cells);
+
+  //table rows
+  this.rows = {
+    id: 'id', // item key in data items
+    onevent: function(t, d) { // (type<click, dblclick>, data<sid, rid>); row event
+      ;
+    }
+  };
+  $.extend(this.rows, init.rows);
+
+  //table columns
+  this.columns = [];
+  for(i=0; i<init.columns.length; i++){
+    column = {
+      id: 0,
+      sortable: false,
+      render: this.cells.render
+    };
+
+    $.extend(column, init.columns[i]);
+    this.columns.push(column);
+  }
 }
 
+// cube table prototype
 CubeTable.prototype = {
 	constructor: CubeTable,
 
-  /**
-  * @method
-  * @param rowitems: array, table row items data
-  *   [{'name1': data1, 'name2': data2, ...}, ...]
-  * @param columns: array, table column definiation
-  *   [{'name': 'name or index in data item', 'render': function(data)}, ...]
-  * @return: str, row/col html text 
-  */
-  renderRows: function(items) {
+  renderEmpty: function() {
+    html = '<tr><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">没有数据</td></tr>';
+    this.dom.body.html(html);
+  },
+
+  renderLoading: function() {
+    html = '<tr><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">正在加载数据...</td></tr>';
+    this.dom.body.html(html);
+  },
+
+  renderFailure: function(msg) {
+    html = '<tr><td valign="top" colspan="'+this.columns.length+'" style="text-align: center;">'+msg+'</td></tr>';
+    this.dom.body.html(html);
+  },
+
+  //render table head
+  renderHead: function() {
+    // get heads
+    heads = $(this.dom.head).children('th');
+
+    // add attrs
+    for (i=0; i<heads.length; i++){
+      //set head name with original name
+      $(heads[i]).html(this.columns[i].name);
+      //set head sequence
+      $(heads[i]).attr('seq', i);
+
+      //add sortable style
+      if (this.columns[i].sortable){
+        $(heads[i]).attr('style', 'cursor: pointer;');
+        $(heads[i]).attr('sortable', 'true');
+        $(heads[i]).html(this.columns[i].name+'&#8597;');
+      }
+
+      //add sort flag
+      if (this.data.sort.by == this.columns[i].id){
+        //set head name with sort flag
+        if (this.data.sort.order == 'asc')
+          $(heads[i]).html(this.columns[i].name+'&#8593;');
+        else if (this.data.sort.order == 'desc')
+          $(heads[i]).html(this.columns[i].name+'&#8595;');
+        else
+          $(heads[i]).html(this.columns[i].name+'&#8597;');
+      }
+    }
+  },
+
+  //render table rows
+  renderRows: function() {
+    //epmpty data
+    if(this.data.items.length == 0){
+      this.renderEmpty();
+      return;
+    }
+
     //html row array
     htmlrows = [];
 
     //process each row item data
-    for (i=0; i<items.length; i++){
-      //current row data
-      item = items[i];
+    for (i=0; i<this.data.items.length; i++){
+      //odd / even
+      oe = 'odd';
+      if(i%2==0)
+        oe = 'even';
+
+       //add row start
+      htmlrow = '<tr class="'+oe+'" sid="'+i+'" rid="'+this.data.items[i][this.rows.id]+'">\n'
 
       //row columns
-      htmlcols = []
-
-      //add row start
-      htmlrow = '<tr>\n'
-
+      htmlcols = [];
       //extract column data for row
-      for (j=0; j<this.tablecols.length; j++){
-        column = this.tablecols[j];
-        
-        name = j;
-        if (column.data)
-          name = column.data;
-
-        render = function(x){
-          return x;
-        };
-        if (column.render)
-          render = column.render
-
-        data = '';
-        // column original data
-        if (name) {
-          data = item[name];
-        } else {
-          data = item[j];
-        }
-
-        // column rendered data
-        if (render) {
-          data = render(data);
-        }
+      for (j=0; j<this.columns.length; j++){
+        id = this.columns[j].id;
+        render = this.columns[j].render;
 
         // column html data
-        htmlcol = '\t<td>' + data + '</td>';
+        htmlcol = '\t<td>' + render(this.data.items[i][id]) + '</td>';
 
         // add to html columns
         htmlcols.push(htmlcol);
@@ -81,151 +190,360 @@ CubeTable.prototype = {
 
       // add row columns
       htmlrow += htmlcols.join('\n');
-
       // add row end
       htmlrow += '\n</tr>';
 
       htmlrows.push(htmlrow);
     }
 
-    return htmlrows.join('\n');
+    //body html
+    html = htmlrows.join('\n');
+
+    //render body
+    this.dom.body.html(html);
   },
 
   // render page data
-  renderPage: function(page, total, size, style) {
-    pages = Math.ceil(total/size);
-    if (page > pages)
-      page = pages;
-
-    if (page < 0 || pages == 0)
-      page = 0;
-
-    if (!style)
-      style = 'float: right; margin: 0px;';
-
-    prestatus = '', nextstatus = '', currstatus = ' disabled';
-    if (page <= 1)
-      prestatus = ' disabled';
-
-    if (page == pages)
-      nextstatus = ' disabled';
-
-    html = '<ul class="pagination" style="' + style + '">\n'
-            + '\t<li class="page-item'+prestatus+'"><a class="page-link" tbl="'+this.tableid+'" act="first">&lt;&lt;</a></li>\n'
-            + '\t<li class="page-item'+prestatus+'"><a class="page-link" tbl="'+this.tableid+'" act="pre" href="#">&lt;</a></li>\n'
-            + '\t<li class="page-item'+currstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="curr" href="#">'+page+'</a></li>\n'
-            + '\t<li class="page-item'+nextstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="next" href="#">&gt;</a></li>\n'
-            + '\t<li class="page-item'+nextstatus+'"><a class="page-link" tbl="'+this.tableid+'" act="last" href="#">&gt;&gt;</a></li>\n'
+  renderPage: function() {  
+    html = '<ul class="pagination" style="' + this.page.style + '">\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="first">&lt;&lt;</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="previous">&lt;</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="current">'+this.data.page.curr+'</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="next">&gt;</a></li>\n'
+            + '\t<li><a href="#" linktbl="'+this.id+'" act="last">&gt;&gt;</a></li>\n'
             + '</ul>';
 
-    return html;
+    //render
+    this.dom.page.html(html);
   },
 
   // render size selector
-  renderSize: function(size) {
-    html = '<span>每页\n'
-            + '\t<select name="page">\n';
+  renderSize: function() {
+    html = '<span style="'+this.size.style+'">每页\n'
+            + '\t<select sztbl="'+this.id+'">\n';
 
-    for (i=0; i<this.tablesizes.length; i++){
-      if (size == this.tablesizes[i])
-        html += '\t\t<option value="'+this.tablesizes[i]+'" selected>'+this.tablesizes[i]+'</option>\n';
+    for (i=0; i<this.page.options.length; i++){
+      if (this.page.size == this.page.options[i])
+        html += '\t\t<option value="'+this.page.options[i]+'" selected>'+this.page.options[i]+'</option>\n';
       else
-        html += '\t\t<option value="'+this.tablesizes[i]+'">'+this.tablesizes[i]+'</option>\n';
+        html += '\t\t<option value="'+this.page.options[i]+'">'+this.page.options[i]+'</option>\n';
     }
     
     html += '\t</select>\n';
     html += '条</span>';
 
-    return html;
+    //render
+    this.dom.size.html(html);
   },
 
   // render items information
-  renderInfo: function(page, total, size) {
-    pages = Math.ceil(total/size);
-    spos = (page-1)*size, epos = page*size;
-    if (spos < 0)
-      spos = 0;
-    if (epos > total)
-      epos = total;
+  renderInfo: function() {
+    if(this.data.items.length == 0){
+      start = 0;
+      end = 0;
+    } else {
+      start = this.data.start+1;
+      end = this.data.start+this.data.items.length;
+    }
 
-    html = '<span>第'+spos+'-'+epos+'条, 共'+total+'条; 第'+page+'页, 共'+pages+'页</span>';
-    return html;
+    html = '<span style="'+this.info.style+'">第'+start+'-'+end+'条, 共'+this.data.total+'条; 第'+this.data.page.curr+'页, 共'+this.data.page.total+'页</span>';
+    //render
+    this.dom.info.html(html);
   },
 
-  // render table info&size html
-  renderDetail: function(page, total, size) {
-    htmlsep = '\n<span>|</span>\n';
-    return this.renderInfo(page, total, size) + htmlsep + this.renderSize(size, this.tablesizes);
+  // init query event
+  addQueryEvent: function() {
+    // add query event
+    $(this.dom.query).on('click', {table: this}, function(e){
+      //goto first page
+      e.data.table.page.goto = 1;
+      //load data
+      e.data.table.load();
+    });
   },
 
-
-  // render table
-  render: function(data) {
-    // render table body
-    this.tablebody.html(this.renderRows(data.items));
-
-    // render table detail
-    this.tabledetail.html(this.renderDetail(data.page, data.total, data.size));
-
-    // render table pager
-    this.tablepager.html(this.renderPage(data.page, data.total, data.size));
+  // init query event
+  addResetEvent: function() {
+    // add query event
+    $(this.dom.reset).on('click', {table: this}, function(e){
+      //reset form
+      $(e.data.table.dom.form)[0].reset();
+      //goto first page
+      e.data.table.page.goto = 1;
+      //load data
+      e.data.table.load();
+    });
   },
 
+  // add sort event
+  addSortEvent: function() {
+    sorts = $(this.dom.head).children('th[sortable="true"]');
+    $(sorts).on('click', {table: this}, function(e){
+      // process display
+      i = $(this).attr('seq');
+      if(e.data.table.sort.by == e.data.table.columns[i].id){
+        if(e.data.table.sort.order == 'asc') {
+          e.data.table.sort.order = 'desc';
+          $(this).html(e.data.table.columns[i].name+"&#8595;");
+        }
+        else{
+          e.data.table.sort.order = 'asc';
+          $(this).html(e.data.table.columns[i].name+"&#8593;");
+        }
+      } else {
+        //reset last sort column head
+        lseq = e.data.table.sort.seq;
+        if(lseq != ''){
+          $(this).siblings('th[seq="'+lseq+'"]').html(e.data.table.columns[lseq].name+"&#8597;");
+        }
 
-  // go to first page
-  gotoFirstPage: function() {
-    alert('goto first page');
+        //set sort data
+        e.data.table.sort.seq = i;
+        e.data.table.sort.by = e.data.table.columns[i].id;
+        e.data.table.sort.order = 'asc';
+
+        //set current sort column head
+        $(this).html(e.data.table.columns[i].name+"&#8593;");
+      }
+
+      //load data
+      e.data.table.load();
+    });
   },
 
-  // go to last page
-  gotoLastPage: function() {
-    alert('goto last page');
+  // add page event
+  addPageEvent: function() {
+    $('a[linktbl="'+this.id+'"]').on('click', {table: this}, function(e){
+      act = $(this).attr('act');
+      e.data.table.goto(act);
+    });
   },
 
-  // go to pre page
-  gotoPrePage: function() {
-    alert('goto pre page');
+  // add size event
+  addSizeEvent: function() {
+    $('select[sztbl="'+this.id+'"]').on('change', {table: this}, function(e){
+      e.data.table.resize();
+    });
   },
 
-  // go to next page
-  gotoNextPage: function() {
-    alert('goto next page');
+  // add row select event
+  addRowEvents: function(events) {
+    if(this.data.items.length == 0)
+      return;
+
+    rows = $(this.dom.body).children('tr');
+    for (i=0; i<events.length; i++){
+      $(rows).on(events[i], {table: this}, function(e) {
+        // get row id
+        rid = $(this).attr('rid');
+        // get seq id
+        sid = $(this).attr('sid');
+
+        // set row backgroud
+        $(this).siblings('.success').removeClass('success');
+        $(this).addClass('success');
+        
+        // set data select id
+        e.data.table.data.select.rid = rid;
+        e.data.table.data.select.sid = sid;
+
+        // call select function
+        e.data.table.rows.onevent(e.type, e.data.table.data.select);
+      });
+    }
+  },
+
+  // init head
+  initHead: function() {
+    // init column names for table head
+    heads = $(this.dom.head).children('th');
+    for(i=0; i<heads.length; i++){
+      this.columns[i].name = $(heads[i]).text();
+    }
+  },
+
+  // init event
+  initEvent: function() {
+    // add query event
+    this.addQueryEvent();
+
+    // add reset event
+    this.addResetEvent();
+
+    // add sort event
+    this.addSortEvent();
+
+    // add change page event
+    this.addPageEvent();
+
+    // add change page size event
+    this.addSizeEvent();
+  },
+
+  // update event
+  updateEvent: function() {
+    // update row click event
+    this.addRowEvents(['click', 'dblclick']);
+  },
+
+  //update page
+  updatePage: function() {
+    //update current page
+    $('a[linktbl="'+this.id+'"][act="current"]').text(this.data.page.curr);
+    $('a[linktbl="'+this.id+'"][act="current"]').parent().attr('class', 'active');
+
+    //update previous&first buttons
+    if(this.data.page.curr <= 1){
+      $('a[linktbl="'+this.id+'"][act="first"]').parent().attr('class', 'disabled');
+      $('a[linktbl="'+this.id+'"][act="previous"]').parent().attr('class', 'disabled');
+    } else {
+      $('a[linktbl="'+this.id+'"][act="first"]').parent().attr('class', '');
+      $('a[linktbl="'+this.id+'"][act="previous"]').parent().attr('class', '');
+    }
+
+    //update next&last buttons
+    if(this.data.page.curr >= this.data.page.total) {
+      $('a[linktbl="'+this.id+'"][act="next"]').parent().attr('class', 'disabled');
+      $('a[linktbl="'+this.id+'"][act="last"]').parent().attr('class', 'disabled');
+    } else {
+      $('a[linktbl="'+this.id+'"][act="next"]').parent().attr('class', '');
+      $('a[linktbl="'+this.id+'"][act="last"]').parent().attr('class', '');
+    }
+  },
+
+   // go to page
+  goto: function(act) {
+    //change current page
+    if(act == 'first'){
+      if(this.data.page.curr == 1)
+        return;
+      this.data.page.goto = 1;    
+    }
+    else if ( act == 'previous') {
+      if(this.data.page.curr == 1)
+        return;
+
+      if(this.data.page.curr > 1)
+        this.data.page.goto = this.data.page.curr-1;
+    }
+    else if( act == 'next'){
+      if(this.data.page.curr >= this.data.page.total)
+        return;
+
+      if(this.data.page.curr < this.data.page.total)
+        this.data.page.goto = this.data.page.curr+1;
+    }
+    else if( act == 'last'){
+      if(this.data.page.curr >= this.data.page.total)
+        return;
+
+      this.data.page.goto = this.data.page.total;
+    }
+    else
+      return;
+
+    //check goto value
+    if(this.data.page.goto < 1)
+      this.data.page.goto = 1;
+
+    //load table data
+    this.load();
   },
 
   // change page size
-  changePageSize: function() {
-    alert('change page size');
+  resize: function() {
+    //reset page size
+    this.page.size = $('select[sztbl="'+this.id+'"]').val();
+
+    //reset current page
+    this.data.page.goto = 1;
+
+    //reload table data
+    this.load();
+  },
+
+  // update table
+  update: function(data) {
+    //update table data
+    $.extend(this.data, data);
+
+    //update total page
+    this.data.page.total = Math.ceil(this.data.total / this.page.size);
+
+    //update current page
+    if (this.data.items.length > 0)
+      this.data.page.curr = Math.ceil(this.data.start / this.page.size)+1;
+    else {
+      this.page.start = 0;
+      this.data.page.curr = 0;
+    }
+
+    //reset selected data
+    this.data.select.sid = null;
+    this.data.select.rid = null;
+
+
+    //update row data
+    this.renderRows();
+
+    //update table info
+    this.renderInfo();
+
+    //update table page
+    this.updatePage();
+
+    //update event
+    this.updateEvent();
   },
 
   // query table data
   load: function() {
-      //set form default input value
+    //set loading tips
+    this.renderLoading();
 
-      //check form data
-      if(this.tableform.valid()){
-          this.tableform.ajaxSubmit({
-             url: this.requesturl,
-             type: 'get',
-             table: this,
-             success: function(resp) {
-                  if(resp.status){
-                    // render table
-                    this.table.render(resp.data);
+    //set hidden input
+    this.dom.input.start.val(this.page.size*(this.data.page.goto-1));
+    this.dom.input.count.val(this.page.size);
+    this.dom.input.orderby.val(this.data.sort.by);
+    this.dom.input.order.val(this.data.sort.order);
 
-                    // add change page event
-                    $('.page-link').click(function(){
-                      tableid = $(this).attr('tbl');
-                      pageact = $(this).attr('act');
-                    });
+    //check form data
+    if(this.dom.form.valid()){
+      this.dom.form.ajaxSubmit({
+         url: this.url,
+         type: 'get',
+         table: this,
+         success: function(resp) {
+            if(resp.status){
+              // update table
+              this.table.update(resp.data);
+            } else {
+              this.table.renderFailure(resp.message);
+            }
+         }
+      });
+    }
+  },
 
+  // init table
+  init: function() {
+    // init head
+    this.initHead();
 
-                    // add change page size event
-                  } else {
-                    alert(resp.status);
-                  }
-             }
-          });
-      }
+    // render head
+    this.renderHead();
+
+    // render page
+    this.renderPage();
+
+    // render size
+    this.renderSize();
+
+    // init event
+    this.initEvent();
+
+    //load data
+    this.load();
   }
 };
 

@@ -1,0 +1,82 @@
+[
+  {
+    "model": "adb.module",
+    "pk": 1,
+    "fields": {
+      "name": "权限管理",
+      "order": 1,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 2,
+    "fields": {
+      "parent": 1,
+      "name": "用户管理",
+      "path": "/cms/auth/admin/",
+      "order": 2,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 3,
+    "fields": {
+      "parent": 1,
+      "name": "角色管理",
+      "path": "/cms/auth/role/",
+      "order": 3,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 4,
+    "fields": {
+      "parent": 1,
+      "name": "模块管理",
+      "path": "/cms/auth/module/",
+      "order": 4,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 5,
+    "fields": {
+      "name": "交易管理",
+      "order": 5,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 6,
+    "fields": {
+      "parent": 5,
+      "name": "交易订单",
+      "path": "/cms/trade/order/",
+      "order": 6,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 7,
+    "fields": {
+      "parent": 5,
+      "name": "交易杠杆",
+      "path": "/cms/trade/lever/",
+      "order": 7,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  }
+]
