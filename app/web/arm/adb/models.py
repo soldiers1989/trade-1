@@ -91,8 +91,8 @@ class RoleModule(models.Model):
 # tb_trade_account
 class TradeAccount(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=16)
     account = models.CharField(max_length=16, unique=True)
+    name = models.CharField(max_length=16)
     lmoney = models.DecimalField(max_digits=10, decimal_places=2)
     cfmin = models.DecimalField(max_digits=10, decimal_places=2)
     cfrate = models.DecimalField(max_digits=6, decimal_places=6)
@@ -431,6 +431,7 @@ class UserTrade(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True)
+    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
     code = models.CharField(max_length=16, unique=True)
     oprice = models.DecimalField(max_digits=10, decimal_places=2)
     ocount = models.IntegerField()

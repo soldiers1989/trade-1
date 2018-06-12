@@ -45,3 +45,4 @@ boost
 .idea
 
 src/trades/log
+app/web/aim/cms/migrations/*.py
