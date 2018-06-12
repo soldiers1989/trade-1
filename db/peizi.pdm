@@ -5101,8 +5101,8 @@ DESTINATION 0 新宋体,8,N</a:FontList>
 <o:ReferenceSymbol Id="o79">
 <a:CreationDate>1528711993</a:CreationDate>
 <a:ModificationDate>1528713492</a:ModificationDate>
-<a:Rect>((-20863,2471), (-7173,2921))</a:Rect>
-<a:ListOfPoints>((-7173,2696),(-20863,2696))</a:ListOfPoints>
+<a:Rect>((-20863,2467), (-7173,2917))</a:Rect>
+<a:ListOfPoints>((-7173,2696),(-20863,2692))</a:ListOfPoints>
 <a:CornerStyle>1</a:CornerStyle>
 <a:ArrowStyle>1</a:ArrowStyle>
 <a:LineColor>12615680</a:LineColor>
