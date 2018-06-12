@@ -1,13 +1,31 @@
-<table id="order_datagrid" style="height: 100%;"></table>
 
-<div id="lever_toolbar">
+<div class="easyui-layout" data-options="fit:true, split:true, border: true">
+    <div data-options="region:'west', split:true" style="width: 75%;">
+        <table id="order_datagrid" style="height: 100%;"></table>
+    </div>
+    <div data-options="region:'center', split:true, title:'订单详情'" style="width: 25%">
+        <table id="admin_role_datagrid" style="height: 100%;"></table>
+    </div>
+</div>
+
+<div id="order_toolbar">
     <span>
         <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="order.add()">新建</a>
         <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="order.update()">编辑</a>
     </span>
-	<span style="float: right; margin-right: 18px;">
-		<a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="order.refresh()">刷新</a>
-	</span>
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="order_search_form">
+            <span>日期</span>
+            <input id="sdate" class="easyui-datebox" validType="date">
+            <span>-</span>
+            <input id="edate" class="easyui-datebox" validType="date">
+
+            <input id="words" class="easyui-textbox">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="order.list()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="order.reset()">重置</a>
+        </form>
+    </span>
 </div>
 
 <div class="easyui-dialog" id="lever_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#lever_dialog_buttons'">
@@ -66,7 +84,8 @@
         forms: {
         	add: $('#order_add_form'),
         	mod: $('#order_mod_form'),
-        }
+        	search: $('#order_search_form'),
+        },
 
         action: '',
         urls: {
@@ -86,38 +105,42 @@
 				striped: true,
 				fitColumns: true,
                 pagination: false,
-                rownumbers: true,
+                rownumbers: false,
                 singleSelect: true,
                 
-
-				toolbar: '#lever_toolbar',
+				toolbar: '#order_toolbar',
+				frozenColumns: [[
+				    {field:'id', title:'ID'},
+                    {field:'user', title:'用户'},
+                    {field:'stock', title:'股票'},
+                    {field:'lever', title:'杠杆'},
+					{field:'statusd', title:'状态'},
+					{field:'ctime', title:'创建日', formatter: cube.format.date},
+                    {field:'ftime', title:'结束日', formatter: cube.format.date},
+				]],
                 columns: [[
-                    {field:'id', title:'ID', width:'4%'},
-                    {field:'lever', title:'杠杆', width:'6%'},
-                    {field:'wline', title:'预警线', width:'8%'},
-                    {field:'sline', title:'止损线', width:'8%'},
-                    {field:'ofmin', title:'保底费用', width:'8%'},
-                    {field:'ofrate', title:'建仓费率', width:'8%'},
-                    {field:'dfrate', title:'延期费率', width:'8%'},
-                    {field:'psrate', title:'盈利分成', width:'8%'},
-                    {field:'mmin', title:'本金下限', width:'8%'},
-                    {field:'mmax', title:'本金上限', width:'8%'},
-                    {field:'order', title:'排序', width:'4%'},
-                    {field:'disable', title:'禁用', width: '5%', formatter: cube.format.boolean},
-                    {field:'ctime', title:'创建时间', width: '8%', formatter: cube.format.date},
-                    {field:'mtime', title:'修改时间', width: '8%', formatter: cube.format.date}
+                    {field:'hprice', title:'持仓价', formatter: cube.format.none},
+                    {field:'hcount', title:'持仓量', formatter: cube.format.none},
+                    {field:'fcount', title:'可卖量', formatter: cube.format.none},
+                    {field:'oprice', title:'订单价'},
+                    {field:'ocount', title:'订单量'},
+                    {field:'bprice', title:'买入价', formatter: cube.format.none},
+                    {field:'bcount', title:'买入量', formatter: cube.format.none},
+                    {field:'sprice', title:'卖出价', formatter: cube.format.none},
+                    {field:'scount', title:'卖出量', formatter: cube.format.none},
+                    {field:'margin', title:'保证金'},
+                    {field:'ofee', title:'建仓费'},
+                    {field:'ddays', title:'天数', formatter: cube.format.none},
+                    {field:'dfee', title:'延期费', formatter: cube.format.none},
+                    {field:'tprofit', title:'盈利', formatter: cube.format.none},
+                    {field:'sprofit', title:'分成', formatter: cube.format.none},
                 ]],
-
-                onDrop: function(target, source, point) {
-                    lever.reorder(source.id, source.order, target.id, target.order);
-                },
 
                 loadFilter: function (resp) {
                     return resp.data;
                 },
 
                 onLoadSuccess: function(resp) {
-                    $(this).datagrid('enableDnd');
                 },
 
                 onLoadError: function() {
@@ -130,9 +153,28 @@
         },
         
    
-        refresh: function() { // reset
+        list: function() { // list
+            //check search form
+            if(!this.forms.search.form('validate'))
+                return;
+
+            //get parameters
+            params = {
+                sdate: this.forms.search.children('#sdate').val(),
+                edate: this.forms.search.children('#edate').val(),
+                words: this.forms.search.children('#words').val()
+            };
+
+            //reload by retrieve conditions
+            this.datagrid.datagrid('load', params);
+        },
+
+        reset: function() { // reset
+            //clear form
+            this.forms.search.form('clear');
+
             //reload datagrid
-            this.datagrid.datagrid('reload');
+            this.datagrid.datagrid('load', {});
         },
 
         add: function() { // add
@@ -167,34 +209,6 @@
             }
         },
 
-        delete: function() { // delete
-            //get selected row data
-            var row = this.datagrid.datagrid('getSelected');
-            if (!row)
-                return;
-        
-            $.messager.confirm({
-                title: '确认',
-                msg: '确认删除杠杆'+row.lever+'?',
-                url: this.urls.delete,
-                fn: function(r){
-                    if (r){
-                        $.post(this.url, {id: row.id}, function(resp, status){
-                            if(status == 'success'){
-                                if (resp.status){
-                                    lever.refresh();
-                                } else {
-                                    $.messager.show({title: '错误', msg: resp.message});
-                                }
-                            } else {
-                                $.messager.show({title: '错误', msg: '请求服务器错误'});
-                            }
-                        },'json');
-                    }
-                }
-            });
-        },
-
         save: function() { // save
             //get selected row data
             var row = this.datagrid.datagrid('getSelected');
@@ -217,13 +231,13 @@
                 url: url,
                 queryParams: params,   
                 onSubmit: function(){
-                    return lever.form.form('validate');
+                    return order.form.form('validate');
                 },
                 success: function(data){
                     var resp = eval('('+data+')');
                     if (resp.status){
-                        lever.dialog.dialog('close');
-                        lever.datagrid.datagrid('reload');
+                        order.dialog.dialog('close');
+                        order.datagrid.datagrid('reload');
                     } else {
                         $.messager.show({ title: '错误',  msg: resp.message });
                     }
@@ -238,27 +252,12 @@
             //close dialog
             this.dialog.dialog('close');
         },
-
-        reorder: function(sid, sorder, tid, torder) { //reorder
-            $.post(this.urls.reorder, {sid: sid, sorder: sorder, tid: tid, torder: torder}, function(resp, status){
-            if(status == 'success'){
-                if (resp.status){
-                    lever.refresh();
-                } else {
-                    $.messager.show({title: '错误', msg: resp.message});
-                }
-            } else {
-                $.messager.show({title: '错误', msg: '请求服务器错误'});
-            }
-            },'json');
-        }
-
     };
 
     //init page
     $(function(){
-        //init lever
-        lever.init();
+        //init order
+        order.init();
     });
 
 </script>

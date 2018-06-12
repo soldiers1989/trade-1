@@ -460,11 +460,11 @@ class UserTrade(models.Model):
         items['user'] = items['user'].user if items['user'] else None
         items['stock'] = items['stock'].name if items['stock'] else None
         items['coupon'] = items['coupon'].money if items['coupon'] else None
+        items['statusd'] = self.statusd(items['status'])
         items['lever'] = self.tradelever.lever
         return items
 
-    @staticmethod
-    def cstatus(s):
+    def statusd(self, s):
         cm = {
                 'tobuy': '待买入', 'buying': '买入中', 'holding': '持仓中',
                 'tosell': '待卖出', 'selling': '卖出中', 'toclose': '待平仓', 'closing': '平仓中',

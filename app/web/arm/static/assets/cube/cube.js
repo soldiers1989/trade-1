@@ -30,8 +30,19 @@ cube.format = new function() {
 			return '否';
 	}
 
+    //format none
+    self.none = function(v) {
+        if(v == null)
+            return '-';
+        else
+            return v;
+    }
+
 	//format timestamp to date
 	self.date = function(tm) {
+        if(tm == null)
+            return '-';
+
 		var date = new Date();
 		date.setTime(tm*1000);
 		return date.toLocaleDateString();
@@ -39,6 +50,9 @@ cube.format = new function() {
 
 	//form timestamp to datetime
 	self.datetime = function(tm) {
+        if(tm == null)
+            return '-';
+
 		var date = new Date();
 		date.setTime(tm);
 		return date.toLocaleString();
