@@ -15,18 +15,28 @@ def list(request):
     :return:
     """
     try:
-        roles = models.Lever.objects.all().order_by('order')
+        form = forms.trade.lever.List(request.POST)
+        if form.is_valid():
+            roles = None
 
-        rows = []
-        for role in roles:
-            rows.append(role.dict())
+            disable = form.cleaned_data['disable']
+            if form.data.get('disable'):
+                roles = models.Lever.objects.filter(disable=disable).order_by('order')
+            else:
+                roles = models.Lever.objects.all().order_by('order')
 
-        data = {
-            'total': len(rows),
-            'rows': rows
-        }
+            rows = []
+            for role in roles:
+                rows.append(role.dict())
 
-        return resp.success(data=data)
+            data = {
+                'total': len(rows),
+                'rows': rows
+            }
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))
 

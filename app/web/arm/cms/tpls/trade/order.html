@@ -11,7 +11,6 @@
 <div id="order_toolbar">
     <span>
         <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="order.add()">新建</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="order.update()">编辑</a>
     </span>
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="order_search_form">
@@ -28,45 +27,33 @@
     </span>
 </div>
 
-<div class="easyui-dialog" id="lever_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#lever_dialog_buttons'">
-    <form class="easyui-form" id="lever_form" method="post" style="margin:0;padding:10px 20px">
+<div class="easyui-dialog" id="order_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#order_add_dialog_buttons'">
+    <form class="easyui-form" id="order_add_form" method="post" style="margin:0;padding:10px 20px">
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="lever" data-options="label:'杠杆', prompt:'1~10', required:true, validType:['digits', 'range[1, 10]']" style="width:100%">
+            <input id="order_add_user" name="user" label="用户" prompt="输入用户" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="wline" data-options="label:'预警线', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+           	<input id="order_add_stock" name="stock" label="股票" prompt="股票代码" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="sline" data-options="label:'止损线', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+           	<input id="order_add_lever" name="lever" label="杠杆" prompt="选择杠杆" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ofmin" data-options="label:'保底费用', prompt:'>=0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input id="order_add_coupon" name="coupon" label="优惠券" prompt="选择优惠券" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ofrate" data-options="label:'建仓费率', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+            <input id="order_add_ptype" name="ptype" label="报价方式" prompt="选择报价方式" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="dfrate" data-options="label:'延期费率', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'100的整数倍', required:true, validType:['stock', 'min[100]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="psrate" data-options="label:'盈利分成', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" id="mmin" name="mmin" data-options="label:'本金下限', prompt:'>=0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="mmax" data-options="label:'本金上限', prompt:'大于等于本金下限', required:true, validType:['number', 'largeequal[\'#mmin\']']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', editable:false, required:true" style="width: 100%">
-                <option value="false">否</option>
-                <option value="true">是</option>
-            </select>
+            <input class="easyui-textbox" id="order_add_oprice" name="oprice" data-options="label:'委托价格', prompt:'>0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
         </div>
     </form>
 </div>
 
-<div id="lever_dialog_buttons">
+<div id="order_add_dialog_buttons">
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="order.save()" style="width:90px">保存</a>
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="order.cancel()" style="width:90px">取消</a>
 </div>
@@ -76,22 +63,23 @@
     // order list/add/update/delete
     var order = {
         datagrid: $('#order_datagrid'),
+
+        dialog: null,
         dialogs: {
         	add: $('#order_add_dialog'),
-        	mod: $('#order_mod_dialog'),
-        },
+       	},
 
+       	form: null,
         forms: {
         	add: $('#order_add_form'),
-        	mod: $('#order_mod_form'),
         	search: $('#order_search_form'),
         },
 
         action: '',
+        url: null,
         urls: {
             list: '/api/trade/order/list',
             add: '/api/trade/order/add',
-            update: '/api/trade/order/update',
         },
 
         init: function() { //init
@@ -148,8 +136,82 @@
                 }
             });
 
-            //enable drag/drop
-            //this.datagrid.datagrid('enableDnd');
+            //init user textbox
+            $('#order_add_user').combobox({
+                url:'/api/user/user/query', 
+                mode: 'remote',
+
+                valueField:'id',
+                textField:'user',
+                
+                limitToList: true,
+                
+                loadFilter: function(resp) {
+                    return resp.data;
+                },
+                
+                onChange: function(newv, oldv) {
+                    if($(this).textbox('isValid')){
+                        $('#order_add_coupon').combobox({queryParams: {user:$(this).val(), status:'unused'}}).combobox('reload', '/api/user/coupon/list');
+                    }
+                }
+            });
+
+            //init stock combobox
+            $('#order_add_stock').combobox({
+                url:'/api/stock/stock/query',
+                mode: 'remote',
+
+                valueField:'id',
+                textField:'name',
+
+                limitToList: true,
+
+                loadFilter: function(resp) {
+                    return resp.data;
+                }
+            });
+
+            //init lever combobox
+            $('#order_add_lever').combobox({
+                url:'/api/trade/lever/list',
+                editable:false,
+                valueField:'id',
+                textField:'lever',
+                queryParams: {
+                    disable: 'false'
+                },
+                loadFilter: function(resp) {
+                    return resp.data.rows;
+                }
+            });
+
+            //init coupon combobox
+            $('#order_add_coupon').combobox({
+                editable:false,
+                valueField: 'id',
+                textField: 'money',
+                loadFilter: function(resp) {
+                    return resp.data.rows;
+                }
+            });
+
+            //init ptype combobox
+            $('#order_add_ptype').combobox({
+                editable:false,
+                valueField: 'id',
+                textField: 'text',
+                data: [{id:'sj', text:'市价'},{id:'xj', text:'限价'}],
+                onChange: function(newv, oldv){
+                    if (newv == 'sj'){
+                        $('#order_add_oprice').textbox('clear');
+                        $('#order_add_oprice').textbox('disable');
+                    } else {
+                        $('#order_add_oprice').textbox('clear');
+                        $('#order_add_oprice').textbox('enable');
+                    }
+                }
+            });
         },
         
    
@@ -180,64 +242,33 @@
         add: function() { // add
             //reset action
             this.action = 'add';
+            this.url = this.urls.add;
+            this.form = this.forms.add;
+            this.dialog = this.dialogs.add;
 
             //reset form
             this.form.form('clear');
 
             //open dialog
-            this.dialog.dialog('open').dialog('center').dialog('setTitle','添加杠杆');
-        },
-
-        update: function() { // udpate
-            //reset action
-            this.action = 'update';
-            
-            //get selected row data
-            this.row = this.datagrid.datagrid('getSelected');
-            if (this.row){
-            	// format boolean value
-            	this.row.disable = String(this.row.disable);
-
-                // clear form
-                this.form.form('clear');
-
-                //load form data
-                this.form.form('load', this.row);
-
-                //option dialog
-                this.dialog.dialog('open').dialog('center').dialog('setTitle','修改杠杆');
-            }
+            this.dialog.dialog('open').dialog('center').dialog('setTitle','添加订单');
         },
 
         save: function() { // save
-            //get selected row data
-            var row = this.datagrid.datagrid('getSelected');
-            if (!row)
-                return;
-
-            var url, params={};
-            // get action url
-            if(this.action == 'add') {
-                url = this.urls.add;
-            } else if (this.action == 'update'){
-                params.id = row.id;
-                url = this.urls.update;
-            } else {
-                return;
-            }
-
+        	//save relate variables
+           	form = this.form, dialog = this.dialog, url = this.url, params={}, datagrid = this.datagrid;
+          
             //submit form
-            this.form.form('submit',{
+            form.form('submit',{
                 url: url,
                 queryParams: params,   
                 onSubmit: function(){
-                    return order.form.form('validate');
+                    return form.form('validate');
                 },
                 success: function(data){
                     var resp = eval('('+data+')');
                     if (resp.status){
-                        order.dialog.dialog('close');
-                        order.datagrid.datagrid('reload');
+                        dialog.dialog('close');
+                        datagrid.datagrid('reload');
                     } else {
                         $.messager.show({ title: '错误',  msg: resp.message });
                     }
@@ -251,7 +282,7 @@
 
             //close dialog
             this.dialog.dialog('close');
-        },
+        }
     };
 
     //init page

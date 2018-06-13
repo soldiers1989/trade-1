@@ -8,17 +8,9 @@ class List(forms.Form):
     sort = forms.CharField(initial='id', required=False)
     order = forms.CharField(initial='asc', required=False)
 
+    user = forms.CharField(required=False)
     status = forms.CharField(required=False)
+
     sdate = forms.DateField(required=False)
     edate = forms.DateField(required=False)
     words = forms.CharField(required=False)
-
-
-class Add(forms.Form):
-    user = forms.IntegerField()
-    stock = forms.CharField()
-    lever = forms.IntegerField()
-    coupon = forms.IntegerField(required=False)
-    ptype = forms.CharField()
-    ocount = forms.IntegerField(min_value=100)
-    oprice = forms.DecimalField(required=False)

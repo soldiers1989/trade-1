@@ -1,5 +1,5 @@
 from django.urls import path
-from cms.apis import auth, trade
+from cms.apis import auth, trade, user, stock
 
 urlpatterns = [
     path('admin/login', auth.admin.login, name="api.admin.login"),
@@ -38,4 +38,15 @@ urlpatterns = [
     path('trade/lever/reorder', trade.lever.reorder, name="api.trade.lever.reorder"),
 
     path('trade/order/list', trade.order.list, name="api.trade.order.list"),
+    path('trade/order/add', trade.order.add, name="api.trade.order.add"),
+
+    path('user/user/list', user.user.list, name="api.user.user.list"),
+    path('user/user/query', user.user.query, name="api.user.user.query"),
+    path('user/user/has', user.user.has, name="api.user.user.has"),
+
+    path('user/coupon/list', user.coupon.list, name="api.user.coupon.list"),
+
+    path('stock/stock/list', stock.stock.list, name="api.stock.stock.list"),
+    path('stock/stock/query', stock.stock.query, name="api.stock.stock.query"),
+    path('stock/stock/has', stock.stock.has, name="api.stock.stock.has"),
 ]

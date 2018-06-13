@@ -9,16 +9,13 @@ class List(forms.Form):
     order = forms.CharField(initial='asc', required=False)
 
     status = forms.CharField(required=False)
-    sdate = forms.DateField(required=False)
-    edate = forms.DateField(required=False)
+    limit = forms.CharField(required=False)
     words = forms.CharField(required=False)
 
 
-class Add(forms.Form):
-    user = forms.IntegerField()
+class Query(forms.Form):
+    q = forms.CharField()
+
+
+class Has(forms.Form):
     stock = forms.CharField()
-    lever = forms.IntegerField()
-    coupon = forms.IntegerField(required=False)
-    ptype = forms.CharField()
-    ocount = forms.IntegerField(min_value=100)
-    oprice = forms.DecimalField(required=False)

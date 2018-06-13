@@ -15,7 +15,7 @@ def list(request):
     :return:
     """
     try:
-        form = forms.trade.order.List(request.POST)
+        form = forms.user.user.List(request.POST)
         if form.is_valid():
             ## form parameters ##
             params = form.cleaned_data
@@ -37,10 +37,10 @@ def list(request):
                 if len(filters) == 0 and len(words) < 10 and words.isdigit():
                     filters['id'] = int(words) # id, not phone number
                 else :
-                    q = Q(user__user=words) | Q(stock__id=words) | Q(stock__name__contains=words)
+                    q = Q(user=words) | Q(phone=words)
 
             ## get total count ##
-            total = models.UserTrade.objects.filter(q, **filters).count()
+            total = models.User.objects.filter(q, **filters).count()
 
 
             # order by#
@@ -59,14 +59,14 @@ def list(request):
             objects = []
             if orderby:
                 if start is not None and end is not None:
-                    objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby)[start:end]
+                    objects = models.User.objects.filter(q, **filters).order_by(orderby)[start:end]
                 else:
-                    objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby)
+                    objects = models.User.objects.filter(q, **filters).order_by(orderby)
             else:
                 if start is not None and end is not None:
-                    objects = models.UserTrade.objects.filter(q, **filters)[start:end]
+                    objects = models.User.objects.filter(q, **filters)[start:end]
                 else:
-                    objects = models.UserTrade.objects.filter(q, **filters)
+                    objects = models.User.objects.filter(q, **filters)
 
             ## make results ##
             rows = []
@@ -85,6 +85,58 @@ def list(request):
     except Exception as e:
         return resp.failure(str(e))
 
+
+@auth.need_login
+def query(request):
+    """
+        query api
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.user.user.Query(request.POST)
+        if form.is_valid():
+            ## form parameters ##
+            words = form.cleaned_data['q']
+
+            ## response data ##
+            data = []
+
+            ##
+            if len(words) > 3:
+                objects = models.User.objects.filter(user__startswith=words, disable=False)
+                for obj in objects:
+                    data.append({'id': obj.id, 'user': obj.user})
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(form.errors)
+    except Exception as e:
+        return resp.failure(str(e))
+
+@auth.need_login
+def has(request):
+    """
+
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.user.user.Has(request.POST)
+        if form.is_valid():
+            # get user
+            user = form.cleaned_data['user']
+
+            # get order detail
+            items = models.User.objects.filter(user=user)
+            if(items.exists()):
+                return resp.text('true')
+            else:
+                return resp.text('false')
+        else:
+            return resp.failure(form.errors)
+    except Exception as e:
+        return resp.failure(str(e))
 
 @auth.need_login
 def get(request):
@@ -106,8 +158,7 @@ def get(request):
     except Exception as e:
         return resp.failure(str(e))
 
-
-@auth.need_login
+@auth.need_permit
 def add(request):
     """
         add api
@@ -115,24 +166,24 @@ def add(request):
     :return:
     """
     try:
-        form = forms.trade.order.Add(request.POST)
+        if request.method != 'POST':
+            return resp.failure(message='method not support')
+
+        form = forms.order.lever.Lever(request.POST)
         if form.is_valid():
-            # clean form data
-            params = form.cleaned_data
-
-            # get params
-            user, stock, lever, coupon = params['user'], params['stock'], params['lever'], params['coupon']
-
-            # check params
-
-
-            # add order
-            item = models.UserTrade(user_id=user,
-                                    stock_id = stock,
-                                    coupon_id = coupon,
-                                    ctime=int(time.time()));
-
-
+            item = models.Lever(lever=form.cleaned_data['lever'],
+                                 wline=form.cleaned_data['wline'],
+                                 sline=form.cleaned_data['sline'],
+                                 ofmin=form.cleaned_data['ofmin'],
+                                 ofrate=form.cleaned_data['ofrate'],
+                                 dfrate=form.cleaned_data['dfrate'],
+                                 psrate=form.cleaned_data['psrate'],
+                                 mmin=form.cleaned_data['mmin'],
+                                 mmax=form.cleaned_data['mmax'],
+                                 order=form.cleaned_data['order'],
+                                 disable=form.cleaned_data['disable'],
+                                 ctime=int(time.time()),
+                                 mtime=int(time.time()));
             item.save()
             return resp.success(data=item.dict())
         else:

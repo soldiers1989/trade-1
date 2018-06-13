@@ -188,4 +188,12 @@ $.extend($.fn.validatebox.defaults.rules, {
         },
         message: '请输入正确的数值'
     },
+
+    /*stock value*/
+    stock: {
+        validator: function( value ) {
+            return /^\d+$/.test( value ) && value % 100 == 0;
+        },
+        message: '请输入正确的数值'
+    },
 });
