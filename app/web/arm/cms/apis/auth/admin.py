@@ -18,7 +18,7 @@ def login(request):
         if login_form.is_valid():
             # get login data form user input
             username = login_form.cleaned_data.get('user')
-            password = cube.hash.sha1(login_form.cleaned_data.get('pwd'))
+            password = cube.util.hash.sha1(login_form.cleaned_data.get('pwd'))
             remember = login_form.cleaned_data.get('remember')
 
             # get admin data from database
@@ -71,7 +71,7 @@ def pwd(request):
         form = forms.auth.admin.Pwd(request.POST)
         if form.is_valid():
             # get new password
-            pwd = cube.hash.sha1(form.cleaned_data['pwd'])
+            pwd = cube.util.hash.sha1(form.cleaned_data['pwd'])
             # get current admin
             id = auth.get_admin_id(request)
             # update password
@@ -102,9 +102,9 @@ def list(request):
             sdate, edate = params['sdate'], params['edate']
             filters = {}
             if sdate:
-                filters['ctime__gte'] = cube.time.utime(sdate)
+                filters['ctime__gte'] = cube.util.time.utime(sdate)
             if edate:
-                filters['ctime__lt'] = cube.time.utime(edate+datetime.timedelta(days=1))
+                filters['ctime__lt'] = cube.util.time.utime(edate+datetime.timedelta(days=1))
 
             q = Q()
             ## search words ##
@@ -193,7 +193,7 @@ def add(request):
             params = form.cleaned_data
 
             item = models.Admin(user=params['user'],
-                                pwd=cube.hash.sha1(params['pwd']),
+                                pwd=cube.util.hash.sha1(params['pwd']),
                                 name=params['name'],
                                 phone=params['phone'],
                                 disable=params['disable'],
@@ -258,7 +258,7 @@ def resetpwd(request):
         form = forms.auth.admin.ResetPwd(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
-            pwd = cube.hash.sha1(form.cleaned_data['pwd'])
+            pwd = cube.util.hash.sha1(form.cleaned_data['pwd'])
 
             models.Admin.objects.filter(id=id).update(pwd=pwd)
 

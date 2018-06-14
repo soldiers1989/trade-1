@@ -1,0 +1,32 @@
+[
+    {
+        "model": "adb.tradeaccount",
+        "pk": 1,
+        "fields": {
+            "account": "a00001",
+            "name": "账户1",
+            "lmoney": 100000.0,
+            "cfmin": 5.0,
+            "cfrate": 0.0002,
+            "tfrate": 0.001,
+            "disable": false,
+            "ctime": 1527261052,
+            "mtime": 1527261052
+        }
+    },
+    {
+        "model": "adb.tradeaccount",
+        "pk": 2,
+        "fields": {
+            "account": "a00002",
+            "name": "账户2",
+            "lmoney": 100000.0,
+            "cfmin": 5.0,
+            "cfrate": 0.0002,
+            "tfrate": 0.001,
+            "disable": true,
+            "ctime": 1527261052,
+            "mtime": 1527261052
+        }
+    }
+]

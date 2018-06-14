@@ -14,6 +14,9 @@ class List(forms.Form):
     words = forms.CharField(required=False)
 
 
+class Get(forms.Form):
+    id = forms.IntegerField()
+
 class Add(forms.Form):
     user = forms.IntegerField()
     stock = forms.CharField()

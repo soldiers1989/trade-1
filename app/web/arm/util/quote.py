@@ -1,0 +1,3 @@
+"""
+    quote of stock
+"""

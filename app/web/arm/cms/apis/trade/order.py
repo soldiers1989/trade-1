@@ -27,9 +27,9 @@ def list(request):
             if status:
                 filters['status'] = status
             if sdate:
-                filters['ctime__gte'] = cube.time.utime(sdate)
+                filters['ctime__gte'] = cube.util.time.utime(sdate)
             if edate:
-                filters['ctime__lt'] = cube.time.utime(edate+datetime.timedelta(days=1))
+                filters['ctime__lt'] = cube.util.time.utime(edate+datetime.timedelta(days=1))
 
             ## search words ##
             q = Q()
@@ -174,8 +174,6 @@ def add(request):
                                                status = 'todo')
                 tradeorder.save()
 
-
-
             return resp.success()
         else:
             return resp.failure(hint.ERR_FORM_DATA, data={'errors':form.errors})
@@ -183,128 +181,112 @@ def add(request):
         return resp.failure(str(e))
 
 
-@auth.need_permit
-def modify(request):
+@auth.need_login
+def fees(request):
     """
-        modify api
+        list api
     :param request:
     :return:
     """
     try:
-        if request.method != 'POST':
-            return resp.failure(message='method not support')
-
-        form = forms.order.lever.Lever(request.POST)
+        form = forms.trade.order.Get(request.POST)
         if form.is_valid():
-            id = form.cleaned_data['id']
-            models.Lever.objects.filter(id=id).update(lever=form.cleaned_data['lever'],
-                                                     wline=form.cleaned_data['wline'],
-                                                     sline=form.cleaned_data['sline'],
-                                                     ofmin=form.cleaned_data['ofmin'],
-                                                     ofrate=form.cleaned_data['ofrate'],
-                                                     dfrate=form.cleaned_data['dfrate'],
-                                                     psrate=form.cleaned_data['psrate'],
-                                                     mmin=form.cleaned_data['mmin'],
-                                                     mmax=form.cleaned_data['mmax'],
-                                                     order=form.cleaned_data['order'],
-                                                     disable=form.cleaned_data['disable'],
-                                                     mtime=int(time.time()));
-            item = models.Lever.objects.get(id=id)
-            return resp.success(data=item.dict())
+            # trade id
+            tradeid = form.cleaned_data['id']
+
+            # get fee records of order
+            objects = models.TradeFee.objects.filter(trade__id=tradeid)
+
+            ## get total count ##
+            total = objects.count()
+
+            ## make results ##
+            rows = []
+            for obj in objects:
+                rows.append(obj.dict())
+
+            ## response data ##
+            data = {
+                'total': total,
+                'rows': rows
+            }
+
+            return resp.success(data=data)
         else:
-            return resp.failure(hint.ERR_FORM_DATA, data={'errors': form.errors})
-    except Exception as e:
-        return resp.failure(str(e))
-
-
-@auth.need_permit
-def delete(request):
-    """
-        delete api
-    :param request:
-    :return:
-    """
-    try:
-        if request.method != 'POST':
-            return resp.failure(message='method not support')
-
-        id = request.POST['id']
-        models.Lever.objects.filter(id=id).delete()
-        return resp.success()
-    except Exception as e:
-        return resp.failure(str(e))
-
-
-@auth.need_permit
-def reorder(request):
-    """
-        order api
-    :param request:
-    :return:
-    """
-    try:
-        if request.method != 'POST':
-            return resp.failure(message='method not support')
-
-        ids = request.POST.getlist('id')
-        ords = request.POST.getlist('ord')
-
-        if len(ids) != len(ords):
-            return resp.failure(hint.ERR_FORM_DATA)
-
-        iords = []
-        for i in range(0, len(ids)):
-            iords.append([ids[i], ords[i]])
-
-        for id, ord in iords:
-            models.Lever.objects.filter(id=id).update(order=ord)
-
-        return resp.success(data={'iords': iords})
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))
 
 
 @auth.need_login
-def orderfees(request):
+def margins(request):
     """
         list api
     :param request:
     :return:
     """
     try:
-        # get order id
-        id = request.GET['id']
+        form = forms.trade.order.Get(request.POST)
+        if form.is_valid():
+            # trade id
+            tradeid = form.cleaned_data['id']
 
-        # get margin records of order
-        items = models.TradeFee.objects.filter(trade__id=id)
+            # get margin records of order
+            objects = models.TradeMargin.objects.filter(trade__id=tradeid)
 
-        data = []
-        for item in items:
-            d = item.dict()
-            data.append(d)
-        return resp.success(data=data)
+            ## get total count ##
+            total = objects.count()
+
+            ## make results ##
+            rows = []
+            for obj in objects:
+                rows.append(obj.dict())
+
+            ## response data ##
+            data = {
+                'total': total,
+                'rows': rows
+            }
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))
 
 
 @auth.need_login
-def ordermargins(request):
+def orders(request):
     """
         list api
     :param request:
     :return:
     """
     try:
-        # get order id
-        id = request.GET['id']
+        form = forms.trade.order.Get(request.POST)
+        if form.is_valid():
+            # trade id
+            tradeid = form.cleaned_data['id']
 
-        # get margin records of order
-        items = models.TradeMargin.objects.filter(trade__id=id)
+            # get margin records of order
+            objects = models.TradeOrder.objects.filter(trade__id=tradeid)
 
-        data = []
-        for item in items:
-            d = item.dict()
-            data.append(d)
-        return resp.success(data=data)
+            ## get total count ##
+            total = objects.count()
+
+            ## make results ##
+            rows = []
+            for obj in objects:
+                rows.append(obj.dict())
+
+            ## response data ##
+            data = {
+                'total': total,
+                'rows': rows
+            }
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(form.errors)
     except Exception as e:
         return resp.failure(str(e))

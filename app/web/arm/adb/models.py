@@ -97,12 +97,6 @@ class TradeAccount(models.Model):
     cfmin = models.DecimalField(max_digits=10, decimal_places=2)
     cfrate = models.DecimalField(max_digits=6, decimal_places=6)
     tfrate = models.DecimalField(max_digits=6, decimal_places=6)
-    rfmin = models.DecimalField(max_digits=10, decimal_places=6)
-    rfrate = models.DecimalField(max_digits=6, decimal_places=6)
-    tpwd = models.CharField(max_length=16)
-    cpwd = models.CharField(max_length=16)
-    dept = models.CharField(max_length=16)
-    version = models.CharField(max_length=16)
     disable = models.BooleanField(default=True)
     ctime = models.BigIntegerField()
     mtime = models.BigIntegerField()
@@ -134,31 +128,6 @@ class Lever(models.Model):
 
     class Meta:
         db_table = 'tb_lever'
-
-    def dict(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
-# tb_trade_order
-class TradeOrder(models.Model):
-    id = models.AutoField(primary_key=True)
-    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE)
-    ordern = models.CharField(max_length=16)
-    otype = models.CharField(max_length=8)  # order type
-    ptype = models.CharField(max_length=8)  # price type
-    status = models.CharField(max_length=8)  # order status
-    ocode = models.CharField(max_length=16)  # order code
-    oprice = models.DecimalField(max_digits=10, decimal_places=2)  # order price
-    ocount = models.IntegerField()  # order count
-    otime = models.BigIntegerField()  # order time
-    dcode = models.CharField(max_length=16, null=True)  # deal code
-    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)  # deal price
-    dcount = models.IntegerField(null=True)  # deal count
-    dtime = models.BigIntegerField(null=True)  # deal time
-
-    class Meta:
-        db_table = 'tb_trade_order'
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
@@ -501,18 +470,26 @@ class TradeOrder(models.Model):
     id = models.AutoField(primary_key=True)
     trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
     account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
-    otype = models.CharField(max_length=16),
-    ptype = models.CharField(max_length=16),
-    ocount = models.IntegerField(),
-    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True),
+    otype = models.CharField(max_length=16)
+    ptype = models.CharField(max_length=16)
+    ocount = models.IntegerField()
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     otime = models.BigIntegerField()
-    ocode = models.CharField(max_length=16, null=True),
+    ocode = models.CharField(max_length=16, null=True)
     ostatus = models.CharField(max_length=16, null=True)
-    dcount = models.IntegerField(null=True),
-    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True),
-    dtime = models.BigIntegerField(null=True),
+    dcount = models.IntegerField(null=True)
+    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    dtime = models.BigIntegerField(null=True)
     status = models.CharField(max_length=16)
-    
+
+    class Meta:
+        db_table = 'tb_trade_order'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'] = items['trade'].id if items['trade'] else None
+        items['account'] = items['account'].account if items['account'] else None
+        return items
 
 # tb_trade_margin
 class TradeMargin(models.Model):

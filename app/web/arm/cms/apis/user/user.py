@@ -26,9 +26,9 @@ def list(request):
             if status:
                 filters['status'] = status
             if sdate:
-                filters['ctime__gte'] = cube.time.utime(sdate)
+                filters['ctime__gte'] = cube.util.time.utime(sdate)
             if edate:
-                filters['ctime__lt'] = cube.time.utime(edate+datetime.timedelta(days=1))
+                filters['ctime__lt'] = cube.util.time.utime(edate+datetime.timedelta(days=1))
 
             ## search words ##
             q = Q()

@@ -1,4 +1,4 @@
-import time, cube, datetime
+import time, util
 
 from django.db.models import Q
 from adb import models
@@ -123,12 +123,12 @@ def moduletree(request):
             for module in modules:
                 module['text'] = module['name']
 
-                if module['id'] in mids and cube.tree.isleaf(module, modules):
+                if module['id'] in mids and util.tree.isleaf(module, modules):
                     module['checked'] = True
 
                 nodes.append(module)
 
-            data = cube.tree.make(nodes)
+            data = util.tree.make(nodes)
 
             return resp.success(data=data)
         else:
@@ -166,10 +166,10 @@ def addmodule(request):
                 modules.append(item.dict())
 
             # get module childs
-            childs = cube.tree.childids(module, modules)
+            childs = util.tree.childids(module, modules)
 
             # get module parents
-            parents = cube.tree.parentids(module, modules)
+            parents = util.tree.parentids(module, modules)
 
             # get relate modules for role need to add
             relates = childs+parents+[mid]
@@ -213,7 +213,7 @@ def delmodule(request):
                 modules.append(item.dict())
 
             # get childs of delete role's module
-            childs = cube.tree.childids({'id':mid}, modules)
+            childs = util.tree.childids({'id':mid}, modules)
 
             # get role module ids need to delete
             mids = childs + [mid]

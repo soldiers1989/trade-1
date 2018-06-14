@@ -1,0 +1,3 @@
+"""
+    trade of stock
+"""
