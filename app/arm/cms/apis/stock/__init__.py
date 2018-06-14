@@ -1,1 +1,0 @@
-from cms.apis.stock import stock

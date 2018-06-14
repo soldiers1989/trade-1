@@ -1,1 +1,0 @@
-from cms.forms.stock import stock
