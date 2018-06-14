@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/bootstrap/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/icon.css">
+    <script type="text/javascript" src="/assets/jquery/1.11.3/jquery.min.js"></script>
+    <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/locale/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+<div style="position: absolute;top: 20%;left: 50%;transform: translateX(-50%);">
+    <div class="easyui-panel" title="用户登录" style="width:100%;max-width:400px;padding:30px 60px;">
+        <form class="easyui-form" id="login" method="post" data-options="novalidate:true">
+            <div style="margin-bottom:10px">
+                <input class="easyui-textbox" type="text" id="user" name="user" style="width:100%;height:40px;padding:12px" data-options="prompt:'用户名',iconCls:'icon-man',iconWidth:38, required:true, validType:['text', 'length[3,16]']">
+            </div>
+            <div style="margin-bottom:20px">
+                <input class="easyui-textbox" type="password" id="pwd", name="pwd" style="width:100%;height:40px;padding:12px" data-options="prompt:'请输入密码',iconCls:'icon-lock',iconWidth:38, required:true, validType:['text', 'length[3,16]']">
+            </div>
+            <div style="margin-bottom:20px">
+                <input type="checkbox" id="remember" name="remember" checked="checked">
+                <span>记住我</span>
+                <span id="hint" style="color: red"></span>
+            </div>
+            <div>
+                <a href="#" id="submit" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" style="padding:5px 0px;width:100%;">
+                    <span style="font-size:14px;">登录</span>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $().ready(function () {
+        // submit form
+        $('#login').form({
+            url: '/api/admin/login',
+            type: 'post',
+            onSubmit: function() {
+                return $(this).form('enableValidation').form('validate');
+            },
+            success: function (data) {
+                var resp = JSON.parse(data);
+                if (resp.status) {
+                    window.location.assign('/cms/index/');
+                } else {
+                    $('#hint').html(resp.message);
+                }
+            }
+        });
+
+        // submit aciton
+        $('#submit').on('click', function(){
+            $('#login').submit();
+        });
+
+        // clear hint
+        $('input').on('focus',function () {
+            $('#hint').html('');
+        });
+    })
+</script>
+</body>
+</html>

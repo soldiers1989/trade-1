@@ -4,6 +4,138 @@
 		"selected_items":
 		[
 			[
+				"vali",
+				"valid"
+			],
+			[
+				"load",
+				"loadFilter"
+			],
+			[
+				"com",
+				"combobox"
+			],
+			[
+				"dia",
+				"dialogs"
+			],
+			[
+				"format",
+				"formatter"
+			],
+			[
+				"mod",
+				"models"
+			],
+			[
+				"valid",
+				"validator"
+			],
+			[
+				"check",
+				"checked"
+			],
+			[
+				"admin",
+				"adminid"
+			],
+			[
+				"mul",
+				"multiple"
+			],
+			[
+				"inpu",
+				"inputs"
+			],
+			[
+				"mar",
+				"margin-bottom"
+			],
+			[
+				"mess",
+				"messager"
+			],
+			[
+				"admi",
+				"admin"
+			],
+			[
+				"del",
+				"delroles"
+			],
+			[
+				"margin",
+				"margin-right"
+			],
+			[
+				"wid",
+				"width"
+			],
+			[
+				"reset",
+				"resetpwd"
+			],
+			[
+				"eas",
+				"easyui-form"
+			],
+			[
+				"data",
+				"datagrid"
+			],
+			[
+				"admin_da",
+				"admin_dialog"
+			],
+			[
+				"disable",
+				"disableValidation"
+			],
+			[
+				"disab",
+				"disableValidation"
+			],
+			[
+				"admin_d",
+				"admin_dialog_form"
+			],
+			[
+				"wi",
+				"width"
+			],
+			[
+				"ac",
+				"action"
+			],
+			[
+				"admin_",
+				"admin_search"
+			],
+			[
+				"easy",
+				"easyui-textbox"
+			],
+			[
+				"forma",
+				"formatter"
+			],
+			[
+				"formch",
+				"form_changepwd"
+			],
+			[
+				"co",
+				"color"
+			],
+			[
+				"bl",
+				"inline-block"
+			],
+			[
+				"pad",
+				"padding-left"
+			],
+			[
 				"col",
 				"columns\t = 'auto' Style CSS"
 			],
@@ -30,10 +162,6 @@
 			[
 				"previ",
 				"previous"
-			],
-			[
-				"pad",
-				"padding-top"
 			],
 			[
 				"curr",
@@ -96,10 +224,6 @@
 				"btn-sm"
 			],
 			[
-				"inpu",
-				"input-sm"
-			],
-			[
 				"ipu",
 				"input-sm"
 			],
@@ -144,10 +268,6 @@
 				"console_log"
 			],
 			[
-				"mod",
-				"modify"
-			],
-			[
 				"tos",
 				"toastr"
 			],
@@ -187,6 +307,24 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "arm/cms/tpls/trade/order.html",
+			"settings":
+			{
+				"buffer_size": 10527,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "arm/adb/models.py",
+			"settings":
+			{
+				"buffer_size": 20853,
+				"encoding": "UTF-8",
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -244,10 +382,32 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm"
 	],
 	"file_history":
 	[
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/auth/admin.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/static/assets/cube/cube.js",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/trade/order.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/trade/lever.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/index.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/login.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/list.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/order/lever.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/auth/role.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/auth/module.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/adb/models.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/auth/user.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/login.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/sites/auth.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/sites/auth/admin.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/sites/urls.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/demo.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/sites/home.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/index1.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/welcome.html",
+		"/Users/polly/Desktop/Monitor.md",
+		"/Users/polly/Library/Application Support/Sublime Text 3/Packages/HTML-CSS-JS Prettify/Default (OSX).sublime-keymap",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpl/login.html",
 		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/layout/complex.html",
 		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid/rowediting.html",
 		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid-dnd/datagrid-dnd.html",
@@ -272,7 +432,6 @@
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/margin/demo.html",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/views/order/order.py",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/urls.py",
-		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/list.html",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/fixtures/usertrade.json",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/base.html",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/module/list.html",
@@ -321,7 +480,7 @@
 	],
 	"find":
 	{
-		"height": 26.0
+		"height": 39.0
 	},
 	"find_in_files":
 	{
@@ -335,6 +494,19 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"lever",
+			"getLength",
+			"treegrid",
+			"module",
+			"module.",
+			"role.",
+			"role",
+			"admin",
+			"adminid",
+			"datagrid",
+			"alert",
+			"this.form",
+			"admin_form"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -342,6 +514,13 @@
 		"regex": false,
 		"replace_history":
 		[
+			"order",
+			"datagrid",
+			"lever",
+			"lever.",
+			"rolemodule.",
+			"adminrole.",
+			"roleid"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -352,8 +531,75 @@
 	"groups":
 	[
 		{
+			"selected": 0,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "arm/cms/tpls/trade/order.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 10527,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								8251,
+								8251
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 4570.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 1,
+					"file": "arm/adb/models.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 20853,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.sublime-syntax",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
 			]
 		}
 	],
@@ -374,11 +620,18 @@
 				0,
 				1,
 				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
 			]
 		],
 		"cols":
 		[
 			0.0,
+			0.439495845809,
 			1.0
 		],
 		"rows":
@@ -408,7 +661,7 @@
 	"project": "web.sublime-project",
 	"replace":
 	{
-		"height": 48.0
+		"height": 70.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -438,7 +691,7 @@
 		],
 		"width": 0.0
 	},
-	"selected_group": 0,
+	"selected_group": 1,
 	"settings":
 	{
 	},
@@ -446,7 +699,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 426.0,
+	"side_bar_width": 221.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{

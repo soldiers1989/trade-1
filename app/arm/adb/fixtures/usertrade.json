@@ -1,0 +1,99 @@
+[
+  {
+    "model": "adb.usertrade",
+    "pk": 1,
+    "fields": {
+      "user_id": 1,
+      "stock_id": "601318",
+      "coupon_id": 1,
+      "code": "0001",
+      "oprice": 10.02,
+      "ocount": 1000,
+      "hprice": 10.02,
+      "hcount": 1000,
+      "fcount": 1000,
+      "bprice": 10.02,
+      "bcount": 1000,
+      "sprice": 10.30,
+      "scount": 1000,
+      "margin": 2000.00,
+      "ofee": 200.00,
+      "ddays": 0,
+      "dfee": 0.0,
+      "tprofit": 1000.00,
+      "sprofit": 200.00,
+      "status": "holding",
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.usertrade",
+    "pk": 2,
+    "fields": {
+      "user_id": 2,
+      "stock_id": "601318",
+      "code": "0002",
+      "oprice": 10.02,
+      "ocount": 1000,
+      "hprice": 10.02,
+      "hcount": 1000,
+      "fcount": 1000,
+      "bprice": 10.02,
+      "bcount": 1000,
+      "sprice": 10.30,
+      "scount": 1000,
+      "margin": 2000.00,
+      "ofee": 200.00,
+      "ddays": 0,
+      "dfee": 0.0,
+      "tprofit": 1000.00,
+      "sprofit": 200.00,
+      "status": "tobuy",
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.usertrade",
+    "pk": 3,
+    "fields": {
+      "user_id": 3,
+      "stock_id": "000100",
+      "code": "0003",
+      "oprice": 10.02,
+      "ocount": 1000,
+      "hprice": 10.02,
+      "fcount": 1000,
+      "hcount": 1000,
+      "bprice": 10.02,
+      "bcount": 1000,
+      "sprice": 10.30,
+      "scount": 1000,
+      "margin": 2000.00,
+      "ofee": 200.00,
+      "ddays": 0,
+      "dfee": 0.0,
+      "tprofit": 1000.00,
+      "sprofit": 200.00,
+      "status": "tobuy",
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.usertrade",
+    "pk": 4,
+    "fields": {
+      "user_id": 3,
+      "stock_id": "000001",
+      "code": "0004",
+      "oprice": 10.02,
+      "ocount": 1000,
+      "hprice": 10.02,
+      "fcount": 1000,
+      "hcount": 1000,
+      "margin": 2000.00,
+      "ofee": 200.00,
+      "status": "tobuy",
+      "ctime": 1527261052
+    }
+  }
+]

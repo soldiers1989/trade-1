@@ -1,0 +1,308 @@
+<div class="easyui-layout" data-options="fit:true, split:true, border: true">
+    <div data-options="region:'west', split:true" style="width: 80%;">
+        <table id="role_datagrid" style="height: 100%;"></table>
+    </div>
+    <div data-options="region:'center', split:true, title:'角色模块'" style="width: 20%">
+        <ul id="role_module_tree" style="height: 100%;"></ul>
+    </div>
+</div>
+
+<div id="role_toolbar">
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="role.add()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="role.update()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="role.delete()">删除</a>
+    </span>
+    <span style="float: right; margin-right: 18px;">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="role.refresh()">刷新</a>
+    </span>
+</div>
+
+<div class="easyui-dialog" id="role_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#role_dialog_buttons'">
+    <form class="easyui-form" id="role_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'名称', prompt:'名称', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', editable:false, required:true" style="width: 100%">
+                <option value="false">否</option>
+                <option value="true">是</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<div id="role_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="role.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="role.cancel()" style="width:90px">取消</a>
+</div>
+
+<script type="text/javascript">
+    // role list/add/update/delete
+    var role = {
+        datagrid: $('#role_datagrid'),
+        dialog: $('#role_dialog'),
+        form: $('#role_form'),
+
+        row: null,
+        action: '',
+        urls: {
+            list: '/api/auth/role/list',
+            add: '/api/auth/role/add',
+            update: '/api/auth/role/update',
+            delete: '/api/auth/role/delete',
+        },
+
+        init: function() { //init
+            //init tree grid
+            this.datagrid.datagrid({
+                url: this.urls.list,
+                method: 'post',
+                
+                idField: 'id',
+        
+                striped: true,
+                fitColumns: true,
+                pagination: false,
+                rownumbers: false,
+                singleSelect: true,
+                
+
+                toolbar: '#role_toolbar',
+                columns: [[
+                    {field:'id', title:'ID', width: '10%'},
+                    {field:'name', title:'名称', width: '60%'},
+                    {field:'disable', title:'禁用', width: '10%', formatter: cube.format.boolean},
+                    {field:'ctime', title:'时间', width: '20%', formatter: cube.format.date}
+                ]],
+
+                loadFilter: function (resp) {
+                    return resp.data;
+                },
+
+                onLoadSuccess: function(resp) {
+
+                },
+
+                onLoadError: function() {
+                    $.messager.show({title: '错误', msg: '请求数据失败'});
+                },
+
+                onSelect(index, row) {
+                    //alert(index+'|'+JSON.stringify(row));
+                    //reload role's module
+                    rolemodule.load(row.id);
+                }
+            });
+        },
+        
+   
+        refresh: function() { // reset
+            //reload datagrid
+            this.datagrid.datagrid('reload');
+        },
+
+        add: function() { // add
+            //reset action
+            this.action = 'add';
+
+            //reset form
+            this.form.form('clear');//.form('disableValidation');
+
+            //open dialog
+            this.dialog.dialog('open').dialog('center').dialog('setTitle','添加角色');
+        },
+
+        update: function() { // udpate
+            //reset action
+            this.action = 'update';
+            
+            //get selected row data
+            this.row = this.datagrid.datagrid('getSelected');
+            if (this.row){
+                // format boolean value
+                this.row.disable = String(this.row.disable);
+
+                // clear form
+                this.form.form('clear');
+
+                //load form data
+                this.form.form('load', this.row);
+
+                //option dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','修改角色');
+            }
+        },
+
+        delete: function() { // delete
+            //get selected row data
+            var row = this.datagrid.datagrid('getSelected');
+            if (row){
+                $.messager.confirm({
+                    title: '确认',
+                    msg: '确认删除: '+row.name+'?',
+                    url: this.urls.delete,
+                    fn: function(r){
+                        if (r){
+                            $.post(this.url, {id: row.id}, function(resp, status){
+                                if(status == 'success'){
+                                    if (resp.status){
+                                        role.refresh();
+                                    } else {
+                                        $.messager.show({title: '错误', msg: resp.message});
+                                    }
+                                } else {
+                                    $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                }
+                            },'json');
+                        }
+                    }
+                });
+            }
+        },
+
+        save: function() { // save
+            var url, params={};
+            // get action url
+            if(this.action == 'add') {
+                url = this.urls.add;
+            } else if (this.action == 'update'){
+                params.id = this.row.id;
+                url = this.urls.update;
+            } else {
+                return;
+            }
+
+            //submit form
+            this.form.form('submit',{
+                url: url,
+                queryParams: params,   
+                onSubmit: function(){
+                    return role.form.form('validate');
+                },
+                success: function(data){
+                    var resp = eval('('+data+')');
+                    if (resp.status){
+                        role.dialog.dialog('close');
+                        role.datagrid.datagrid('reload');
+                    } else {
+                        $.messager.show({ title: '错误',  msg: resp.message });
+                    }
+                }
+            });
+        },
+
+        cancel: function() { //cancel
+            //clear action
+            this.action = '';
+
+            //close dialog
+            this.dialog.dialog('close');
+        }
+    };
+
+    //init role modules
+    var rolemodule = {
+        tree: $('#role_module_tree'),
+
+        roleid: null,
+        urls: {
+            list: '/api/auth/role/module/tree',
+            add: '/api/auth/role/module/add',
+            del: '/api/auth/role/module/del',
+        },
+
+        init: function(roleid) {
+            this.tree.tree({
+                url: this.urls.list,
+                method: 'post',
+                queryParams: {id: roleid},
+                
+
+                checkbox: true,
+      
+
+                columns: [[
+                    {field:'id', title:'ID', checkbox:true, width: '10%'},
+                    {field:'name', title:'角色', width: '90%'},
+                ]],
+
+                loadFilter: function (resp) {
+                    //alert(JSON.stringify(resp));
+                    return resp.data;
+                },
+                
+
+                onLoadError: function() {
+                    $.messager.show({title: '错误', msg: '请求数据失败'});
+                },
+
+                onCheck: function(node, checked) {
+                    if(checked){
+                        rolemodule.add(node.id);
+                    } else {
+                        rolemodule.del(node.id);
+                    }
+                }
+            });
+        },
+
+        load: function(roleid) {
+            //set current selected role id
+            this.roleid = roleid;
+
+            //reload module tree of current role
+            this.init(roleid);
+        },
+
+
+        add: function(id) {
+            if (this.roleid == null)
+                $.messager.show({title: '错误', msg: '请选择角色'});
+
+            params = {id: this.roleid, module: id};
+
+            $.post(this.urls.add, params, function(resp, status){
+                    if(status == 'success'){
+                        if (resp.status){
+                            $.messager.show({title: '成功', msg: resp.message});
+                        } else {
+                            $.messager.show({title: '错误', msg: resp.message});
+                        }
+                    } else {
+                        $.messager.show({title: '错误', msg: '请求服务器错误'});
+                    }
+                },
+                'json'
+            );
+        },
+
+        del: function(id) {
+            if (this.roleid == null)
+                $.messager.show({title: '错误', msg: '请选择管理员'});
+
+            params = {id: this.roleid, module: id};
+            
+            $.post(this.urls.del, params, function(resp, status){
+                    if(status == 'success'){
+                        if (resp.status){
+                            $.messager.show({title: '成功', msg: resp.message});
+                        } else {
+                            $.messager.show({title: '错误', msg: resp.message});
+                        }
+                    } else {
+                        $.messager.show({title: '错误', msg: '请求服务器错误'});
+                    }
+                },
+                'json'
+            );
+        }
+    };
+
+    //init page
+    $(function(){
+        //init role
+        role.init();
+    });
+
+</script>
