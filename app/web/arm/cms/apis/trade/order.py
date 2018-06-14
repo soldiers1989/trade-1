@@ -2,6 +2,7 @@
     api for cms
 """
 import cube, time, datetime
+from django.db import transaction
 from django.db.models import Q
 from adb import models
 from cms import auth, resp, hint, forms
@@ -120,21 +121,62 @@ def add(request):
             # clean form data
             params = form.cleaned_data
 
-            # get params
-            user, stock, lever, coupon = params['user'], params['stock'], params['lever'], params['coupon']
+            with transaction.atomic():
+                # get params
+                userid, leverid, stockid, couponid = params['user'], params['lever'], params['stock'], params['coupon']
 
-            # check params
+                # get user/lever/stock/coupon
+                user = models.User.objects.get(id=userid)
+                lever = models.Lever.objects.get(id=leverid)
+                stock = models.Stock.objects.get(id=stockid)
+                usercoupon = models.UserCoupon.objects.get(id=couponid) if couponid else None
+
+                # compute margin
 
 
-            # add order
-            item = models.UserTrade(user_id=user,
-                                    stock_id = stock,
-                                    coupon_id = coupon,
-                                    ctime=int(time.time()));
+                # get user
 
 
-            item.save()
-            return resp.success(data=item.dict())
+
+                # take margin
+
+
+                # add trade
+                trade = models.UserTrade(user_id = params['user'],
+                                        stock_id = params['stock'],
+                                        coupon_id = params['coupon'],
+                                        code = cube.rand.uuid(),
+                                        oprice = params['oprice'],
+                                        ocount = params['ocount'],
+                                        ctime=int(time.time()));
+                trade.save()
+
+                # add lever
+                tradelever = models.TradeLever(trade_id = trade.id,
+                                               lever = lever.lever,
+                                               wline = lever.wline,
+                                               sline = lever.sline,
+                                               ofmin = lever.ofmin,
+                                               ofrate = lever.ofrate,
+                                               dfrate = lever.dfrate,
+                                               psrate = lever.psrate,
+                                               mmin = lever.mmin,
+                                               mmax = lever.mmax);
+                tradelever.save()
+
+                # add trade order
+                tradeorder = models.TradeOrder(trade_id = trade.id,
+                                               otype = params['otype'],
+                                               ptype = params['ptype'],
+                                               ocount = params['ocount'],
+                                               oprice = params['oprice'],
+                                               otime = int(time.time()),
+                                               status = 'todo')
+                tradeorder.save()
+
+
+
+            return resp.success()
         else:
             return resp.failure(hint.ERR_FORM_DATA, data={'errors':form.errors})
     except Exception as e:

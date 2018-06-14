@@ -432,8 +432,8 @@ class UserTrade(models.Model):
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True)
     account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
-    code = models.CharField(max_length=16, unique=True)
-    oprice = models.DecimalField(max_digits=10, decimal_places=2)
+    code = models.CharField(max_length=20, unique=True)
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     ocount = models.IntegerField()
     hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     hcount = models.IntegerField(null=True) # holding count
@@ -495,6 +495,24 @@ class TradeLever(models.Model):
         del items['trade']
         return items
 
+
+# tb_trade_order
+class TradeOrder(models.Model):
+    id = models.AutoField(primary_key=True)
+    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
+    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
+    otype = models.CharField(max_length=16),
+    ptype = models.CharField(max_length=16),
+    ocount = models.IntegerField(),
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True),
+    otime = models.BigIntegerField()
+    ocode = models.CharField(max_length=16, null=True),
+    ostatus = models.CharField(max_length=16, null=True)
+    dcount = models.IntegerField(null=True),
+    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True),
+    dtime = models.BigIntegerField(null=True),
+    status = models.CharField(max_length=16)
+    
 
 # tb_trade_margin
 class TradeMargin(models.Model):

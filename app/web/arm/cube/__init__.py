@@ -1,1 +1,1 @@
-from cube import time, page, hash, tree
+from cube import time, page, hash, tree, rand
