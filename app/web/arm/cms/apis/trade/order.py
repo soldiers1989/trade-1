@@ -182,6 +182,43 @@ def add(request):
 
 
 @auth.need_login
+def lever(request):
+    try:
+        form = forms.trade.order.Get(request.POST)
+        if form.is_valid():
+            # trade id
+            tradeid = form.cleaned_data['id']
+
+            # get fee records of order
+            object = models.TradeLever.objects.get(trade__id=tradeid)
+
+            ## make results ##
+            rows = []
+
+            rows.append({'name':'杠杆', 'value':object.lever})
+            rows.append({'name':'预警线', 'value':object.wline})
+            rows.append({'name':'止损线', 'value':object.sline})
+            rows.append({'name':'保底费用', 'value':object.ofmin})
+            rows.append({'name':'建仓费率', 'value':object.ofrate})
+            rows.append({'name': '延期费率', 'value': object.dfrate})
+            rows.append({'name': '盈利分成', 'value': object.psrate})
+            rows.append({'name': '本金下限', 'value': object.mmin})
+            rows.append({'name': '本金上线限', 'value': object.mmax})
+
+            ## response data ##
+            data = {
+                'total': len(rows),
+                'rows': rows
+            }
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(form.errors)
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
 def fees(request):
     """
         list api
@@ -213,7 +250,7 @@ def fees(request):
 
             return resp.success(data=data)
         else:
-            return resp.failure(form.errors)
+            return resp.failure(form.errors, [])
     except Exception as e:
         return resp.failure(str(e))
 

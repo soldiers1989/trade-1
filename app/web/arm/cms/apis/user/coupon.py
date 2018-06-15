@@ -30,7 +30,7 @@ def list(request):
             ## search words ##
             user = params['user']
             if user:
-                filters['user__user'] = user
+                filters['user__id'] = user
 
             ## get total count ##
             total = models.UserCoupon.objects.filter(**filters).count()

@@ -9,6 +9,14 @@ from cms import auth
 @auth.need_login
 def index(request):
     """
+        index
+    """
+    return render(request, 'index.html')
+
+
+@auth.need_login
+def index1(request):
+    """
         administrator index page
     :param request:
     :return:

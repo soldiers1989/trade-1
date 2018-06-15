@@ -4,6 +4,7 @@ from cms.apis import auth, trade, user, stock
 urlpatterns = [
     path('admin/login', auth.admin.login, name="api.admin.login"),
     path('admin/logout', auth.admin.logout, name="api.admin.logout"),
+    path('admin/whoami', auth.admin.whoami, name="api.admin.whoami"),
     path('admin/pwd/change', auth.admin.pwd, name="api.admin.pwd.change"),
 
     path('auth/admin/list', auth.admin.list, name="api.auth.admin.list"),
@@ -42,6 +43,7 @@ urlpatterns = [
     path('trade/order/fees', trade.order.fees, name="api.trade.order.fees"),
     path('trade/order/margins', trade.order.margins, name="api.trade.order.margins"),
     path('trade/order/orders', trade.order.orders, name="api.trade.order.orders"),
+    path('trade/order/lever', trade.order.lever, name="api.trade.order.lever"),
 
     path('user/user/list', user.user.list, name="api.user.user.list"),
     path('user/user/query', user.user.query, name="api.user.user.query"),

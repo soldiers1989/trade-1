@@ -1,7 +1,7 @@
 """
     api for cms
 """
-import time, cube, datetime
+import time, cube, util, datetime
 from django.db.models import Q
 from adb import models
 from cms import auth, resp, hint, forms
@@ -161,6 +161,62 @@ def list(request):
             return resp.success(data=data)
         else:
             return resp.failure(hint.ERR_FORM_DATA)
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
+def whoami(request):
+    try:
+        # get admin id from session
+        id = auth.get_admin_id(request);
+
+        # get admin
+        admin = models.Admin.objects.get(id=id)
+
+        qs = None
+        # get admin roles
+        roles = admin.roles.filter(disable=False).all()
+        for role in roles:
+            if qs is None:
+                qs = Q(role__id=role.id)
+            else:
+                qs = qs | Q(role__id=role.id)
+
+        # get admin's modules
+        mobjs = models.Module.objects.filter(qs, disable=False).distinct().order_by('order')
+
+        # get modules of admin
+        modules, mtrees = [], []
+        # pack modules to session
+        if mobjs is not None:
+            for mobj in mobjs:
+                modules.append(mobj.dict())
+                mtrees.append({
+                   'id': mobj.id,
+                   'parent': mobj.parent_id,
+                   'order': mobj.order,
+                   'text': mobj.name,
+                   'attributes':{
+                       'url': mobj.path,
+                   }
+               })
+
+        # save admin modules to session
+        auth.set_admin_modules(request, modules)
+
+        # make results
+        data = {
+            'admin': {
+                'user': admin.user,
+                'name': admin.name,
+                'phone': admin.phone
+            },
+            'modules': util.tree.make(mtrees)
+        }
+
+        return resp.success(data=data)
+
     except Exception as e:
         return resp.failure(str(e))
 

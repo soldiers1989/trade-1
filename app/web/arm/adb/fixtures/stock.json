@@ -7,7 +7,7 @@
       "jianpin": "zgpa",
       "quanpin": "zhongguopingan",
       "status": "open",
-      "limit": "normal",
+      "limit": "none",
       "ctime": 1527261052,
       "mtime": 1527261052
     }
@@ -20,7 +20,7 @@
       "jianpin": "payh",
       "quanpin": "pinganyinhang",
       "status": "open",
-      "limit": "normal",
+      "limit": "none",
       "ctime": 1527261052,
       "mtime": 1527261052
     }
@@ -33,7 +33,7 @@
       "jianpin": "tcl",
       "quanpin": "tcl",
       "status": "open",
-      "limit": "normal",
+      "limit": "none",
       "ctime": 1527261052,
       "mtime": 1527261052
     }

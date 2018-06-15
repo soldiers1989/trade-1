@@ -14,6 +14,10 @@ class List(forms.Form):
     words = forms.CharField(required=False)
 
 
+class Get(forms.Form):
+    id = forms.IntegerField()
+
+
 class Query(forms.Form):
     q = forms.CharField()
 
