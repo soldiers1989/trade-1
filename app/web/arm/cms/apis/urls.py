@@ -48,6 +48,13 @@ urlpatterns = [
     path('user/user/list', user.user.list, name="api.user.user.list"),
     path('user/user/query', user.user.query, name="api.user.user.query"),
     path('user/user/has', user.user.has, name="api.user.user.has"),
+    path('user/user/banks', user.user.banks, name="api.user.user.banks"),
+    path('user/user/bills', user.user.bills, name="api.user.user.bills"),
+    path('user/user/coupons', user.user.coupons, name="api.user.user.coupons"),
+    path('user/user/stocks', user.user.stocks, name="api.user.user.stocks"),
+    path('user/user/charges', user.user.charges, name="api.user.user.charges"),
+    path('user/user/draws', user.user.draws, name="api.user.user.draws"),
+
 
     path('user/coupon/list', user.coupon.list, name="api.user.coupon.list"),
 

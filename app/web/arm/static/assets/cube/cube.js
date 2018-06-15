@@ -54,7 +54,7 @@ cube.format = new function() {
             return '-';
 
 		var date = new Date();
-		date.setTime(tm);
+		date.setTime(tm*1000);
 		return date.toLocaleString();
 	}
 }

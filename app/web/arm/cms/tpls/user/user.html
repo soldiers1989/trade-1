@@ -1,30 +1,51 @@
 
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
     <div data-options="region:'west', split:true" style="width: 75%;">
-        <table id="order_datagrid" style="height: 100%;"></table>
+        <table id="user_datagrid" style="height: 100%;"></table>
     </div>
     <div data-options="region:'center', split:true" style="width: 25%">
-        <div class="easyui-panel" title="杠杆详情" style="height:25%;">
-            <table id="order_lever_datagrid"></table>
-        </div>
-        <div class="easyui-panel" title="费用详情" style="height:25%;">
-            <table id="order_fee_datagrid"></table>
-        </div>
-        <div class="easyui-panel" title="保证金详情" style="height:25%;">
-            <table id="order_margin_datagrid"></table>
-        </div>
-        <div class="easyui-panel" title="交易委托详情" style="height:25%;">
-            <table id="order_order_datagrid"></table>
+        <div class="easyui-tabs" id="user_detail_tabs" fit="true" border="true" plain="true">
+            <div title="基本信息">
+                <div class="easyui-panel" style="height:50%;">
+                    <table id="user_info_datagrid"></table>
+                </div>
+                <div class="easyui-panel" title="银行账户" style="height:50%;">
+                    <table id="user_bank_datagrid"></table>
+                </div>
+            </div>
+            <div title="用户交易">
+                <table id="user_trade_datagrid"></table>
+            </div>
+            <div title="充值提现">
+                <div class="easyui-panel" title="充值记录" style="height:50%;">
+                    <table id="user_charge_datagrid"></table>
+                </div>
+                <div class="easyui-panel" title="提现记录" style="height:50%;">
+                    <table id="user_draw_datagrid"></table>
+                </div>
+            </div>
+            <div title="资金流水">
+                <table id="user_bill_datagrid"></table>
+            </div>
+            <div title="优惠券">
+                <table id="user_coupon_datagrid"></table>
+            </div>
+            <div title="自选股票">
+                <table id="user_stock_datagrid"></table>
+            </div>
         </div>
     </div>
 </div>
 
-<div id="order_toolbar">
+<div id="user_toolbar">
     <span>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="usertrade.add.open()">新建</a>
+        <a href="javascript:void(0)" id="user_edit_menubutton" class="easyui-menubutton" data-options="menu:'#user_edit_menus',iconCls:'icon-edit'">编辑</a>
+        <div id="user_edit_menus" style="width:150px;">
+            <div>重置密码</div>
+        </div>
     </span>
     <span style="float: right; margin-right: 18px;">
-        <form class="easyui-form" id="order_search_form">
+        <form class="easyui-form" id="user_search_form">
             <span>日期</span>
             <input id="sdate" class="easyui-datebox" validType="date">
             <span>-</span>
@@ -32,187 +53,19 @@
 
             <input id="words" class="easyui-textbox">
 
-            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="usertrade.search.do()">查询</a>
-            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="usertrade.search.reset()">重置</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="user.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="user.search.reset()">重置</a>
         </form>
     </span>
 </div>
 
-<div class="easyui-dialog" id="order_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#order_add_dialog_buttons'">
-    <form class="easyui-form" id="order_add_form" method="post" style="margin:0;padding:10px 20px">
-        <div style="margin-bottom:10px">
-            <input id="order_add_user" name="user" label="用户" prompt="输入用户" style="width:100%" required>
-        </div>
-        <div style="margin-bottom:10px">
-           	<input id="order_add_stock" name="stock" label="股票" prompt="股票代码" style="width:100%" required>
-        </div>
-        <div style="margin-bottom:10px">
-           	<input id="order_add_lever" name="lever" label="杠杆" prompt="选择杠杆" style="width:100%" required>
-        </div>
-        <div style="margin-bottom:10px">
-            <input id="order_add_coupon" name="coupon" label="优惠券" prompt="选择优惠券" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input id="order_add_ptype" name="ptype" label="报价方式" prompt="选择报价方式" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'100的整数倍', required:true, validType:['stock', 'min[100]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" id="order_add_oprice" name="oprice" data-options="label:'委托价格', prompt:'>0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-    </form>
-</div>
-
-<div id="order_add_dialog_buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="usertrade.add.save()" style="width:90px">保存</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="usertrade.add.close()" style="width:90px">取消</a>
-</div>
-
 
 <script type="text/javascript">
-    // user trade list/add/update/delete
-    var usertrade = {
-        // trade add
-        add: {
-            url: '/api/trade/order/add',
-
-            form: $('#order_add_form'),
-            dialog: $('#order_add_dialog'),
-
-            inited: false,
-
-            init: function() {
-                //init user textbox
-                $('#order_add_user').combobox({
-                    url:'/api/user/user/query', 
-                    mode: 'remote',
-
-                    valueField:'id',
-                    textField:'user',
-                    
-                    limitToList: true,
-                    
-                    loadFilter: function(resp) {
-                        return resp.data;
-                    },
-                    
-                    onChange: function(newv, oldv) {
-                        if($(this).textbox('isValid')){
-                            $('#order_add_coupon').combobox({queryParams: {user:$(this).val(), status:'unused'}}).combobox('reload', '/api/user/coupon/list');
-                        }
-                    }
-                });
-
-                //init stock combobox
-                $('#order_add_stock').combobox({
-                    url:'/api/stock/stock/query',
-                    mode: 'remote',
-
-                    valueField:'id',
-                    textField:'name',
-
-                    limitToList: true,
-
-                    loadFilter: function(resp) {
-                        return resp.data;
-                    }
-                });
-
-                //init lever combobox
-                $('#order_add_lever').combobox({
-                    url:'/api/trade/lever/list',
-                    editable:false,
-                    valueField:'id',
-                    textField:'lever',
-                    queryParams: {
-                        disable: 'false'
-                    },
-                    loadFilter: function(resp) {
-                        return resp.data.rows;
-                    }
-                });
-
-                //init coupon combobox
-                $('#order_add_coupon').combobox({
-                    editable:false,
-                    valueField: 'id',
-                    textField: 'money',
-                    loadFilter: function(resp) {
-                        return resp.data.rows;
-                    }
-                });
-
-                //init ptype combobox
-                $('#order_add_ptype').combobox({
-                    editable:false,
-                    valueField: 'id',
-                    textField: 'text',
-                    data: [{id:'sj', text:'市价'},{id:'xj', text:'限价'}],
-                    onChange: function(newv, oldv){
-                        if (newv == 'sj'){
-                            $('#order_add_oprice').textbox('clear');
-                            $('#order_add_oprice').textbox('disable');
-                        } else {
-                            $('#order_add_oprice').textbox('clear');
-                            $('#order_add_oprice').textbox('enable');
-                        }
-                    }
-                });
-
-                //set inited flag
-                this.inited = true;
-            },
-
-            reload: function() {
-                $('#order_add_lever').combobox('reload');
-            },
-
-            open: function() { //open dialog
-                //reset form
-                this.form.form('clear');
-
-                //init add
-                if (!this.inited)
-                    this.init();
-                else
-                    this.reload();
-
-                //open dialog
-                this.dialog.dialog('open').dialog('center').dialog('setTitle','添加订单');
-            },
-
-            close: function() { //close dialog
-                //close dialog
-                this.dialog.dialog('close');
-            },
-
-            save: function() { // save add record
-                 //submit form
-                this.form.form('submit',{
-                    url: this.url,
-   
-                    onSubmit: function(){
-                        return usertrade.add.form.form('validate');
-                    },
-                    success: function(data){
-                        var resp = eval('('+data+')');
-                        if (resp.status){
-                            usertrade.add.dialog.dialog('close');
-                            usertrade.datagrid.datagrid('reload');
-                        } else {
-                            $.messager.show({ title: '错误',  msg: resp.message });
-                        }
-                    }
-                });
-            },
-        },
-
-        //trade search
+    // user list/add/update/delete
+    var user = {
+        //user search
         search: {
-            url: '/api/trade/order/list',
-
-            form: $('#order_search_form'),
+            form: $('#user_search_form'),
 
             do: function() { // do search
                 //check search form
@@ -227,7 +80,7 @@
                 };
 
                 //reload by retrieve conditions
-                usertrade.list.load(params);
+                user.list.load(params);
             },
 
             reset: function() { // reset
@@ -235,14 +88,14 @@
                 this.form.form('clear');
 
                 //reload datagrid
-                usertrade.list.load({});
+                user.list.load({});
             },
         },
 
         //trade list
         list: {
-            url: '/api/trade/order/list',
-            datagrid: $('#order_datagrid'),
+            url: '/api/user/user/list',
+            datagrid: $('#user_datagrid'),
 
             init: function() {
                 this.datagrid.datagrid({
@@ -261,32 +114,15 @@
                     pageSize: 20,
                     pageList: [5, 10, 20, 30, 40, 50, 100],
                     
-                    toolbar: '#order_toolbar',
-                    frozenColumns: [[
+                    toolbar: '#user_toolbar',
+                     columns: [[
                         {field:'id', title:'ID', sortable:true},
-                        {field:'user', title:'用户'},
-                        {field:'stock', title:'股票'},
-                        {field:'lever', title:'杠杆', sortable:true},
-                        {field:'statusd', title:'状态'},
-                        {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.date},
-                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.date},
-                    ]],
-                    columns: [[
-                        {field:'hprice', title:'持仓价', sortable:true, formatter: cube.format.none},
-                        {field:'hcount', title:'持仓量', sortable:true, formatter: cube.format.none},
-                        {field:'fcount', title:'可卖量', sortable:true, formatter: cube.format.none},
-                        {field:'oprice', title:'订单价', sortable:true},
-                        {field:'ocount', title:'订单量', sortable:true},
-                        {field:'bprice', title:'买入价', sortable:true, formatter: cube.format.none},
-                        {field:'bcount', title:'买入量', sortable:true, formatter: cube.format.none},
-                        {field:'sprice', title:'卖出价', sortable:true, formatter: cube.format.none},
-                        {field:'scount', title:'卖出量', sortable:true, formatter: cube.format.none},
-                        {field:'margin', title:'保证金', sortable:true},
-                        {field:'ofee', title:'建仓费', sortable:true},
-                        {field:'ddays', title:'天数', sortable:true, formatter: cube.format.none},
-                        {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},
-                        {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
-                        {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
+                        {field:'user', title:'用户', sortable:true},
+                        {field:'phone', title:'手机', sortable:true},
+                        {field:'money', title:'余额', sortable:true},
+                        {field:'disable', title:'状态', sortable:true, formatter: cube.format.boolean},
+                        {field:'ctime', title:'注册时间', sortable:true, formatter: cube.format.datetime},
+                        {field:'ltime', title:'最近访问', sortable:true, formatter: cube.format.datetime}
                     ]],
 
                     loadFilter: function (resp) {
@@ -297,11 +133,11 @@
                     },
 
                     onLoadError: function() {
-                        $.messager.show({title: '错误', msg: '请求用户交易数据失败'});
+                        $.messager.show({title: '错误', msg: '请求用户列表数据失败'});
                     },
                     
                     onSelect(index, row) {
-                        usertrade.detail.show(row.id);
+                        user.detail.show(row.id);
                     }
                 });
             },
@@ -555,8 +391,8 @@
 
     //init page
     $(function(){
-        //init user trade page
-        usertrade.init();
+        //init user page
+        user.init();
     });
 
 </script>
