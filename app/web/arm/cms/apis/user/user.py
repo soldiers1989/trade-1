@@ -71,7 +71,14 @@ def list(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                row = obj.dict()
+
+                try:
+                    row['userstat__tpay'], row['userstat__tdraw'], row['userstat__ttradec'], row['userstat__ttradem'] = obj.userstat.tpay, obj.userstat.tdraw, obj.userstat.ttradec, obj.userstat.ttradem
+                except:
+                    row['userstat__tpay'], row['userstat__tdraw'], row['userstat__ttradec'], row['userstat__ttradem'] = None, None, None, None
+
+                rows.append(row)
 
             ## response data ##
             data = {
@@ -141,6 +148,41 @@ def has(request):
 
 
 @auth.need_login
+def stat(request):
+    """
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.user.user.Get(request.POST)
+        if form.is_valid():
+            # user id
+            userid = form.cleaned_data['id']
+
+            # get record
+            object = models.UserStat(user_id=userid)
+            try:
+                object = models.UserStat.objects.get(user__id=userid)
+            except:
+                pass
+
+            ## make results ##
+            rows = object.properties()
+
+            ## response data ##
+            data = {
+                'total': len(rows),
+                'rows': rows
+            }
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(form.errors, [])
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
 def banks(request):
     """
         list api
@@ -155,6 +197,43 @@ def banks(request):
 
             # get fee records of order
             objects = models.UserBank.objects.filter(user__id=userid)
+
+            ## get total count ##
+            total = objects.count()
+
+            ## make results ##
+            rows = []
+            for obj in objects:
+                rows.append(obj.dict())
+
+            ## response data ##
+            data = {
+                'total': total,
+                'rows': rows
+            }
+
+            return resp.success(data=data)
+        else:
+            return resp.failure(form.errors, [])
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
+def trades(request):
+    """
+        list api
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.user.user.Get(request.POST)
+        if form.is_valid():
+            # user id
+            userid = form.cleaned_data['id']
+
+            # get fee records of order
+            objects = models.UserTrade.objects.filter(user__id=userid)
 
             ## get total count ##
             total = objects.count()

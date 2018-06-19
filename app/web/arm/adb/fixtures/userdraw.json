@@ -1,0 +1,58 @@
+[
+  {
+    "model": "adb.userdraw",
+    "pk": 1,
+    "fields": {
+      "user_id": 1,
+      "code": "000001",
+      "money": 100.00,
+      "bank": "中国银行",
+      "name": "张三",
+      "account": "212121112212",
+      "status": "paied",
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.userdraw",
+    "pk": 2,
+    "fields": {
+      "user_id": 1,
+      "code": "000002",
+      "money": 100.00,
+      "bank": "中信银行",
+      "name": "张三",
+      "account": "54546456545646",
+      "status": "topay",
+      "ctime": 1527261052
+    }
+  },
+    {
+    "model": "adb.userdraw",
+    "pk": 3,
+    "fields": {
+      "user_id": 2,
+      "code": "000003",
+      "money": 100.00,
+      "bank": "中国银行",
+      "name": "李四",
+      "account": "54754645646546455",
+      "status": "topay",
+      "ctime": 1527261052
+    }
+  },
+    {
+    "model": "adb.userdraw",
+    "pk": 4,
+    "fields": {
+      "user_id": 3,
+      "code": "000004",
+      "money": 100.00,
+      "bank": "中国银行",
+      "name": "王五",
+      "account": "245646546546",
+      "status": "topay",
+      "ctime": 1527261052
+    }
+  }
+]

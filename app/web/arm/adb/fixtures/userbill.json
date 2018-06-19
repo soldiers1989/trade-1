@@ -1,0 +1,54 @@
+[
+  {
+    "model": "adb.userbill",
+    "pk": 1,
+    "fields": {
+      "user_id": 1,
+      "code": "000001",
+      "item": "充值",
+      "detail": "xxx充值",
+      "bmoney": 100.00,
+      "lmoney": 10000.00,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.userbill",
+    "pk": 2,
+    "fields": {
+      "user_id": 1,
+      "code": "000002",
+      "item": "提现",
+      "detail": "xxx提现",
+      "bmoney": -100.00,
+      "lmoney": 9999.00,
+      "ctime": 1527261052
+    }
+  },
+    {
+    "model": "adb.userbill",
+    "pk": 3,
+    "fields": {
+      "user_id": 2,
+      "code": "000003",
+      "item": "充值",
+      "detail": "xxx充值",
+      "bmoney": 100.00,
+      "lmoney": 10000.00,
+      "ctime": 1527261052
+    }
+  },
+    {
+    "model": "adb.userbill",
+    "pk": 4,
+    "fields": {
+      "user_id": 3,
+      "code": "000004",
+      "item": "充值",
+      "detail": "xxx充值",
+      "bmoney": 100.00,
+      "lmoney": 10000.00,
+      "ctime": 1527261052
+    }
+  }
+]

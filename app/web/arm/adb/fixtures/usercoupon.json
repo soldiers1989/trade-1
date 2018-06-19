@@ -3,7 +3,7 @@
     "model": "adb.usercoupon",
     "pk": 1,
     "fields": {
-      "user": 1,
+      "user_id": 1,
       "name": "赠送",
       "money": 10.00,
       "status": "unused",
@@ -15,7 +15,7 @@
     "model": "adb.usercoupon",
     "pk": 2,
     "fields": {
-      "user": 1,
+      "user_id": 1,
       "name": "赠送",
       "money": 10.00,
       "status": "unused",
@@ -27,7 +27,7 @@
     "model": "adb.usercoupon",
     "pk": 3,
     "fields": {
-      "user": 2,
+      "user_id": 2,
       "name": "赠送",
       "money": 10.00,
       "status": "unused",
@@ -39,7 +39,7 @@
     "model": "adb.usercoupon",
     "pk": 4,
     "fields": {
-      "user": 3,
+      "user_id": 3,
       "name": "赠送",
       "money": 10.00,
       "status": "unused",

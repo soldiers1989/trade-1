@@ -1,0 +1,38 @@
+[
+  {
+    "model": "adb.paygateway",
+    "pk": 1,
+    "fields": {
+      "name": "微信",
+      "icon": "icon-abc",
+      "order": 1,
+      "disable": 0,
+      "ctime": 1527261052,
+      "mtime": 1527261052
+    }
+  },
+  {
+    "model": "adb.paygateway",
+    "pk": 2,
+    "fields": {
+      "name": "支付宝",
+      "icon": "icon-abc",
+      "order": 2,
+      "disable": 0,
+      "ctime": 1527261052,
+      "mtime": 1527261052
+    }
+  },
+  {
+    "model": "adb.paygateway",
+    "pk": 3,
+    "fields": {
+      "name": "连连",
+      "icon": "icon-abc",
+      "order": 3,
+      "disable": 0,
+      "ctime": 1527261052,
+      "mtime": 1527261052
+    }
+  }
+]

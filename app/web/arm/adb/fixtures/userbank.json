@@ -1,0 +1,54 @@
+[
+  {
+    "model": "adb.userbank",
+    "pk": 1,
+    "fields": {
+      "user_id": 1,
+      "bank": "中国银行",
+      "name": "张三",
+      "account": "1245678822245",
+      "deleted": false,
+      "ctime": 1527261052,
+      "mtime": 1527961052
+    }
+  },
+  {
+    "model": "adb.userbank",
+    "pk": 2,
+    "fields": {
+      "user_id": 1,
+      "bank": "中国工商银行",
+      "name": "张三",
+      "account": "144524678822245",
+      "deleted": false,
+      "ctime": 1527261052,
+      "mtime": 1527961052
+    }
+  },
+    {
+    "model": "adb.userbank",
+    "pk": 3,
+    "fields": {
+      "user_id": 2,
+      "bank": "中信银行",
+      "name": "李四",
+      "account": "4224545454445",
+      "deleted": false,
+      "ctime": 1527261052,
+      "mtime": 1527961052
+    }
+  },
+    {
+    "model": "adb.userbank",
+    "pk": 4,
+    "fields": {
+      "user_id": 3,
+      "bank": "北京银行",
+      "name": "李四",
+      "account": "4567878678822245",
+      "deleted": false,
+      "ctime": 1527261052,
+      "mtime": 1527961052
+    }
+  }
+]
