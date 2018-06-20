@@ -269,7 +269,7 @@ class PayAccount(models.Model):
 class User(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.CharField(max_length=16, unique=True)
-    pwd = models.CharField(max_length=32)
+    pwd = models.CharField(max_length=64)
     phone = models.CharField(max_length=16)
     money = models.DecimalField(max_digits=10, decimal_places=2)
     disable = models.BooleanField(default=False)

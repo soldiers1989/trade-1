@@ -26,11 +26,11 @@
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="order_search_form">
             <span>日期</span>
-            <input id="sdate" class="easyui-datebox" validType="date">
+            <input name="sdate" class="easyui-datebox" validType="date">
             <span>-</span>
-            <input id="edate" class="easyui-datebox" validType="date">
+            <input name="edate" class="easyui-datebox" validType="date">
 
-            <input id="words" class="easyui-textbox">
+            <input name="words" class="easyui-textbox">
 
             <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="usertrade.search.do()">查询</a>
             <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="usertrade.search.reset()">重置</a>
@@ -221,9 +221,9 @@
 
                 //get parameters
                 params = {
-                    sdate: this.form.children('#sdate').val(),
-                    edate: this.form.children('#edate').val(),
-                    words: this.form.children('#words').val()
+                    sdate: this.form.find('input[name="sdate"]:first').val(),
+                    edate: this.form.find('input[name="edate"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val()
                 };
 
                 //reload by retrieve conditions

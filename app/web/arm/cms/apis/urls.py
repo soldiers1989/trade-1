@@ -56,6 +56,7 @@ urlpatterns = [
     path('user/user/stocks', user.user.stocks, name="api.user.user.stocks"),
     path('user/user/charges', user.user.charges, name="api.user.user.charges"),
     path('user/user/draws', user.user.draws, name="api.user.user.draws"),
+    path('user/user/resetpwd', user.user.resetpwd, name="api.user.user.resetpwd"),
 
 
     path('user/coupon/list', user.coupon.list, name="api.user.coupon.list"),

@@ -439,3 +439,25 @@ def draws(request):
             return resp.failure(form.errors, [])
     except Exception as e:
         return resp.failure(str(e))
+
+
+@auth.need_login
+def resetpwd(request):
+    """
+        list api
+    :param request:
+    :return:
+    """
+    try:
+        form = forms.user.user.ResetPwd(request.POST)
+        if form.is_valid():
+            id = form.cleaned_data['id']
+            pwd = cube.util.hash.sha1(form.cleaned_data['pwd'])
+
+            models.User.objects.filter(id=id).update(pwd=pwd)
+
+            return resp.success()
+        else:
+            return resp.failure(form.errors)
+    except Exception as e:
+        return resp.failure(str(e))

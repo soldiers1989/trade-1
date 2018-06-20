@@ -1,4 +1,3 @@
-
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
     <div data-options="region:'west', split:true" style="width: 70%;">
         <table id="user_datagrid" style="height: 100%;"></table>
@@ -39,22 +38,22 @@
 
 <div id="user_toolbar">
     <span>
-        <a href="javascript:void(0)" id="user_edit_menubutton" class="easyui-menubutton" data-options="menu:'#user_edit_menu',iconCls:'icon-edit'">编辑</a>
+        <a href="javascript:void(0)" id="user_edit_menubutton" class="easyui-menubutton" data-options="menu:'#user_edit_menu', disabled:true,iconCls:'icon-edit'">编辑</a>
         <div id="user_edit_menu" style="width:150px;">
-            <div onclick="users.user.resetpwd.open()">重置密码</div>
+            <div iconCls="icon-lock" onclick="user.edit.resetpwd.open()">重置密码</div>
         </div>
     </span>
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="user_search_form">
             <span>日期</span>
-            <input id="sdate" class="easyui-datebox" validType="date">
+            <input name="sdate" class="easyui-datebox" validType="date">
             <span>-</span>
-            <input id="edate" class="easyui-datebox" validType="date">
+            <input name="edate" class="easyui-datebox" validType="date">
 
-            <input id="words" class="easyui-textbox">
+            <input name="words" class="easyui-textbox">
 
-            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="users.search.do()">查询</a>
-            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="users.search.reset()">重置</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="user.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="user.search.reset()">重置</a>
         </form>
     </span>
 </div>
@@ -62,29 +61,30 @@
 <div id="user_dialog_resetpwd">
     <form id="user_form_resetpwd" method="post">
         <div style="padding: 10px">
-            <input class="easyui-passwordbox" id="user_form_resetpwd_pwd" name="pwd" label="密码" prompt="请输入密码" data-options="required:true, validType:['text', 'length[3,16]']" style="width: 100%">
+            <input id="user_form_pwd" name="pwd" style="width: 100%">
         </div>
         <div style="padding: 10px">
-            <input class="easyui-passwordbox" id="user_form_resetpwd_cpwd" name="cpwd" label="重复密码" prompt="请重复密码" validType="equals['#user_form_resetpwd_pwd']" style="width: 100%" required="required">
+            <input id="user_form_cpwd" name="cpwd" style="width: 100%">
         </div>
         <div id='user_hint_resetpwd'></div>
     </form>
 </div>
 
+
 <script type="text/javascript">
     // user list/add/update/delete
-    var users = {
+    var user = {
         //user edits
-        user: {
+        edit: {
+            menubutton: $('#user_edit_menubutton'),
+
            //reset user pwd
             resetpwd: {
                 url: '/api/user/user/resetpwd',
 
-                dialog: $('#user_dialog_resetpwd'),
-                form: $('#user_form_resetpwd'),
-                hint: $('#user_hint_resetpwd'),
-
-                inited: false,
+                dialog:$('#user_dialog_resetpwd'),
+                form:$('#user_form_resetpwd'),
+                hint:$('#user_hint_resetpwd'),
 
                 init: function() {
                     //init change password dialog
@@ -99,47 +99,60 @@
                                 text: '保存',
                                 iconCls: 'icon-ok',
                                 handler: function(){
-                                    users.user.resetpwd.form.submit();
+                                    user.edit.resetpwd.form.submit();
                                 }
                             },{
                                 text: '取消',
                                 iconCls: 'icon-cancel',
                                 handler: function(){
-                                    users.user.resetpwd.close();
+                                    user.edit.resetpwd.close();
                                 }
                             }
                         ]
                     });
 
+                    //init input
+                    $('#user_form_pwd').passwordbox({
+                        required: true,
+                        prompt: '请输入密码',
+                        validType: 'length[3, 16]'
+                    });
+
+                    $('#user_form_cpwd').passwordbox({
+                        required: true,
+                        prompt: '请重复密码',
+                        validType: 'equals["#user_form_pwd"]'
+                    });
+
                     //init change passowrd form
                     this.form.form({
-                        url: users.user.resetpwd.url,
+                        url: user.edit.resetpwd.url,
                         type: 'post',
-                        novalidate: true,
-                        onSubmit: function() {
-                            return users.user.resetpwd.form.form('enableValidation').form('validate');
+
+                        onSubmit: function(param) {
+                            row = user.list.getSelected();
+                            if(!row)
+                                return false;
+
+                            param.id=row.id;
+                            return user.edit.resetpwd.form.form('validate');
                         },
+
                         success: function (data) {
                             var resp = JSON.parse(data);
                             if (resp.status) {
-                                users.user.resetpwd.close();
+                                user.edit.resetpwd.close();
+                                $.messager.show({title: '提示', msg: "重置用户密码成功"});
                             } else {
-                                users.user.resetpwd.hint.html(resp.message);
+                                user.edit.resetpwd.hint.html(resp.message);
                             }
                         }
                     });
-
-                    //set inited flag
-                    this.inited = true;
-
                 },
 
                 open: function() {
-                    if(!this.inited)
-                        this.init();
-
-                    //reset form
-                    this.form.form('disableValidation').form('reset');
+                        //reset form
+                    this.form.form('reset');
 
                     //reset hint
                     this.hint.html('');
@@ -154,8 +167,20 @@
                 }
             },
 
+            // init edit
             init: function() {
+                //init reset password components
                 this.resetpwd.init();
+            },
+
+            // enable edit
+            enable: function() {
+                this.menubutton.menubutton('enable');
+            },
+
+            // disable edit
+            disable: function() {
+                this.menubutton.menubutton('disable');
             }
         },
 
@@ -170,13 +195,13 @@
 
                 //get parameters
                 params = {
-                    sdate: this.form.children('#sdate').val(),
-                    edate: this.form.children('#edate').val(),
-                    words: this.form.children('#words').val()
+                    sdate: this.form.find('input[name="sdate"]:first').val(),
+                    edate: this.form.find('input[name="edate"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val()
                 };
 
                 //reload by retrieve conditions
-                users.list.load(params);
+                user.list.load(params);
             },
 
             reset: function() { // reset
@@ -184,7 +209,7 @@
                 this.form.form('clear');
 
                 //reload datagrid
-                users.list.load({});
+                user.list.load({});
             },
         },
 
@@ -211,7 +236,7 @@
                     pageList: [5, 10, 20, 30, 40, 50, 100],
                     
                     toolbar: '#user_toolbar',
-                     columns: [[
+                    columns: [[
                         {field:'id', title:'ID', sortable:true},
                         {field:'user', title:'用户', sortable:true},
                         {field:'phone', title:'手机', sortable:true},
@@ -230,6 +255,11 @@
                     },
 
                     onLoadSuccess: function(resp) {
+                        //disable edit
+                        user.edit.disable();
+
+                        //clear detail
+                        user.detail.clear();
                     },
 
                     onLoadError: function() {
@@ -237,7 +267,10 @@
                     },
                     
                     onSelect(index, row) {
-                        users.detail.show(row.id);
+                        //enable edit
+                        user.edit.enable();
+                        //show detail
+                        user.detail.show(row.id);
                     }
                 });
             },
@@ -266,31 +299,31 @@
                         border: false,
 
                         onSelect: function(title, index){
-                            row = users.list.getSelected();
+                            row = user.list.getSelected();
                             if(!row)
                                 return;
 
                             userid = row.id;
                             switch (index) {
                                 case 0:
-                                    users.detail.stat.show(userid);
-                                    users.detail.banks.show(userid);
+                                    user.detail.stat.show(userid);
+                                    user.detail.banks.show(userid);
                                     break;
                                 case 1:
-                                    users.detail.trades.show(userid);
+                                    user.detail.trades.show(userid);
                                     break;
                                 case 2:
-                                    users.detail.charges.show(userid);
-                                    users.detail.draws.show(userid);
+                                    user.detail.charges.show(userid);
+                                    user.detail.draws.show(userid);
                                     break;
                                 case 3:
-                                    users.detail.bills.show(userid);
+                                    user.detail.bills.show(userid);
                                     break;
                                 case 4:
-                                    users.detail.coupons.show(userid);
+                                    user.detail.coupons.show(userid);
                                     break; 
                                 case 5:
-                                    users.detail.stocks.show(userid);
+                                    user.detail.stocks.show(userid);
                                     break;                            
                                 default:
                                     // statements_def
@@ -308,12 +341,12 @@
                     if(!tab || this.tabs.tabs('getTabIndex', tab) != 0)
                         this.tabs.tabs('select', 0);
                     else{
-                        row = users.list.getSelected();
+                        row = user.list.getSelected();
                         if(!row)
                             return;
                         userid = row.id;
-                        users.detail.stat.show(userid);
-                        users.detail.banks.show(userid);
+                        user.detail.stat.show(userid);
+                        user.detail.banks.show(userid);
                     }
 
                 }
@@ -787,18 +820,25 @@
                 }
             },
 
+            //init detail
+            init: function() {
+                this.tabs.init();
+            },
+
+            //show detail
             show: function() {
                 this.tabs.show();
             },
 
-            init: function() {
-                this.tabs.init();
+            //clear detail
+            clear:function() {
+
             }
         },
 
         //init user list
         init: function() {
-            this.user.init();
+            this.edit.init();
 
             // init user list
             this.list.init();
@@ -811,7 +851,7 @@
     //init page
     $(function(){
         //init user page
-        users.init();
+        user.init();
     });
 
 </script>

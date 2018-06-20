@@ -21,5 +21,12 @@ class Get(forms.Form):
 class Query(forms.Form):
     q = forms.CharField()
 
+
 class Has(forms.Form):
     user = forms.CharField()
+
+
+class ResetPwd(forms.Form):
+    id = forms.IntegerField()
+    pwd = forms.CharField(max_length=16, min_length=3)
+

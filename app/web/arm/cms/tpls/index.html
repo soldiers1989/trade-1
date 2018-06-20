@@ -44,10 +44,10 @@
     <div id="index_dialog_changepwd">
         <form id="index_form_changepwd" method="post">
             <div style="padding: 10px">
-                <input class="easyui-passwordbox" id="pwd" name="pwd" type="text" data-options="prompt:'请输入密码', required:true, validType:['text', 'length[3,16]']" style="width: 100%">
+                <input class="easyui-passwordbox" id="pwd" name="pwd" data-options="prompt:'请输入密码', required:true, validType:['text', 'length[3,16]']" style="width: 100%">
             </div>
             <div style="padding: 10px">
-                <input class="easyui-passwordbox" id="cpwd" name="cpwd" type="password" prompt="请重复密码" validType="equals['#pwd']" style="width: 100%" required="required">
+                <input class="easyui-passwordbox" id="cpwd" name="cpwd" prompt="请重复密码" validType="equals['#pwd']" style="width: 100%" required="required">
             </div>
             <div id='index_changepwd_hint'></div>
         </form>
