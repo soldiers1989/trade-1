@@ -1,4 +1,3 @@
-import datetime
 from django import forms
 
 
@@ -14,3 +13,15 @@ class List(forms.Form):
     edate = forms.DateField(required=False)
     words = forms.CharField(required=False)
 
+
+class Get(forms.Form):
+    id = forms.IntegerField()
+
+class Add(forms.Form):
+    user = forms.IntegerField()
+    stock = forms.CharField()
+    lever = forms.IntegerField()
+    coupon = forms.IntegerField(required=False)
+    ptype = forms.CharField()
+    ocount = forms.IntegerField(min_value=100)
+    oprice = forms.DecimalField(required=False)

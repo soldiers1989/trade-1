@@ -1,3 +1,5 @@
+import cube
+
 from django.db  import models
 
 
@@ -91,18 +93,12 @@ class RoleModule(models.Model):
 # tb_trade_account
 class TradeAccount(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=16)
     account = models.CharField(max_length=16, unique=True)
+    name = models.CharField(max_length=16)
     lmoney = models.DecimalField(max_digits=10, decimal_places=2)
     cfmin = models.DecimalField(max_digits=10, decimal_places=2)
     cfrate = models.DecimalField(max_digits=6, decimal_places=6)
     tfrate = models.DecimalField(max_digits=6, decimal_places=6)
-    rfmin = models.DecimalField(max_digits=10, decimal_places=6)
-    rfrate = models.DecimalField(max_digits=6, decimal_places=6)
-    tpwd = models.CharField(max_length=16)
-    cpwd = models.CharField(max_length=16)
-    dept = models.CharField(max_length=16)
-    version = models.CharField(max_length=16)
     disable = models.BooleanField(default=True)
     ctime = models.BigIntegerField()
     mtime = models.BigIntegerField()
@@ -134,31 +130,6 @@ class Lever(models.Model):
 
     class Meta:
         db_table = 'tb_lever'
-
-    def dict(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
-# tb_trade_order
-class TradeOrder(models.Model):
-    id = models.AutoField(primary_key=True)
-    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE)
-    ordern = models.CharField(max_length=16)
-    otype = models.CharField(max_length=8)  # order type
-    ptype = models.CharField(max_length=8)  # price type
-    status = models.CharField(max_length=8)  # order status
-    ocode = models.CharField(max_length=16)  # order code
-    oprice = models.DecimalField(max_digits=10, decimal_places=2)  # order price
-    ocount = models.IntegerField()  # order count
-    otime = models.BigIntegerField()  # order time
-    dcode = models.CharField(max_length=16, null=True)  # deal code
-    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)  # deal price
-    dcount = models.IntegerField(null=True)  # deal count
-    dtime = models.BigIntegerField(null=True)  # deal time
-
-    class Meta:
-        db_table = 'tb_trade_order'
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
@@ -257,82 +228,6 @@ class Stock(models.Model):
         return items
 
 
-# tb_user
-class User(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.CharField(max_length=16, unique=True)
-    pwd = models.CharField(max_length=32)
-    phone = models.CharField(max_length=16)
-    money = models.DecimalField(max_digits=10, decimal_places=2)
-    disable = models.BooleanField(default=False)
-    ctime = models.BigIntegerField() # create time
-    ltime = models.BigIntegerField() # last access time
-
-    class Meta:
-        db_table = 'tb_user'
-
-    def dict(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
-# tb_user_coupon
-class UserCoupon(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('User', on_delete=models.CASCADE)
-    name = models.CharField(max_length=64)
-    money = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=16, default='unused') #unused-未使用, used-已使用, deleted-已删除,  expired-已失效
-    ctime = models.BigIntegerField()  # create time
-    etime = models.BigIntegerField()  # expire time
-    utime = models.BigIntegerField(null=True)  # used time
-
-    class Meta:
-        db_table = 'tb_user_coupon'
-
-    def dict(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
-# tb_user_bank
-class UserBank(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('User', on_delete=models.CASCADE)
-    bank = models.CharField(max_length=16)
-    name = models.CharField(max_length=16)
-    account = models.CharField(max_length=32)
-    deleted = models.BooleanField(default=False)
-    ctime = models.BigIntegerField()  # create time
-    mtime = models.BigIntegerField()  # modify time
-
-    class Meta:
-        db_table = 'tb_user_bank'
-
-    def dict(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
-# tb_user_bill
-class UserBill(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('User', on_delete=models.CASCADE)
-    code = models.CharField(max_length=16, unique=True)
-    item = models.CharField(max_length=16)
-    detail = models.CharField(max_length=64)
-    bmoney = models.DecimalField(max_digits=10, decimal_places=2) # bill money
-    lmoney = models.DecimalField(max_digits=10, decimal_places=2) # left money
-    ctime = models.BigIntegerField()  # create time
-
-    class Meta:
-        db_table = 'tb_user_bill'
-
-    def dict(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
 # tb_pay_gateway
 class PayGateway(models.Model):
     id = models.AutoField(primary_key=True)
@@ -370,6 +265,150 @@ class PayAccount(models.Model):
         return items
 
 
+# tb_user
+class User(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.CharField(max_length=16, unique=True)
+    pwd = models.CharField(max_length=64)
+    phone = models.CharField(max_length=16)
+    money = models.DecimalField(max_digits=10, decimal_places=2)
+    disable = models.BooleanField(default=False)
+    ctime = models.BigIntegerField() # create time
+    ltime = models.BigIntegerField() # last access time
+
+    class Meta:
+        db_table = 'tb_user'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        return items
+
+
+# tb_user_stat
+class UserStat(models.Model):
+    user = models.OneToOneField('User', on_delete=models.CASCADE)
+
+    ctime = models.BigIntegerField(null=True)  # create time
+    mtime = models.BigIntegerField(null=True)  # modify time
+
+    tpay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    tdraw = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    ttradec = models.IntegerField(null=True)
+    ttradem = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    dpay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    ddraw = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    dtradec = models.IntegerField(null=True)
+    dtradem = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    wpay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    wdraw = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    wtradec = models.IntegerField(null=True)
+    wtradem = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    mpay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    mdraw = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    mtradec = models.IntegerField(null=True)
+    mtradem = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+
+    class Meta:
+        db_table = 'tb_user_stat'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        del items['user']
+        return items
+
+    def properties(self):
+        props = []
+
+        items = self.dict()
+        del items['id']
+        items['ctime'] = cube.util.time.datetms(items['ctime'])
+        items['mtime'] = cube.util.time.datetms(items['mtime'])
+
+        for key in items.keys():
+            props.append({'name':self.keyname(key), 'value':items[key], "group":self.keygroup(key)})
+
+        return props
+
+    def keyname(self, key):
+        key2name = {'dpay':'充值额','ddraw':'提现额','dtradec':'交易数','dtradem':'交易额',
+                    'wpay':'充值额','wdraw':'提现额','wtradec':'交易数','wtradem':'交易额',
+                    'mpay': '充值额', 'mdraw': '提现额', 'mtradec': '交易数', 'mtradem': '交易额',
+                    'tpay': '充值额', 'tdraw': '提现额', 'ttradec': '交易数', 'ttradem': '交易额',
+                    'ctime': '创建时间', 'mtime': '更新时间'}
+        return key2name[key]
+
+    def keygroup(self, key):
+        key2group = {'dpay':'昨日','ddraw':'昨日','dtradec':'昨日','dtradem':'昨日',
+                     'wpay':'上周','wdraw':'上周','wtradec':'上周','wtradem':'上周',
+                     'mpay': '上月', 'mdraw': '上月', 'mtradec': '上月', 'mtradem': '上月',
+                     'tpay': '累计', 'tdraw': '累计', 'ttradec': '累计', 'ttradem': '累计',
+                     'ctime': '统计时间', 'mtime': '统计时间'}
+        return key2group[key]
+
+# tb_user_coupon
+class UserCoupon(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    name = models.CharField(max_length=64)
+    money = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=16, default='unused') #unused-未使用, used-已使用, deleted-已删除,  expired-已失效
+    ctime = models.BigIntegerField()  # create time
+    etime = models.BigIntegerField()  # expire time
+    utime = models.BigIntegerField(null=True)  # used time
+
+    class Meta:
+        db_table = 'tb_user_coupon'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        del items['user']
+        return items
+
+
+# tb_user_bank
+class UserBank(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    bank = models.CharField(max_length=16)
+    name = models.CharField(max_length=16)
+    account = models.CharField(max_length=32)
+    deleted = models.BooleanField(default=False)
+    ctime = models.BigIntegerField()  # create time
+    mtime = models.BigIntegerField()  # modify time
+
+    class Meta:
+        db_table = 'tb_user_bank'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        del items['user']
+        return items
+
+
+# tb_user_bill
+class UserBill(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    code = models.CharField(max_length=16, unique=True)
+    item = models.CharField(max_length=16)
+    detail = models.CharField(max_length=64)
+    bmoney = models.DecimalField(max_digits=10, decimal_places=2) # bill money
+    lmoney = models.DecimalField(max_digits=10, decimal_places=2) # left money
+    ctime = models.BigIntegerField()  # create time
+
+    class Meta:
+        db_table = 'tb_user_bill'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        del items['user']
+        return items
+
+
 # tb_user_charge
 class UserCharge(models.Model):
     id = models.AutoField(primary_key=True)
@@ -385,6 +424,8 @@ class UserCharge(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['account'] = items['account'].name if items['account'] else None
+        del items['user']
         return items
 
 
@@ -405,6 +446,7 @@ class UserDraw(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        del items['user']
         return items
 
 
@@ -415,13 +457,15 @@ class UserStock(models.Model):
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
     deleted = models.BooleanField(default=False)
     ctime = models.BigIntegerField()  # create time
-    dtime = models.BigIntegerField()  # delete time
+    dtime = models.BigIntegerField(null=True)  # delete time
 
     class Meta:
         db_table = 'tb_user_stock'
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['stock'] = items['stock'].name if items['stock'] else None
+        del items['user']
         return items
 
 
@@ -431,8 +475,9 @@ class UserTrade(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True)
-    code = models.CharField(max_length=16, unique=True)
-    oprice = models.DecimalField(max_digits=10, decimal_places=2)
+    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
+    code = models.CharField(max_length=20, unique=True)
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     ocount = models.IntegerField()
     hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     hcount = models.IntegerField(null=True) # holding count
@@ -459,11 +504,11 @@ class UserTrade(models.Model):
         items['user'] = items['user'].user if items['user'] else None
         items['stock'] = items['stock'].name if items['stock'] else None
         items['coupon'] = items['coupon'].money if items['coupon'] else None
+        items['statusd'] = self.statusd(items['status'])
         items['lever'] = self.tradelever.lever
         return items
 
-    @staticmethod
-    def cstatus(s):
+    def statusd(self, s):
         cm = {
                 'tobuy': '待买入', 'buying': '买入中', 'holding': '持仓中',
                 'tosell': '待卖出', 'selling': '卖出中', 'toclose': '待平仓', 'closing': '平仓中',
@@ -494,6 +539,32 @@ class TradeLever(models.Model):
         del items['trade']
         return items
 
+
+# tb_trade_order
+class TradeOrder(models.Model):
+    id = models.AutoField(primary_key=True)
+    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
+    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
+    otype = models.CharField(max_length=16)
+    ptype = models.CharField(max_length=16)
+    ocount = models.IntegerField()
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    otime = models.BigIntegerField()
+    ocode = models.CharField(max_length=16, null=True)
+    ostatus = models.CharField(max_length=16, null=True)
+    dcount = models.IntegerField(null=True)
+    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    dtime = models.BigIntegerField(null=True)
+    status = models.CharField(max_length=16)
+
+    class Meta:
+        db_table = 'tb_trade_order'
+
+    def dict(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'] = items['trade'].id if items['trade'] else None
+        items['account'] = items['account'].account if items['account'] else None
+        return items
 
 # tb_trade_margin
 class TradeMargin(models.Model):

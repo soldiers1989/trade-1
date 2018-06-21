@@ -1,6 +1,10 @@
 from django import forms
 
 
+class List(forms.Form):
+    disable = forms.BooleanField(required=False)
+
+
 class Get(forms.Form):
     id = forms.IntegerField()
 

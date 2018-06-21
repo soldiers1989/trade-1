@@ -48,3 +48,7 @@ def failure(message='failure', data={}):
     resp = json.dumps(resp, cls=JEncoder).encode('utf-8')
 
     return HttpResponse(resp, content_type='application/json;charset=utf8')
+
+
+def text(txt):
+    return HttpResponse(txt, content_type='application/json;charset=utf8')

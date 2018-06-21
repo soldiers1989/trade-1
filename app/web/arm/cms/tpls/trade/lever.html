@@ -192,16 +192,16 @@
         },
 
         save: function() { // save
-            //get selected row data
-            var row = this.datagrid.datagrid('getSelected');
-            if (!row)
-                return;
-
             var url, params={};
             // get action url
             if(this.action == 'add') {
                 url = this.urls.add;
             } else if (this.action == 'update'){
+                //get selected row data
+                var row = this.datagrid.datagrid('getSelected');
+                if (!row)
+                    return;
+                
                 params.id = row.id;
                 url = this.urls.update;
             } else {

@@ -1,9 +1,10 @@
 from django.urls import path
-from cms.apis import auth, trade
+from cms.apis import auth, trade, user, stock
 
 urlpatterns = [
     path('admin/login', auth.admin.login, name="api.admin.login"),
     path('admin/logout', auth.admin.logout, name="api.admin.logout"),
+    path('admin/whoami', auth.admin.whoami, name="api.admin.whoami"),
     path('admin/pwd/change', auth.admin.pwd, name="api.admin.pwd.change"),
 
     path('auth/admin/list', auth.admin.list, name="api.auth.admin.list"),
@@ -38,4 +39,29 @@ urlpatterns = [
     path('trade/lever/reorder', trade.lever.reorder, name="api.trade.lever.reorder"),
 
     path('trade/order/list', trade.order.list, name="api.trade.order.list"),
+    path('trade/order/add', trade.order.add, name="api.trade.order.add"),
+    path('trade/order/fees', trade.order.fees, name="api.trade.order.fees"),
+    path('trade/order/margins', trade.order.margins, name="api.trade.order.margins"),
+    path('trade/order/orders', trade.order.orders, name="api.trade.order.orders"),
+    path('trade/order/lever', trade.order.lever, name="api.trade.order.lever"),
+
+    path('user/user/list', user.user.list, name="api.user.user.list"),
+    path('user/user/query', user.user.query, name="api.user.user.query"),
+    path('user/user/has', user.user.has, name="api.user.user.has"),
+    path('user/user/stat', user.user.stat, name="api.user.user.stat"),
+    path('user/user/banks', user.user.banks, name="api.user.user.banks"),
+    path('user/user/trades', user.user.trades, name="api.user.user.trades"),
+    path('user/user/bills', user.user.bills, name="api.user.user.bills"),
+    path('user/user/coupons', user.user.coupons, name="api.user.user.coupons"),
+    path('user/user/stocks', user.user.stocks, name="api.user.user.stocks"),
+    path('user/user/charges', user.user.charges, name="api.user.user.charges"),
+    path('user/user/draws', user.user.draws, name="api.user.user.draws"),
+    path('user/user/resetpwd', user.user.resetpwd, name="api.user.user.resetpwd"),
+
+
+    path('user/coupon/list', user.coupon.list, name="api.user.coupon.list"),
+
+    path('stock/stock/list', stock.stock.list, name="api.stock.stock.list"),
+    path('stock/stock/query', stock.stock.query, name="api.stock.stock.query"),
+    path('stock/stock/has', stock.stock.has, name="api.stock.stock.has"),
 ]

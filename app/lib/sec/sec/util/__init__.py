@@ -1,0 +1,1 @@
+from sec.util.table import Table as table

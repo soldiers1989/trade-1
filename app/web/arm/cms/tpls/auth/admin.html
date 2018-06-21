@@ -18,14 +18,14 @@
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="admin_search_form">
             <span>时间</span>
-            <input id="sdate" class="easyui-datebox" validType="date">
+            <input name="sdate" class="easyui-datebox" validType="date">
             <span>-</span>
-            <input id="edate" class="easyui-datebox" validType="date">
+            <input name="edate" class="easyui-datebox" validType="date">
 
-            <input id="words" class="easyui-textbox">
+            <input name="words" class="easyui-textbox">
 
             <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="admin.list()">查询</a>
-            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="admin.reset()">重置</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="admin.reset()">重置</a>
         </form>
     </span>
 </div>
@@ -151,9 +151,9 @@
 
             //get parameters
             params = {
-                sdate: this.forms.search.children('#sdate').val(),
-                edate: this.forms.search.children('#edate').val(),
-                words: this.forms.search.children('#words').val()
+                sdate: this.forms.search.find('input[name="sdate"]:first').val(),
+                edate: this.forms.search.find('input[name="edate"]:first').val(),
+                words: this.forms.search.find('input[name="words"]:first').val()
             };
 
             //reload by retrieve conditions

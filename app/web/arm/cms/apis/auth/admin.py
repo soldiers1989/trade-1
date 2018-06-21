@@ -1,7 +1,7 @@
 """
     api for cms
 """
-import time, cube, datetime
+import time, cube, util, datetime
 from django.db.models import Q
 from adb import models
 from cms import auth, resp, hint, forms
@@ -18,7 +18,7 @@ def login(request):
         if login_form.is_valid():
             # get login data form user input
             username = login_form.cleaned_data.get('user')
-            password = cube.hash.sha1(login_form.cleaned_data.get('pwd'))
+            password = cube.util.hash.sha1(login_form.cleaned_data.get('pwd'))
             remember = login_form.cleaned_data.get('remember')
 
             # get admin data from database
@@ -71,7 +71,7 @@ def pwd(request):
         form = forms.auth.admin.Pwd(request.POST)
         if form.is_valid():
             # get new password
-            pwd = cube.hash.sha1(form.cleaned_data['pwd'])
+            pwd = cube.util.hash.sha1(form.cleaned_data['pwd'])
             # get current admin
             id = auth.get_admin_id(request)
             # update password
@@ -102,9 +102,9 @@ def list(request):
             sdate, edate = params['sdate'], params['edate']
             filters = {}
             if sdate:
-                filters['ctime__gte'] = cube.time.utime(sdate)
+                filters['ctime__gte'] = cube.util.time.utime(sdate)
             if edate:
-                filters['ctime__lt'] = cube.time.utime(edate+datetime.timedelta(days=1))
+                filters['ctime__lt'] = cube.util.time.utime(edate+datetime.timedelta(days=1))
 
             q = Q()
             ## search words ##
@@ -166,6 +166,62 @@ def list(request):
 
 
 @auth.need_login
+def whoami(request):
+    try:
+        # get admin id from session
+        id = auth.get_admin_id(request);
+
+        # get admin
+        admin = models.Admin.objects.get(id=id)
+
+        qs = None
+        # get admin roles
+        roles = admin.roles.filter(disable=False).all()
+        for role in roles:
+            if qs is None:
+                qs = Q(role__id=role.id)
+            else:
+                qs = qs | Q(role__id=role.id)
+
+        # get admin's modules
+        mobjs = models.Module.objects.filter(qs, disable=False).distinct().order_by('order')
+
+        # get modules of admin
+        modules, mtrees = [], []
+        # pack modules to session
+        if mobjs is not None:
+            for mobj in mobjs:
+                modules.append(mobj.dict())
+                mtrees.append({
+                   'id': mobj.id,
+                   'parent': mobj.parent_id,
+                   'order': mobj.order,
+                   'text': mobj.name,
+                   'attributes':{
+                       'url': mobj.path,
+                   }
+               })
+
+        # save admin modules to session
+        auth.set_admin_modules(request, modules)
+
+        # make results
+        data = {
+            'admin': {
+                'user': admin.user,
+                'name': admin.name,
+                'phone': admin.phone
+            },
+            'modules': util.tree.make(mtrees)
+        }
+
+        return resp.success(data=data)
+
+    except Exception as e:
+        return resp.failure(str(e))
+
+
+@auth.need_login
 def get(request):
     """
         get api
@@ -193,7 +249,7 @@ def add(request):
             params = form.cleaned_data
 
             item = models.Admin(user=params['user'],
-                                pwd=cube.hash.sha1(params['pwd']),
+                                pwd=cube.util.hash.sha1(params['pwd']),
                                 name=params['name'],
                                 phone=params['phone'],
                                 disable=params['disable'],
@@ -258,7 +314,7 @@ def resetpwd(request):
         form = forms.auth.admin.ResetPwd(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
-            pwd = cube.hash.sha1(form.cleaned_data['pwd'])
+            pwd = cube.util.hash.sha1(form.cleaned_data['pwd'])
 
             models.Admin.objects.filter(id=id).update(pwd=pwd)
 

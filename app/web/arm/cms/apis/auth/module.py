@@ -1,10 +1,10 @@
 """
     api for cms
 """
-import time, cube
+import time, util
 
 from adb import models
-from cms import auth, resp, hint, forms
+from cms import auth, resp, forms
 
 
 @auth.need_login
@@ -53,7 +53,7 @@ def tree(request):
 
             rows.append(row)
 
-        data = cube.tree.make(rows)
+        data = util.tree.make(rows)
 
         return resp.success(data=data)
     except Exception as e:

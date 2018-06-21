@@ -1,0 +1,44 @@
+[
+  {
+    "model": "adb.userstock",
+    "pk": 1,
+    "fields": {
+      "user_id": 1,
+      "stock_id": "000001",
+      "deleted": true,
+      "ctime": 1527261052,
+      "dtime": 1527961052
+    }
+  },
+  {
+    "model": "adb.userstock",
+    "pk": 2,
+    "fields": {
+      "user_id": 1,
+      "stock_id": "000100",
+      "deleted": false,
+      "ctime": 1527261052,
+      "dtime": 1527961052
+    }
+  },
+    {
+    "model": "adb.userstock",
+    "pk": 3,
+    "fields": {
+      "user_id": 2,
+      "stock_id": "000001",
+      "deleted": false,
+      "ctime": 1527261052
+    }
+  },
+    {
+    "model": "adb.userstock",
+    "pk": 4,
+    "fields": {
+      "user_id": 3,
+      "stock_id": "601318",
+      "deleted": false,
+      "ctime": 1527261052
+    }
+  }
+]

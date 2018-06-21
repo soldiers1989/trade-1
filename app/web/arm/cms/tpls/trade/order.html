@@ -1,264 +1,562 @@
-<table id="order_datagrid" style="height: 100%;"></table>
 
-<div id="lever_toolbar">
-    <span>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="order.add()">新建</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="order.update()">编辑</a>
-    </span>
-	<span style="float: right; margin-right: 18px;">
-		<a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="order.refresh()">刷新</a>
-	</span>
+<div class="easyui-layout" data-options="fit:true, split:true, border: true">
+    <div data-options="region:'west', split:true" style="width: 75%;">
+        <table id="order_datagrid" style="height: 100%;"></table>
+    </div>
+    <div data-options="region:'center', split:true" style="width: 25%">
+        <div class="easyui-panel" title="杠杆详情" style="height:25%;">
+            <table id="order_lever_datagrid"></table>
+        </div>
+        <div class="easyui-panel" title="费用详情" style="height:25%;">
+            <table id="order_fee_datagrid"></table>
+        </div>
+        <div class="easyui-panel" title="保证金详情" style="height:25%;">
+            <table id="order_margin_datagrid"></table>
+        </div>
+        <div class="easyui-panel" title="交易委托详情" style="height:25%;">
+            <table id="order_order_datagrid"></table>
+        </div>
+    </div>
 </div>
 
-<div class="easyui-dialog" id="lever_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#lever_dialog_buttons'">
-    <form class="easyui-form" id="lever_form" method="post" style="margin:0;padding:10px 20px">
+<div id="order_toolbar">
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="usertrade.add.open()">新建</a>
+    </span>
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="order_search_form">
+            <span>日期</span>
+            <input name="sdate" class="easyui-datebox" validType="date">
+            <span>-</span>
+            <input name="edate" class="easyui-datebox" validType="date">
+
+            <input name="words" class="easyui-textbox">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="usertrade.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="usertrade.search.reset()">重置</a>
+        </form>
+    </span>
+</div>
+
+<div class="easyui-dialog" id="order_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#order_add_dialog_buttons'">
+    <form class="easyui-form" id="order_add_form" method="post" style="margin:0;padding:10px 20px">
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="lever" data-options="label:'杠杆', prompt:'1~10', required:true, validType:['digits', 'range[1, 10]']" style="width:100%">
+            <input id="order_add_user" name="user" label="用户" prompt="输入用户" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="wline" data-options="label:'预警线', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+           	<input id="order_add_stock" name="stock" label="股票" prompt="股票代码" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="sline" data-options="label:'止损线', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+           	<input id="order_add_lever" name="lever" label="杠杆" prompt="选择杠杆" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ofmin" data-options="label:'保底费用', prompt:'>=0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input id="order_add_coupon" name="coupon" label="优惠券" prompt="选择优惠券" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ofrate" data-options="label:'建仓费率', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+            <input id="order_add_ptype" name="ptype" label="报价方式" prompt="选择报价方式" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="dfrate" data-options="label:'延期费率', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'100的整数倍', required:true, validType:['stock', 'min[100]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="psrate" data-options="label:'盈利分成', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" id="mmin" name="mmin" data-options="label:'本金下限', prompt:'>=0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="mmax" data-options="label:'本金上限', prompt:'大于等于本金下限', required:true, validType:['number', 'largeequal[\'#mmin\']']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', editable:false, required:true" style="width: 100%">
-                <option value="false">否</option>
-                <option value="true">是</option>
-            </select>
+            <input class="easyui-textbox" id="order_add_oprice" name="oprice" data-options="label:'委托价格', prompt:'>0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
         </div>
     </form>
 </div>
 
-<div id="lever_dialog_buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="order.save()" style="width:90px">保存</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="order.cancel()" style="width:90px">取消</a>
+<div id="order_add_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="usertrade.add.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="usertrade.add.close()" style="width:90px">取消</a>
 </div>
 
 
 <script type="text/javascript">
-    // order list/add/update/delete
-    var order = {
-        datagrid: $('#order_datagrid'),
-        dialogs: {
-        	add: $('#order_add_dialog'),
-        	mod: $('#order_mod_dialog'),
-        },
+    // user trade list/add/update/delete
+    var usertrade = {
+        // trade add
+        add: {
+            url: '/api/trade/order/add',
 
-        forms: {
-        	add: $('#order_add_form'),
-        	mod: $('#order_mod_form'),
-        }
+            form: $('#order_add_form'),
+            dialog: $('#order_add_dialog'),
 
-        action: '',
-        urls: {
-            list: '/api/trade/order/list',
-            add: '/api/trade/order/add',
-            update: '/api/trade/order/update',
-        },
+            inited: false,
 
-        init: function() { //init
-        	//init tree grid
-            this.datagrid.datagrid({
-                url: this.urls.list,
-                method: 'post',
-                
-                idField: 'id',
- 		
-				striped: true,
-				fitColumns: true,
-                pagination: false,
-                rownumbers: true,
-                singleSelect: true,
-                
+            init: function() {
+                //init user textbox
+                $('#order_add_user').combobox({
+                    url:'/api/user/user/query', 
+                    mode: 'remote',
 
-				toolbar: '#lever_toolbar',
-                columns: [[
-                    {field:'id', title:'ID', width:'4%'},
-                    {field:'lever', title:'杠杆', width:'6%'},
-                    {field:'wline', title:'预警线', width:'8%'},
-                    {field:'sline', title:'止损线', width:'8%'},
-                    {field:'ofmin', title:'保底费用', width:'8%'},
-                    {field:'ofrate', title:'建仓费率', width:'8%'},
-                    {field:'dfrate', title:'延期费率', width:'8%'},
-                    {field:'psrate', title:'盈利分成', width:'8%'},
-                    {field:'mmin', title:'本金下限', width:'8%'},
-                    {field:'mmax', title:'本金上限', width:'8%'},
-                    {field:'order', title:'排序', width:'4%'},
-                    {field:'disable', title:'禁用', width: '5%', formatter: cube.format.boolean},
-                    {field:'ctime', title:'创建时间', width: '8%', formatter: cube.format.date},
-                    {field:'mtime', title:'修改时间', width: '8%', formatter: cube.format.date}
-                ]],
+                    valueField:'id',
+                    textField:'user',
+                    
+                    limitToList: true,
+                    
+                    loadFilter: function(resp) {
+                        return resp.data;
+                    },
+                    
+                    onChange: function(newv, oldv) {
+                        if($(this).textbox('isValid')){
+                            $('#order_add_coupon').combobox({queryParams: {user:$(this).val(), status:'unused'}}).combobox('reload', '/api/user/coupon/list');
+                        }
+                    }
+                });
 
-                onDrop: function(target, source, point) {
-                    lever.reorder(source.id, source.order, target.id, target.order);
-                },
+                //init stock combobox
+                $('#order_add_stock').combobox({
+                    url:'/api/stock/stock/query',
+                    mode: 'remote',
 
-                loadFilter: function (resp) {
-                    return resp.data;
-                },
+                    valueField:'id',
+                    textField:'name',
 
-                onLoadSuccess: function(resp) {
-                    $(this).datagrid('enableDnd');
-                },
+                    limitToList: true,
 
-                onLoadError: function() {
-                    $.messager.show({title: '错误', msg: '请求管理员数据失败'});
-                }
-            });
+                    loadFilter: function(resp) {
+                        return resp.data;
+                    }
+                });
 
-            //enable drag/drop
-            //this.datagrid.datagrid('enableDnd');
-        },
-        
-   
-        refresh: function() { // reset
-            //reload datagrid
-            this.datagrid.datagrid('reload');
-        },
+                //init lever combobox
+                $('#order_add_lever').combobox({
+                    url:'/api/trade/lever/list',
+                    editable:false,
+                    valueField:'id',
+                    textField:'lever',
+                    queryParams: {
+                        disable: 'false'
+                    },
+                    loadFilter: function(resp) {
+                        return resp.data.rows;
+                    }
+                });
 
-        add: function() { // add
-            //reset action
-            this.action = 'add';
+                //init coupon combobox
+                $('#order_add_coupon').combobox({
+                    editable:false,
+                    valueField: 'id',
+                    textField: 'money',
+                    loadFilter: function(resp) {
+                        return resp.data.rows;
+                    }
+                });
 
-            //reset form
-            this.form.form('clear');
+                //init ptype combobox
+                $('#order_add_ptype').combobox({
+                    editable:false,
+                    valueField: 'id',
+                    textField: 'text',
+                    data: [{id:'sj', text:'市价'},{id:'xj', text:'限价'}],
+                    onChange: function(newv, oldv){
+                        if (newv == 'sj'){
+                            $('#order_add_oprice').textbox('clear');
+                            $('#order_add_oprice').textbox('disable');
+                        } else {
+                            $('#order_add_oprice').textbox('clear');
+                            $('#order_add_oprice').textbox('enable');
+                        }
+                    }
+                });
 
-            //open dialog
-            this.dialog.dialog('open').dialog('center').dialog('setTitle','添加杠杆');
-        },
+                //set inited flag
+                this.inited = true;
+            },
 
-        update: function() { // udpate
-            //reset action
-            this.action = 'update';
-            
-            //get selected row data
-            this.row = this.datagrid.datagrid('getSelected');
-            if (this.row){
-            	// format boolean value
-            	this.row.disable = String(this.row.disable);
+            reload: function() {
+                $('#order_add_lever').combobox('reload');
+            },
 
-                // clear form
+            open: function() { //open dialog
+                //reset form
                 this.form.form('clear');
 
-                //load form data
-                this.form.form('load', this.row);
+                //init add
+                if (!this.inited)
+                    this.init();
+                else
+                    this.reload();
 
-                //option dialog
-                this.dialog.dialog('open').dialog('center').dialog('setTitle','修改杠杆');
-            }
-        },
+                //open dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','添加订单');
+            },
 
-        delete: function() { // delete
-            //get selected row data
-            var row = this.datagrid.datagrid('getSelected');
-            if (!row)
-                return;
-        
-            $.messager.confirm({
-                title: '确认',
-                msg: '确认删除杠杆'+row.lever+'?',
-                url: this.urls.delete,
-                fn: function(r){
-                    if (r){
-                        $.post(this.url, {id: row.id}, function(resp, status){
-                            if(status == 'success'){
-                                if (resp.status){
-                                    lever.refresh();
-                                } else {
-                                    $.messager.show({title: '错误', msg: resp.message});
-                                }
-                            } else {
-                                $.messager.show({title: '错误', msg: '请求服务器错误'});
-                            }
-                        },'json');
+            close: function() { //close dialog
+                //close dialog
+                this.dialog.dialog('close');
+            },
+
+            save: function() { // save add record
+                 //submit form
+                this.form.form('submit',{
+                    url: this.url,
+   
+                    onSubmit: function(){
+                        return usertrade.add.form.form('validate');
+                    },
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            usertrade.add.dialog.dialog('close');
+                            usertrade.datagrid.datagrid('reload');
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
                     }
-                }
-            });
+                });
+            },
         },
 
-        save: function() { // save
-            //get selected row data
-            var row = this.datagrid.datagrid('getSelected');
-            if (!row)
-                return;
+        //trade search
+        search: {
+            url: '/api/trade/order/list',
 
-            var url, params={};
-            // get action url
-            if(this.action == 'add') {
-                url = this.urls.add;
-            } else if (this.action == 'update'){
-                params.id = row.id;
-                url = this.urls.update;
-            } else {
-                return;
+            form: $('#order_search_form'),
+
+            do: function() { // do search
+                //check search form
+                if(!this.form.form('validate'))
+                    return;
+
+                //get parameters
+                params = {
+                    sdate: this.form.find('input[name="sdate"]:first').val(),
+                    edate: this.form.find('input[name="edate"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val()
+                };
+
+                //reload by retrieve conditions
+                usertrade.list.load(params);
+            },
+
+            reset: function() { // reset
+                //clear form
+                this.form.form('clear');
+
+                //reload datagrid
+                usertrade.list.load({});
+            },
+        },
+
+        //trade list
+        list: {
+            url: '/api/trade/order/list',
+            datagrid: $('#order_datagrid'),
+
+            init: function() {
+                this.datagrid.datagrid({
+                    url: this.url,
+                    method: 'post',
+                    
+                    idField: 'id',
+            
+                    striped: true,
+                    fitColumns: true,
+                    pagination: true,
+                    rownumbers: false,
+                    singleSelect: true,
+
+                    pageNumber: 1,
+                    pageSize: 20,
+                    pageList: [5, 10, 20, 30, 40, 50, 100],
+                    
+                    toolbar: '#order_toolbar',
+                    frozenColumns: [[
+                        {field:'id', title:'ID', sortable:true},
+                        {field:'user', title:'用户'},
+                        {field:'stock', title:'股票'},
+                        {field:'lever', title:'杠杆', sortable:true},
+                        {field:'statusd', title:'状态'},
+                        {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.date},
+                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.date},
+                    ]],
+                    columns: [[
+                        {field:'hprice', title:'持仓价', sortable:true, formatter: cube.format.none},
+                        {field:'hcount', title:'持仓量', sortable:true, formatter: cube.format.none},
+                        {field:'fcount', title:'可卖量', sortable:true, formatter: cube.format.none},
+                        {field:'oprice', title:'订单价', sortable:true},
+                        {field:'ocount', title:'订单量', sortable:true},
+                        {field:'bprice', title:'买入价', sortable:true, formatter: cube.format.none},
+                        {field:'bcount', title:'买入量', sortable:true, formatter: cube.format.none},
+                        {field:'sprice', title:'卖出价', sortable:true, formatter: cube.format.none},
+                        {field:'scount', title:'卖出量', sortable:true, formatter: cube.format.none},
+                        {field:'margin', title:'保证金', sortable:true},
+                        {field:'ofee', title:'建仓费', sortable:true},
+                        {field:'ddays', title:'天数', sortable:true, formatter: cube.format.none},
+                        {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},
+                        {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
+                        {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
+                    ]],
+
+                    loadFilter: function (resp) {
+                        return resp.data;
+                    },
+
+                    onLoadSuccess: function(resp) {
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求用户交易数据失败'});
+                    },
+                    
+                    onSelect(index, row) {
+                        usertrade.detail.show(row.id);
+                    }
+                });
+            },
+
+            load: function(params) {
+                this.datagrid.datagrid('load', params);
             }
+        },
 
-            //submit form
-            this.form.form('submit',{
-                url: url,
-                queryParams: params,   
-                onSubmit: function(){
-                    return lever.form.form('validate');
+        //trade detail
+        detail: {
+            lever: {
+                url: '/api/trade/order/lever',
+                datagrid: $('#order_lever_datagrid'),
+
+                inited: false,
+
+                init: function(params) {
+                    this.datagrid.datagrid({
+                        url: this.url,
+                        method: 'post',
+                        queryParams: params,
+                        
+                        idField: 'name',
+                
+                        striped: true,
+                        fitColumns: true,
+                        pagination: false,
+                        rownumbers: false,
+                        singleSelect: true,
+
+                        columns: [[
+                            {field:'name', title:'名称', width:'50%'},
+                            {field:'value', title:'取值', width:'50%'}
+                        ]],
+
+                        loadFilter: function (resp) {
+                            return resp.data;
+                        },
+
+                        onLoadSuccess: function(resp) {
+                        },
+
+                        onLoadError: function() {
+                            $.messager.show({title: '错误', msg: '请求交易杠杆详情失败'});
+                        }
+                    });
+
+                    this.inited=true;
                 },
-                success: function(data){
-                    var resp = eval('('+data+')');
-                    if (resp.status){
-                        lever.dialog.dialog('close');
-                        lever.datagrid.datagrid('reload');
-                    } else {
-                        $.messager.show({ title: '错误',  msg: resp.message });
-                    }
+                
+                load: function(params) {
+                    this.datagrid.datagrid('load', params);
+                },
+
+                show: function(tradeid) {
+                    params = {id:tradeid};
+                    if(!this.inited)
+                        this.init(params);
+                    else
+                        this.load(params);
                 }
-            });
-        },
+            },
 
-        cancel: function() { //cancel
-            //clear action
-            this.action = '';
+            fees: {
+                url: '/api/trade/order/fees',
+                datagrid: $('#order_fee_datagrid'),
 
-            //close dialog
-            this.dialog.dialog('close');
-        },
+                inited: false,
 
-        reorder: function(sid, sorder, tid, torder) { //reorder
-            $.post(this.urls.reorder, {sid: sid, sorder: sorder, tid: tid, torder: torder}, function(resp, status){
-            if(status == 'success'){
-                if (resp.status){
-                    lever.refresh();
-                } else {
-                    $.messager.show({title: '错误', msg: resp.message});
+                init: function(params) {
+                    this.datagrid.datagrid({
+                        url: this.url,
+                        method: 'post',
+                        queryParams: params,
+                        
+                        idField: 'id',
+                
+                        striped: true,
+                        fitColumns: true,
+                        pagination: false,
+                        rownumbers: false,
+                        singleSelect: true,
+
+                        columns: [[
+                            {field:'item', title:'类目', width:'20%'},
+                            {field:'nmoney', title:'应收', width:'20%'},
+                            {field:'amoney', title:'实收', width:'20%'},
+                            {field:'ctime', title:'时间', formatter: cube.format.datetime}
+                        ]],
+
+                        loadFilter: function (resp) {
+                            return resp.data;
+                        },
+
+                        onLoadSuccess: function(resp) {
+                        },
+
+                        onLoadError: function() {
+                            $.messager.show({title: '错误', msg: '请求交易费用详情失败'});
+                        }
+                    });
+
+                    this.inited=true;
+                },
+                
+                load: function(params) {
+                    this.datagrid.datagrid('load', params);
+                },
+
+                show: function(tradeid) {
+                    params = {id:tradeid};
+                    if(!this.inited)
+                        this.init(params);
+                    else
+                        this.load(params);
                 }
-            } else {
-                $.messager.show({title: '错误', msg: '请求服务器错误'});
+            },
+
+            margins: {
+                url: '/api/trade/order/margins',
+                datagrid: $('#order_margin_datagrid'),
+                
+                inited: false,
+
+                init: function(params) {
+                   this.datagrid.datagrid({
+                        url: this.url,
+                        method: 'post',
+                        queryParams: params,
+                        
+                        idField: 'id',
+                
+                        striped: true,
+                        fitColumns: true,
+                        pagination: false,
+                        rownumbers: true,
+                        singleSelect: true,
+
+                        columns: [[
+                            {field:'item', title:'类目', width:'25%'},
+                            {field:'money', title:'金额', width:'30%'},
+                            {field:'ctime', title:'时间', formatter: cube.format.datetime}
+                        ]],
+
+                        loadFilter: function (resp) {
+                            return resp.data;
+                        },
+
+                        onLoadSuccess: function(resp) {
+                        },
+
+                        onLoadError: function() {
+                            $.messager.show({title: '错误', msg: '请求交易保证金详情失败'});
+                        }
+                    });
+
+                   this.inited = true;
+                },
+
+                load: function(params) {
+                    this.datagrid.datagrid('load', params);
+                },
+
+                show: function(tradeid) {
+                    params = {id:tradeid};
+                    if(!this.inited)
+                        this.init(params);
+                    else
+                        this.load(params);
+                }
+            },
+
+            orders: {
+                url: '/api/trade/order/orders',
+                datagrid: $('#order_order_datagrid'),
+                
+                inited: false,
+                
+                init: function(params) {
+                   this.datagrid.datagrid({
+                        url: this.url,
+                        method: 'post',
+                        queryParams: params,
+                        
+                        idField: 'id',
+                
+                        striped: true,
+                        fitColumns: true,
+                        pagination: false,
+                        rownumbers: true,
+                        singleSelect: true,
+
+                        columns: [[
+                            {field:'status', title:'处理状态'},
+                            {field:'ostatus', title:'委托状态'},
+                            {field:'account', title:'股票账户'},
+                            {field:'otype', title:'委托类别'},
+                            {field:'ptype', title:'报价方式'},
+                            {field:'ocount', title:'委托数量'},
+                            {field:'oprice', title:'委托价格'},
+                            {field:'ocode', title:'委托编号'},
+                            {field:'otime', title:'委托时间'},
+                            {field:'dcount', title:'成交数量'},
+                            {field:'dprice', title:'成交价格'},
+                            {field:'dtime', title:'成交时间'},
+                        ]],
+
+                        loadFilter: function (resp) {
+                            return resp.data;
+                        },
+
+                        onLoadSuccess: function(resp) {
+                        },
+
+                        onLoadError: function() {
+                            $.messager.show({title: '错误', msg: '请求交易委托详情失败'});
+                        }
+                    });
+
+                   this.inited = true;
+                },
+
+                load: function(params) {
+                    this.datagrid.datagrid('load', params);
+                },
+
+                show: function(tradeid) {
+                    params = {id:tradeid};
+                    if(!this.inited)
+                        this.init(params);
+                    else
+                        this.load(params);
+                }
+            },
+
+            show: function(tradeid) {
+                this.lever.show(tradeid);
+                this.fees.show(tradeid);
+                this.margins.show(tradeid);
+                this.orders.show(tradeid);
             }
-            },'json');
-        }
+        },
 
+        //init user trade
+        init: function() {
+            // init user trade list
+            this.list.init();
+        }
     };
 
     //init page
     $(function(){
-        //init lever
-        lever.init();
+        //init user trade page
+        usertrade.init();
     });
 
 </script>

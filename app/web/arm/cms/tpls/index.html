@@ -15,10 +15,10 @@
 <body class="easyui-layout">
     <div id="header" data-options="region:'north',border:false" style="height:30px;">
         <div style="padding: 5px 10px;background-color: #f9f9f9;">
-            <span>{{name}}, 欢迎!</span>
+            <span id="index_user_welcome"></span>
             <span style="float: right;">
-                    <span><a href="#" onclick="changepwd()">修改密码</a></span>
-                    <span><a href="#" onclick="logout()">退出</a></span>
+                    <span><a href="#" onclick="index.user.changepwd.open()">修改密码</a></span>
+                    <span><a href="#" onclick="index.user.logout()">退出</a></span>
             </span>
         </div>
     </div>
@@ -30,142 +30,225 @@
     </div>
 
     <div title="运营管理系统" data-options="region:'west',split:true" style="width:150px;">
-        <ul class="easyui-tree">
-            {% for module in modules %}
-            <li>
-                <span>{{ module.name }}</span>
-                <ul class="easyui-tree">
-                    {% for child in module.childs %}
-                        <li>
-                            <a href="javascript:void(0)" onclick="opentab('{{ child.name }}','{{ child.path }}')">{{ child.name }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </li>
-            {% endfor %}
-        </ul>
+        <ul id="index_nav_tree"></ul>
     </div>
 
     <div data-options="region:'center'">
-        <div class="easyui-tabs" id="mytabs" fit="true" border="true" plain="true">
+        <div class="easyui-tabs" id="index_main_tabs" fit="true" border="true" plain="true">
             <div title="欢迎">
                 <h1 style="text-align: center;">欢迎使用运营管理系统!</h1>
             </div>
         </div>
     </div>
 
-    <div id="dlg_changepwd">
-        <form id="form_changepwd" method="post">
+    <div id="index_dialog_changepwd">
+        <form id="index_form_changepwd" method="post">
             <div style="padding: 10px">
-                <input class="easyui-passwordbox" id="pwd" name="pwd" type="text" data-options="prompt:'请输入密码', required:true, validType:['text', 'length[3,16]']" style="width: 100%">
+                <input class="easyui-passwordbox" id="pwd" name="pwd" data-options="prompt:'请输入密码', required:true, validType:['text', 'length[3,16]']" style="width: 100%">
             </div>
             <div style="padding: 10px">
-                <input class="easyui-passwordbox" id="cpwd" name="cpwd" type="password" prompt="请重复密码" validType="equals['#pwd']" style="width: 100%" required="required">
+                <input class="easyui-passwordbox" id="cpwd" name="cpwd" prompt="请重复密码" validType="equals['#pwd']" style="width: 100%" required="required">
             </div>
-            <div id='hint'></div>
+            <div id='index_changepwd_hint'></div>
         </form>
     </div>
 
     <script type="text/javascript">
-        //open new tab
-        function opentab(title, url) {
-            var mytabs = $('#mytabs');
-            if(mytabs.tabs('exists', title)){
-                mytabs.tabs('select', title);
-            } else {
-                $('#mytabs').tabs('add', {
-                    title: title,
-                    //content: '<iframe style="width:100%;height:100%;" src="http://www.baidu.com/"></iframe>',
-                    href: url,
-                    closable: true,
-                    extractor:function(data){
-                        return data;
-                    }
-                });
-            }
-        }
+        var index ={
+            //user
+            user: {
+                url: '/api/admin/whoami',
+                admin: null,
+                modules: null,
 
-        //change password
-        function changepwd() {
-            $('#form_changepwd').form('disableValidation');
-            $('#form_changepwd').form('reset');
-            $('#dlg_changepwd').dialog('open');
-        }
+                //init login user
+                init: function() {
+                    //init dialog
+                    this.changepwd.init();
 
-        //user logout
-        function logout() {
-            //alert('logout');
-            $.post('/api/admin/logout',
-                function(resp, status) {
-                    if(resp.status){
-                        window.location.assign('/cms/login/');
-                    } else {
-                        alert(resp.message);
-                    }
+                    //get login user information
+                    $.post(this.url, function(resp, status){
+                        if(status=='success'){
+                            //set user data
+                            index.user.admin = resp.data.admin;
+                            index.user.modules = resp.data.modules;
+
+                            //init index page
+                            index.show();
+                        } else {
+                            window.location('/cms/login/');
+                        }
+
+                    }, 'json');
                 },
-                'json'
-            );
-        }
 
-        //init & setup events
-        $(function(){
-            //init change password dialog
-            $('#dlg_changepwd').dialog({
-                title: '修改密码',
-                width: 300,
-                height:200,
-                closed: true,
-                modal: true,
-                buttons: [
-                {
-                    text: '保存',
-                    iconCls: 'icon-ok',
-                    handler: function(){
-                        $('#form_changepwd').submit();
-                    }
-                },{
-                    text: '取消',
-                    iconCls: 'icon-cancel',
-                    handler: function(){
-                        $('#dlg_changepwd').dialog('close');
-                    }
-                }
-                ]
-            });
-
-            //init change passowrd form
-            $('#form_changepwd').form({
-                url: '/api/admin/pwd/change',
-                type: 'post',
-                novalidate: true,
-                onSubmit: function() {
-                    return $(this).form('enableValidation').form('validate');
+                //user logout
+                logout: function() {
+                    //alert('logout');
+                    $.post('/api/admin/logout',
+                        function(resp, status) {
+                            if(resp.status){
+                                window.location.assign('/cms/login/');
+                            } else {
+                                alert(resp.message);
+                            }
+                        },
+                        'json'
+                    );
                 },
-                success: function (data) {
-                    var resp = JSON.parse(data);
-                    if (resp.status) {
-                        // close change passowrd dialog
-                        $('#dlg_changepwd').dialog('close');
 
-                        // relogin after change passowrd
-                        window.location.assign('/cms/login/');
-                    } else {
-                        $('#hint').html(resp.message);
-                    }
-                }
-            });
+                //change password
+                changepwd: {
+                    url: '/api/admin/pwd/change',
 
+                    dialog: $('#index_dialog_changepwd'),
+                    form: $('#index_form_changepwd'),
+                    hint: $('#index_changepwd_hint'),
 
-            //confirm password
-            $.extend($.fn.validatebox.defaults.rules, {
-                equals: {
-                    validator: function(value, param){
-                        var pass = $(param[0]).passwordbox('getValue');
-                        return value == pass;
+                    inited: false,
+
+                    init: function() {
+                        //init change password dialog
+                        this.dialog.dialog({
+                            title: '修改密码',
+                            width: 300,
+                            height:200,
+                            closed: true,
+                            modal: true,
+                            buttons: [
+                            {
+                                text: '保存',
+                                iconCls: 'icon-ok',
+                                handler: function(){
+                                    index.user.changepwd.form.submit();
+                                }
+                            },{
+                                text: '取消',
+                                iconCls: 'icon-cancel',
+                                handler: function(){
+                                    index.user.changepwd.close();
+                                }
+                            }
+                            ]
+                        });
+
+                        //init change passowrd form
+                        this.form.form({
+                            url: index.user.changepwd.url,
+                            type: 'post',
+                            novalidate: true,
+                            onSubmit: function() {
+                                return index.user.changepwd.form.form('enableValidation').form('validate');
+                            },
+                            success: function (data) {
+                                var resp = JSON.parse(data);
+                                if (resp.status) {
+                                    // close change passowrd dialog
+                                    index.user.changepwd.close();
+
+                                    // relogin after change passowrd
+                                    window.location.assign('/cms/login/');
+                                } else {
+                                    index.user.changepwd.hint.html(resp.message);
+                                }
+                            }
+                        });
+
+                        //set inited flag
+                        this.inited = true;
+
                     },
-                    message: '前后输入密码不一致'
+
+                    open: function() {
+                        if(!this.inited)
+                            this.init();
+
+                        //reset form
+                        this.form.form('disableValidation').form('reset');
+
+                        //reset hint
+                        this.hint.html('');
+                        
+                        //open dialog
+                        this.dialog.dialog('open');
+                    },
+
+                    close: function() {
+                        //close dialog
+                        this.dialog.dialog('close');
+                    }
                 }
-            });
+            },
+
+            //top user information
+            top: {
+                welcome: $('#index_user_welcome'),
+
+                init: function() {
+                    this.welcome.text(index.user.admin.user+"，欢迎你！");
+                }
+            },
+
+            //left nav module tree
+            nav: {
+                tree: $('#index_nav_tree'),
+
+                init: function() {
+                    this.tree.tree({
+                        data: index.user.modules,
+
+                        onClick: function(node) {
+                            title = node.text;
+                            url = node.attributes.url;
+                            if(url)
+                                index.main.open(title, url);
+                        }
+                    });
+                },
+
+            },
+
+            //center main container tabs
+            main: {
+                tabs: $('#index_main_tabs'),
+
+                init: function() {
+
+                },
+
+                open: function(title, url) {
+                    if(this.tabs.tabs('exists', title)){
+                        this.tabs.tabs('select', title);
+                    } else {
+                        this.tabs.tabs('add', {
+                            title: title,
+                            href: url,
+                            closable: true,
+                            extractor:function(data){
+                                return data;
+                            }
+                        });
+                    }
+                }
+            },
+
+            //init index user
+            init: function() {
+                this.user.init();
+            },
+
+            //show index page
+            show: function() {
+                this.top.init();
+                this.nav.init();
+                this.main.init();
+            }
+        };
+
+      
+        $().ready(function (){
+            //init index
+            index.init();
         });
     </script>
 </body>

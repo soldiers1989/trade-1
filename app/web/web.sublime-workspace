@@ -4,6 +4,138 @@
 		"selected_items":
 		[
 			[
+				"vali",
+				"valid"
+			],
+			[
+				"load",
+				"loadFilter"
+			],
+			[
+				"com",
+				"combobox"
+			],
+			[
+				"dia",
+				"dialogs"
+			],
+			[
+				"format",
+				"formatter"
+			],
+			[
+				"mod",
+				"models"
+			],
+			[
+				"valid",
+				"validator"
+			],
+			[
+				"check",
+				"checked"
+			],
+			[
+				"admin",
+				"adminid"
+			],
+			[
+				"mul",
+				"multiple"
+			],
+			[
+				"inpu",
+				"inputs"
+			],
+			[
+				"mar",
+				"margin-bottom"
+			],
+			[
+				"mess",
+				"messager"
+			],
+			[
+				"admi",
+				"admin"
+			],
+			[
+				"del",
+				"delroles"
+			],
+			[
+				"margin",
+				"margin-right"
+			],
+			[
+				"wid",
+				"width"
+			],
+			[
+				"reset",
+				"resetpwd"
+			],
+			[
+				"eas",
+				"easyui-form"
+			],
+			[
+				"data",
+				"datagrid"
+			],
+			[
+				"admin_da",
+				"admin_dialog"
+			],
+			[
+				"disable",
+				"disableValidation"
+			],
+			[
+				"disab",
+				"disableValidation"
+			],
+			[
+				"admin_d",
+				"admin_dialog_form"
+			],
+			[
+				"wi",
+				"width"
+			],
+			[
+				"ac",
+				"action"
+			],
+			[
+				"admin_",
+				"admin_search"
+			],
+			[
+				"easy",
+				"easyui-textbox"
+			],
+			[
+				"forma",
+				"formatter"
+			],
+			[
+				"formch",
+				"form_changepwd"
+			],
+			[
+				"co",
+				"color"
+			],
+			[
+				"bl",
+				"inline-block"
+			],
+			[
+				"pad",
+				"padding-left"
+			],
+			[
 				"col",
 				"columns\t = 'auto' Style CSS"
 			],
@@ -30,10 +162,6 @@
 			[
 				"previ",
 				"previous"
-			],
-			[
-				"pad",
-				"padding-top"
 			],
 			[
 				"curr",
@@ -96,10 +224,6 @@
 				"btn-sm"
 			],
 			[
-				"inpu",
-				"input-sm"
-			],
-			[
 				"ipu",
 				"input-sm"
 			],
@@ -142,10 +266,6 @@
 			[
 				"cons",
 				"console_log"
-			],
-			[
-				"mod",
-				"modify"
 			],
 			[
 				"tos",
@@ -244,10 +364,35 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm"
+		"/Users/polly/Workspace/Personal/Project/trade/app/web",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim"
 	],
 	"file_history":
 	[
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/untitled",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/auth/admin.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/static/assets/cube/cube.js",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/trade/order.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/trade/lever.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/index.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/login.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/list.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/order/lever.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/auth/role.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/auth/module.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/adb/models.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/auth/user.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/login.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/sites/auth.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/sites/auth/admin.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/sites/urls.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/demo.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/sites/home.py",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/index1.html",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpls/welcome.html",
+		"/Users/polly/Desktop/Monitor.md",
+		"/Users/polly/Library/Application Support/Sublime Text 3/Packages/HTML-CSS-JS Prettify/Default (OSX).sublime-keymap",
+		"/Users/polly/Workspace/Personal/Project/trade/app/web/arm/cms/tpl/login.html",
 		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/layout/complex.html",
 		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid/rowediting.html",
 		"/Users/polly/Downloads/jquery-easyui-1.5.5.2/demo/datagrid-dnd/datagrid-dnd.html",
@@ -272,7 +417,6 @@
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/order/margin/demo.html",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/views/order/order.py",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/urls.py",
-		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/order/lever/list.html",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/fixtures/usertrade.json",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/base.html",
 		"/Users/polly/Workspace/Personal/Project/trade/app/web/aim/cms/templates/auth/module/list.html",
@@ -321,7 +465,7 @@
 	],
 	"find":
 	{
-		"height": 26.0
+		"height": 27.0
 	},
 	"find_in_files":
 	{
@@ -359,7 +503,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 26.0
+		"height": 27.0
 	},
 	"input":
 	{
@@ -408,7 +552,7 @@
 	"project": "web.sublime-project",
 	"replace":
 	{
-		"height": 48.0
+		"height": 50.0
 	},
 	"save_all_on_build": true,
 	"select_file":
@@ -446,7 +590,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 426.0,
+	"side_bar_width": 221.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{
