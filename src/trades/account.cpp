@@ -1,6 +1,7 @@
 #include "trade\tdx.h"
 #include "cube\safe.h"
 #include "cube\log\log.h"
+#include "trades\status.h"
 #include "trades\config.h"
 #include "trades\account.h"
 BEGIN_TRADES_NAMESPACE
@@ -20,7 +21,7 @@ int accounts::login(const std::string &laccount, const std::string taccount, con
 	//account has login
 	if (_accounts.find(laccount) != _accounts.end()) {
 		cube::log::info("account %s has already login.", laccount.c_str());
-		return 0;
+		return status::SUCCESS;
 	}
 
 	std::string errmsg("");
@@ -29,21 +30,21 @@ int accounts::login(const std::string &laccount, const std::string taccount, con
 	if (acnt->init(config::wdir, &errmsg) != 0) {
 		cube::log::error("account %s login failed, error: %s", laccount.c_str(), errmsg.c_str());
 		cube::safe_assign<std::string>(error, errmsg);
-		return -1;
+		return status::ERROR;
 	}
 
 	//account login
 	if (acnt->login(ip, port, version, dept, laccount, taccount, tpwd, cpwd, &errmsg) != 0) {
 		cube::safe_assign<std::string>(error, errmsg);
 		cube::log::error("account %s login failed, error: %s", laccount.c_str(), errmsg.c_str());
-		return -1;
+		return status::ERROR;
 	}
 
 	//add account
 	_accounts.insert(std::pair<std::string, trade::trade*>(laccount, acnt));
 
 	cube::log::info("account %s login success.", laccount.c_str());
-	return 0;
+	return status::SUCCESS;
 
 }
 
@@ -55,7 +56,7 @@ int accounts::quote(const std::string &account, const std::string &code, trade::
 	if (iter == _accounts.end()) {
 		cube::safe_assign<std::string>(error, "account not exist.");
 		cube::log::error("query quote data with code %s from account %s failed, error: account not exist", code.c_str(), account.c_str());
-		return -1;
+		return status::ERROR_ACCOUNT_NOT_EXIST;
 	}
 
 	std::string errmsg("");
@@ -63,11 +64,11 @@ int accounts::quote(const std::string &account, const std::string &code, trade::
 	if (iter->second->quote(code, result, &errmsg) != 0) {
 		cube::safe_assign<std::string>(error, errmsg);
 		cube::log::error("query quote data with code %s from account %s failed, error: %s", code.c_str(), account.c_str(), errmsg.c_str());
-		return -1;
+		return status::ERROR;
 	}
 
 	cube::log::info("query quote data with code %s from account %s success.", code.c_str(), account.c_str());
-	return 0;
+	return  status::SUCCESS;
 }
 
 int accounts::query(const std::string &account, int category, trade::table &result, std::string *error) {
@@ -78,7 +79,7 @@ int accounts::query(const std::string &account, int category, trade::table &resu
 	if (iter == _accounts.end()) {
 		cube::safe_assign<std::string>(error, "account not exist.");
 		cube::log::error("query account %s data with category %d failed, error: account not exist", account.c_str(), category);
-		return -1;
+		return status::ERROR_ACCOUNT_NOT_EXIST;
 	}
 
 	std::string errmsg("");
@@ -86,7 +87,7 @@ int accounts::query(const std::string &account, int category, trade::table &resu
 	if (iter->second->query((trade::query::type)category, result, &errmsg) != 0) {
 		cube::safe_assign<std::string>(error, errmsg);
 		cube::log::error("query account %s data with category %d failed, error: %s", account.c_str(), category, errmsg.c_str());
-		return -1;
+		return  status::ERROR;
 	}
 
 	cube::log::info("query account %s data with category %d success.", account.c_str(), category);
@@ -101,7 +102,7 @@ int accounts::query(const std::string &account, int category, const std::string 
 	if (iter == _accounts.end()) {
 		cube::safe_assign<std::string>(error, "account not exist.");
 		cube::log::error("query account %s history data from %s~%s with category %d failed, error: account not exist", account.c_str(), start_date.c_str(), end_date.c_str(), category);
-		return -1;
+		return status::ERROR_ACCOUNT_NOT_EXIST;
 	}
 
 	std::string errmsg("");
@@ -109,11 +110,11 @@ int accounts::query(const std::string &account, int category, const std::string 
 	if (iter->second->query((trade::query::type)category, start_date, end_date, result, &errmsg) != 0) {
 		cube::safe_assign<std::string>(error, errmsg);
 		cube::log::error("query account %s history data from %s~%s with category %d failed, error: %s", account.c_str(), start_date.c_str(), end_date.c_str(), category, errmsg.c_str());
-		return -1;
+		return  status::ERROR;
 	}
 
 	cube::log::info("query account %s history data from %s~%s with category %d success.", account.c_str(), start_date.c_str(), end_date.c_str(), category);
-	return 0;
+	return  status::SUCCESS;
 }
 
 int accounts::order(const std::string &account, int otype, int ptype, const std::string &gddm, const std::string &zqdm, float price, int count, trade::table &result, std::string *error) {
@@ -124,7 +125,7 @@ int accounts::order(const std::string &account, int otype, int ptype, const std:
 	if (iter == _accounts.end()) {
 		cube::safe_assign<std::string>(error, "account not exist.");
 		cube::log::error("order <otype:%d, ptype:%d, gddm:%s, zqdm:%s, price: %.2f, count: %d> from account %s failed, error: account not exist", otype, ptype, gddm.c_str(), zqdm.c_str(), price, count, account.c_str());
-		return -1;
+		return status::ERROR_ACCOUNT_NOT_EXIST;
 	}
 
 	std::string errmsg("");
@@ -132,11 +133,11 @@ int accounts::order(const std::string &account, int otype, int ptype, const std:
 	if (iter->second->send((trade::order::type)otype, (trade::price::type)ptype, gddm, zqdm, price, count, result, &errmsg) != 0) {
 		cube::safe_assign<std::string>(error, errmsg);
 		cube::log::info("order <otype:%d, ptype:%d, gddm:%s, zqdm:%s, price: %.2f, count: %d> from account %s failed. error: %s", otype, ptype, gddm.c_str(), zqdm.c_str(), price, count, account.c_str(), errmsg.c_str());
-		return -1;
+		return  status::ERROR;
 	}
 
 	cube::log::info("order <otype:%d, ptype:%d, gddm:%s, zqdm:%s, price: %.2f, count: %d> from account %s success", otype, ptype, gddm.c_str(), zqdm.c_str(), price, count, account.c_str());
-	return 0;
+	return  status::SUCCESS;
 }
 
 int accounts::cancel(const std::string &account, const std::string &seid, const std::string &orderno, trade::table &result, std::string *error) {
@@ -147,7 +148,7 @@ int accounts::cancel(const std::string &account, const std::string &seid, const 
 	if (iter == _accounts.end()) {
 		cube::safe_assign<std::string>(error, "account not exist.");
 		cube::log::info("cancel <seid:%s, orderno:%s from account %s failed, error: account not exist", seid.c_str(), orderno.c_str(), account.c_str());
-		return -1;
+		return status::ERROR_ACCOUNT_NOT_EXIST;
 	}
 
 	std::string errmsg("");
@@ -155,11 +156,11 @@ int accounts::cancel(const std::string &account, const std::string &seid, const 
 	if (iter->second->cancel(seid, orderno, result, &errmsg) != 0) {
 		cube::safe_assign<std::string>(error, errmsg);
 		cube::log::info("cancel <seid:%s, orderno:%s from account %s failed, error: %s", seid.c_str(), orderno.c_str(), account.c_str(), errmsg.c_str());
-		return -1;
+		return status::ERROR;
 	}
 
 	cube::log::info("cancel <seid:%s, orderno:%s from account %s success", seid.c_str(), orderno.c_str(), account.c_str());
-	return 0;
+	return  status::SUCCESS;
 }
 
 int accounts::logout(const std::string &account, std::string *error) {
@@ -167,9 +168,7 @@ int accounts::logout(const std::string &account, std::string *error) {
 	std::map<std::string, trade::trade*>::iterator iter = _accounts.find(account);
 	//account has login
 	if (iter == _accounts.end()) {
-		cube::safe_assign<std::string>(error, "account not exist.");
-		cube::log::error("account %s logout failed, error: account not exist.", account.c_str());
-		return -1;
+		return  status::SUCCESS;
 	}
 
 	//logout
@@ -184,6 +183,6 @@ int accounts::logout(const std::string &account, std::string *error) {
 	//remove
 	_accounts.erase(iter);
 
-	return 0;
+	return  status::SUCCESS;
 }
 END_TRADES_NAMESPACE

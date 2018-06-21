@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="alias.cpp" />
     <ClCompile Include="config.cpp" />
+    <ClCompile Include="status.cpp" />
     <ClCompile Include="lang.cpp" />
     <ClCompile Include="quoter.cpp" />
     <ClCompile Include="quotes.cpp" />
@@ -166,6 +167,7 @@
   <ItemGroup>
     <ClInclude Include="alias.h" />
     <ClInclude Include="config.h" />
+    <ClInclude Include="status.h" />
     <ClInclude Include="lang.h" />
     <ClInclude Include="quoter.h" />
     <ClInclude Include="service.h" />

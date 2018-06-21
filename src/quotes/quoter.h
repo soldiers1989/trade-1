@@ -30,15 +30,20 @@ public:
 
 	int disconnect();
 
+	bool connected();
+
 	int destroy();
 
 private:
-	quoter() {}
+	quoter() : _connected(false){}
 
 private:
 	static quoter *_instance;
 
 	//quote connect
 	quote::quote1 *_quote;
+
+	//connect flag
+	bool _connected;
 };
 END_QUOTES_NAMESPACE
