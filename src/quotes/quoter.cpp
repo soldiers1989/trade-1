@@ -12,6 +12,8 @@ quoter *quoter::instance() {
 }
 
 int quoter::init() {
+	_connected = false;
+
 	_quote = new quote::tdx1();
 	std::string errmsg("");
 	if (_quote->init(config::wdir, &errmsg) != 0) {
@@ -23,7 +25,11 @@ int quoter::init() {
 }
 
 int quoter::connect(const std::string &ip, ushort port, quote::table &result, std::string *error) {
-	return _quote->connect(ip, port, result, error);
+	int ret = _quote->connect(ip, port, result, error);
+	if (ret != 0)
+		return -1;
+	_connected = true;
+	return 0;
 }
 
 int quoter::query_security_count(int market, int &count, std::string *error) {
@@ -55,7 +61,16 @@ int quoter::query_current_quote_data(int market, const std::string &zqdm, quote:
 }
 
 int quoter::disconnect() {
-	return _quote->disconnect();
+	if (!_connected)
+		return 0;
+
+	_quote->disconnect();
+	_connected = false;
+	return 0;
+}
+
+bool quoter::connected() {
+	return _connected;
 }
 
 int quoter::destroy() {

@@ -5,8 +5,8 @@ BEGIN_QUOTES_NAMESPACE
 class protocol {
 public:
 	static std::string ctype;
-	static std::string succ(const std::string &msg, const std::string &data = "");
-	static std::string fail(const std::string &msg, const std::string &data = "");
+	static bool check(const cube::http::request &req, cube::http::response &resp);
+	static std::string resp(int status, const std::string &msg, const std::string &data = "");
 };
 
 class authority {

@@ -3,29 +3,16 @@
 #include "trades\config.h"
 #include "cube\str\json.h"
 #include "cube\str\stype.h"
+#include "cube\str\format.h"
+#include "trades\status.h"
 #include "trades\account.h"
 #include "trades\servlet.h"
 BEGIN_TRADES_NAMESPACE
 //response content type
 std::string protocol::ctype = "application/json";
 
-std::string protocol::succ(const std::string &msg, const std::string &data) {
-	std::string res("{\"status\":0,");
-	res.append("\"msg\":\""+cube::str::json(msg)+"\",");
-	res.append("\"data\":");
-
-	if (data.empty())
-		res.append("[]");
-	else
-		res.append(data);
-
-	res.append("}");
-
-	return res;
-}
-
-std::string protocol::fail(const std::string &msg, const std::string &data) {
-	std::string res("{\"status\":-1,");
+std::string protocol::resp(int status, const std::string &msg, const std::string &data) {
+	std::string res = cube::str::format("{\"status\":%d,", status);
 	res.append("\"msg\":\"" + cube::str::json(msg) + "\",");
 	res.append("\"data\":");
 
@@ -52,7 +39,7 @@ bool authority::allow(const std::string &ip) {
 int login::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
-		std::string content = protocol::fail("authority denied");
+		std::string content = protocol::resp(status::ERROR_NOT_AUTHORIZED, "authority denied");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -88,7 +75,7 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 
 	//check parameters
 	if (laccount.empty() || taccount.empty() || tpwd.empty() || ip.empty() || port.empty() || dept.empty() || version.empty()) {
-		std::string content = protocol::fail("invalid parameter.");
+		std::string content = protocol::resp(status::ERROR_INVALID_PARAM, "invalid parameter.");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -96,12 +83,12 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 	std::string errmsg("");
 	//login account
 	if (accounts::instance()->login(laccount, taccount, tpwd, cpwd, ip, (ushort)::atoi(port.c_str()), ::atoi(dept.c_str()), version, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg);
+		std::string content = protocol::resp(status::ERROR, errmsg);
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
-	std::string content = protocol::succ("success");
+	std::string content = protocol::resp(status::SUCCESS, "success");
 	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
@@ -114,7 +101,7 @@ int login::handle(const cube::http::request &req, cube::http::response &resp) {
 int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
-		std::string content = protocol::fail("authority denied");
+		std::string content = protocol::resp(status::ERROR_NOT_AUTHORIZED, "authority denied");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -125,7 +112,7 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 
 	//check parameters
 	if (account.empty() || code.empty()) {
-		std::string content = protocol::fail("invalid parameter.");
+		std::string content = protocol::resp(status::ERROR_INVALID_PARAM, "invalid parameter.");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -133,8 +120,9 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 	trade::table result;
 	std::string errmsg("");
 	//query account
-	if (accounts::instance()->quote(account, code, result, &errmsg) != 0) {
-		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+	int ret = accounts::instance()->quote(account, code, result, &errmsg);
+	if (ret != 0) {
+		std::string content = protocol::resp(ret, lang::instance()->conv(errmsg));
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -153,7 +141,7 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 	//response json
 	std::string data = cube::str::json(result);
 
-	std::string content = protocol::succ("success", data);
+	std::string content = protocol::resp(status::SUCCESS, "success", data);
 	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
@@ -165,7 +153,7 @@ int quote::handle(const cube::http::request &req, cube::http::response &resp) {
 int querycurrent::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
-		std::string content = protocol::fail("authority denied");
+		std::string content = protocol::resp(status::ERROR_NOT_AUTHORIZED, "authority denied");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -176,7 +164,7 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 
 	//check parameters
 	if (account.empty() || category.empty()) {
-		std::string content = protocol::fail("invalid parameter.");
+		std::string content = protocol::resp(status::ERROR_INVALID_PARAM, "invalid parameter.");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -184,8 +172,9 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 	trade::table result;
 	std::string errmsg("");
 	//query account
-	if (accounts::instance()->query(account, ::atoi(category.c_str()), result, &errmsg) != 0) {
-		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+	int ret = accounts::instance()->query(account, ::atoi(category.c_str()), result, &errmsg);
+	if (ret != 0) {
+		std::string content = protocol::resp(ret, lang::instance()->conv(errmsg));
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -204,7 +193,7 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 	//response json
 	std::string data = cube::str::json(result);
 
-	std::string content = protocol::succ("success", data);
+	std::string content = protocol::resp(status::SUCCESS, "success", data);
 	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
@@ -216,7 +205,7 @@ int querycurrent::handle(const cube::http::request &req, cube::http::response &r
 int queryhistory::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
-		std::string content = protocol::fail("authority denied");
+		std::string content = protocol::resp(status::ERROR_NOT_AUTHORIZED, "authority denied");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -229,7 +218,7 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 
 	//check parameters
 	if (account.empty() || category.empty() || sdate.empty() || edate.empty()) {
-		std::string content = protocol::fail("invalid parameter.");
+		std::string content = protocol::resp(status::ERROR_INVALID_PARAM, "invalid parameter.");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -237,8 +226,9 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 	trade::table result;
 	std::string errmsg("");
 	//query account
-	if (accounts::instance()->query(account, ::atoi(category.c_str()), sdate, edate, result, &errmsg) != 0) {
-		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+	int ret = accounts::instance()->query(account, ::atoi(category.c_str()), sdate, edate, result, &errmsg);
+	if (ret != 0) {
+		std::string content = protocol::resp(ret, lang::instance()->conv(errmsg));
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -257,7 +247,7 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 	//response json
 	std::string data = cube::str::json(result);
 
-	std::string content = protocol::succ("success", data);
+	std::string content = protocol::resp(status::SUCCESS, "success", data);
 	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
@@ -269,7 +259,7 @@ int queryhistory::handle(const cube::http::request &req, cube::http::response &r
 int order::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
-		std::string content = protocol::fail("authority denied");
+		std::string content = protocol::resp(status::ERROR_NOT_AUTHORIZED, "authority denied");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -285,7 +275,7 @@ int order::handle(const cube::http::request &req, cube::http::response &resp) {
 
 	//check parameters
 	if (account.empty() || otype.empty() || ptype.empty() || gddm.empty() || zqdm.empty() || price.empty() || count.empty()) {
-		std::string content = protocol::fail("invalid parameter.");
+		std::string content = protocol::resp(status::ERROR_INVALID_PARAM, "invalid parameter.");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -293,8 +283,9 @@ int order::handle(const cube::http::request &req, cube::http::response &resp) {
 	trade::table result;
 	std::string errmsg("");
 	//send order
-	if (accounts::instance()->order(account, ::atoi(otype.c_str()), ::atoi(ptype.c_str()), gddm, zqdm, (float)::atof(price.c_str()), ::atoi(count.c_str()), result, &errmsg) != 0) {
-		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+	int ret = accounts::instance()->order(account, ::atoi(otype.c_str()), ::atoi(ptype.c_str()), gddm, zqdm, (float)::atof(price.c_str()), ::atoi(count.c_str()), result, &errmsg);
+	if (ret != 0) {
+		std::string content = protocol::resp(ret, lang::instance()->conv(errmsg));
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -313,7 +304,7 @@ int order::handle(const cube::http::request &req, cube::http::response &resp) {
 	//response json
 	std::string data = cube::str::json(result);
 
-	std::string content = protocol::succ("success", data);
+	std::string content = protocol::resp(status::SUCCESS, "success", data);
 	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
@@ -325,7 +316,7 @@ int order::handle(const cube::http::request &req, cube::http::response &resp) {
 int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
-		std::string content = protocol::fail("authority denied");
+		std::string content = protocol::resp(status::ERROR_NOT_AUTHORIZED, "authority denied");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -337,7 +328,7 @@ int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 	
 	//check parameters
 	if (account.empty() || seid.empty() || orderno.empty()) {
-		std::string content = protocol::fail("invalid parameter.");
+		std::string content = protocol::resp(status::ERROR_INVALID_PARAM, "invalid parameter.");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -345,8 +336,9 @@ int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 	trade::table result;
 	std::string errmsg("");
 	//send order
-	if (accounts::instance()->cancel(account, seid, orderno, result, &errmsg) != 0) {
-		std::string content = protocol::fail(lang::instance()->conv(errmsg));
+	int ret = accounts::instance()->cancel(account, seid, orderno, result, &errmsg);
+	if (ret != 0) {
+		std::string content = protocol::resp(ret, lang::instance()->conv(errmsg));
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -365,7 +357,7 @@ int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 	//response json
 	std::string data = cube::str::json(result);
 
-	std::string content = protocol::succ("success", data);
+	std::string content = protocol::resp(status::SUCCESS, "success", data);
 	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
@@ -377,7 +369,7 @@ int cancel::handle(const cube::http::request &req, cube::http::response &resp) {
 int logout::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
-		std::string content = protocol::fail("authority denied");
+		std::string content = protocol::resp(status::ERROR_NOT_AUTHORIZED, "authority denied");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
@@ -387,21 +379,17 @@ int logout::handle(const cube::http::request &req, cube::http::response &resp) {
 
 	//check parameters
 	if (account.empty()) {
-		std::string content = protocol::fail("invalid parameter.");
+		std::string content = protocol::resp(status::ERROR_INVALID_PARAM, "invalid parameter.");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
 	std::string errmsg("");
 	//logout account
-	if (accounts::instance()->logout(account, &errmsg) != 0) {
-		std::string content = protocol::fail(errmsg);
-		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
-		return 0;
-	}
+	accounts::instance()->logout(account, &errmsg);
 
 
-	std::string content = protocol::succ("success");
+	std::string content = protocol::resp(status::SUCCESS, "success");
 	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
@@ -409,12 +397,12 @@ int logout::handle(const cube::http::request &req, cube::http::response &resp) {
 int echo::handle(const cube::http::request &req, cube::http::response &resp) {
 	//check authority
 	if (!authority::allow(req.peerip())) {
-		std::string content = protocol::fail("authority denied");
+		std::string content = protocol::resp(status::ERROR_NOT_AUTHORIZED, "authority denied");
 		resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 		return 0;
 	}
 
-	std::string content = protocol::succ("success");
+	std::string content = protocol::resp(status::SUCCESS, "success");
 	resp.set_content(content.c_str(), content.length(), protocol::ctype, lang::charset());
 	return 0;
 }
