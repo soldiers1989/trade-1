@@ -1,46 +1,101 @@
 """
     agent to sina quote data
 """
-import requests
-from sec.util import stock
+import math, decimal, random, requests
+from sec.util import stock, digit
+from sec.stock.quote import host
 
 
 class Agent:
-    def __init__(self, timeout):
+    # sina quote server host
+    HOST = "hq.sinajs.cn"
+
+    def __init__(self, hosts, timeout, kickout):
+        """
+            init agent
+        :param hosts: array, server hosts
+        :param timeout:
+        """
+        # check hosts
+        if Agent.HOST not in hosts:
+            hosts.append(Agent.HOST)
+
+        # server list & time
+        self._hosts = host.Hosts(hosts, kickout)
         self._timeout = timeout
 
-    def get(self, code):
+    def get(self, code, retry):
         """
             request quote of stock @code from sina quote url
-        :param code:
+        :param code: str, stock code
+        :param retry: int, retry number if failed
         :return:
         """
-        return self.gets([code])[0]
+        return self.gets([code], retry)[0]
 
-    def gets(self, codes):
+    def gets(self, codes, retry):
         """
-
-        :param codes:
+            get quote of stocks
+        :param codes: array, stock codes array
+        :param retry: int, retry number if failed
         :return:
         """
-        # make request url
-        url = self._makeurl(codes)
+        # request headers
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate",
+            "Host": "hq.sinajs.cn",
+            "Referer": "http://vip.stock.finance.sina.com.cn/mkt/"
+        }
 
-        # request remote service
-        resp = requests.get(url, timeout=self._timeout)
+        # errors
+        errors = []
+        # retry to get quote of stocks
+        while retry>0:
+            # select host
+            host = self._hosts.get()
+            try:
+                 # make request url
+                url = self._makeurl(host.host, codes)
+                if url:
+                    # request remote service
+                    resp = requests.get(url, headers=headers, timeout=self._timeout)
 
-        # parse response
-        return self._parse(resp.text)
+                    # parse response
+                    result = self._parse(resp.text)
 
-    @staticmethod
-    def _makeurl(codes):
+                    return result
+                else:
+                    raise Exception('not host can be used')
+            except Exception as e:
+                retry -= 1
+                host.addfailed()
+                errors.append(str(e))
+
+        raise Exception(str(errors))
+
+    def hosts(self):
+        """
+            get hosts for agent
+        :return:
+        """
+        return self._hosts
+
+    def _makeurl(self, host, codes):
         """
             make request url by stock codes
         :param codes:
         :return:
         """
-        sina_quote_url = "http://hq.sinajs.cn/list="
+        # make url
+        sina_quote_url = "http://"+host+"/rn="+Agent._makern()+"&list="
+
         return sina_quote_url+",".join(Agent._addse(codes))
+
+    @staticmethod
+    def _makern():
+        return digit.strbasen(round(random.random()*60466176), 36)
 
     @staticmethod
     def _addse(codes):
@@ -90,6 +145,30 @@ class Agent:
                 qte[k] = items[alias[k]]
 
             # add to results
-            results.append({'code': code, 'quote': qte})
+            results.append({'code': code, 'quote': Agent._tidy(qte)})
 
         return results
+
+    def _tidy(quote):
+        """
+            tidy quote data
+        :param quote:
+        :return:
+        """
+        # prices
+        prices = ["jkj", "zsj", "dqj", "zgj", "zdj", "cje", "mrj1", "mrj2", "mrj3", "mrj4", "mrj5", "mcj1", "mcj2", "mcj3", "mcj4", "mcj5"]
+
+        # volumes
+        volumes = ["cjl", "mrl1", "mrl2", "mrl3", "mrl4", "mrl5", "mcl1", "mcl2", "mcl3", "mcl4", "mcl5"]
+
+        # tidy prices
+        for p in prices:
+            if quote.get(p) is not None:
+                quote[p] = str(decimal.Decimal(quote[p]).quantize(decimal.Decimal('0.00')))
+
+        # tidy volumes
+        for v in volumes:
+            if quote.get(v) is not None:
+                quote[v] = str(math.floor(int(quote[v])/100))
+
+        return quote

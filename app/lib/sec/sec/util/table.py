@@ -134,7 +134,7 @@ class Table:
         :param data:
         :return:
         """
-        if not data or not _Table.is_table(data):
+        if not data or not Table.is_table(data):
             raise "input data is not table"
 
         result = []

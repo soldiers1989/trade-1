@@ -7,7 +7,7 @@ from sec.stock.quote.tdx import agent
 
 
 class TdxQuote(quote.Quote):
-    def __init__(self, host, port, servers, timeout=5):
+    def __init__(self, host, port, servers, timeout=1):
         """
             init tdx quote service
         :param host: str, remote agent host
@@ -16,6 +16,9 @@ class TdxQuote(quote.Quote):
         :param timeout: int, connection timeout in seconds
         """
         self._agent = agent.Agent(host, port, servers, timeout)
+
+        # init super
+        super(TdxQuote, self).__init__()
 
     def get(self, code):
         """
@@ -51,6 +54,8 @@ class TdxQuote(quote.Quote):
             self.monitor.add_failure(str(e))
             return None
 
+    def alive(self):
+        pass
 
 if __name__ == "__main__":
     q = TdxQuote("172.16.21.135", 8080)

@@ -1,0 +1,1 @@
+from sec.stock.quote.sina import quote
