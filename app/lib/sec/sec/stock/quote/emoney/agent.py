@@ -1,21 +1,20 @@
 """
-    agent to sina quote data
+    agent to eastmoney quote data
 """
-import math, decimal, random, requests, time
-from sec.util import stock, digit
+import math, decimal, requests, json, random, time
+from sec.util import stock
 from sec.stock.quote import host
 
 
 class Agent:
-    # sina quote server host
-    HOST = "hq.sinajs.cn"
+    # eastmoney quote server host
+    HOST = "nuff.eastmoney.com"
     # request headers
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
         "Accept": "*/*",
         "Accept-Encoding": "gzip, deflate",
-        "Host": "hq.sinajs.cn",
-        "Referer": "http://vip.stock.finance.sina.com.cn/mkt/"
+        "Host": "nuff.eastmoney.com",
     }
 
     def __init__(self, hosts, timeout, kickout):
@@ -48,8 +47,11 @@ class Agent:
         # make request url
         url = self._makeurl(host.host, [code])
 
+        # add header referer
+        headers = Agent.HEADERS
+        headers.update({"Referer": "http://quote.eastmoney.com/" + stock.addse(code) + ".html"})
         # request
-        resp = requests.get(url, headers=Agent.HEADERS, timeout=self._timeout)
+        resp = requests.get(url, headers=headers, timeout=self._timeout)
 
         # parse response
         results = self._parse(resp.text)
@@ -58,12 +60,46 @@ class Agent:
 
     def get(self, code, retry):
         """
-            request quote of stock @code from sina quote url
+            request quote of stock @code from ifeng quote url
         :param code: str, stock code
         :param retry: int, retry number if failed
         :return:
         """
-        return self.gets([code], retry)[0]
+        # add header referer
+        headers = Agent.HEADERS
+        headers.update({"Referer": "http://quote.eastmoney.com/" + stock.addse(code) + ".html"})
+
+        # errors
+        errors = []
+        # retry to get quote of stocks
+        while retry > 0:
+            # select host
+            host = self._hosts.get()
+            try:
+                # make request url
+                url = self._makeurl(host.host, code)
+                if url:
+                    # request remote service
+                    stime = time.time()
+                    resp = requests.get(url, headers=headers, timeout=self._timeout)
+                    etime = time.time()
+
+                    # parse response
+                    result = self._parse(resp.text)
+
+                    # add succeed for host
+                    host.addsucceed(etime-stime)
+
+                    return result
+                else:
+                    raise Exception('not host can be used')
+            except Exception as e:
+                retry -= 1
+                error = host.host + ": " + str(e)
+                host.addfailed(error)
+                errors.append(error)
+
+        raise Exception(str(errors))
 
     def gets(self, codes, retry):
         """
@@ -72,37 +108,10 @@ class Agent:
         :param retry: int, retry number if failed
         :return:
         """
-        # errors
-        errors = []
-        # retry to get quote of stocks
-        while retry>0:
-            # select host
-            host = self._hosts.get()
-            try:
-                 # make request url
-                url = self._makeurl(host.host, codes)
-                if url:
-                    # request remote service
-                    stime = time.time()
-                    resp = requests.get(url, headers=Agent.HEADERS, timeout=self._timeout)
-                    etime = time.time()
-
-                    # parse response
-                    result = self._parse(resp.text)
-
-                    # add host succeed
-                    host.addsucceed(etime-stime)
-
-                    return result
-                else:
-                    raise Exception('not host can be used')
-            except Exception as e:
-                retry -= 1
-                error = host.host+":"+str(e)
-                host.addfailed(error)
-                errors.append(errors)
-
-        raise Exception(str(errors))
+        results = []
+        for code in codes:
+            results.append(self.get(code, retry))
+        return results
 
     def hosts(self):
         """
@@ -111,33 +120,25 @@ class Agent:
         """
         return self._hosts
 
-    def _makeurl(self, host, codes):
+    def _makeurl(self, host, code):
         """
             make request url by stock codes
         :param codes:
         :return:
         """
+        # generate id by code
+        id = code+"1" if stock.getse(code) == 'sh' else code+"2"
+
+        # generate token
+        token = "4f1862fc3b5e77c150a2b985b12db0fd"
+
+        # add random parameter
+        rd = str(int(time.time()*1000))
+
         # make url
-        sina_quote_url = "http://"+host+"/rn="+Agent._makern()+"&list="
+        url = "http://"+host+"/EM_Finance2015TradeInterface/JS.ashx?id="+id+"&token="+"&_="+rd
 
-        return sina_quote_url+",".join(Agent._addse(codes))
-
-    @staticmethod
-    def _makern():
-        return digit.strbasen(round(random.random()*60466176), 36)
-
-    @staticmethod
-    def _addse(codes):
-        """
-            add securities exchange flag before stock codes, like: 000001->sz000001
-        :param codes: array, stock codes
-        :return:
-            array, stock codes with exchange flag
-        """
-        ncodes = []
-        for code in codes:
-            ncodes.append(stock.addse(code))
-        return ncodes
+        return url
 
     @staticmethod
     def _parse(text):
@@ -151,36 +152,36 @@ class Agent:
 
         # alias for item
         alias = {
-            "jkj": 1, "zsj": 2, "dqj": 3, "zgj": 4, "zdj": 5,
-            "cjl": 8, "cje": 9,
-            "mrl1": 10, "mrj1": 11, "mrl2": 12, "mrj2": 13, "mrl3": 14, "mrj3": 15, "mrl4": 16, "mrj4": 17, "mrl5": 18, "mrj5": 19,
-            "mcl1": 20, "mcj1": 21, "mcl2": 22, "mcj2": 23, "mcl3": 24, "mcj3": 25, "mcl4": 26, "mcj4": 27, "mcl5": 28, "mcj5": 29,
-            "date": 30, "time": 31
+            "jkj": 28, "zsj": 34, "dqj": 25, "zgj": 30, "zdj": 32,
+            "cjl": 31, "cje": 35,
+            "mrl1": 13, "mrj1": 3, "mrl2": 14, "mrj2": 4, "mrl3": 15, "mrj3": 5, "mrl4": 16, "mrj4": 6, "mrl5": 17, "mrj5": 7,
+            "mcl1": 18, "mcj1": 8, "mcl2": 19, "mcj2": 9, "mcl3": 20, "mcj3": 10, "mcl4": 21, "mcj4": 11, "mcl5": 22, "mcj5": 12,
+            "time": 49,
         }
 
-        # parse all response quotes
-        quotes = text.strip().split('\n')
+        # parse response quote
+        rpos = text.find('(')+1
+        text = text[rpos:].rstrip().rstrip(')')
 
-        # parse each quote
-        for quote in quotes:
-            items = quote.split(',')
+        # quote items
+        items = json.loads(text)['Value']
+        # stock code
+        code = items[1]
 
-            # stock code
-            code = items[0].split('=')[0][-6:]
+        qte = {}
+        # stock quote
+        for k in alias:
+            qte[k] = items[alias[k]]
 
-            qte = {}
-            # stock quote
-            for k in alias:
-                qte[k] = items[alias[k]]
+        # process cje
+        unit = qte['cje'][-1:]
+        unit = 100000000 if unit=='亿' else 10000 if unit =='万' else 1
+        qte['cje'] = str(decimal.Decimal(qte['cje'][:-1]) * unit)
 
-            # process date&time
-            qte['time'] = qte['date']+" "+qte['time']
-            del qte['date']
+        # make result
+        result = {"code": code, "quote": qte}
 
-            # add to results
-            results.append({'code': code, 'quote': Agent._tidy(qte)})
-
-        return results
+        return result
 
     def _tidy(quote):
         """

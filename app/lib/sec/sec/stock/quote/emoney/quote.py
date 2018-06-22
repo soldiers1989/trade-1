@@ -1,12 +1,11 @@
 """
-    quote data from sina
+    quote data from east money
 """
-import time
-from sec.stock.quote import quote, config, sina
-from sec.stock.quote.sina import agent
+from sec.stock.quote import quote, config, emoney
+from sec.stock.quote.emoney import agent
 
 
-class SinaQuote(quote.Quote):
+class EmoneyQuote(quote.Quote):
     def __init__(self, hosts=[], timeout=config.TIMEOUT, kickout=config.KICKOUT):
         """
             init with http request timeout
@@ -18,4 +17,4 @@ class SinaQuote(quote.Quote):
         agt = agent.Agent(hosts, timeout, kickout)
 
         # init super
-        super(SinaQuote, self).__init__(sina.ID, sina.NAME, agt)
+        super(EmoneyQuote, self).__init__(emoney.ID, emoney.NAME, agt)

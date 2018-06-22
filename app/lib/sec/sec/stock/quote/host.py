@@ -1,17 +1,23 @@
 """
     host for quote
 """
-import threading
+import threading, time
 
 
 class Host:
     def __init__(self, host, maxfailed):
+        self._ctime = time.time()
+
         self._host = host
+        self._maxfailed = maxfailed
+
         self._succeed = 0
         self._failed = 0
-        self._latest_failed = 0
+        self._cfailed = 0
+        self._time = 0.0
+        self._failures = []
+
         self._disabled = False
-        self._maxfailed = maxfailed
 
         # lock for host
         self._lock = threading.RLock()
@@ -29,35 +35,62 @@ class Host:
         return self._failed
 
     @property
-    def latest_failed(self):
-        return self._latest_failed
+    def cfailed(self):
+        return self._cfailed
+
+    @property
+    def avgtime(self):
+        return self._time / self._succeed if self._succeed > 0 else 0.0
 
     @property
     def disabled(self):
         return self._disabled
 
-    def addfailed(self):
+    def addfailed(self, failure):
+        """
+            add failed
+        :param failure:
+        :return:
+        """
         self._lock.acquire()
 
         self._failed += 1
-        self._latest_failed += 1
-        if(self._latest_failed > self._maxfailed):
+        self._cfailed += 1
+        if(self._cfailed > self._maxfailed):
             self._disabled = True
+
+        self._failures.append(failure)
 
         self._lock.release()
 
-    def addsucceed(self):
+    def addsucceed(self, timeused):
         self._lock.acquire()
 
         self._succeed += 1
-        self._latest_failed = 0
+        self._cfailed = 0
+        self._time += timeused
         self._disabled = False
+        self._failures = []
 
         self._lock.release()
 
+    def status(self):
+        s = {
+            'id': self._host,
+            'name': self._host,
+            'succeed': self._succeed,
+            'failed': self._failed,
+            'cfailed': self._cfailed,
+            'disabled': self._disabled,
+            'avgtime': self.avgtime,
+            'ctime': self._ctime
+
+        }
+
+        return s
+
     def __str__(self):
-        s = {"host": self._host, "succeed":self._succeed, "failed":self._failed, "latest_failed":self._latest_failed, "disabled":self._disabled}
-        return str(s)
+        return str(self.status())
 
     __repr__ = __str__
 
@@ -88,6 +121,18 @@ class Hosts:
         """
         return self._hosts
 
+    def find(self, host):
+        """
+            find host object by host name
+        :param name:
+        :return:
+        """
+        for h in self._hosts:
+            if h.host == host:
+                return h
+
+        return None
+
     def get(self):
         """
             get a host by round robin rules
@@ -103,10 +148,19 @@ class Hosts:
         # no host can be used
         return None
 
-    def __str__(self):
-        s = []
+    def status(self):
+        """
+            get host status
+        :return:
+        """
+        results = []
+
         for host in self._hosts:
-            s.append(str(host))
-        return str(s)
+            results.append(host.status())
+
+        return results
+
+    def __str__(self):
+        return str(self.status())
 
     __repr__ = __str__
