@@ -11,8 +11,9 @@ def invert(aliasobj):
     :return:
     """
     inverted = {}
-    for k, v in aliasobj.items():
-        inverted['v'] = k
+    for alias, names in aliasobj.items():
+        for name in names:
+            inverted[name] = alias
 
     return inverted
 
@@ -22,10 +23,7 @@ dqzc = {
     'zzc': ["总资产"],
     'zjye': ["资金余额"],
     'kyzj': ["可用资金"],
-    'kqzj': ["可取资金"],
-    'djzj': ["冻结资金"],
-    'zxsz': ["最新市值"],
-    'fdyk': ["参考浮动盈亏"]
+    'kqzj': ["可取资金"]
 }
 idqzc = invert(dqzc)
 
@@ -35,15 +33,7 @@ dqcc = {
     'zqdm': ["证券代码"],
     'zqmc': ["证券名称"],
     'zqsl': ["证券数量"],
-    'kmsl': ["可卖数量"],
-    'ckcb': ["参考成本价","摊薄成本价"],
-    'mrjj': ["买入均价"],
-    'dqj': ["当前价"],
-    'zxsz': ["最新市值"],
-    'fdyk': ["参考浮动盈亏","摊薄浮动盈亏"],
-    'ykbl': ["盈亏比例(%)","参考盈亏比例(%)"],
-    'gddm': ["股东代码"],
-    'jysdm': ["交易所代码"]
+    'kmsl': ["可卖数量"]
 }
 idqcc = invert(dqcc)
 
@@ -114,7 +104,9 @@ ikcwt = invert(kcwt)
 # 股东信息查询
 gdxx = {
     'gddm': ["股东代码"],
-    'gdlx': ["股东类型"]
+    'gdmc': ['股东名称'],
+    'zjzh': ['资金账号'],
+    'gdlx': ["股东类型","账号类别"]
 }
 igdxx = invert(gdxx)
 

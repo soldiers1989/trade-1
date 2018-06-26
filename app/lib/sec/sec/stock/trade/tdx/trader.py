@@ -18,6 +18,17 @@ class Account:
         self.dept = dept
         self.version = version
 
+    def status(self):
+        ret = {
+            'laccount': self.laccount,
+            'lpwd': self.lpwd,
+            'taccount': self.taccount,
+            'tpwd': self.tpwd,
+            'detp': self.dept,
+            'version': self.version
+        }
+        return ret
+
 
 class AgentServer:
     """
@@ -27,6 +38,13 @@ class AgentServer:
         self.id = id
         self.host = host
         self.port = port
+
+    def status(self):
+        return {
+            'id': self.id,
+            'host': self.host,
+            'port': self.port
+        }
 
     def url(self):
         return "http://%s:%s" % (self.host, self.port)
@@ -66,6 +84,15 @@ class TradeServer:
 
         # add error message
         self.errors.append(err)
+
+    def status(self):
+        return {
+            'id': self.id,
+            'ip': self.ip,
+            'port': self.port,
+            'disabled':self.disabled,
+            'errors': self.errors
+        }
 
 
 class TradeServers:
@@ -107,6 +134,12 @@ class TradeServers:
 
         self._servers.get(id).disable(error)
 
+    def status(self):
+        results = []
+        for server in self._servers.values():
+            results.append(server.status())
+        return results
+
 
 class Trader:
     """
@@ -129,6 +162,21 @@ class Trader:
 
         self.disabled = False
         self.errors = []
+
+    def status(self):
+        """
+            get trader status
+        :return:
+        """
+        stats = {
+            'id': self._id,
+            'disabled': self.disabled,
+            'errors': self.errors,
+            'agent': self._agents.status(),
+            'servers': self._tradess.status()
+        }
+
+        return stats
 
     def login(self):
         """
@@ -157,20 +205,16 @@ class Trader:
 
             # request remote service
             resp = requests.get(url, params, timeout=config.TIMEOUT).json()
-            rcode, msg, data = resp['status'], resp['msg'], resp['data']
-
-            # check login result
-            if rcode == protocol.status.SUCCESS:
-                return # account login success, trade can be start
-
-            # disable server
-            self._tradess.disable(server.id, msg)
-
-            # pick a new one
-            server = self._tradess.pickone()
+            if resp['status'] != 0:
+                # disable server
+                self._tradess.disable(server.id, resp['msg'])
+                # pick a new one
+                server = self._tradess.pickone()
+            else:
+                return resp
 
         # no usable trade server
-        raise 'no trade server usable for trader.'
+        raise Exception(self._id+': no trade server usable for trader.')
 
     def logout(self):
         """
@@ -182,7 +226,7 @@ class Trader:
 
         # request parameters
         params =  {
-            "account": self._account.caccount
+            "account": self._account.laccount
         }
 
         # request remote service
@@ -219,10 +263,9 @@ class Trader:
         while True:
             # request remote service
             resp = requests.get(url, params, timeout=config.TIMEOUT).json()
-            rcode = resp['status']
 
             # login if error is not login
-            if rcode == protocol.status.ERROR_ACCOUNT_NOT_EXIST:
+            if resp['status'] == protocol.status.ERROR_ACCOUNT_NOT_EXIST:
                 self.login()
             else:
                 return resp
@@ -238,7 +281,7 @@ class Trader:
 
         # request parameters
         params = {
-            "account": self._account.caccount,
+            "account": self._account.laccount,
             "category": type
         }
 
@@ -261,7 +304,7 @@ class Trader:
 
         # request parameters
         params = {
-            "account": self._account.caccount,
+            "account": self._account.laccount,
             "category": type,
             "sdate": startdate,
             "edate": enddate
@@ -284,7 +327,7 @@ class Trader:
 
         # request parameters
         params = {
-            "account":self._account.caccount,
+            "account":self._account.laccount,
             "code" : code
         }
 
@@ -310,7 +353,7 @@ class Trader:
 
         # request parameters
         params = {
-            "account":self._account.caccount,
+            "account":self._account.laccount,
             "otype" : otype,
             "ptype" : ptype,
             "zqdm" : zqdm,
@@ -337,7 +380,7 @@ class Trader:
 
         # request parameters
         params = {
-            "account":self._account.caccount,
+            "account":self._account.laccount,
             "seid" : seid,
             "orderno" : orderno
         }
@@ -385,6 +428,12 @@ class Traders:
         # current trader
         self._trader = self.pickone()
 
+    def status(self):
+        results = []
+        for trader in self._traders.values():
+            results.append(trader.status())
+        return results
+
     def login(self):
         """
             account login
@@ -400,7 +449,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        raise "no trader usable for account"
+        raise Exception("no trader usable for account")
 
     def logout(self):
         """
@@ -417,7 +466,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        raise "no trader usable for account"
+        raise Exception("no trader usable for account")
 
 
     def queryc(self, type):
@@ -436,7 +485,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        raise "no trader usable for account"
+        raise Exception("no trader usable for account")
 
     def queryh(self, type, startdate, enddate):
         """
@@ -456,7 +505,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        return "no trader usable for account"
+        return Exception("no trader usable for account")
 
     def quote(self, code):
         """
@@ -474,7 +523,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        raise "no trader usable for account"
+        raise Exception("no trader usable for account")
 
     def order(self, otype, ptype, zqdm, price, count):
         """
@@ -497,7 +546,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        return "no trader usable for account"
+        return Exception("no trader usable for account")
 
     def cancel(self, orderno, seid):
         """
@@ -516,7 +565,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        return "no trader usable for account"
+        return Exception("no trader usable for account")
 
     def echo(self):
         """
@@ -533,7 +582,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        return "no trader usable for account"
+        return Exception("no trader usable for account")
 
     def pickone(self):
         """

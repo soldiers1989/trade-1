@@ -1,10 +1,33 @@
 """
-    securities account for trade
+    securities account base class for trade
 """
 
 
 class Account:
     def __init__(self):
+        pass
+
+    def login(self):
+        """
+            账户登录
+        :return: dict
+            {'status': status, 'msg': msg, 'data':{}}
+        """
+        pass
+
+    def logout(self):
+        """
+            账户退出
+        :return:
+            (True|False, result message string)
+        """
+        pass
+
+    def status(self):
+        """
+            get account status
+        :return:
+        """
         pass
 
     def query_dqzc(self):

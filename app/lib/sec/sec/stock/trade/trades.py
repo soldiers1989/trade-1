@@ -1,187 +1,456 @@
 """
     trade service
 """
+import threading
+from sec.stock.trade import protocol
 
 
 class Trades:
     def __init__(self):
-        pass
+        """
+            init trade service
+        """
+        # account in trade service
+        self._accounts = {}
 
-    def start(self):
-        pass
+        # lock for accounts
+        self._lock = threading.RLock()
 
-    def add_trader(self):
-        pass
+    def add(self, aid, account):
+        """
+            add account
+        :param aid:
+        :param account:
+        :return:
+        """
+        resp = None
 
-    def add_account(self, account, pwd, ip, port, dept, version):
+        self._lock.acquire()
+        acnt = self._accounts.get(aid)
+        self._accounts[aid] = account
+        self._lock.release()
+
+        if acnt is not None:
+            resp = protocol.success('account has already exist, replaced.')
+        else:
+            resp = protocol.success('account has added')
+
+        return resp
+
+    def delete(self, aid):
+        """
+            delete account
+        :param id:
+        :return:
+        """
+        resp = None
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            # logout first
+            account.logout()
+            # remove from account list
+            del self._accounts[aid]
+            # response
+            resp = protocol.success('account has deleted.', data={'id':aid})
+        else:
+            resp = protocol.success('account is not exist.', data={'id':aid})
+        self._lock.release()
+
+        return resp
+
+    def clear(self):
+        """
+            clear all account
+        :return:
+        """
+        resp, data = None, []
+        self._lock.acquire()
+
+        for id, account in self._accounts.items():
+            # logout first
+            res = account.logout()
+            code, msg = res.get('status'), res.get('msg')
+            # add data
+            data.append({'id':id, 'code':code, 'msg':msg})
+
+        # make response
+        resp = protocol.success(data=data)
+
+        # empty accounts
+        self._accounts = {}
+
+        self._lock.release()
+
+        return resp
+
+    def status(self, aid = None):
+        """
+            get account status
+        :param aid:
+        :return:
+        """
+        resp = None
+        self._lock.acquire()
+        if aid is not None:
+            account = self._accounts.get(aid)
+            if account is not None:
+                data = {'id':aid}
+                data.update(account.status())
+                resp = protocol.success(data=data)
+            else:
+                resp = protocol.failed('account is not exist', data={'id':aid})
+        else:
+            stats = []
+            for id, account in self._accounts.items():
+                data = account.status()
+                data['id'] = aid
+                stats.append(data)
+            resp = protocol.success(data=stats)
+
+        self._lock.release()
+
+        return resp
+
+    def login(self, aid = None):
         """
             账户登录
-        :param account:
-        :param pwd:
-        :param ip:
-        :param port:
-        :param dept:
-        :param version:
+        :param aid:
         :return:
-            (True|False, result message string)
         """
-        pass
+        resp = None
+        self._lock.acquire()
+        if aid is not None:
+            # login account
+            account = self._accounts.get(aid)
+            if account is not None:
+                res = account.login()
+                code, msg = res.get('status'), res.get('msg')
+                if code == 0:
+                    resp = protocol.success(data={'id':aid, 'code':code, msg:msg})
+                else:
+                    resp = protocol.failed(data={'id': aid, 'code': code, msg: msg})
+            else:
+                resp = protocol.failed(data={'id':aid, 'code':-1, 'msg':'account not exist'})
+        else:
+            succeed, data = True, []
+            # login all account
+            for id, account in self._accounts.items():
+                res = account.login()
+                code, msg = res.get('status'), res.get('msg')
+                if code != 0:
+                    succeed = False
+                data.append({'id': id, 'code': code, 'msg': msg})
 
-    def query_dqzc(self, account):
+            if succeed:
+                resp = protocol.success(data = data)
+            else:
+                resp = protocol.failed(data = data)
+        self._lock.release()
+
+        return resp
+
+    def logout(self, aid = None):
+        """
+            账户退出
+        :param aid:
+        :return:
+        """
+        resp = None
+        self._lock.acquire()
+        if aid is not None:
+            # account logout
+            account = self._accounts.get(aid)
+            if account is not None:
+                res = account.logout()
+                code, msg = res.get('status'), res.get('msg')
+                if code == 0:
+                    resp = protocol.success(data={'id':aid, 'code':code, 'msg':msg})
+                else:
+                    resp = protocol.failed(data={'id': aid, 'code': code, 'msg': msg})
+            else:
+                resp = protocol.failed(data={'id':aid, 'code':-1, 'msg':'account not exist'})
+        else:
+            # all account logout
+            succeed, data = True, []
+            # login all account
+            for id, account in self._accounts.items():
+                res = account.logout()
+                code, msg = res.get('status'), res.get('msg')
+                if code != 0:
+                    succeed = False
+                data.append({'id': id, 'login': True, 'msg': msg})
+
+            if succeed:
+                resp = protocol.success(data = data)
+            else:
+                resp = protocol.failed(data = data)
+        self._lock.release()
+
+        return resp
+
+    def query_dqzc(self, aid):
         """
             当前资产查询
-        :param account: in, account
+        :param aid: in, account
         :return:
         """
-        pass
+        resp = None
 
-    def query_dqcc(self, account):
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_dqzc()
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
+
+        return resp
+
+    def query_dqcc(self, aid):
         """
             当前持仓查询
-        :param account: in, account
+        :param aid: in, account
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_dqcc()
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def query_drwt(self, account):
+        return resp
+
+    def query_drwt(self, aid):
         """
             当日委托查询
-        :param account: in, account
+        :param aid: in, account id
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_drwt()
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def query_drcj(self, account):
+        return resp
+
+    def query_drcj(self, aid):
         """
             当日成交查询
-        :param account: in, account
+        :param aid: in, account id
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_drcj()
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def query_kcwt(self, account):
+        return resp
+
+    def query_kcwt(self, aid):
         """
             可撤委托查询
-        :param account: in, account
+        :param aid: in, account id
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_kcwt()
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def query_gdxx(self, account):
+        return resp
+
+    def query_gdxx(self, aid):
         """
             股东信息查询
-        :param account: in, account
+        :param aid: in, account
         :return:
             (True, [gddm list]) or (False, error message)
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_gdxx()
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def query_lswt(self, account, sdate, edate):
+        return resp
+
+    def query_lswt(self, aid, sdate, edate):
         """
             查询历史委托
-        :param account:
+        :param aid:
         :param sdate: str, in, format: yyyymmdd
         :param edate: str, in, format: yyyymmdd
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_lswt(sdate, edate)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def query_lscj(self, account, sdate, edate):
+        return resp
+
+    def query_lscj(self, aid, sdate, edate):
         """
             查询历史成交
-        :param account:
+        :param aid:
         :param sdate: str, in, format: yyyymmdd
         :param edate: str, in, format: yyyymmdd
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_lscj(sdate, edate)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def query_jgd(self, account, sdate, edate):
+        return resp
+
+
+    def query_jgd(self, aid, sdate, edate):
         """
             查询交割单
-        :param account:
+        :param aid:
         :param sdate: str, in, format: yyyymmdd
         :param edate: str, in, format: yyyymmdd
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_jgd(sdate, edate)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def query_gphq(self, account, code, market="0"):
+        return resp
+
+    def query_gphq(self, aid, code):
         """
             查询股票行情
-        :param account: str, in, user account
+        :param aid: str, in, user account
         :param code: str, in, stock code
-        :param market: 0 - shenzhen, 1 -shanghai, useless...
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.query_gphq(code)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def order_xjmr(self, account, gddm, zqdm, price, count):
+        return resp
+
+    def order_xjmr(self, aid, zqdm, price, count):
         """
             限价买入
-        :param account:
-        :param gddm:
+        :param aid:
         :param zqdm:
         :param price:
         :param count:
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.order_xjmr(zqdm, price, count)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def order_xjmc(self, account, gddm, zqdm, price, count):
+        return resp
+
+    def order_xjmc(self, aid, zqdm, price, count):
         """
             限价卖出
-        :param account:
-        :param gddm:
+        :param aid:
         :param zqdm:
         :param price:
         :param count:
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.order_xjmc(zqdm, price, count)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def order_sjmr(self, account, gddm, zqdm, price, count):
+        return resp
+
+    def order_sjmr(self, aid, zqdm, price, count):
         """
             市价买入
-        :param account:
-        :param gddm:
+        :param aid:
         :param zqdm:
         :param price:
         :param count:
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.order_sjmr(zqdm, price, count)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def order_sjmc(self, account, gddm, zqdm, price, count):
+        return resp
+
+    def order_sjmc(self, aid, zqdm, price, count):
         """
             市价卖出
-        :param account:
-        :param gddm:
+        :param aid:
         :param zqdm:
         :param price:
         :param count:
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.order_sjmc(zqdm, price, count)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def cancel_order(self, account, orderno, market):
+        return resp
+
+    def cancel_order(self, aid, orderno):
         """
             委托撤单
-        :param account:
+        :param aid:
         :param orderno:
-        :param market: 0 - shenzhen， 1 - 上海
         :return:
         """
-        pass
+        self._lock.acquire()
+        account = self._accounts.get(aid)
+        if account is not None:
+            resp = account.cancel_order(orderno)
+        else:
+            resp = protocol.failed('account not exist', data={'id':aid})
+        self._lock.release()
 
-    def logout(self, account):
-        """
-            账户退出
-        :param account:
-        :return:
-            (True|False, result message string)
-        """
-        pass
+        return resp
 
-    def stop(self):
-        pass
+

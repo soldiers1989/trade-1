@@ -1,10 +1,11 @@
 """
     securities account for trade
 """
+from sec.stock.trade import account
 from sec.stock.trade.tdx import trader, protocol
 
 
-class Account:
+class Account(account.Account):
     def __init__(self, laccount, lpwd, taccount, tpwd, dept, version, agentservers, tradeservers):
         """
             init account
@@ -29,7 +30,7 @@ class Account:
         try:
             return self._traders.login()
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def logout(self):
         """
@@ -40,7 +41,19 @@ class Account:
         try:
             return self._traders.logout()
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
+
+    def status(self):
+        """
+            get account status
+        :return:
+        """
+        try:
+            data = self._account.status()
+            data['traders'] = self._traders.status()
+            return protocol.success(data=data)
+        except Exception as e:
+            return protocol.failed(str(e))
 
     def query_dqzc(self):
         """
@@ -55,7 +68,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.idqzc)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def query_dqcc(self):
         """
@@ -67,10 +80,10 @@ class Account:
             resp = self._traders.queryc(protocol.query.dqcc)
 
             # upgrade response
-            return protocol.upgrade(resp, protocol.alias.idqzc)
+            return protocol.upgrade(resp, protocol.alias.idqcc)
 
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def query_drwt(self):
         """
@@ -84,7 +97,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.idrwt)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def query_drcj(self):
         """
@@ -99,9 +112,9 @@ class Account:
             return protocol.upgrade(resp, protocol.alias.idrcj)
 
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
-    def query_kcwt(self, account):
+    def query_kcwt(self):
         """
             可撤委托查询
         :return:
@@ -114,9 +127,9 @@ class Account:
             return protocol.upgrade(resp, protocol.alias.ikcwt)
 
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
-    def query_gdxx(self, account):
+    def query_gdxx(self):
         """
             股东信息查询
         :return:
@@ -128,7 +141,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.igdxx)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def query_lswt(self, sdate, edate):
         """
@@ -144,7 +157,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.ilswt)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def query_lscj(self, sdate, edate):
         """
@@ -160,7 +173,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.ilscj)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def query_jgd(self, sdate, edate):
         """
@@ -176,7 +189,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.ijgd)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def query_gphq(self, code):
         """
@@ -191,7 +204,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.igphq)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def order_xjmr(self, zqdm, price, count):
         """
@@ -208,7 +221,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.ixjmr)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def order_xjmc(self, zqdm, price, count):
         """
@@ -225,9 +238,9 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.ixjmc)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
-    def order_sjmr(self, account, gddm, zqdm, price, count):
+    def order_sjmr(self, zqdm, price, count):
         """
             市价买入
         :param zqdm: str, in, 证券代码
@@ -242,9 +255,9 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.isjmr)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
-    def order_sjmc(self, account, gddm, zqdm, price, count):
+    def order_sjmc(self, zqdm, price, count):
         """
             市价卖出
         :param zqdm: str, in, 证券代码
@@ -259,7 +272,7 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.isjmc)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
 
     def cancel_order(self, orderno, seid):
         """
@@ -275,4 +288,4 @@ class Account:
             # upgrade response
             return protocol.upgrade(resp, protocol.alias.iwtcd)
         except Exception as e:
-            return protocol.error(str(e))
+            return protocol.failed(str(e))
