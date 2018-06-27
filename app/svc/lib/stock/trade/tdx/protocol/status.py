@@ -1,0 +1,10 @@
+"""
+    status for agent response
+"""
+
+
+SUCCESS = 0
+ERROR = -1
+ERROR_NOT_AUTHORIZED = -100
+ERROR_ACCOUNT_NOT_EXIST = -200
+ERROR_INVALID_PARAM = -300
