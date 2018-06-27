@@ -11,13 +11,13 @@ class QueryCurrentQuote(tornado.web.RequestHandler):
             get quote
         :return:
         """
-        codes = self.get_argument('code').split(',')
-        if len(codes) == 1:
-            res, data = service.quotes.get(codes[0])
-        else:
-            res, data = service.quotes.gets(codes)
+        try:
+            codes = self.get_argument('code').split(',')
+            if len(codes) == 1:
+                data = service.quotes.get(codes[0])
+            else:
+                data = service.quotes.gets(codes)
 
-        if res:
             self.write(protocol.success(data=data))
-        else:
-            self.write(protocol.failed(msg=data))
+        except Exception as e:
+            self.write(protocol.failed(msg=str(e)))

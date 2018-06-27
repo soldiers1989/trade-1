@@ -44,12 +44,11 @@ class Quote:
             stime = time.time()
             result = self._agent.get(code, retry)
             etime = time.time()
-
             self._monitor.add_succeed(etime - stime)
             return result
         except Exception as e:
             self._monitor.add_failed(str(e))
-            return None
+            raise e
 
     def gets(self, codes, retry=config.RETRY):
         """
@@ -66,7 +65,7 @@ class Quote:
             return result
         except Exception as e:
             self._monitor.add_failed(str(e))
-            return None
+            raise e
 
     def status(self):
         """

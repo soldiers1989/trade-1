@@ -11,5 +11,8 @@ class QueryStatus(tornado.web.RequestHandler):
             get quote service status
         :return:
         """
-        data = service.quotes.status()
-        self.write(protocol.success(data=data))
+        try:
+            data = service.quotes.status()
+            self.write(protocol.success(data=data))
+        except Exception as e:
+            self.write(protocol.failed(msg=str(e)))

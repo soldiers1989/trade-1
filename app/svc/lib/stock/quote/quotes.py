@@ -1,7 +1,7 @@
 """
     quote service manager
 """
-from lib.stock.quote import config, sina, ifeng, emoney
+from lib.stock.quote import config, sina, ifeng, emoney, error
 
 
 class Vendor:
@@ -82,15 +82,14 @@ class Quotes:
         # get vendor
         vendor = self.vendor()
         while vendor is not None:
-            result = vendor.get(code, retry)
-            if result is None:
+            try:
+                result = vendor.get(code, retry)
+                return result
+            except error.HostLackError as e:
                 # disable current vendor
                 vendor.disable()
                 # get next usable vendor
                 vendor = self.vendor()
-            else:
-                break
-        return result
 
     def gets(self, codes, retry=config.RETRY):
         """
@@ -105,15 +104,14 @@ class Quotes:
         # get vendor
         vendor = self.vendor()
         while vendor is not None:
-            results = vendor.gets(codes, retry)
-            if results is None:
+            try:
+                result = vendor.gets(codes, retry)
+                return result
+            except error.HostLackError as e:
                 # disable current vendor
                 vendor.disable()
                 # get next usable vendor
                 vendor = self.vendor()
-            else:
-                break
-        return results
 
     def status(self, id=None):
         """

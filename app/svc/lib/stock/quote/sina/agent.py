@@ -3,7 +3,7 @@
 """
 import math, decimal, random, requests, time
 from lib.stock.util import stock, digit
-from lib.stock.quote import host
+from lib.stock.quote import host, error
 
 
 class Agent:
@@ -63,13 +63,8 @@ class Agent:
         :param retry: int, retry number if failed
         :return:
         """
-        result = []
-
         results = self.gets([code], retry)
-        if results is not None and len(results) > 0:
-            result = results[0]
-
-        return result
+        return results[0]
 
     def gets(self, codes, retry):
         """
@@ -78,13 +73,17 @@ class Agent:
         :param retry: int, retry number if failed
         :return:
         """
-        # errors
-        errors = []
+        # response & errors
+        resp, errors = None, []
 
         # select host
         host = self._hosts.get()
         # retry to get quote of stocks
-        while host and retry>0:
+        while retry>0:
+            # check host
+            if host is None:
+                raise error.HostExhaustedError('no usable host for quote')
+
             try:
                  # make request url
                 url = self._makeurl(host.host, codes)
@@ -94,18 +93,19 @@ class Agent:
                 resp = requests.get(url, headers=Agent.HEADERS, timeout=self._timeout)
                 etime = time.time()
 
-                # parse response
-                result = self._parse(resp.text)
-
                 # add host succeed
                 host.addsucceed(etime-stime)
 
-                return result
+                # parse result
+                results = self._parse(resp.text)
 
+                return results
+            except error.ParseError as e:
+                raise e
             except Exception as e:
                 # disable current host
-                error = host.host+":"+str(e)
-                host.addfailed(error)
+                err = host.host+":"+str(e)
+                host.addfailed(err)
                 errors.append(errors)
 
                 # pick next host
@@ -114,7 +114,7 @@ class Agent:
                 # decrease retry count
                 retry -= 1
 
-        raise Exception(str(errors))
+        raise error.RetryLimitError('retry limit '+ str(retry))
 
     def hosts(self):
         """
@@ -158,10 +158,10 @@ class Agent:
         :param text:
         :return:
         """
-        # parse results
-        results =[]
-
         try:
+            # parse results
+            results = []
+
             # alias for item
             alias = {
                 "jkj": 1, "zsj": 2, "dqj": 3, "zgj": 4, "zdj": 5,
@@ -192,10 +192,11 @@ class Agent:
 
                 # add to results
                 results.append({'code': code, 'quote': Agent._tidy(qte)})
-        except Exception as e:
-            results = None
 
-        return results
+            return results
+        except Exception as e:
+            err = text+"|"+str(e)
+            raise error.ParseError(err)
 
     def _tidy(quote):
         """
