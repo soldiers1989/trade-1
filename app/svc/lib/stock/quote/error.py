@@ -3,6 +3,25 @@
 """
 
 
+# server error
+class ServerError(Exception):
+    def __init__(self, err):
+        self._err = err
+
+    def __str__(self):
+        return self._err
+
+
+# client request error
+class RequestError(Exception):
+    def __init__(self, err):
+        self._err = err
+
+    def __str__(self):
+        return self._err
+
+
+# parse server response error
 class ParseError(Exception):
     def __init__(self, err):
         self._err = err
@@ -11,7 +30,8 @@ class ParseError(Exception):
         return self._err
 
 
-class HostLackError(Exception):
+# none server can be used
+class NoneServerError(Exception):
     def __init__(self, err):
         self._err = err
 
@@ -19,15 +39,8 @@ class HostLackError(Exception):
         return self._err
 
 
+# retry limit error
 class RetryLimitError(Exception):
-    def __init__(self, err):
-        self._err = err
-
-    def __str__(self):
-        return self._err
-
-
-class VendorLackError(Exception):
     def __init__(self, err):
         self._err = err
 
