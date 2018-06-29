@@ -5,4 +5,6 @@
 # quote service listen port
 PORT = 9000
 
-# agents of quote
+AUTORELOAD = True
+
+DEBUG = False

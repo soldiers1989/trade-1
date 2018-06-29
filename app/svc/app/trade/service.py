@@ -1,14 +1,10 @@
 """
-    quote service
+    trade service
 """
 import tornado.web
 import tornado.ioloop
 
-from app.quote import config, urls
-from lib.stock import quote
-
-# quotes object for service
-quotes = quote.quotes.Quotes()
+from app.trade import config, urls
 
 
 # run quote service
