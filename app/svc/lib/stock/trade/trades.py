@@ -360,10 +360,11 @@ class Trades:
 
         return resp
 
-    def order_xjmr(self, aid, zqdm, price, count):
+    def order_xjmr(self, aid, gddm, zqdm, price, count):
         """
             限价买入
         :param aid:
+        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -372,17 +373,18 @@ class Trades:
         self._lock.acquire()
         account = self._accounts.get(aid)
         if account is not None:
-            resp = account.order_xjmr(zqdm, price, count)
+            resp = account.order_xjmr(gddm, zqdm, price, count)
         else:
             resp = protocol.failed('account not exist', data={'id':aid})
         self._lock.release()
 
         return resp
 
-    def order_xjmc(self, aid, zqdm, price, count):
+    def order_xjmc(self, aid, gddm, zqdm, price, count):
         """
             限价卖出
         :param aid:
+        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -391,17 +393,18 @@ class Trades:
         self._lock.acquire()
         account = self._accounts.get(aid)
         if account is not None:
-            resp = account.order_xjmc(zqdm, price, count)
+            resp = account.order_xjmc(gddm, zqdm, price, count)
         else:
             resp = protocol.failed('account not exist', data={'id':aid})
         self._lock.release()
 
         return resp
 
-    def order_sjmr(self, aid, zqdm, price, count):
+    def order_sjmr(self, aid, gddm, zqdm, price, count):
         """
             市价买入
         :param aid:
+        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -410,18 +413,19 @@ class Trades:
         self._lock.acquire()
         account = self._accounts.get(aid)
         if account is not None:
-            resp = account.order_sjmr(zqdm, price, count)
+            resp = account.order_sjmr(gddm, zqdm, price, count)
         else:
             resp = protocol.failed('account not exist', data={'id':aid})
         self._lock.release()
 
         return resp
 
-    def order_sjmc(self, aid, zqdm, price, count):
+    def order_sjmc(self, aid, gddm, zqdm, price, count):
         """
             市价卖出
         :param aid:
         :param zqdm:
+        :param gddm:
         :param price:
         :param count:
         :return:
@@ -429,24 +433,25 @@ class Trades:
         self._lock.acquire()
         account = self._accounts.get(aid)
         if account is not None:
-            resp = account.order_sjmc(zqdm, price, count)
+            resp = account.order_sjmc(gddm, zqdm, price, count)
         else:
             resp = protocol.failed('account not exist', data={'id':aid})
         self._lock.release()
 
         return resp
 
-    def cancel_order(self, aid, orderno):
+    def cancel_order(self, aid, seid, orderno):
         """
             委托撤单
         :param aid:
+        :param seid: 0 - shenzhen， 1 - shanghai, useless
         :param orderno:
         :return:
         """
         self._lock.acquire()
         account = self._accounts.get(aid)
         if account is not None:
-            resp = account.cancel_order(orderno)
+            resp = account.cancel_order(seid, orderno)
         else:
             resp = protocol.failed('account not exist', data={'id':aid})
         self._lock.release()

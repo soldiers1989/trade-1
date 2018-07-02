@@ -233,8 +233,8 @@ class OrderXjmr(tornado.web.RequestHandler):
         :return:
         """
         try:
-            aid, code, price, count = self.get_argument('account'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
-            resp = trader.default.order_xjmr(aid, code, price, count)
+            aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
+            resp = trader.default.order_xjmr(aid, gddm, code, price, count)
             self.write(resp)
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
@@ -250,8 +250,8 @@ class OrderXjmc(tornado.web.RequestHandler):
         :return:
         """
         try:
-            aid, code, price, count = self.get_argument('account'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
-            resp = trader.default.order_xjmc(aid, code, price, count)
+            aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
+            resp = trader.default.order_xjmc(aid, gddm, code, price, count)
             self.write(resp)
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
@@ -267,8 +267,8 @@ class OrderSjmr(tornado.web.RequestHandler):
         :return:
         """
         try:
-            aid, code, price, count = self.get_argument('account'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
-            resp = trader.default.order_sjmr(aid, code, price, count)
+            aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
+            resp = trader.default.order_sjmr(aid, gddm, code, price, count)
             self.write(resp)
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
@@ -284,8 +284,8 @@ class OrderSjmc(tornado.web.RequestHandler):
         :return:
         """
         try:
-            aid, code, price, count = self.get_argument('account'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
-            resp = trader.default.order_sjmc(aid, code, price, count)
+            aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
+            resp = trader.default.order_sjmc(aid, gddm, code, price, count)
             self.write(resp)
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
@@ -301,8 +301,8 @@ class OrderCancel(tornado.web.RequestHandler):
         :return:
         """
         try:
-            aid, orderno = self.get_argument('account'), self.get_argument('orderno')
-            resp = trader.default.cancel_order(aid, orderno)
+            aid, seid, orderno = self.get_argument('account'), self.get_argument('seid'), self.get_argument('orderno')
+            resp = trader.default.cancel_order(aid, seid, orderno)
             self.write(resp)
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))

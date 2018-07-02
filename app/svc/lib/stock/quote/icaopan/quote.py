@@ -1,16 +1,16 @@
 """
-    east money quote data
+    icaopan quote data
 """
 import time
-from lib.stock.util import stock
+
 from lib.stock.quote import quote, server, error
-from lib.stock.quote.emoney import config, parser, path
+from lib.stock.quote.icaopan import config, parser, path
 
 
-class EmoneyQuote(quote.Quote):
+class ICaopanQuote(quote.Quote):
     def __init__(self, hosts=config.HOSTS, timeout=config.TIMEOUT, maxfailed=config.MAXFAILED):
         """
-            init sina quote
+            init icaopan quote
         :param hosts: array, server hosts
         :param maxfailed:
         """
@@ -18,7 +18,7 @@ class EmoneyQuote(quote.Quote):
         servers = server.Servers(hosts, timeout, maxfailed)
 
         # init super
-        super(EmoneyQuote, self).__init__(config.ID, config.NAME, servers)
+        super(ICaopanQuote, self).__init__(config.ID, config.NAME, servers)
 
     def test(self, code):
         """
@@ -28,8 +28,9 @@ class EmoneyQuote(quote.Quote):
         :param host: str, host in agent
         :return:
         """
-        # add header referer
-        headers = self.headers(code)
+        # headers
+        headers = config.HEADERS
+
         # make path
         urlpath = path.make(code)
 
@@ -37,7 +38,7 @@ class EmoneyQuote(quote.Quote):
 
     def get(self, code):
         """
-            request quote of stock @code from sina quote url
+            request quote of stock @code from quote url
         :param code: str, stock code
         :param retry: int, retry number if failed
         :return:
@@ -45,12 +46,12 @@ class EmoneyQuote(quote.Quote):
         try:
             stime = time.time()
             # make header
-            headers = self.headers(code)
+            headers = config.HEADERS
 
             # make path
             urlpath = path.make(code)
             # request remote service
-            resp = self.servers.get(urlpath, headers, config.RETRY).text
+            resp = self.servers.get(urlpath, headers, config.RETRY).json()
             # parse result
             results = parser.parse(resp)
             etime = time.time()
@@ -78,13 +79,3 @@ class EmoneyQuote(quote.Quote):
         for code in codes:
             results.append(self.get(code))
         return results
-
-    def headers(self, code):
-        """
-            make request headers
-        :param code:
-        :return:
-        """
-        headers = config.HEADERS
-        headers.update({"Referer": "http://quote.eastmoney.com/" + stock.addse(code) + ".html"})
-        return headers

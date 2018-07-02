@@ -11,7 +11,7 @@ AUTORELOAD = True
 # agents for trade
 AGENTS = [
     ('agent1', '172.16.21.137', 81),
-    ('agent2', '172.16.21.137', 80)
+    ('agent2', '172.16.21.135', 80)
 ]
 
 # servers for trade #

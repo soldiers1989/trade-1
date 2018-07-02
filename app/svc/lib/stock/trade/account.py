@@ -108,9 +108,10 @@ class Account:
         """
         pass
 
-    def order_xjmr(self, zqdm, price, count):
+    def order_xjmr(self, gddm, zqdm, price, count):
         """
             限价买入
+        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -118,9 +119,10 @@ class Account:
         """
         pass
 
-    def order_xjmc(self, zqdm, price, count):
+    def order_xjmc(self, gddm, zqdm, price, count):
         """
             限价卖出
+        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -128,9 +130,10 @@ class Account:
         """
         pass
 
-    def order_sjmr(self, zqdm, price, count):
+    def order_sjmr(self, gddm, zqdm, price, count):
         """
             市价买入
+        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -138,9 +141,10 @@ class Account:
         """
         pass
 
-    def order_sjmc(self, zqdm, price, count):
+    def order_sjmc(self, gddm, zqdm, price, count):
         """
             市价卖出
+        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -148,9 +152,10 @@ class Account:
         """
         pass
 
-    def cancel_order(self, orderno):
+    def cancel_order(self, seid, orderno):
         """
             委托撤单
+        :param seid: 0 - shenzhen， 1 - shanghai, useless
         :param orderno:
         :return:
         """

@@ -20,12 +20,12 @@ def tidy(quote):
     # tidy prices
     for p in prices:
         if quote.get(p) is not None:
-            quote[p] = str(decimal.Decimal(quote[p]).quantize(decimal.Decimal('0.00')))
+            quote[p] = round(float(quote[p]),2) #str(decimal.Decimal(quote[p]).quantize(decimal.Decimal('0.00')))
 
     # tidy volumes
     for v in volumes:
         if quote.get(v) is not None:
-            quote[v] = str(math.floor(int(quote[v]) / 100))
+            quote[v] = math.floor(int(quote[v]) / 100)
 
     return quote
 
@@ -68,8 +68,15 @@ def parse(text):
             qte['time'] = qte['date'] + " " + qte['time']
             del qte['date']
 
+            # tidy quote
+            qte = tidy(qte)
+
+            # compute ztj&dtj
+            qte['ztj'] = round(qte['zsj'] * 1.1, 2)
+            qte['dtj'] = round(qte['zsj'] * 0.9, 2)
+
             # add to results
-            results.append({'code': code, 'quote': tidy(qte)})
+            results.append({'code': code, 'quote': qte})
 
         return results
     except Exception as e:

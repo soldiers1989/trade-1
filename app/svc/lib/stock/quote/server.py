@@ -37,7 +37,7 @@ class Server:
         """
         result = None
         try:
-            resp = self.get(path, headers)
+            resp = self.get(path, headers).text
             result = {'host': self._host, 'status': 0, 'msg': 'success', 'data': resp}
         except Exception as e:
             result = {'host': self._host, 'status': -1, 'msg': str(e), 'data': None}
@@ -56,7 +56,7 @@ class Server:
 
             # make request
             stime = time.time()
-            resp = requests.get(url, headers=headers, timeout=self._timeout).text
+            resp = requests.get(url, headers=headers, timeout=self._timeout)
             etime = time.time()
 
             # add succeed counter

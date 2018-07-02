@@ -3,6 +3,20 @@
 """
 
 
+def valid(code):
+    """
+        valid stock code
+    :param code:
+    :return:
+    """
+    codes = ['000', '002', '300', '600', '601', '603']
+
+    if len(code) != 6 or not code.isdecimal() or not code[0:3] in codes:
+        return False
+
+    return True
+
+
 def getse(code):
     """
         get securities exchange of specified stock by code

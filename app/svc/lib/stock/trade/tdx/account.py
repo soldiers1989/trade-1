@@ -55,6 +55,17 @@ class Account(account.Account):
         except Exception as e:
             return protocol.failed(str(e))
 
+    def query_gdxx(self):
+        """
+            股东信息查询
+        :return:
+        """
+        try:
+            # send query
+            return self._traders.queryc(protocol.query.gdxx)
+        except Exception as e:
+            return protocol.failed(str(e))
+
     def query_dqzc(self):
         """
             当前资产查询
@@ -77,11 +88,7 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.queryc(protocol.query.dqcc)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.idqcc)
-
+            return self._traders.queryc(protocol.query.dqcc)
         except Exception as e:
             return protocol.failed(str(e))
 
@@ -92,10 +99,7 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.queryc(protocol.query.drwt)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.idrwt)
+            return self._traders.queryc(protocol.query.drwt)
         except Exception as e:
             return protocol.failed(str(e))
 
@@ -106,11 +110,7 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.queryc(protocol.query.drcj)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.idrcj)
-
+            return self._traders.queryc(protocol.query.drcj)
         except Exception as e:
             return protocol.failed(str(e))
 
@@ -121,25 +121,7 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.queryc(protocol.query.kcwt)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.ikcwt)
-
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_gdxx(self):
-        """
-            股东信息查询
-        :return:
-        """
-        try:
-            # send query
-            resp = self._traders.queryc(protocol.query.gdxx)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.igdxx)
+            return self._traders.queryc(protocol.query.kcwt)
         except Exception as e:
             return protocol.failed(str(e))
 
@@ -152,10 +134,7 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.queryh(protocol.query.lswt, sdate, edate)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.ilswt)
+            return self._traders.queryh(protocol.query.lswt, sdate, edate)
         except Exception as e:
             return protocol.failed(str(e))
 
@@ -168,10 +147,7 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.queryh(protocol.query.lscj, sdate, edate)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.ilscj)
+            return self._traders.queryh(protocol.query.lscj, sdate, edate)
         except Exception as e:
             return protocol.failed(str(e))
 
@@ -184,10 +160,7 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.queryh(protocol.query.jgd, sdate, edate)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.ijgd)
+            return self._traders.queryh(protocol.query.jgd, sdate, edate)
         except Exception as e:
             return protocol.failed(str(e))
 
@@ -199,16 +172,14 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.quote(code)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.igphq)
+            return self._traders.quote(code)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_xjmr(self, zqdm, price, count):
+    def order_xjmr(self, gddm, zqdm, price, count):
         """
             限价买入
+        :param gddm: str, in, 股东代码
         :param zqdm: str, in, 证券代码
         :param price: float, in, 委托价格
         :param count: int, in, 委托数量，100整数倍
@@ -216,16 +187,14 @@ class Account(account.Account):
         """
         try:
             # send order to remote
-            resp = self._traders.order(protocol.query.buy, protocol.query.xj, zqdm, price, count)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.ixjmr)
+            return self._traders.order(protocol.query.buy, protocol.query.xj, gddm, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_xjmc(self, zqdm, price, count):
+    def order_xjmc(self, gddm, zqdm, price, count):
         """
             限价卖出
+        :param gddm: str, in, 股东代码
         :param zqdm: str, in, 证券代码
         :param price: float, in, 委托价格
         :param count: int, in, 委托数量，100整数倍
@@ -233,16 +202,14 @@ class Account(account.Account):
         """
         try:
             # send order to remote
-            resp = self._traders.order(protocol.query.sell, protocol.query.xj, zqdm, price, count)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.ixjmc)
+            return self._traders.order(protocol.query.sell, protocol.query.xj, gddm, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_sjmr(self, zqdm, price, count):
+    def order_sjmr(self, gddm, zqdm, price, count):
         """
             市价买入
+        :param gddm: str, in, 股东代码
         :param zqdm: str, in, 证券代码
         :param price: float, in, 委托价格
         :param count: int, in, 委托数量，100整数倍
@@ -250,16 +217,14 @@ class Account(account.Account):
         """
         try:
             # send order to remote
-            resp = self._traders.order(protocol.query.buy, protocol.query.sj, zqdm, price, count)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.isjmr)
+            return self._traders.order(protocol.query.buy, protocol.query.sj, gddm, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_sjmc(self, zqdm, price, count):
+    def order_sjmc(self, gddm, zqdm, price, count):
         """
             市价卖出
+        :param gddm: str, in, 股东代码
         :param zqdm: str, in, 证券代码
         :param price: float, in, 委托价格
         :param count: int, in, 委托数量，100整数倍
@@ -267,25 +232,19 @@ class Account(account.Account):
         """
         try:
             # send order to remote
-            resp = self._traders.order(protocol.query.sell, protocol.query.sj, zqdm, price, count)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.isjmc)
+            return self._traders.order(protocol.query.sell, protocol.query.sj, gddm, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def cancel_order(self, orderno, seid):
+    def cancel_order(self, seid, orderno):
         """
             委托撤单
-        :param orderno: str, in, 委托编号
         :param seid: 0 - shenzhen， 1 - shanghai, useless
+        :param orderno: str, in, 委托编号
         :return:
         """
         try:
             # cancel order
-            resp = self._traders.cancel(orderno, seid)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.iwtcd)
+            return self._traders.cancel(seid, orderno)
         except Exception as e:
             return protocol.failed(str(e))

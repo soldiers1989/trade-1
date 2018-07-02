@@ -21,7 +21,8 @@ if __name__ == "__main__":
 
     if action == 'start':
         if app == 'trade':
-            pass
+            import app.trade
+            app.trade.service.run()
         elif app == 'quote':
             import app.quote
             app.quote.service.run()

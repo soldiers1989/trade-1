@@ -52,7 +52,7 @@ class SinaQuote(quote.Quote):
             # make path
             urlpath = path.make(codes)
             # request remote service
-            resp = self.servers.get(urlpath, config.HEADERS, config.RETRY)
+            resp = self.servers.get(urlpath, config.HEADERS, config.RETRY).text
             # parse result
             results = parser.parse(resp)
             etime = time.time()

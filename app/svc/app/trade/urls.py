@@ -18,4 +18,5 @@ handlers = [
     (r"/order/xjmc", handler.OrderXjmc),
     (r"/order/sjmr", handler.OrderSjmr),
     (r"/order/sjmc", handler.OrderSjmc),
+    (r"/order/cancel", handler.OrderCancel)
 ]

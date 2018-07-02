@@ -19,7 +19,7 @@ def tidy(quote):
     # tidy prices
     for p in prices:
         if quote.get(p) is not None:
-            quote[p] = round(float(quote[p]), 2) #str(decimal.Decimal(quote[p]).quantize(decimal.Decimal('0.00')))
+            quote[p] = quote[p] #str(decimal.Decimal(quote[p]).quantize(decimal.Decimal('0.00')))
 
     # tidy volumes
     for v in volumes:
@@ -29,7 +29,7 @@ def tidy(quote):
     return quote
 
 
-def parse(text):
+def parse(jsonobj):
     """
         parse response text
     :param text:
@@ -40,33 +40,27 @@ def parse(text):
 
     # alias for item
     alias = {
-        "jkj": 28, "zsj": 34, "dqj": 25, "zgj": 30, "zdj": 32,
-        "cjl": 31, "cje": 35,
-        "mrl1": 13, "mrj1": 3, "mrl2": 14, "mrj2": 4, "mrl3": 15, "mrj3": 5, "mrl4": 16, "mrj4": 6, "mrl5": 17, "mrj5": 7,
-        "mcl1": 18, "mcj1": 8, "mcl2": 19, "mcj2": 9, "mcl3": 20, "mcj3": 10, "mcl4": 21, "mcj4": 11, "mcl5": 22, "mcj5": 12,
-        "time": 49,
+        "jkj": 'openPrice', "zsj": 'preClosePrice', "dqj": 'lastPrice', "zgj": 'highPrice', "zdj": 'lowPrice',
+        "cjl": 'volume', "cje": 'amount',
+        "mrl1": 'bidVolume1', "mrj1": 'bidPrice1', "mrl2": 'bidVolume2', "mrj2": 'bidPrice2', "mrl3": 'bidVolume3', "mrj3": 'bidPrice3', "mrl4": 'bidVolume4', "mrj4": 'bidPrice4', "mrl5": 'bidVolume5', "mrj5": 'bidPrice5',
+        "mcl1": 'askVolume1', "mcj1": 'askPrice1', "mcl2": 'askVolume2', "mcj2": 'askPrice2', "mcl3": 'askVolume3', "mcj3": 'askPrice3', "mcl4": 'askVolume4', "mcj4": 'askPrice4', "mcl5": 'askVolume5', "mcj5": 'askPrice5',
+        "time": 'lastModifyTime',
     }
 
-    # parse response quote
-    rpos = text.find('(') + 1
-    text = text[rpos:].rstrip().rstrip(')')
-
     # quote items
-    items = json.loads(text)['Value']
+    items = jsonobj['info']['result']
     # stock code
-    code = items[1]
+    code = items['stockCode']
 
     qte = {}
     # stock quote
     for k in alias:
         qte[k] = items[alias[k]]
 
-    # process cje
-    unit = qte['cje'][-1:]
-    unit = 100000000 if unit == '亿' else 10000 if unit == '万' else 1
-    qte['cje'] = str(decimal.Decimal(qte['cje'][:-1]) * unit)
+    # transfer volume
+    qte['cjl'] = math.floor(qte['cjl']/100)
 
-    # tidy result
+    # tidy quote
     qte = tidy(qte)
 
     # compute ztj&dtj

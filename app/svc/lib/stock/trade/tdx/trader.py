@@ -337,7 +337,7 @@ class Trader:
         # return response result
         return resp
 
-    def order(self, otype, ptype, zqdm, price, count):
+    def order(self, otype, ptype, gddm, zqdm, price, count):
         """
             send an order
         :param otype:
@@ -357,7 +357,7 @@ class Trader:
             "otype" : otype,
             "ptype" : ptype,
             "zqdm" : zqdm,
-            "gddm" : "gddm", # may be not usable
+            "gddm" : gddm,
             "price" : price,
             "count" : count
         }
@@ -368,11 +368,11 @@ class Trader:
         # return response result
         return resp
 
-    def cancel(self, orderno, seid):
+    def cancel(self, seid, orderno):
         """
             cancel an order
-        :param orderno:
         :param seid:
+        :param orderno:
         :return:
         """
         # make request url
@@ -525,7 +525,7 @@ class Traders:
         # no more trader can be used
         raise Exception("no trader usable for account")
 
-    def order(self, otype, ptype, zqdm, price, count):
+    def order(self, otype, ptype, gddm, zqdm, price, count):
         """
             send an order
         :param otype:
@@ -538,7 +538,7 @@ class Traders:
         """
         while self._trader is not None:
             try:
-                return self._trader.order(otype, ptype, zqdm, price, count)
+                return self._trader.order(otype, ptype, gddm, zqdm, price, count)
             except Exception as e:
                 # disable current trader
                 self._trader.disable(str(e))
@@ -548,16 +548,16 @@ class Traders:
         # no more trader can be used
         return Exception("no trader usable for account")
 
-    def cancel(self, orderno, seid):
+    def cancel(self, seid, orderno):
         """
             cancel an order
-        :param orderno:
         :param seid:
+        :param orderno:
         :return:
         """
         while self._trader is not None:
             try:
-                return self._trader.cancel(orderno, seid)
+                return self._trader.cancel(seid, orderno)
             except Exception as e:
                 # disable current trader
                 self._trader.disable(str(e))

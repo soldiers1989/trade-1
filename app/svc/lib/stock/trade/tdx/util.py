@@ -11,8 +11,8 @@ def getse(code):
     """
     # stock code rules
     codes = {
-        "1": ['600','601','603'], # shanghai
-        "0": ['000','002','300'] # shenzhen
+        "0": ['000', '002', '300'],  # shenzhen
+        "1": ['600','601','603'] # shanghai
     }
 
     if len(code) < 3:
@@ -24,3 +24,4 @@ def getse(code):
             return se
 
     return None
+

@@ -5,10 +5,6 @@ import tornado.web
 import tornado.ioloop
 
 from app.quote import config, urls
-from lib.stock import quote
-
-# quotes object for service
-quotes = quote.quotes.Quotes()
 
 
 # run quote service

@@ -1,7 +1,7 @@
 """
     quote service manager
 """
-from lib.stock.quote import sina, ifeng, emoney, error
+from lib.stock.quote import sina, ifeng, icaopan, emoney, error
 
 
 class Quotes:
@@ -13,6 +13,7 @@ class Quotes:
             init quote service
         """
         self._quotes = [
+            icaopan.quote.ICaopanQuote(),
             sina.quote.SinaQuote(),
             ifeng.quote.IfengQuote(),
             emoney.quote.EmoneyQuote()
