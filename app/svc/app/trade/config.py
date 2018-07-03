@@ -1,9 +1,6 @@
 """
     configure for trade service
 """
-# trade service port
-PORT = 9000
-
 # debug/autoreload flag for tornado
 DEBUG = False
 AUTORELOAD = True

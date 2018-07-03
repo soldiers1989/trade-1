@@ -1,10 +1,10 @@
 """
-    quote service
+    pub service
 """
 import tornado.web
 import tornado.ioloop
 
-from app.quote import config, urls
+from app.api import config, urls
 
 
 # run quote service

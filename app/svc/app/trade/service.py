@@ -8,7 +8,7 @@ from app.trade import config, urls
 
 
 # run quote service
-def run():
+def run(port):
     app = tornado.web.Application(urls.handlers, autoreload=config.AUTORELOAD, debug=config.DEBUG)
-    app.listen(config.PORT)
+    app.listen(port)
     tornado.ioloop.IOLoop.current().start()

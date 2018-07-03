@@ -2,9 +2,6 @@
     configure for quote app
 """
 
-# quote service listen port
-PORT = 9000
-
-AUTORELOAD = True
-
+# debug/autoreload flag for tornado
 DEBUG = False
+AUTORELOAD = True
