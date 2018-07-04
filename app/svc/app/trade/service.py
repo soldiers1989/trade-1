@@ -7,8 +7,16 @@ import tornado.ioloop
 from app.trade import config, urls
 
 
-# run quote service
-def run(port):
-    app = tornado.web.Application(urls.handlers, autoreload=config.AUTORELOAD, debug=config.DEBUG)
+# application settings
+settings = {
+    'cookie_secret': config.COOKIE_SECRET,
+    'autoreload': config.AUTORELOAD,
+    'debug': config.DEBUG,
+}
+
+
+# start trade service
+def start(port):
+    app = tornado.web.Application(urls.handlers, **settings)
     app.listen(port)
     tornado.ioloop.IOLoop.current().start()

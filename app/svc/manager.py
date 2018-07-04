@@ -7,7 +7,7 @@ import sys, argparse
 actions = ['start', 'stop']
 
 # registered apps
-apps = ['api', 'trade', 'quote']
+apps = ['aim', 'api', 'trade', 'quote']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -20,15 +20,18 @@ if __name__ == "__main__":
     action, app, port = args.action, args.app, args.port
 
     if action == 'start':
-        if app == 'api':
+        if app == 'aim':
+            import app.aim
+            app.aim.service.start(port)
+        elif app == 'api':
             import app.api
-            app.api.service.run(port)
+            app.api.service.start(port)
         elif app == 'trade':
             import app.trade
-            app.trade.service.run(port)
+            app.trade.service.start(port)
         elif app == 'quote':
             import app.quote
-            app.quote.service.run(port)
+            app.quote.service.start(port)
         else:
             pass
     elif action == 'stop':

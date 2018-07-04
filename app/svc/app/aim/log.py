@@ -1,0 +1,66 @@
+"""
+    log for aim
+"""
+from app.aim import redis
+
+
+class _RedisLog:
+    def __init__(self, name, redis, maxrecords = 1000):
+        """
+            init a redis log
+        :param name:
+        :param redis:
+        """
+        self._name = name
+        self._redis = redis
+        self._maxrecords = maxrecords
+
+    def log(self, msg):
+        """
+            log error message
+        :param msg:
+        :return:
+        """
+        self._redis.lpush(self._name, msg)
+
+        if self._redis.llen(self._name) > self._maxrecords:
+            self._redis.rpop(self._name)
+
+    def get(self, wantrecords=20):
+        """
+            get latest want records
+        :param wantrecords: int, number records want
+        :return:
+        """
+        records = []
+        num = 0
+        while num < wantrecords:
+            record = self._redis.lindex(self._name, num)
+            if record is None:
+                break
+            records.append(record.decode())
+            num += 1
+
+        return records
+
+# info log object
+_infolog = _RedisLog('log_aim_info', redis.aim)
+
+
+# error log object
+_errorlog = _RedisLog('log_aim_error', redis.aim)
+
+
+def info(msg):
+    try:
+        _infolog.log(msg)
+    except:
+        pass
+
+
+def error(msg):
+    try:
+        _errorlog.log(msg)
+    except:
+        pass
+

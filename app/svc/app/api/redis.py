@@ -7,3 +7,4 @@ from app.api import config
 _default = redis.MyRedis(config.redis)
 
 new = _default.get()
+

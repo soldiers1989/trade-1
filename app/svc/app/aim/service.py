@@ -4,17 +4,17 @@
 import tornado.web
 import tornado.ioloop
 
-from app.api import config, urls
-
+from app.aim import config, urls
 
 # application settings
 settings = {
+    'cookie_secret': config.COOKIE_SECRET,
     'autoreload': config.AUTORELOAD,
     'debug': config.DEBUG,
 }
 
 
-# start api service
+# start aim service
 def start(port):
     app = tornado.web.Application(urls.handlers, **settings)
     app.listen(port)

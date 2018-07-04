@@ -26,8 +26,26 @@ class DBMysql:
         :return:
         """
         if self._conn is None or self._cursor is None:
-            self._conn = pymysql.connect(**self._cfg, cursorclass = pymysql.cursors.DictCursor)
+            self._conn = pymysql.connect(**self._cfg)
             self._cursor = self._conn.cursor()
+
+    def begin(self):
+        """
+            begin transaction
+        :return:
+        """
+        self.connect()
+        self._conn.begin()
+
+    def commit(self):
+        """
+            commit changes to database
+        :return:
+        """
+        if self._conn is None:
+            return
+
+        self._conn.commit()
 
     def select(self, sql, args=None):
         """

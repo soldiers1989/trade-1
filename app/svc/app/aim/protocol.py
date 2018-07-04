@@ -20,7 +20,7 @@ def success(msg = 'success', data = None):
     return json.dumps(ret)
 
 
-def failed(msg = 'failed', data = None):
+def failed(status=-1, msg = 'failed', data = None):
     """
         error return format
     :param msg:
@@ -28,7 +28,7 @@ def failed(msg = 'failed', data = None):
     """
     # make formatted return
     ret = {
-        'status': -1,
+        'status': status,
         'msg': msg,
         'data': data
     }

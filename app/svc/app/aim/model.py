@@ -10,8 +10,21 @@ class Model:
         """
         self._db = db
 
+    def _begin(self):
+        """
+            begin transaction
+        :return:
+        """
+        self._db.begin()
 
-    def execute(self, sql, args=None):
+    def _commit(self):
+        """
+            commit changes
+        :return:
+        """
+        self._db.commit()
+
+    def _execute(self, sql, args=None):
         """
             execute
         :param query:
@@ -20,7 +33,7 @@ class Model:
         """
         return self._db.execute(sql, args)
 
-    def select(self, sql, args=None):
+    def _select(self, sql, args=None):
         """
             select
         :param query:

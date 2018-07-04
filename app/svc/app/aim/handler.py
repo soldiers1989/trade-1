@@ -2,8 +2,7 @@
     base handler
 """
 import tornado.web
-from lib.util import mysql
-from app.aim import config
+from app.aim import mysql, config, session
 
 
 class Handler(tornado.web.RequestHandler):
@@ -12,22 +11,40 @@ class Handler(tornado.web.RequestHandler):
     """
     def initialize(self):
         """
-            pass
+            overwrite: initialize
         :return:
         """
-        # init database
-        self.db = mysql.DBMysql(config.mysql)
+        ## init database ##
+        self.db = mysql.get()
+
+        ## init session ##
+        self.session = session.get(self.get_argument(config.SESSION_ID, None))
+
+    def get_current_user(self):
+        """
+            overwrite: get current user
+        :return:
+        """
+        return self.session.get('uid')
+
+    def set_default_headers(self):
+        """
+            overwrite: set default headers
+        :return:
+        """
+        for header in config.HEADERS:
+            self.set_header(*header)
 
     def prepare(self):
         """
-            pass
+            overwrite: prepare
         :return:
         """
         pass
 
     def on_finish(self):
         """
-
+            overwrite: on finish
         :return:
         """
         # close database

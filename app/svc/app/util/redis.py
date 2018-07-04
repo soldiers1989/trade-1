@@ -13,8 +13,6 @@ class MyRedis:
         # connection pool
         self._pool = redis.ConnectionPool(**cfg)
 
-        #
-
     def get(self):
         """
             get a redis object
