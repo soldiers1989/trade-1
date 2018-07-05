@@ -18,7 +18,27 @@ class Handler(tornado.web.RequestHandler):
         self.db = mysql.get()
 
         ## init session ##
-        self.session = session.get(self.get_argument(config.SESSION_ID, None))
+        # get session id from cookie
+        csid = self.get_secure_cookie(config.SESSION_ID)
+        if csid is not None:
+            csid = csid.decode()
+
+        # cookie has no session id, try it in the argument
+        if csid is None:
+            sid = self.get_argument(config.SESSION_ID, None)
+            # get session
+            self.session = session.get(sid)
+
+            # set cookie with new session id
+            self.set_secure_cookie(config.SESSION_ID, self.session.id, config.SESSION_COOKIE_TIMEOUT)
+        else:
+            # get session
+            self.session = session.get(csid)
+
+            # check session id
+            if self.session.id != csid:
+                # set cookie with new session id
+                self.set_secure_cookie(config.SESSION_ID, self.session.id, config.SESSION_COOKIE_TIMEOUT)
 
     def get_current_user(self):
         """
@@ -49,3 +69,7 @@ class Handler(tornado.web.RequestHandler):
         """
         # close database
         self.db.close()
+
+        # update session expire time if current user is login
+        if self.current_user is not None:
+            self.session.expire(config.SESSION_TIMEOUT)

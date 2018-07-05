@@ -75,7 +75,7 @@ def get(sid = None):
     :param sid:
     :return:
     """
-    if sid is None:
+    if sid is None or not _sredis.exists(sid):
         sid = _newid()
 
     return _Session(sid, _sredis)

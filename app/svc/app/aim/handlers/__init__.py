@@ -1,1 +1,1 @@
-from app.aim.handlers import echo, user
+from app.aim.handlers import admin, user, verifier

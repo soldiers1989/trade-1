@@ -56,8 +56,10 @@ class LogoutHandler(handler.Handler):
             logout
         :return:
         """
+        # clear user session data
         self.session.clear()
 
+        # logout success
         self.write(protocol.success())
 
 

@@ -58,9 +58,22 @@ def info(msg):
         pass
 
 
+def getinfo(wantrecords=20):
+    try:
+        return _errorlog.get(wantrecords)
+    except:
+        return ""
+
+
 def error(msg):
     try:
         _errorlog.log(msg)
     except:
         pass
 
+
+def geterror(wantrecords=20):
+    try:
+        return _errorlog.get(wantrecords)
+    except:
+        return ""

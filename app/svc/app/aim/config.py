@@ -16,9 +16,11 @@ COOKIE_SECRET = 'abc'
 COOKIE_TIMEOUT = 30*24*3600
 
 # session id
-SESSION_ID = 'sid'
+SESSION_ID = '_sid'
 # session expire time in seconds
 SESSION_TIMEOUT = 30*24*3600
+# session cookie timeout in days
+SESSION_COOKIE_TIMEOUT = 30
 
 
 # public headers for response

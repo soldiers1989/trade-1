@@ -2,7 +2,7 @@
     access protection
 """
 import tornado.web
-from app.aim import error, config, protocol, log
+from app.aim import error, config, log
 
 
 def needlogin(handler_func):
@@ -14,7 +14,7 @@ def needlogin(handler_func):
     def wrapper(self, *args, **kwargs):
         uid = self.get_argument('uid')
         if uid != self.session.get('uid'):
-            self.write(protocol.failed('not login, access denied'))
+            self.write(error.user_not_login.data)
         else:
             return handler_func(self, *args, **kwargs)
     return wrapper
@@ -29,7 +29,7 @@ def needtoken(handler_func):
     def wrapper(self, *args, **kwargs):
         token = self.get_argument('token')
         if token != config.ACCESS_TOKEN:
-            self.write(protocol.failed('invalid token, access denied'))
+            self.write(error.invalid_access.data)
         else:
             return handler_func(self, *args, **kwargs)
 
@@ -41,9 +41,9 @@ def exptproc(handler_func):
         try:
             return handler_func(self, *args, **kwargs)
         except tornado.web.MissingArgumentError as e:
-            self.write(protocol.failed(**error.MISSING_PARAMETERS))
+            self.write(error.missing_parameters.data)
             log.error(str(e))
         except Exception as e:
-            self.write(protocol.failed(**error.SERVER_EXCEPTION))
+            self.write(error.server_exception.data)
             log.error(str(e))
     return  wrapper
