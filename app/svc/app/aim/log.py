@@ -38,7 +38,7 @@ class _RedisLog:
             record = self._redis.lindex(self._name, num)
             if record is None:
                 break
-            records.append(record.decode())
+            records.append(record)
             num += 1
 
         return records

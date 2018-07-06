@@ -6,6 +6,9 @@ from app.aim import redis
 
 
 class _Session:
+    """
+        user session
+    """
     def __init__(self, id, redis):
         self._id = id
         self._redis = redis
@@ -14,6 +17,14 @@ class _Session:
     def id(self):
         return self._id
 
+    @property
+    def sid(self):
+        """
+            generate session id
+        :return:
+        """
+        return 'ss_'+self._id
+
     def set(self, key, val):
         """
             set session value
@@ -21,7 +32,7 @@ class _Session:
         :param val:
         :return:
         """
-        self._redis.hset(self._id, key, val)
+        self._redis.hset(self.sid, key, val)
 
     def get(self, key, default=None):
         """
@@ -30,11 +41,18 @@ class _Session:
         :param default:
         :return:
         """
-        val = self._redis.hget(self._id, key)
+        val = self._redis.hget(self.sid, key)
         if val is None:
             val = default
-        else:
-            val = val.decode()
+
+        return val
+
+    def all(self):
+        """
+            get all session data
+        :return:
+        """
+        val = self._redis.hgetall(self._id)
         return val
 
     def clear(self):
@@ -57,12 +75,13 @@ class _Session:
         except:
             pass
 
+
 def _newid():
     """
         create new session id
     :return:
     """
-    return 'ss_'+str(uuid.uuid4())
+    return str(uuid.uuid4())
 
 
 # redis for session

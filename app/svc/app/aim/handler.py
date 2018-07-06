@@ -19,18 +19,18 @@ class Handler(tornado.web.RequestHandler):
 
         ## init session ##
         # get session id from cookie
-        csid = self.get_secure_cookie(config.SESSION_ID)
+        csid = self.get_secure_cookie(config.SESSION_NAME)
         if csid is not None:
             csid = csid.decode()
 
         # cookie has no session id, try it in the argument
         if csid is None:
-            sid = self.get_argument(config.SESSION_ID, None)
+            sid = self.get_argument(config.SESSION_NAME, None)
             # get session
             self.session = session.get(sid)
 
             # set cookie with new session id
-            self.set_secure_cookie(config.SESSION_ID, self.session.id, config.SESSION_COOKIE_TIMEOUT)
+            self.set_secure_cookie(config.SESSION_NAME, self.session.id, config.SESSION_COOKIE_TIMEOUT)
         else:
             # get session
             self.session = session.get(csid)
@@ -38,7 +38,7 @@ class Handler(tornado.web.RequestHandler):
             # check session id
             if self.session.id != csid:
                 # set cookie with new session id
-                self.set_secure_cookie(config.SESSION_ID, self.session.id, config.SESSION_COOKIE_TIMEOUT)
+                self.set_secure_cookie(config.SESSION_NAME, self.session.id, config.SESSION_COOKIE_TIMEOUT)
 
     def get_current_user(self):
         """

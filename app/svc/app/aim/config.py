@@ -9,19 +9,25 @@ DEBUG = False
 AUTORELOAD = True
 
 # token for access
-ACCESS_TOKEN = 'abc'
+TOKEN_NAME = '_token'
+TOKEN_VALUE = 'abc'
 
 # cookie expire time in seconds
 COOKIE_SECRET = 'abc'
 COOKIE_TIMEOUT = 30*24*3600
 
 # session id
-SESSION_ID = '_sid'
+SESSION_NAME = '_sid'
 # session expire time in seconds
 SESSION_TIMEOUT = 30*24*3600
 # session cookie timeout in days
 SESSION_COOKIE_TIMEOUT = 30
 
+
+# image verifier code expire time in seconds
+EXPIRE_VERIFIER_IMAGE = 120
+# sms verifier code expire time in seconds
+EXPIRE_VERIFIER_SMS = 300
 
 # public headers for response
 HEADERS = [
@@ -37,7 +43,8 @@ REDISS = {
             'port': 6379,
             'db': 0,
             'password': None,
-            'encoding': 'utf-8'
+            'encoding': 'utf-8',
+            'decode_responses': True
         },
 
         'test': {
@@ -45,7 +52,8 @@ REDISS = {
             'port': 6379,
             'db': 0,
             'password': None,
-            'encoding': 'utf-8'
+            'encoding': 'utf-8',
+            'decode_responses': True
         },
 
         'online': {
@@ -53,7 +61,8 @@ REDISS = {
             'port': 6379,
             'db': 0,
             'password': None,
-            'encoding': 'utf-8'
+            'encoding': 'utf-8',
+            'decode_responses': True
         }
     }
 }

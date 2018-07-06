@@ -1,1 +1,1 @@
-from app.aim.handlers import admin, user, verifier
+from app.aim.handlers import admin, user, verify
