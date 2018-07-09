@@ -37,8 +37,27 @@
         }
     ```
     
-# 服务接口
-## 获取会话ID
+# 用户接口
+## 查询会话ID
+* 接口说明
+    * 查询当前会话ID
+* 请求地址
+    * GET /user/sid
+* 参数说明
+    * 无
+* 成功返回
+    ```
+        {
+            “status”: 0,
+            “msg”: ”success”,
+            “data”: {
+                "sid": <用户会话ID>
+            }
+        }
+    ```
+* 接口示例
+
+## 查询用户是否存在
 * 接口说明
     * 获取会话ID
 * 请求地址
@@ -56,7 +75,6 @@
         }
     ```
 * 接口示例
-
 
 ## 用户登录 
 * 接口说明
@@ -226,6 +244,7 @@
 * 请求地址
     * GET /admin/redis/get
 * 参数说明
+    * t: 字符串，redis存储类型，None-string, h-hash, l-list, s-set, z-sorted set
     * n: 字符串，redis键值名称，必选
 * 成功返回
     ```
@@ -291,12 +310,11 @@
     ```
 * 接口示例
 
-## 查询SESSION Ext
+## 查询图片验证码
 * 接口说明
-    * 查询指定的session扩展信息，包括：
-        * 图片验证码信息
+     * 查询图片验证码信息
 * 请求地址
-    * GET /admin/sessionext/get
+    * GET /admin/verify/img/get
 * 参数说明
     * sid: 字符串，待清除的session id，必选
     * n: 字符串，session扩展名，必选
@@ -311,12 +329,11 @@
 * 接口示例
 
 
-## 删除SESSION Ext
+## 删除图片验证码
 * 接口说明
-    * 删除指定的session扩展信息，包括:
-        * 图片验证码信息
+     * 删除图片验证码信息
 * 请求地址
-    * GET /admin/sessionext/del
+    * GET /admin/verify/img/del
 * 参数说明
     * id: 字符串，待清除的session id，必选
     * n: 字符串，session扩展名，必选
@@ -334,7 +351,7 @@
 * 接口说明
     * 查询短信验证码
 * 请求地址
-    * GET /admin/sms/get
+    * GET /admin/verify/sms/get
 * 参数说明
     * p: 字符串，手机号，必选
     * n: 字符串，短信类别名称，必选
@@ -353,7 +370,7 @@
 * 接口说明
     * 清除指定的session
 * 请求地址
-    * GET /admin/sms/del
+    * GET /admin/verify/sms/del
 * 参数说明
     * p: 字符串，手机号，必选
     * n: 字符串，短信类别名称，必选

@@ -1,7 +1,7 @@
 """
     service admin
 """
-from app.aim import log, access, handler, error, protocol, session, redis, sms
+from app.aim import log, access, handler, error, protocol, session, redis, verify
 
 
 class EchoHandler(handler.Handler):
@@ -40,9 +40,19 @@ class RedisGetHandler(handler.Handler):
             log
         :return:
         """
-        name = self.get_argument('n')
+        type, name = self.get_argument('t', None), self.get_argument('n')
 
-        data = redis.aim.get((name))
+        if type == 'h': # hash
+            data = redis.aim.hgetall(name)
+        elif type == 'l': # list
+            data = redis.aim.lrange(name, 0, -1)
+        elif type == 's': # set
+            data = redis.aim.smembers(name)
+            data = list(data)
+        elif type == 'z': # sorted set
+            data = redis.aim.zrange(name, 0, -1)
+        else: # string
+            data = redis.aim.get(name)
 
         self.write(protocol.success(data=data))
 
@@ -56,9 +66,7 @@ class RedisDelHandler(handler.Handler):
         :return:
         """
         name = self.get_argument('n')
-
         val = redis.aim.delete(name)
-
         self.write(protocol.success())
 
 
@@ -88,7 +96,7 @@ class SessionDelHandler(handler.Handler):
         self.write(protocol.success())
 
 
-class SessionExtGetHandler(handler.Handler):
+class VerifyImgGetHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def get(self):
@@ -97,11 +105,11 @@ class SessionExtGetHandler(handler.Handler):
         :return:
         """
         sid, name = self.get_argument('sid'), self.get_argument('n')
-        data = session.get(sid).getext(name)
+        data = verify.img.get(sid, name)
         self.write(protocol.success(data = data))
 
 
-class SessionExtDelHandler(handler.Handler):
+class VerifyImgDelHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def get(self):
@@ -110,11 +118,11 @@ class SessionExtDelHandler(handler.Handler):
         :return:
         """
         sid, name = self.get_argument('sid'), self.get_argument('n')
-        session.get(sid).delext(name)
+        verify.img.delete(sid, name)
         self.write(protocol.success())
 
 
-class SmsGetHandler(handler.Handler):
+class VerifySmsGetHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def get(self):
@@ -123,11 +131,11 @@ class SmsGetHandler(handler.Handler):
         :return:
         """
         phone, name = self.get_argument('p'), self.get_argument('n')
-        data = sms.get(phone, name)
+        data = verify.sms.get(phone, name)
         self.write(protocol.success(data = data))
 
 
-class SmsDelHandler(handler.Handler):
+class VerifySmsDelHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def get(self):
@@ -136,6 +144,6 @@ class SmsDelHandler(handler.Handler):
         :return:
         """
         phone, name = self.get_argument('p'), self.get_argument('n')
-        sms.delete(phone, name)
+        verify.sms.delete(phone, name)
         self.write(protocol.success())
 

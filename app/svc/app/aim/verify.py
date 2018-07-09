@@ -26,6 +26,9 @@ def _smsid(phone, name):
 
 # vode verify using sms
 class _Sms:
+    # sms verify code definition
+    register = _RedisItem('register', 120)
+
     @staticmethod
     def set(phone, name, val, expires):
         """
@@ -60,9 +63,6 @@ class _Sms:
         key = _smsid(phone, name)
         _smsredis.delete(key)
 
-    # sms verify code definition
-    register = _RedisItem('register', 120)
-
 sms = _Sms
 
 
@@ -83,6 +83,9 @@ def _imgid(sid, name):
 
 # vode verify using image
 class _Image:
+    # image verify code items defination
+    register = _RedisItem('register', 120)
+
     @staticmethod
     def set(sid, name, val, expires):
         """
@@ -116,8 +119,5 @@ class _Image:
         """
         key = _imgid(sid, name)
         _smsredis.delete(key)
-
-    # image verify code items defination
-    register = _RedisItem('register', 120)
 
 img = _Image

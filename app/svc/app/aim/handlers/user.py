@@ -17,6 +17,52 @@ class GetSIDHandler(handler.Handler):
         self.write(protocol.success(data={'sid':sid}))
 
 
+class UserExistHandler(handler.Handler):
+    @access.exptproc
+    def get(self):
+        """
+            check if user has exist
+        :return:
+        """
+        # get arguments
+        phone = self.get_argument('phone')
+
+        # check if user has exist
+        usermodel = models.user.UserModel(self.db)
+
+        if len(usermodel.get(phone)) > 0:
+            data = {'exist': True}
+        else:
+            data = {'exist': False}
+
+        return self.write(protocol.success(data=data))
+
+
+class VerifyImgForRegHandler(handler.Handler):
+    @access.exptproc
+    def get(self):
+        """
+            user register
+        :return:
+        """
+        # get arguments
+        phone, vcode = self.get_argument('phone', None), self.get_argument('vcode', None)
+
+        # get verify image
+        if vcode is None:
+            chars, imgdata = verifier.image.num(4, 120, 50)
+
+            # save verify chars
+            verify.img.set(self.session.id, verify.img.register.name, chars, verify.img.register.expires)
+
+            # response data
+            self.set_header('Content-Type', 'image/png')
+            self.write(imgdata)
+
+            return
+
+
+
 class RegisterHandler(handler.Handler):
     @access.exptproc
     def get(self):
@@ -82,7 +128,7 @@ class RegisterHandler(handler.Handler):
             return
 
         # check verify code
-        if vcode.lower() != sms.get(phone, sms.REGISTER).lower():
+        if vcode.lower() != verify.sms.get(phone, verify.sms.register.name).lower():
             self.write(error.wrong_sms_verify_code.data)
             return
 

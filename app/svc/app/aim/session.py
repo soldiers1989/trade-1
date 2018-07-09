@@ -1,7 +1,7 @@
 """
     http session
 """
-import uuid
+import uuid, time
 from app.aim import redis
 
 
@@ -13,17 +13,18 @@ class _Session:
         self._id = id
         self._redis = redis
 
+        if self._redis.exists(self._id):
+            self.set('ctime', time.time())
+
     @property
     def id(self):
         return self._id
 
-    @property
-    def sid(self):
+    def create(self):
         """
-            generate session id
+            create s
         :return:
         """
-        return 'ss_'+self._id
 
     def set(self, key, val):
         """
@@ -32,7 +33,7 @@ class _Session:
         :param val:
         :return:
         """
-        self._redis.hset(self.sid, key, val)
+        self._redis.hset(self._id, key, val)
 
     def get(self, key, default=None):
         """
@@ -41,7 +42,7 @@ class _Session:
         :param default:
         :return:
         """
-        val = self._redis.hget(self.sid, key)
+        val = self._redis.hget(self._id, key)
         if val is None:
             val = default
 
@@ -81,7 +82,7 @@ def _newid():
         create new session id
     :return:
     """
-    return str(uuid.uuid4())
+    return 'ss_'+str(uuid.uuid4())
 
 
 # redis for session
@@ -94,7 +95,7 @@ def get(sid = None):
     :param sid:
     :return:
     """
-    if sid is None or not _sredis.exists(sid):
+    if sid is None:
         sid = _newid()
 
     return _Session(sid, _sredis)

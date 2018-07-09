@@ -2,7 +2,10 @@ from app.aim import handlers
 
 handlers = [
     (r"/user/sid", handlers.user.GetSIDHandler),
+    (r"/user/exist", handlers.user.UserExistHandler),
     (r"/user/register", handlers.user.RegisterHandler),
+    (r"/user/vimg", handlers.user.UserExistHandler),
+    (r"/user/vsms", handlers.user.UserExistHandler),
     (r"/user/login", handlers.user.LoginHandler),
     (r"/user/logout", handlers.user.LogoutHandler),
 
@@ -12,10 +15,10 @@ handlers = [
     (r"/admin/redis/del", handlers.admin.RedisDelHandler),
     (r"/admin/session/get", handlers.admin.SessionGetHandler),
     (r"/admin/session/del", handlers.admin.SessionDelHandler),
-    (r"/admin/sessionext/get", handlers.admin.SessionExtGetHandler),
-    (r"/admin/sessionext/del", handlers.admin.SessionExtDelHandler),
-    (r"/admin/sms/get", handlers.admin.SmsGetHandler),
-    (r"/admin/sms/del", handlers.admin.SmsDelHandler),
+    (r"/admin/verify/img/get", handlers.admin.VerifyImgGetHandler),
+    (r"/admin/verify/img/del", handlers.admin.VerifyImgDelHandler),
+    (r"/admin/verify/sms/get", handlers.admin.VerifySmsGetHandler),
+    (r"/admin/verify/sms/del", handlers.admin.VerifySmsDelHandler),
 
     (r"/verify/sms", handlers.verify.SmsHandler),
     (r"/verify/image", handlers.verify.ImageHandler),
