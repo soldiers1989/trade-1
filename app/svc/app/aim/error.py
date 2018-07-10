@@ -27,5 +27,6 @@ invalid_phone = _Error(-1100, '错误的手机号')
 server_exception = _Error(-1200, '服务器处理异常')
 invalid_access = _Error(-1201, '未授权的非法访问')
 
-wrong_sms_verify_code = _Error(-1211, '短信验验码错误')
 wrong_image_verify_code = _Error(-1210, '图片验验码错误')
+wrong_sms_verify_code = _Error(-1211, '短信验验码错误')
+wrong_usage_verify_code = _Error(-1212, '验证码类型错误')

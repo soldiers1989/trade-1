@@ -1,7 +1,7 @@
 """
     service admin
 """
-from app.aim import log, access, handler, error, protocol, session, redis, verify
+from app.aim import log, access, handler, error, protocol, session, redis, cache
 
 
 class EchoHandler(handler.Handler):
@@ -105,7 +105,7 @@ class VerifyImgGetHandler(handler.Handler):
         :return:
         """
         sid, name = self.get_argument('sid'), self.get_argument('n')
-        data = verify.img.get(sid, name)
+        data = cache.img.get(sid, name)
         self.write(protocol.success(data = data))
 
 
@@ -118,7 +118,7 @@ class VerifyImgDelHandler(handler.Handler):
         :return:
         """
         sid, name = self.get_argument('sid'), self.get_argument('n')
-        verify.img.delete(sid, name)
+        cache.img.delete(sid, name)
         self.write(protocol.success())
 
 
@@ -131,7 +131,7 @@ class VerifySmsGetHandler(handler.Handler):
         :return:
         """
         phone, name = self.get_argument('p'), self.get_argument('n')
-        data = verify.sms.get(phone, name)
+        data = cache.sms.get(phone, name)
         self.write(protocol.success(data = data))
 
 
@@ -144,6 +144,6 @@ class VerifySmsDelHandler(handler.Handler):
         :return:
         """
         phone, name = self.get_argument('p'), self.get_argument('n')
-        verify.sms.delete(phone, name)
+        cache.sms.delete(phone, name)
         self.write(protocol.success())
 

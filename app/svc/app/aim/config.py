@@ -26,6 +26,7 @@ SESSION_COOKIE_TIMEOUT = 30
 
 # image verifier code expire time in seconds
 EXPIRE_VERIFIER_IMAGE = 120
+
 # sms verifier code expire time in seconds
 EXPIRE_VERIFIER_SMS = 300
 

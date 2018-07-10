@@ -2,8 +2,8 @@
     user handlers
 """
 from lib.cube.util import hash
-from app.aim import access, handler, models, error, protocol, verify, config
-from app.util import verifier, validator
+from app.aim import access, handler, models, error, protocol, cache
+from app.util import validator
 
 
 class GetSIDHandler(handler.Handler):
@@ -38,81 +38,7 @@ class UserExistHandler(handler.Handler):
         return self.write(protocol.success(data=data))
 
 
-class VerifyImgForRegHandler(handler.Handler):
-    @access.exptproc
-    def get(self):
-        """
-            user register
-        :return:
-        """
-        # get arguments
-        phone, vcode = self.get_argument('phone', None), self.get_argument('vcode', None)
-
-        # get verify image
-        if vcode is None:
-            chars, imgdata = verifier.image.num(4, 120, 50)
-
-            # save verify chars
-            verify.img.set(self.session.id, verify.img.register.name, chars, verify.img.register.expires)
-
-            # response data
-            self.set_header('Content-Type', 'image/png')
-            self.write(imgdata)
-
-            return
-
-
-
 class RegisterHandler(handler.Handler):
-    @access.exptproc
-    def get(self):
-        """
-            user register
-        :return:
-        """
-        # get arguments
-        phone, vcode = self.get_argument('phone', None), self.get_argument('vcode', None)
-
-        # get verify image
-        if vcode is None:
-            chars, imgdata = verifier.image.num(4, 120, 50)
-
-            # save verify chars
-            verify.img.set(self.session.id, verify.img.register.name, chars, verify.img.register.expires)
-
-            # response data
-            self.set_header('Content-Type', 'image/png')
-            self.write(imgdata)
-
-            return
-
-        # sms need phone number
-        if phone is None:
-            self.write(error.invalid_parameters.data)
-            return
-
-
-        # check phone number
-        if not validator.phone(phone):
-            self.write(error.invalid_phone.data)
-            return
-
-        # check verify code
-        svcode = self.session.getext(self.session.ext.VCODE_IMG_REG)
-        if svcode is None or vcode.lower() != svcode.lower():
-            self.write(error.invalid_access.data)
-            return
-
-
-        # send and save sms
-        smscode = verifier.rand.num(4)
-        verifier.sms.send(phone, smscode)
-        verify.sms.set(phone, verify.sms.register.name, smscode, verify.sms.register.expires)
-
-        # sms has send success
-        self.write(protocol.success())
-
-
     @access.exptproc
     def post(self):
         """
@@ -128,7 +54,7 @@ class RegisterHandler(handler.Handler):
             return
 
         # check verify code
-        if vcode.lower() != verify.sms.get(phone, verify.sms.register.name).lower():
+        if vcode.lower() != cache.sms.get(phone, 'register').lower():
             self.write(error.wrong_sms_verify_code.data)
             return
 

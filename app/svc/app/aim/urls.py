@@ -21,5 +21,5 @@ handlers = [
     (r"/admin/verify/sms/del", handlers.admin.VerifySmsDelHandler),
 
     (r"/verify/sms", handlers.verify.SmsHandler),
-    (r"/verify/image", handlers.verify.ImageHandler),
+    (r"/verify/img", handlers.verify.ImageHandler),
 ]
