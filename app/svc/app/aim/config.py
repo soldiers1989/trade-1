@@ -23,12 +23,15 @@ SESSION_TIMEOUT = 30*24*3600
 # session cookie timeout in days
 SESSION_COOKIE_TIMEOUT = 30
 
+# verify code expire time in seconds
+EXPIRE_VERIFY_CODE = 120
+LENGTH_VERIFY_CODE_MIN = 4
+LENGTH_VERIFY_CODE_MAX = 6
 
-# image verifier code expire time in seconds
-EXPIRE_VERIFIER_IMAGE = 120
-
-# sms verifier code expire time in seconds
-EXPIRE_VERIFIER_SMS = 300
+WIDTH_VERIFY_IMAGE_MIN = 50
+WIDTH_VERIFY_IMAGE_MAX = 200
+HEIGHT_VERIFY_IMAGE_MIN = 30
+HEIGHT_VERIFY_IMAGE_MAX = 100
 
 # public headers for response
 HEADERS = [
@@ -42,7 +45,6 @@ REDISS = {
         'dev': {
             'host': '127.0.0.1',
             'port': 6379,
-            'db': 0,
             'password': None,
             'encoding': 'utf-8',
             'decode_responses': True
@@ -51,7 +53,6 @@ REDISS = {
         'test': {
             'host': '127.0.0.1',
             'port': 6379,
-            'db': 0,
             'password': None,
             'encoding': 'utf-8',
             'decode_responses': True
@@ -60,7 +61,6 @@ REDISS = {
         'online': {
             'host': '127.0.0.1',
             'port': 6379,
-            'db': 0,
             'password': None,
             'encoding': 'utf-8',
             'decode_responses': True

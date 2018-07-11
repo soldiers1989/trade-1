@@ -1,8 +1,9 @@
 """
     http session
 """
-import uuid, time
+import time
 from app.aim import redis
+from app.util import rand
 
 
 class _Session:
@@ -63,7 +64,6 @@ class _Session:
         """
         self._redis.delete(self._id)
 
-
     def expire(self, seconds):
         """
             reset session expire time in seconds
@@ -82,11 +82,11 @@ def _newid():
         create new session id
     :return:
     """
-    return 'ss_'+str(uuid.uuid4())
+    return rand.uuid()
 
 
 # redis for session
-_sredis = redis.aim
+_sredis = redis.session
 
 # get session by id
 def get(sid = None):

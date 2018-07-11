@@ -44,11 +44,11 @@ class _RedisLog:
         return records
 
 # info log object
-_infolog = _RedisLog('log_aim_info', redis.aim)
+_infolog = _RedisLog('log_aim_info', redis.log)
 
 
 # error log object
-_errorlog = _RedisLog('log_aim_error', redis.aim)
+_errorlog = _RedisLog('log_aim_error', redis.log)
 
 
 def info(msg):

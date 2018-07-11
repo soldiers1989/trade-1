@@ -9,7 +9,7 @@ def phone(val):
     :param val:
     :return:
     """
-    pass
+    return True
 
 
 def password(val):
@@ -18,5 +18,16 @@ def password(val):
     :param val:
     :return:
     """
-    pass
+    return True
+
+
+def range(val, vmin, vmax):
+    """
+
+    :param val:
+    :param vmin:
+    :param vmax:
+    :return:
+    """
+    return True
 

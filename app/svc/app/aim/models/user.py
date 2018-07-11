@@ -8,7 +8,7 @@ from app.aim import model
 class UserModel(model.Model):
     def get(self, user):
         """
-            get user by username
+            get user by username(phone number)
         :param user:
         :return:
         """

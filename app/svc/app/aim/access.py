@@ -42,7 +42,10 @@ def exptproc(handler_func):
         except tornado.web.MissingArgumentError as e:
             self.write(error.missing_parameters.data)
             log.error(str(e))
+        except error.ProcessError as e:
+            self.write(e.data)
+            log.error(str(e))
         except Exception as e:
             self.write(error.server_exception.data)
             log.error(str(e))
-    return  wrapper
+    return wrapper

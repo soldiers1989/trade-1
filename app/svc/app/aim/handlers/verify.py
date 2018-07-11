@@ -1,53 +1,42 @@
 """
     service verifier, including image, sms
 """
-from app.util import sms, image, rand
-from app.aim import access, handler, error, protocol, config, cache, vcode
+from app.util import sms, image, rand, validator
+from app.aim import access, handler, error, protocol, config, models, verify, msgtpl
 
 
-class ImageCodeHandler(handler.Handler):
+class CodeHandler(handler.Handler):
     @access.exptproc
     def get(self):
         """
-            get verify code id
+            get verify code
         :return:
         """
         # get arguments
-        u = self.get_argument('u') # verify code usage
+        t = self.get_argument('t')  # image code type, n - number, s - alpha string, ns - alpha/number string
+        l = int(self.get_argument('l'))  # code length
 
-        # get verify code object by usage
-        o = vcode.create(u)
+        # check verify code length
+        if not validator.range(l, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
+            raise error.invalid_parameters
 
-        if o is None:
-            self.write(error.wrong_usage_verify_code.data)
-            return
+        # generate random characters
+        code = rand.vcode(t, l)
+        if code is None:
+            raise error.invalid_parameters
 
-        data = {'v': o.id}
+        # generate verify code id
+        id = rand.uuid()
+
+        # save to verify code storage
+        verify.image.set(id, code, config.EXPIRE_VERIFY_CODE)
+
+        # response with verify code id
+        data = {'id': id}
         self.write(protocol.success(data = data))
 
 
-class SmsCodeHandler(handler.Handler):
-    @access.exptproc
-    def get(self):
-        """
-            get verify code id
-        :return:
-        """
-        # get arguments
-        u = self.get_argument('u') # verify code usage
-
-        # get verify code object by usage
-        o = vcode.create(u)
-
-        if o is None:
-            self.write(error.wrong_usage_verify_code.data)
-            return
-
-        data = {'v': o.id}
-        self.write(protocol.success(data = data))
-
-
-class ImageHandler(handler.Handler):
+class GeneralImageHandler(handler.Handler):
     @access.exptproc
     def get(self):
         """
@@ -55,31 +44,20 @@ class ImageHandler(handler.Handler):
         :return:
         """
         # get arguments
-        i = self.get_argument('i') # identifier for usage
-        t = self.get_argument('t') # image code type, n - number, s - alpha string, ns - alpha/number string
-        l = int(self.get_argument('l')) # code length
+        i = self.get_argument('i') # verify code id
         w = int(self.get_argument('w')) # image width
         h = int(self.get_argument('h')) # image height
-
         f = [] # font sizes, split by ','
         for s in self.get_argument('f').split(','):
             f.append(int(s))
 
-        # generate random characters
-        if t == 'n':
-            chars = rand.num(l)
-        elif t == 's':
-            chars = rand.alpha(l)
-        elif t == 'ns':
-            chars = rand.alnum(l)
-        else:
-            chars = rand.num(l)
+        # get image code from verify code storage
+        code = verify.image.get(i)
+        if code is None:
+            raise error.invalid_parameters
 
         # create image
-        data = image.create(chars, w, h, f)
-
-        # save verify characters
-        cache.img.set(self.session.id, i, chars, config.EXPIRE_VERIFIER_IMAGE)
+        data = image.create(code, w, h, f)
 
         # response image data
         self.set_header('Content-Type', 'image/png')
@@ -96,16 +74,77 @@ class ImageHandler(handler.Handler):
         c = self.get_argument('c') # user input characters
 
         # get verify characters from session
-        sc = cache.img.get(self.session.id, i)
+        sc = verify.image.get(i)
+
+        # verify user input code
+        if sc is None or c.lower() != sc.lower():
+            raise error.wrong_image_verify_code
+
+        self.write(protocol.success())
+
+
+class SessionImageHandler(handler.Handler):
+    @access.exptproc
+    def get(self):
+        """
+            get verifier image
+        :return:
+        """
+        # get arguments
+        i = self.session.id # use session id for image id
+        t = self.get_argument('t') # image code type, n - number, s - alpha string, ns - alpha/number string
+        l = int(self.get_argument('l')) # code length
+        w = int(self.get_argument('w')) # image width
+        h = int(self.get_argument('h')) # image height
+
+        f = [] # font sizes, split by ','
+        for s in self.get_argument('f').split(','):
+            f.append(int(s))
+
+        # generate random characters
+        code = rand.vcode(t, l)
+        if code is None:
+            raise error.invalid_parameters
+
+        # check verify code length
+        if not validator.range(l, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
+            raise error.invalid_parameters
+
+        # check image width and height
+        if not validator.range(w, config.WIDTH_VERIFY_IMAGE_MIN, config.WIDTH_VERIFY_IMAGE_MAX) or not validator.range(h, config.HEIGHT_VERIFY_IMAGE_MIN, config.HEIGHT_VERIFY_IMAGE_MAX):
+            raise error.invalid_parameters
+
+        # create image
+        data = image.create(code, w, h, f)
+
+        # save verify characters
+        verify.image.set(i, code, config.EXPIRE_VERIFY_CODE)
+
+        # response image data
+        self.set_header('Content-Type', 'image/png')
+        self.write(data)
+
+    @access.exptproc
+    def post(self):
+        """
+            check verifier image
+        :return:
+        """
+        # get arguments
+        i = self.session.id  # use session id for image id
+        c = self.get_argument('c') # user input characters
+
+        # get verify characters from session
+        sc = verify.image.get(self.session.id, i)
 
         # verify
-        if sc is not None and c.lower() == sc.lower():
-            self.write(protocol.success())
-        else:
-            self.write(error.wrong_image_verify_code.data)
+        if sc is None or c.lower() != sc.lower():
+            raise error.wrong_image_verify_code
+
+        self.write(protocol.success())
 
 
-class SmsHandler(handler.Handler):
+class GeneralSmsHandler(handler.Handler):
     @access.exptproc
     def get(self):
         """
@@ -114,18 +153,41 @@ class SmsHandler(handler.Handler):
         """
         # get arguments
         p = self.get_argument('p') # phone number
-        i = self.get_argument('i') # identifier for usage
-        l = int(self.get_argument('l', 6)) # length of numbers
+        c = self.get_argument('c') # user input verify code
+        v = self.get_argument('v') # server verify code id
+        t = self.get_argument('t') # message template
+        l = int(self.get_argument('l')) # length of numbers
 
-        # create & save message
-        msg = rand.num(l)
-        cache.sms.set(p, i, msg, config.EXPIRE_VERIFIER_SMS)
+        # check phone number
+        if not validator.phone(p):
+            raise error.invalid_parameters
 
-        # send message
-        sms.send(p, msg)
+        # check verify code
+        sc = verify.image.get(v)
+        if sc is None or c.lower() != sc.lower():
+            raise error.wrong_image_verify_code
 
-        # response
-        self.write(protocol.success())
+        # get message template
+        tpl = msgtpl.sms.get(t)
+        if tpl is None:
+            raise error.invalid_parameters
+
+        # check verify code length
+        if validator.range(l, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
+            raise error.invalid_parameters
+
+        # generate verify code
+        code = rand.num(l)
+
+        # save verify code
+        verify.sms.set(p, code, config.EXPIRE_VERIFY_CODE)
+
+        # send message by template
+        sms.send(p, tpl.format(code))
+
+        # response data
+        data = {'expires': config.EXPIRE_VERIFY_CODE}
+        self.write(protocol.success(data = data))
 
     @access.exptproc
     def post(self):
@@ -135,56 +197,15 @@ class SmsHandler(handler.Handler):
         """
         # get arguments
         p = self.get_argument('p') # phone number
-        i = self.get_argument('i') # identifier for usage
         c = self.get_argument('c')  # user input characters
 
         # verify code
-        sc = cache.sms.get(p, i)
-        if sc is not None and c.lower() == sc.lower():
-            self.write(protocol.success())
-        else:
-            self.write(error.wrong_sms_verify_code.data)
+        sc = verify.sms.get(p)
+        if sc is None or c.lower() != sc.lower():
+            raise error.wrong_sms_verify_code
 
-
-class PhoneSmsHandler(handler.Handler):
-    @access.exptproc
-    def get(self):
-        """
-            send sms
-        :return:
-        """
-        # get arguments
-        p = self.get_argument('p') # phone number
-        u = self.get_argument('u') # verify code usage
-        c = self.get_argument('c') # user input verify code for send message
-
-        # create verify vode
-        vcode = rand.num(l)
-        cache.sms.set(p, i, msg, config.EXPIRE_VERIFIER_SMS)
-
-        # send message
-        sms.send(p, msg)
-
-        # response
+        # response success
         self.write(protocol.success())
-
-    @access.exptproc
-    def post(self):
-        """
-            check sms
-        :return:
-        """
-        # get arguments
-        p = self.get_argument('p') # phone number
-        i = self.get_argument('i') # identifier for usage
-        c = self.get_argument('c')  # user input characters
-
-        # verify code
-        sc = cache.sms.get(p, i)
-        if sc is not None and c.lower() == sc.lower():
-            self.write(protocol.success())
-        else:
-            self.write(error.wrong_sms_verify_code.data)
 
 
 class UserSmsHandler(handler.Handler):
@@ -194,20 +215,40 @@ class UserSmsHandler(handler.Handler):
             send sms
         :return:
         """
+        # get login user phone number
+        p = self.session.get('phone')
+        if p is None:
+            raise error.user_not_login
+
         # get arguments
-        p = self.get_argument('p') # phone number
-        i = self.get_argument('i') # identifier for usage
-        l = int(self.get_argument('l', 6)) # length of numbers
+        t = self.get_argument('t') # message template
+        l = int(self.get_argument('l')) # length of numbers
 
-        # create & save message
-        msg = rand.num(l)
-        cache.sms.set(p, i, msg, config.EXPIRE_VERIFIER_SMS)
+        # check phone number
+        if not validator.phone(p):
+            raise error.invalid_parameters
 
-        # send message
-        sms.send(p, msg)
+        # get message template
+        tpl = msgtpl.sms.get(t)
+        if tpl is None:
+            raise error.invalid_parameters
 
-        # response
-        self.write(protocol.success())
+        # check verify code length
+        if validator.range(l, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
+            raise error.invalid_parameters
+
+        # generate verify code
+        code = rand.num(l)
+
+        # save verify code
+        verify.sms.set(p, code, config.EXPIRE_VERIFY_CODE)
+
+        # send message by template
+        sms.send(p, tpl.format(code))
+
+        # response data
+        data = {'expires': config.EXPIRE_VERIFY_CODE}
+        self.write(protocol.success(data = data))
 
     @access.exptproc
     def post(self):
@@ -215,14 +256,18 @@ class UserSmsHandler(handler.Handler):
             check sms
         :return:
         """
+        # get login user phone number
+        p = self.session.get('phone')
+        if p is None:
+            raise error.user_not_login
+
         # get arguments
-        p = self.get_argument('p') # phone number
-        i = self.get_argument('i') # identifier for usage
         c = self.get_argument('c')  # user input characters
 
         # verify code
-        sc = cache.sms.get(p, i)
-        if sc is not None and c.lower() == sc.lower():
-            self.write(protocol.success())
-        else:
-            self.write(error.wrong_sms_verify_code.data)
+        sc = verify.sms.get(p)
+        if sc is None or c.lower() != sc.lower():
+            raise error.wrong_sms_verify_code
+
+        # response success
+        self.write(protocol.success())

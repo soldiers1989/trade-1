@@ -2,7 +2,7 @@
     user handlers
 """
 from lib.cube.util import hash
-from app.aim import access, handler, models, error, protocol, cache
+from app.aim import access, handler, models, error, protocol, verify
 from app.util import validator
 
 
@@ -46,30 +46,27 @@ class RegisterHandler(handler.Handler):
         :return:
         """
         # get arguments
-        phone, pwd, vcode = self.get_argument('phone'), self.get_argument('pwd'), self.get_argument('vcode')
+        phone, pwd, vid, vcode = self.get_argument('phone'), self.get_argument('pwd'), self.get_argument('vid'), self.get_argument('vcode')
 
         # check arguments
         if not validator.phone(phone) and not validator.password(pwd):
-            self.write(error.invalid_parameters.data)
-            return
+            raise error.invalid_parameters
 
         # check verify code
-        if vcode.lower() != cache.sms.get(phone, 'register').lower():
-            self.write(error.wrong_sms_verify_code.data)
-            return
+        scode = verify.image.get(vid)
+        if scode is None or vcode.lower() != scode.lower():
+            raise error.wrong_sms_verify_code
 
         # init user model
         usermodel = models.user.UserModel(self.db)
 
         # check exists user
         if len(usermodel.get(phone)) > 0:
-            self.write(error.user_exists.data)
-            return
+            raise error.user_exists
 
         # create user
         if usermodel.add(phone, hash.sha1(pwd)) != 1:
-            self.write(error.user_register.data)
-            return
+            raise error.user_register
 
         # register success
         self.write(protocol.success())
@@ -92,21 +89,13 @@ class LoginHandler(handler.Handler):
         users = usermodel.get(user)
 
         ## check user ##
-        # user not exist
-        if len(users) == 0:
-            self.write(protocol.failed(**error.USER_OR_PASSWORD_INVALID))
-            return
-
-        # password invalid
-        if hash.sha1(pwd) != users[0].get('pwd'):
-            self.write(protocol.failed(**error.USER_OR_PASSWORD_INVALID))
-            return
-
+        # user not exist or password invalid
+        if len(users) == 0 or hash.sha1(pwd) != users[0].get('pwd'):
+            raise error.user_or_pwd_invalid
 
         # user has disabled
         if users[0].get('disable'):
-            self.write(protocol.failed(**error.USER_DISABLED))
-            return
+            raise error.user_disabled
 
         # get user id
         uid = users[0].get('id')
