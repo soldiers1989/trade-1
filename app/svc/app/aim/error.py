@@ -42,3 +42,5 @@ wrong_image_verify_code = ProcessError(-1210, '图片验验码错误')
 wrong_sms_verify_code = ProcessError(-1211, '短信验验码错误')
 wrong_usage_verify_code = ProcessError(-1212, '验证码类型错误')
 
+redis_db_not_exist = ProcessError(-1220, '查询DB不存在')
+redis_key_not_exist = ProcessError(-1221, '查询健值不存在')

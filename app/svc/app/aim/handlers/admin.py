@@ -29,7 +29,7 @@ class RedisGetHandler(handler.Handler):
         # get redis db
         db = redis.all.get(db)
         if db is None:
-            raise error.invalid_parameters
+            raise error.redis_db_not_exist
 
         # get data from redis db
         if type == 'h': # hash
@@ -43,6 +43,9 @@ class RedisGetHandler(handler.Handler):
             data = db.zrange(name, 0, -1)
         else: # string
             data = db.get(name)
+
+        if data is None:
+            raise error.redis_key_not_exist
 
         self.write(protocol.success(data=data))
 
@@ -61,7 +64,7 @@ class RedisDelHandler(handler.Handler):
         # get redis db
         db = redis.all.get(db)
         if db is None:
-            raise error.invalid_parameters
+            raise error.redis_db_not_exist
 
         # delete data
         db.delete(name)
