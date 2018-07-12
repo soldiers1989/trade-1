@@ -46,14 +46,14 @@ class RegisterHandler(handler.Handler):
         :return:
         """
         # get arguments
-        phone, pwd, vid, vcode = self.get_argument('phone'), self.get_argument('pwd'), self.get_argument('vid'), self.get_argument('vcode')
+        phone, pwd, vcode = self.get_argument('phone'), self.get_argument('pwd'), self.get_argument('vcode')
 
         # check arguments
         if not validator.phone(phone) and not validator.password(pwd):
             raise error.invalid_parameters
 
         # check verify code
-        scode = verify.image.get(vid)
+        scode = verify.sms.get(phone)
         if scode is None or vcode.lower() != scode.lower():
             raise error.wrong_sms_verify_code
 
@@ -98,10 +98,11 @@ class LoginHandler(handler.Handler):
             raise error.user_disabled
 
         # get user id
-        uid = users[0].get('id')
+        uid, phone = users[0].get('id'), users[0].get('phone')
 
         # set user session
         self.session.set('uid', uid)
+        self.session.set('phone', phone)
 
         # login success
         self.write(protocol.success(data={'uid':uid, 'sid': self.session.id}))

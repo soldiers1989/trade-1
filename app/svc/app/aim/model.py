@@ -10,30 +10,52 @@ class Model:
         """
         self._db = db
 
-    def _begin(self):
+    def begin(self):
         """
             begin transaction
         :return:
         """
         self._db.begin()
 
-    def _commit(self):
+    def commit(self):
         """
             commit changes
         :return:
         """
         self._db.commit()
 
-    def _execute(self, sql, args=None):
+    def execute(self, sql, args=None):
         """
             execute
         :param query:
         :param args:
         :return:
         """
-        return self._db.execute(sql, args)
+        self._db.execute(sql, args)
 
-    def _select(self, sql, args=None):
+    def insert(self, sql, args=None):
+        """
+            execute
+        :param query:
+        :param args:
+        :return:
+        """
+        n = self._db.execute(sql, args)
+        self._db.commit()
+        return n
+
+    def update(self, sql, args=None):
+        """
+            execute
+        :param query:
+        :param args:
+        :return:
+        """
+        n = self._db.execute(sql, args)
+        self._db.commit()
+        return n
+
+    def select(self, sql, args=None):
         """
             select
         :param query:

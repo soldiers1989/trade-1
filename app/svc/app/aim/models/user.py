@@ -20,7 +20,7 @@ class UserModel(model.Model):
               '''
 
         # excute query
-        results = self._select(sql, (user,))
+        results = self.select(sql, (user,))
 
         return results
 
@@ -43,4 +43,4 @@ class UserModel(model.Model):
         tm = int(time.time())
 
         # insert new records
-        return self._execute(sql, (phone, pwd, phone, 0.0, False, tm, tm))
+        return self.insert(sql, (phone, pwd, phone, 0.0, False, tm, tm))

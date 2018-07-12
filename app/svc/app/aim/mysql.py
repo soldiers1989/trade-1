@@ -1,5 +1,5 @@
 from app.aim import config
-from lib.util import mysql
+from app.util import mysql
 
 # mysql databases
 _aim = config.DATABASES['aim'][config.MODE]

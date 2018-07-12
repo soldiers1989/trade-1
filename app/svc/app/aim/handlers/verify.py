@@ -135,7 +135,7 @@ class SessionImageHandler(handler.Handler):
         c = self.get_argument('c') # user input characters
 
         # get verify characters from session
-        sc = verify.image.get(self.session.id, i)
+        sc = verify.image.get(i)
 
         # verify
         if sc is None or c.lower() != sc.lower():
@@ -173,7 +173,7 @@ class GeneralSmsHandler(handler.Handler):
             raise error.invalid_parameters
 
         # check verify code length
-        if validator.range(l, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
+        if not validator.range(l, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
             raise error.invalid_parameters
 
         # generate verify code
@@ -234,7 +234,7 @@ class UserSmsHandler(handler.Handler):
             raise error.invalid_parameters
 
         # check verify code length
-        if validator.range(l, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
+        if not validator.range(l, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
             raise error.invalid_parameters
 
         # generate verify code
