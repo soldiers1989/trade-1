@@ -6,7 +6,7 @@ from app.aim import model
 
 
 class UserModel(model.Model):
-    def get(self, user):
+    def get(self, **kwargs):
         """
             get user by username(phone number)
         :param user:
@@ -18,7 +18,6 @@ class UserModel(model.Model):
                 from tb_user
                 where `user`=%s
               '''
-
         # excute query
         results = self.select(sql, (user,))
 

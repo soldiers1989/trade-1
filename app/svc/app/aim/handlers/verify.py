@@ -7,7 +7,7 @@ from app.aim import access, handler, error, protocol, config, models, verify, ms
 
 class CodeHandler(handler.Handler):
     @access.exptproc
-    def get(self):
+    def post(self):
         """
             get verify code
         :return:

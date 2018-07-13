@@ -131,6 +131,11 @@ class ChangePwdHandler(handler.Handler):
         :return:
         """
         try:
+            # get arguments
+            opwd, npwd = self.get_argument('opwd'), self.get_argument('npwd')
+
+            # check old password
+
             self.write(protocol.success(data=[]))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
