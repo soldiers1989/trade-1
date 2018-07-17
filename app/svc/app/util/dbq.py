@@ -3,13 +3,18 @@
 """
 
 
-class Dbq:
+class Db:
     def __init__(self, db):
         """
             init model with database connection
         :param db:
         """
         self._db = db
+
+    def connect(self):
+        """
+        :return:
+        """
 
     def tables(self, *args):
         """
