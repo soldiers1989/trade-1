@@ -12,6 +12,9 @@ handlers = [
     (r"/user/vsms", handlers.user.UserExistHandler),
     (r"/user/login", handlers.user.LoginHandler),
     (r"/user/logout", handlers.user.LogoutHandler),
+    (r"/user/cpwd", handlers.user.ChangePwdHandler),
+    (r"/user/fpwd", handlers.user.FindPwdHandler),
+    (r"/user/bank/get", handlers.user.GetBankHandler),
 
     (r"/verify/gsms", handlers.verify.GeneralSmsHandler),
     (r"/verify/usms", handlers.verify.UserSmsHandler),

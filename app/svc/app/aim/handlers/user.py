@@ -30,7 +30,7 @@ class UserExistHandler(handler.Handler):
         # check if user has exist
         usermodel = models.user.UserModel(self.db)
 
-        if len(usermodel.get(phone)) > 0:
+        if len(usermodel.get(phone=phone)) > 0:
             data = {'exist': True}
         else:
             data = {'exist': False}
@@ -61,7 +61,7 @@ class RegisterHandler(handler.Handler):
         usermodel = models.user.UserModel(self.db)
 
         # check exists user
-        if len(usermodel.get(phone)) > 0:
+        if len(usermodel.get(phone=phone)) > 0:
             raise error.user_exists
 
         # create user
@@ -86,7 +86,7 @@ class LoginHandler(handler.Handler):
         usermodel = models.user.UserModel(self.db)
 
         # get user from database
-        users = usermodel.get(user)
+        users = usermodel.get(user=user)
 
         ## check user ##
         # user not exist or password invalid
@@ -124,32 +124,129 @@ class LogoutHandler(handler.Handler):
 
 
 class ChangePwdHandler(handler.Handler):
+    @access.exptproc
     @access.needlogin
     def post(self):
         """
             echo
         :return:
         """
-        try:
-            # get arguments
-            opwd, npwd = self.get_argument('opwd'), self.get_argument('npwd')
+        # get arguments
+        opwd, npwd = self.get_argument('opwd'), self.get_argument('npwd')
 
-            # check old password
+        # check new password
+        if not validator.password(npwd):
+            raise error.invalid_parameters
 
-            self.write(protocol.success(data=[]))
-        except Exception as e:
-            self.write(protocol.failed(msg=str(e)))
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # get user from database
+        uid = self.session.get('uid')
+        user = usermodel.get(id = uid)[0]
+
+        # match old password
+        if hash.sha1(opwd) != user.get('pwd'):
+            raise error.user_pwd_invalid
+
+        # update password
+        usermodel.update(uid, pwd=hash.sha1(npwd))
+
+        self.write(protocol.success())
 
 
 class FindPwdHandler(handler.Handler):
-    @access.needlogin
+    @access.exptproc
     def post(self):
         """
             echo
         :return:
         """
-        try:
-            self.write(protocol.success(data=[]))
-        except Exception as e:
-            self.write(protocol.failed(msg=str(e)))
+        # get arguments
+        phone, vcode, npwd = self.get_argument('phone'), self.get_argument('vcode'), self.get_argument('npwd')
 
+        # check verify code
+        if verify.sms.get(phone) != vcode:
+            raise error.wrong_sms_verify_code
+
+        # check user if exist
+        usermodel = models.user.UserModel(self.db)
+        users = usermodel.get(phone=phone)
+        if len(users) == 0:
+            raise error.invalid_parameters
+
+        # get user id
+        uid = users[0].get('id')
+
+        # check new password
+        if not validator.password(npwd):
+            raise error.invalid_parameters
+
+        # set new password
+        usermodel.update(uid, pwd=hash.sha1(npwd))
+
+        self.write(protocol.success())
+
+
+class GetBankHandler(handler.Handler):
+    @access.exptproc
+    @access.needlogin
+    def post(self):
+        """
+            bank card
+        :return:
+        """
+        # get user id
+        uid = self.session.get('uid')
+
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # get user banks
+        banks = usermodel.getbank(user_id=uid, deleted=False)
+
+        # response data
+        data = []
+        for bank in banks:
+            data.append({'id':bank.get('id'),
+                         'bank': bank.get('bank'),
+                         'name': bank.get('name'),
+                         'account': bank.get('account'),
+                         'ctime': bank.get('ctime'),
+                         'mtime': bank.get('mtime'),
+                         'user': bank.get('user_id')})
+
+        self.write(protocol.success(data=data))
+
+
+class AddBankCardHandler(handler.Handler):
+    @access.exptproc
+    @access.needlogin
+    def post(self):
+        """
+            bank card
+        :return:
+        """
+        pass
+
+
+class DeleteBankCardHandler(handler.Handler):
+    @access.exptproc
+    @access.needlogin
+    def post(self):
+        """
+            bank card
+        :return:
+        """
+        pass
+
+
+class GetBankCardHandler(handler.Handler):
+    @access.exptproc
+    @access.needlogin
+    def post(self):
+        """
+            bank card
+        :return:
+        """
+        pass

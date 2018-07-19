@@ -26,7 +26,7 @@ class DBMysql:
         :return:
         """
         if self._conn is None or self._cursor is None:
-            self._conn = pymysql.connect(**self._cfg)
+            self._conn = pymysql.connect(**self._cfg, cursorclass = pymysql.cursors.DictCursor)
             self._cursor = self._conn.cursor()
 
     def begin(self):
@@ -71,6 +71,9 @@ class DBMysql:
         :param args:
         :return:
         """
+        # connect to database
+        self.connect()
+
         # execute sql
         return self._cursor.execute(sql, args)
 

@@ -30,6 +30,7 @@ user_or_pwd_invalid = ProcessError(-1001, '用户名或密码错误')
 user_disabled = ProcessError(-1002, '用户被禁止，请与平台联系')
 user_exists = ProcessError(-1003, '手机号已注册')
 user_register = ProcessError(-1004, '用户注册失败')
+user_pwd_invalid = ProcessError(-1005, '原始密码错误')
 
 missing_parameters = ProcessError(-1100, '缺少必要的访问参数')
 invalid_parameters = ProcessError(-1100, '非法的访问参数')

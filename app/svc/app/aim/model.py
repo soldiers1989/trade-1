@@ -10,21 +10,21 @@ class Model:
         """
         self._db = db
 
-    def begin(self):
+    def dbbegin(self):
         """
             begin transaction
         :return:
         """
         self._db.begin()
 
-    def commit(self):
+    def dbcommit(self):
         """
             commit changes
         :return:
         """
         self._db.commit()
 
-    def execute(self, sql, args=None):
+    def dbexecute(self, sql, args=None):
         """
             execute
         :param query:
@@ -33,7 +33,7 @@ class Model:
         """
         self._db.execute(sql, args)
 
-    def insert(self, sql, args=None):
+    def dbinsert(self, sql, args=None):
         """
             execute
         :param query:
@@ -44,7 +44,7 @@ class Model:
         self._db.commit()
         return n
 
-    def update(self, sql, args=None):
+    def dbupdate(self, sql, args=None):
         """
             execute
         :param query:
@@ -55,7 +55,7 @@ class Model:
         self._db.commit()
         return n
 
-    def select(self, sql, args=None):
+    def dbselect(self, sql, args=None):
         """
             select
         :param query:
@@ -63,100 +63,3 @@ class Model:
         :return:
         """
         return self._db.select(sql, args)
-
-
-class _Model:
-    def __init__(self, db):
-        """
-            init model with database connection
-        :param db:
-        """
-        self._db = db
-
-    def tables(self, *args):
-        """
-
-        :return:
-        """
-        return self
-
-    def insert(self, **kwargs):
-        """
-
-        :param kwargs:
-        :return:
-        """
-        return self
-
-    def select(self, **kwargs):
-        """
-        :param kwargs:
-        :return:
-        """
-        return self
-
-    def update(self, **kwargs):
-        """
-
-        :param kwargs:
-        :return:
-        """
-        return self
-
-    def delete(self):
-        """
-
-        :return:
-        """
-        return self
-
-    def where(self, **kwargs):
-        """
-
-        :param kwargs:
-        :return:
-        """
-        return self
-
-    def orderby(self, **kwargs):
-        """
-
-        :param kwargs:
-        :return:
-        """
-        return self
-
-    def groupby(self, **kwargs):
-        """
-
-        :param kwargs:
-        :return:
-        """
-        return self
-
-    def execute(self):
-        """
-
-        :return:
-        """
-        return self
-
-    def commit(self):
-        """
-
-        :return:
-        """
-        pass
-
-def use(db):
-    return _Model(db)
-
-a = _Model(1)
-
-a.tables(
-
-).select(
-
-).where(
-
-)
