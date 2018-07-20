@@ -15,6 +15,13 @@ handlers = [
     (r"/user/cpwd", handlers.user.ChangePwdHandler),
     (r"/user/fpwd", handlers.user.FindPwdHandler),
     (r"/user/bank/get", handlers.user.GetBankHandler),
+    (r"/user/bank/add", handlers.user.AddBankHandler),
+    (r"/user/bank/del", handlers.user.DelBankHandler),
+    (r"/user/coupon/get", handlers.user.GetCouponHandler),
+    (r"/user/bill/get", handlers.user.GetBillHandler),
+    (r"/user/charge/get", handlers.user.GetChargeHandler),
+    (r"/user/draw/get", handlers.user.GetDrawHandler),
+    (r"/user/stock/get", handlers.user.GetStockHandler),
 
     (r"/verify/gsms", handlers.verify.GeneralSmsHandler),
     (r"/verify/usms", handlers.verify.UserSmsHandler),

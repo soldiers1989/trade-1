@@ -375,6 +375,7 @@ class UserBank(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     bank = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
+    idc = models.CharField(max_length=32)
     account = models.CharField(max_length=32)
     deleted = models.BooleanField(default=False)
     ctime = models.BigIntegerField()  # create time
@@ -413,7 +414,6 @@ class UserBill(models.Model):
 class UserCharge(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey('User', on_delete=models.CASCADE)
-    account = models.ForeignKey('PayAccount', on_delete=models.CASCADE)
     code = models.CharField(max_length=16, unique=True)
     money = models.DecimalField(max_digits=10, decimal_places=2)  # bill money
     status = models.CharField(max_length=16, default='paying')
@@ -437,6 +437,7 @@ class UserDraw(models.Model):
     money = models.DecimalField(max_digits=10, decimal_places=2)
     bank = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
+    idc = models.CharField(max_length=32)
     account = models.CharField(max_length=32)
     status = models.CharField(max_length=16, default='paying')
     ctime = models.BigIntegerField()  # create time

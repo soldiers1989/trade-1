@@ -156,6 +156,16 @@ class _Insert:
         self._columns = None
         self._values = None
 
+    def colvals(self, **cvals):
+        """
+
+        :param cvals:
+        :return:
+        """
+        self._columns = list(cvals.keys())
+        self._values = list(cvals.values())
+        return self
+
     def columns(self, *cols):
         """
 
@@ -288,7 +298,7 @@ class _Update:
         if self._wheres is not None:
             wheres = []
             for where in self._wheres:
-               wheres.append('`'+ '`=%s, and `'.join(where.keys()) + '`=%s ')
+               wheres.append('`'+ '`=%s and `'.join(where.keys()) + '`=%s ')
 
             s = s + 'where ' + 'or '.join(wheres)
 

@@ -142,7 +142,7 @@ class ChangePwdHandler(handler.Handler):
         usermodel = models.user.UserModel(self.db)
 
         # get user from database
-        uid = self.session.get('uid')
+        uid = self.get_current_user()
         user = usermodel.get(id = uid)[0]
 
         # match old password
@@ -197,7 +197,7 @@ class GetBankHandler(handler.Handler):
         :return:
         """
         # get user id
-        uid = self.session.get('uid')
+        uid = self.get_current_user()
 
         # init user model
         usermodel = models.user.UserModel(self.db)
@@ -209,8 +209,9 @@ class GetBankHandler(handler.Handler):
         data = []
         for bank in banks:
             data.append({'id':bank.get('id'),
-                         'bank': bank.get('bank'),
                          'name': bank.get('name'),
+                         'idc': bank.get('idc'),
+                         'bank': bank.get('bank'),
                          'account': bank.get('account'),
                          'ctime': bank.get('ctime'),
                          'mtime': bank.get('mtime'),
@@ -219,7 +220,7 @@ class GetBankHandler(handler.Handler):
         self.write(protocol.success(data=data))
 
 
-class AddBankCardHandler(handler.Handler):
+class AddBankHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
     def post(self):
@@ -227,10 +228,22 @@ class AddBankCardHandler(handler.Handler):
             bank card
         :return:
         """
-        pass
+        # get arguments
+        name, idc, bank, account = self.get_argument('name'), self.get_argument('idc'), self.get_argument('bank'), self.get_argument('account')
+
+        # get user id
+        uid = self.get_current_user()
+
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # add user bank card
+        usermodel.addbank(uid, name, idc, bank, account)
+
+        self.write(protocol.success())
 
 
-class DeleteBankCardHandler(handler.Handler):
+class DelBankHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
     def post(self):
@@ -238,10 +251,22 @@ class DeleteBankCardHandler(handler.Handler):
             bank card
         :return:
         """
-        pass
+        # get arguments
+        id = self.get_argument('id')
+
+        # get user id
+        uid = self.get_current_user()
+
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # add user bank card
+        usermodel.delbank(uid, id)
+
+        self.write(protocol.success())
 
 
-class GetBankCardHandler(handler.Handler):
+class GetCouponHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
     def post(self):
@@ -249,4 +274,150 @@ class GetBankCardHandler(handler.Handler):
             bank card
         :return:
         """
-        pass
+        # get user id
+        uid = self.get_current_user()
+
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # get user coupons
+        coupons = usermodel.getcoupon(uid)
+
+        # response data
+        data = []
+        for coupon in coupons:
+            data.append({'id':coupon.get('id'),
+                         'name': coupon.get('name'),
+                         'money': coupon.get('money'),
+                         'status': coupon.get('status'),
+                         'ctime': coupon.get('ctime'),
+                         'etime': coupon.get('etime'),
+                         'utime': coupon.get('utime'),
+                         'user': coupon.get('user_id')})
+
+        self.write(protocol.success(data=data))
+
+
+class GetBillHandler(handler.Handler):
+    @access.exptproc
+    @access.needlogin
+    def post(self):
+        """
+            bills
+        :return:
+        """
+        # get user id
+        uid = self.get_current_user()
+
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # get user bills
+        bills = usermodel.getbill(uid)
+
+        # response data
+        data = []
+        for bill in bills:
+            data.append({'id':bill.get('id'),
+                         'code': bill.get('code'),
+                         'item': bill.get('item'),
+                         'detail': bill.get('detail'),
+                         'bmoney': bill.get('bmoney'),
+                         'lmoney': bill.get('lmoney'),
+                         'ctime': bill.get('ctime'),
+                         'user': bill.get('user_id')})
+
+        self.write(protocol.success(data=data))
+
+
+class GetChargeHandler(handler.Handler):
+    @access.exptproc
+    @access.needlogin
+    def post(self):
+        """
+            charge record
+        :return:
+        """
+        # get user id
+        uid = self.get_current_user()
+
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # get user charges
+        charges = usermodel.getcharge(uid)
+
+        # response data
+        data = []
+        for charge in charges:
+            data.append({'id': charge.get('id'),
+                         'code': charge.get('code'),
+                         'money': charge.get('money'),
+                         'status': charge.get('status'),
+                         'ctime': charge.get('ctime'),
+                         'user': charge.get('user_id')})
+
+        self.write(protocol.success(data=data))
+
+
+class GetDrawHandler(handler.Handler):
+    @access.exptproc
+    @access.needlogin
+    def post(self):
+        """
+            draw record
+        :return:
+        """
+        # get user id
+        uid = self.get_current_user()
+
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # get user draws
+        draws = usermodel.getdraw(uid)
+
+        # response data
+        data = []
+        for draw in draws:
+            data.append({'id': draw.get('id'),
+                         'code': draw.get('code'),
+                         'money': draw.get('money'),
+                         'name': draw.get('name'),
+                         'idc': draw.get('idc'),
+                         'bank': draw.get('bank'),
+                         'account': draw.get('account'),
+                         'status': draw.get('status'),
+                         'ctime': draw.get('ctime'),
+                         'user': draw.get('user_id')})
+
+        self.write(protocol.success(data=data))
+
+
+class GetStockHandler(handler.Handler):
+    @access.exptproc
+    @access.needlogin
+    def post(self):
+        """
+            user stock
+        :return:
+        """
+        # get user id
+        uid = self.get_current_user()
+
+        # init user model
+        usermodel = models.user.UserModel(self.db)
+
+        # get user stocks
+        stocks = usermodel.getstock(uid)
+
+        # response data
+        data = []
+        for stock in stocks:
+            data.append({'id': stock.get('id'),
+                         'code': stock.get('code'),
+                         'name': stock.get('name'),
+                         'ctime': stock.get('ctime'),
+                         'user': stock.get('user')})
+
+        self.write(protocol.success(data=data))
