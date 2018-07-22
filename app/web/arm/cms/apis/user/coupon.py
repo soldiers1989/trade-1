@@ -1,5 +1,4 @@
-import cube, datetime
-from django.db.models import Q
+import datetime, util
 from adb import models
 from cms import auth, resp, hint, forms
 
@@ -23,9 +22,9 @@ def list(request):
             if status:
                 filters['status'] = status
             if sdate:
-                filters['ctime__gte'] = cube.util.time.utime(sdate)
+                filters['ctime__gte'] = util.time.utime(sdate)
             if edate:
-                filters['ctime__lt'] = cube.util.time.utime(edate+datetime.timedelta(days=1))
+                filters['ctime__lt'] = util.time.utime(edate+datetime.timedelta(days=1))
 
             ## search words ##
             user = params['user']

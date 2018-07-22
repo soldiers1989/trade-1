@@ -1,7 +1,7 @@
 """
     api for cms
 """
-import cube, time, datetime
+import time, datetime
 from django.db import transaction
 from django.db.models import Q
 from adb import models
@@ -27,9 +27,9 @@ def list(request):
             if status:
                 filters['status'] = status
             if sdate:
-                filters['ctime__gte'] = cube.util.time.utime(sdate)
+                filters['ctime__gte'] = util.time.utime(sdate)
             if edate:
-                filters['ctime__lt'] = cube.util.time.utime(edate+datetime.timedelta(days=1))
+                filters['ctime__lt'] = util.time.utime(edate+datetime.timedelta(days=1))
 
             ## search words ##
             q = Q()
@@ -145,7 +145,7 @@ def add(request):
                 trade = models.UserTrade(user_id = params['user'],
                                         stock_id = params['stock'],
                                         coupon_id = params['coupon'],
-                                        code = cube.rand.uuid(),
+                                        code = util.rand.uuid(),
                                         oprice = params['oprice'],
                                         ocount = params['ocount'],
                                         ctime=int(time.time()));

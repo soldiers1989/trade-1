@@ -1,4 +1,4 @@
-import cube
+import util
 
 from django.db  import models
 
@@ -325,8 +325,8 @@ class UserStat(models.Model):
 
         items = self.dict()
         del items['id']
-        items['ctime'] = cube.util.time.datetms(items['ctime'])
-        items['mtime'] = cube.util.time.datetms(items['mtime'])
+        items['ctime'] = util.time.datetms(items['ctime'])
+        items['mtime'] = util.time.datetms(items['mtime'])
 
         for key in items.keys():
             props.append({'name':self.keyname(key), 'value':items[key], "group":self.keygroup(key)})
