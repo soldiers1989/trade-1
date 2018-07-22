@@ -1,7 +1,7 @@
 """
     api for cms
 """
-import cube, time, datetime
+import util, datetime
 from django.db.models import Q
 from adb import models
 from cms import auth, resp, hint, forms
@@ -26,9 +26,9 @@ def list(request):
             if status:
                 filters['status'] = status
             if sdate:
-                filters['ctime__gte'] = cube.util.time.utime(sdate)
+                filters['ctime__gte'] = util.time.utime(sdate)
             if edate:
-                filters['ctime__lt'] = cube.util.time.utime(edate+datetime.timedelta(days=1))
+                filters['ctime__lt'] = util.time.utime(edate+datetime.timedelta(days=1))
 
             ## search words ##
             q = Q()
@@ -452,7 +452,7 @@ def resetpwd(request):
         form = forms.user.user.ResetPwd(request.POST)
         if form.is_valid():
             id = form.cleaned_data['id']
-            pwd = cube.util.hash.sha1(form.cleaned_data['pwd'])
+            pwd = util.hash.sha1(form.cleaned_data['pwd'])
 
             models.User.objects.filter(id=id).update(pwd=pwd)
 

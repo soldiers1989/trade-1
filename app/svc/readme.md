@@ -9,3 +9,9 @@
 * requests
     * 功能：http访问
     * 版本：2.18.1
+* redis
+    * 功能: redius访问
+    * 版本: 2.10.6
+* PyMySQL
+    * 功能：mysql数据库访问
+    * 版本：0.8.0

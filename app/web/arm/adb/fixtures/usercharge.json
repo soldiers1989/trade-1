@@ -4,7 +4,6 @@
     "pk": 1,
     "fields": {
       "user_id": 1,
-      "account_id": 1,
       "code": "000001",
       "money": 100.00,
       "status": "topay",
@@ -16,7 +15,6 @@
     "pk": 2,
     "fields": {
       "user_id": 1,
-      "account_id": 2,
       "code": "000002",
       "money": 100.00,
       "status": "topay",
@@ -28,7 +26,6 @@
     "pk": 3,
     "fields": {
       "user_id": 2,
-      "account_id": 3,
       "code": "000003",
       "money": 100.00,
       "status": "topay",
@@ -40,7 +37,6 @@
     "pk": 4,
     "fields": {
       "user_id": 3,
-      "account_id": 3,
       "code": "000004",
       "money": 100.00,
       "status": "topay",
