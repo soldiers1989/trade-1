@@ -1,12 +1,19 @@
 """
     quote recorder
 """
-import os, sys, random, math, json, time, requests
+import os, sys, random, math, json, time, threading, requests
+
 
 class _Config:
     """
         configure for quote recorder
     """
+    # test flag
+    TEST = False
+
+    # log flag
+    LOG = False
+
     # ifeng quote server host
     HOST = "hq.finance.ifeng.com"
 
@@ -30,6 +37,24 @@ class _Config:
 
 
 config = _Config
+
+
+class _Log:
+    _lck = threading.Lock()
+
+    @staticmethod
+    def log(msg):
+        """
+            print log
+        :param msg:
+        :return:
+        """
+        if config.LOG:
+            _Log._lck.acquire()
+            print(msg)
+            _Log._lck.release()
+
+log = _Log
 
 class _Path:
     """
@@ -221,6 +246,9 @@ class _Util:
             check if current time is trading day, !!!Note: exclude holiday later!!!
         :return:
         """
+        if config.TEST:
+            return True
+
         # get current local time
         ltm = time.localtime()
 
@@ -237,6 +265,10 @@ class _Util:
             check current time is trading hours
         :return:
         """
+        if config.TEST:
+            return True
+
+
         # get current local time
         ltm = time.localtime()
 
@@ -250,7 +282,7 @@ class _Util:
 util = _Util
 
 
-class _Quoter:
+class _Quoter(threading.Thread):
     """
         quoter for record tick data
     """
@@ -262,6 +294,9 @@ class _Quoter:
         :param interval:
         :param finterval:
         """
+        # init parent
+        threading.Thread.__init__(self)
+
         # init arguments
         self._stockcode = stockcode
         self._datadir = datadir + '/' + stockcode
@@ -284,11 +319,11 @@ class _Quoter:
         """
         # flush condition
         if len(self._data) == 0:
-            print(util.now() + ': flush, no records.')
+            log.log('%s:[%s] flush, no records.' % (util.now(), self._stockcode))
             return
 
         if time.time() - self._last_flush_tm < self._finterval:
-            print(util.now() + ': flush, interval not satisfied.')
+            log.log('%s:[%s] flush, interval not satisfied.' % (util.now(), self._stockcode))
             return
 
         # current data file
@@ -299,14 +334,14 @@ class _Quoter:
             outer.writelines(self._data)
             outer.flush()
 
+        # print flush information
+        log.log("%s:[%s] flush %d records" % (util.now(), self._stockcode, len(self._data)))
+
         # clear data
         self._data.clear()
 
         # update last flush timestamp
         self._last_flush_tm = time.time()
-
-        # print flush information
-        print(util.now()+": flush " + len(self._data) + " records")
 
     def fetch(self):
         """
@@ -315,7 +350,7 @@ class _Quoter:
         """
         # fetch condition
         if not util.is_trading_day() or not util.is_trading_hours():
-            print(util.now() + ': fetch, not trading hours.')
+            log.log('%s:[%s] fetch, not trading hours.' % (util.now(), self._stockcode))
             return
 
         # fetch data
@@ -325,7 +360,7 @@ class _Quoter:
         self._data.append(str(data)+"\n")
 
         # print fetch information
-        print(util.now() + ': fetch 1 record')
+        log.log('%s:[%s] fetch 1 record' % (util.now(), self._stockcode))
 
     def run(self):
         """
@@ -348,15 +383,24 @@ class _Quoter:
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
-        print('usage: python quote.py <stock-code> <data-directory> <tick-interval-seconds> <flush-interval-seconds>\n'
-              'example: python quote.py 000100 ./data 5 300\n')
+        print('usage: python quote.py <stock-codes> <data-directory> <tick-interval-seconds> <flush-interval-seconds>\n'
+              'example: python quote.py 000100,000320 ./data 5 300\n')
         exit(0)
 
     # get arguments
-    stockcode, datadir, interval, finterval = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+    stockcodes, datadir, interval, finterval = sys.argv[1].split(','), sys.argv[2], sys.argv[3], sys.argv[4]
 
-    # init quoter
-    quoter = _Quoter(stockcode, datadir, int(interval), int(finterval))
+    # run quoter for each stock
+    for stockcode in stockcodes:
+        # init quoter
+        quoter = _Quoter(stockcode, datadir, int(interval), int(finterval))
 
-    # run quote recorder
-    quoter.run()
+        # start recording
+        quoter.start()
+
+        # sleep a while for next quoter
+        time.sleep(1)
+
+    # sleep for ever
+    while True:
+        time.sleep(100)
