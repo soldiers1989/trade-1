@@ -1,4 +1,4 @@
-from cms.sites import index, login, auth, trade, user
+from cms.sites import index, login, auth, trade, user, stock
 from django.urls import path
 
 urlpatterns = [
@@ -15,4 +15,6 @@ urlpatterns = [
     path('trade/order/', trade.order, name="cms.trade.order"),
 
     path('user/user/', user.user, name="cms.user.user"),
+
+    path('stock/stock/', stock.stock, name="cms.stock.stock"),
 ]
