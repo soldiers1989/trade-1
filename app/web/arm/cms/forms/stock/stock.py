@@ -13,6 +13,28 @@ class List(forms.Form):
     words = forms.CharField(required=False)
 
 
+class Add(forms.Form):
+    id = forms.CharField(min_length=6, max_length=6)
+    name = forms.CharField(min_length=1, max_length=16)
+    jianpin = forms.CharField(min_length=1, max_length=16)
+    quanpin = forms.CharField(min_length=1, max_length=32)
+    status = forms.CharField(min_length=1, max_length=8)
+    limit = forms.CharField(min_length=1, max_length=8)
+
+
+class Update(forms.Form):
+    id = forms.CharField(min_length=6, max_length=6)
+    name = forms.CharField(min_length=1, max_length=16)
+    jianpin = forms.CharField(min_length=1, max_length=16)
+    quanpin = forms.CharField(min_length=1, max_length=32)
+    status = forms.CharField(min_length=1, max_length=8)
+    limit = forms.CharField(min_length=1, max_length=8)
+
+
+class Delete(forms.Form):
+    id = forms.IntegerField()
+
+
 class Query(forms.Form):
     q = forms.CharField()
 

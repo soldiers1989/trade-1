@@ -2,237 +2,342 @@
 
 <div id="stock_toolbar">
     <span>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="stock.add()">新建</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="stock.update()">编辑</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="stock.delete()">删除</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="stock.add.open()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="stock.update.open()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="stock.delete.do()">删除</a>
     </span>
-	<span style="float: right; margin-right: 18px;">
-		<a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="stock.refresh()">刷新</a>
-	</span>
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="stock_search_form">
+            <input name="status" data-options="prompt:'股票状态', editable:false, required:false">
+            <input name="limit" data-options="prompt:'限制类型', editable:false, required:false">
+            <input name="words" class="easyui-textbox">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="stock.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="stock.search.reset()">重置</a>
+        </form>
+    </span>
 </div>
 
-<div class="easyui-dialog" id="stock_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#stock_dialog_buttons'">
-    <form class="easyui-form" id="stock_form" method="post" style="margin:0;padding:10px 20px">
+<div class="easyui-dialog" id="stock_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#stock_add_dialog_buttons'">
+    <form class="easyui-form" id="stock_add_form" method="post" style="margin:0;padding:10px 20px">
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="stock" data-options="label:'杠杆', prompt:'1~10', required:true, validType:['digits', 'range[1, 10]']" style="width:100%">
+            <input class="easyui-textbox" name="id" data-options="label:'代码', prompt:'输入股票代码', required:true, validType:['text', 'length[6,6]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="wline" data-options="label:'预警线', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+            <input class="easyui-textbox" name="name" data-options="label:'名称', prompt:'输入股票名称', required:true, validType:['text', 'length[1,32]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="sline" data-options="label:'止损线', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+            <input class="easyui-textbox" name="jianpin" data-options="label:'简拼', prompt:'输入名称简拼', required:true, validType:['text', 'length[1,32]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ofmin" data-options="label:'保底费用', prompt:'>=0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" name="quanpin" data-options="label:'全拼', prompt:'输入名称全拼', required:true, validType:['text', 'length[1,32]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ofrate" data-options="label:'建仓费率', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+            <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择股票状态', editable:false, required:true" style="width: 100%">
+                <option value="open">正常</option>
+                <option value="close">停牌</option>
+                <option value="delisted">退市</option>
+            </select>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="dfrate" data-options="label:'延期费率', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="psrate" data-options="label:'盈利分成', prompt:'0.0~1.0', required:true, validType:['number', 'range[0,1]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" id="mmin" name="mmin" data-options="label:'本金下限', prompt:'>=0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="mmax" data-options="label:'本金上限', prompt:'大于等于本金下限', required:true, validType:['number', 'largeequal[\'#mmin\']']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <select class="easyui-combobox" name="disable" data-options="label:'禁用', prompt:'是否禁用', editable:false, required:true" style="width: 100%">
-                <option value="false">否</option>
-                <option value="true">是</option>
+            <select class="easyui-combobox" name="limit" data-options="label:'限制', prompt:'选择交易限制', editable:false, required:true" style="width: 100%">
+                <option value="none">无</option>
+                <option value="nobuy">禁买</option>
+                <option value="nodelay">禁延</option>
             </select>
         </div>
     </form>
 </div>
 
-<div id="stock_dialog_buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="stock.save()" style="width:90px">保存</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="stock.cancel()" style="width:90px">取消</a>
+<div id="stock_add_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="stock.add.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="stock.add.cancel()" style="width:90px">取消</a>
 </div>
 
+<div class="easyui-dialog" id="stock_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#stock_update_dialog_buttons'">
+    <form class="easyui-form" id="stock_update_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="id" data-options="label:'代码', prompt:'输入股票代码', required:true, validType:['text', 'length[6,6]']" style="width:100%" disabled>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'名称', prompt:'输入股票名称', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="jianpin" data-options="label:'简拼', prompt:'输入名称简拼', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="quanpin" data-options="label:'全拼', prompt:'输入名称全拼', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择股票状态', editable:false, required:true" style="width: 100%">
+                <option value="open">正常</option>
+                <option value="close">停牌</option>
+                <option value="delisted">退市</option>
+            </select>
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="limit" data-options="label:'限制', prompt:'选择交易限制', editable:false, required:true" style="width: 100%">
+                <option value="none">无</option>
+                <option value="nobuy">禁买</option>
+                <option value="nodelay">禁延</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<div id="stock_update_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="stock.update.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="stock.update.cancel()" style="width:90px">取消</a>
+</div>
 
 <script type="text/javascript">
     // stock list/add/update/delete
     var stock = {
-        datagrid: $('#stock_datagrid'),
-        dialog: $('#stock_dialog'),
-        form: $('#stock_form'),
+        // stock list
+        list: {
+            url: '/api/stock/stock/list',
+            datagrid: $('#stock_datagrid'),
 
-        action: '',
-        urls: {
-            list: '/api/trade/stock/list',
-            add: '/api/trade/stock/add',
-            update: '/api/trade/stock/update',
-            delete: '/api/trade/stock/delete',
-        },
+            init: function() {
+            	//init tree grid
+                this.datagrid.datagrid({
+                    url: this.url,
+                    method: 'post',
 
-        init: function() { //init
-        	//init tree grid
-            this.datagrid.datagrid({
-                url: this.urls.list,
-                method: 'post',
+                    idField: 'id',
 
-                idField: 'id',
-
-				striped: true,
-				fitColumns: true,
-                pagination: true,
-                rownumbers: true,
-                singleSelect: true,
+    				striped: true,
+    				fitColumns: true,
+                    pagination: true,
+                    rownumbers: true,
+                    singleSelect: true,
 
 
-				toolbar: '#stock_toolbar',
-                columns: [[
-                    {field:'id', title:'ID', width:'4%'},
-                    {field:'stock', title:'杠杆', width:'6%'},
-                    {field:'wline', title:'预警线', width:'8%'},
-                    {field:'sline', title:'止损线', width:'8%'},
-                    {field:'ofmin', title:'保底费用', width:'8%'},
-                    {field:'ofrate', title:'建仓费率', width:'8%'},
-                    {field:'dfrate', title:'延期费率', width:'8%'},
-                    {field:'psrate', title:'盈利分成', width:'8%'},
-                    {field:'mmin', title:'本金下限', width:'8%'},
-                    {field:'mmax', title:'本金上限', width:'8%'},
-                    {field:'order', title:'排序', width:'4%'},
-                    {field:'disable', title:'禁用', width: '5%', formatter: cube.format.boolean},
-                    {field:'ctime', title:'创建时间', width: '8%', formatter: cube.format.date},
-                    {field:'mtime', title:'修改时间', width: '8%', formatter: cube.format.date}
-                ]],
+    				toolbar: '#stock_toolbar',
+                    columns: [[
+                        {field:'id', title:'代码', sortable:true, width:'10%'},
+                        {field:'name', title:'名称', sortable:true, width:'10%'},
+                        {field:'jianpin', title:'简拼', sortable:true, width:'15%'},
+                        {field:'quanpin', title:'全拼', sortable:true, width:'15%'},
+                        {field:'status', title:'状态', sortable:true, width:'10%'},
+                        {field:'limit', title:'限制', sortable:true, width:'10%'},
+                        {field:'ctime', title:'创建时间', sortable:true, width:'15%', formatter: cube.format.datetime},
+                        {field:'mtime', title:'修改时间', sortable:true, width:'15%', formatter: cube.format.datetime}
+                    ]],
 
-                onDrop: function(target, source, point) {
-                    stock.reorder(source.id, source.order, target.id, target.order);
-                },
+                    loadFilter: function (resp) {
+                        return resp.data;
+                    },
 
-                loadFilter: function (resp) {
-                    return resp.data;
-                },
+                    onLoadSuccess: function(resp) {
+                        $(this).datagrid('enableDnd');
+                    },
 
-                onLoadSuccess: function(resp) {
-                    $(this).datagrid('enableDnd');
-                },
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求股票数据失败'});
+                    }
+                });
+            },
 
-                onLoadError: function() {
-                    $.messager.show({title: '错误', msg: '请求管理员数据失败'});
-                }
-            });
+            load: function(params) {
+                this.datagrid.datagrid('load', params);
+            },
 
-            //enable drag/drop
-            //this.datagrid.datagrid('enableDnd');
-        },
+            reload: function() {
+                this.datagrid.datagrid('reload');
+            },
 
-
-        refresh: function() { // reset
-            //reload datagrid
-            this.datagrid.datagrid('reload');
-        },
-
-        add: function() { // add
-            //reset action
-            this.action = 'add';
-
-            //reset form
-            this.form.form('clear');
-
-            //open dialog
-            this.dialog.dialog('open').dialog('center').dialog('setTitle','添加杠杆');
-        },
-
-        update: function() { // udpate
-            //reset action
-            this.action = 'update';
-
-            //get selected row data
-            this.row = this.datagrid.datagrid('getSelected');
-            if (this.row){
-            	// format boolean value
-            	this.row.disable = String(this.row.disable);
-
-                // clear form
-                this.form.form('clear');
-
-                //load form data
-                this.form.form('load', this.row);
-
-                //option dialog
-                this.dialog.dialog('open').dialog('center').dialog('setTitle','修改杠杆');
+            getSelected: function() {
+                return this.datagrid.datagrid('getSelected');
             }
         },
 
-        delete: function() { // delete
-            //get selected row data
-            var row = this.datagrid.datagrid('getSelected');
-            if (!row)
-                return;
+        //search action
+        search: {
+            form: $('#stock_search_form'),
 
-            $.messager.confirm({
-                title: '确认',
-                msg: '确认删除杠杆'+row.stock+'?',
-                url: this.urls.delete,
-                fn: function(r){
-                    if (r){
-                        $.post(this.url, {id: row.id}, function(resp, status){
-                            if(status == 'success'){
-                                if (resp.status){
-                                    stock.refresh();
-                                } else {
-                                    $.messager.show({title: '错误', msg: resp.message});
-                                }
-                            } else {
-                                $.messager.show({title: '错误', msg: '请求服务器错误'});
-                            }
-                        },'json');
-                    }
-                }
-            });
+            init: function() { //init search form
+                // init status combobox
+                this.form.find('input[name="status"]:first').combobox({
+                    data: [{v:'open', t:'正常'}, {v:'close', t:'停牌'}, {v:'delisted', t:'退市'}],
+                    valueField: 'v',
+                    textField: 't'
+                });
+                // init limit combobox
+                this.form.find('input[name="limit"]:first').combobox({
+                    data: [{v:'none', t:'正常'}, {v:'nobuy', t:'禁买'}, {v:'nodelay', t:'禁延'}],
+                    valueField: 'v',
+                    textField: 't'
+                });
+            },
+
+            do: function() { // do search
+                //check search form
+                if(!this.form.form('validate'))
+                    return;
+
+                //get parameters
+                params = {
+                    status: this.form.find('input[name="status"]:first').val(),
+                    limit: this.form.find('input[name="limit"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val()
+                };
+
+                //reload by retrieve conditions
+                stock.list.load(params);
+            },
+
+            reset: function() { // reset
+                //clear form
+                this.form.form('clear');
+
+                //reload datagrid
+                stock.list.load({});
+            },
         },
 
-        save: function() { // save
-            var url, params={};
-            // get action url
-            if(this.action == 'add') {
-                url = this.urls.add;
-            } else if (this.action == 'update'){
+        //add action
+        add: {
+            url: '/api/stock/stock/add',
+            dialog: $('#stock_add_dialog'),
+            form: $('#stock_add_form'),
+
+            open: function() { // open add
+                //reset form
+                this.form.form('clear');
+
+                //open dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','添加股票');
+            },
+
+            save: function() { // save add
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: {},
+
+                    onSubmit: function(){
+                        return stock.add.form.form('validate');
+                    },
+
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            stock.add.dialog.dialog('close');
+                            stock.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
+                    }
+                });
+            },
+
+            cancel: function() { //cancel add
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        //update action
+        update: {
+            url: '/api/stock/stock/update',
+            dialog: $('#stock_update_dialog'),
+            form: $('#stock_update_form'),
+
+            // open update dialoag
+            open: function() {
                 //get selected row data
-                var row = this.datagrid.datagrid('getSelected');
+                row = stock.list.getSelected();
+                if (row){
+                    // clear form
+                    this.form.form('clear');
+
+                    //load form data
+                    this.form.form('load', row);
+
+                    //open dialog
+                    this.dialog.dialog('open').dialog('center').dialog('setTitle','修改股票');
+                }
+            },
+
+            // save update results
+            save: function() {
+                var params={};
+                // get selected row data
+                var row = stock.list.getSelected();
+                if (!row)
+                    return;
+                params.id = row.id;
+                    
+
+                //submit form
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: params,
+                    onSubmit: function(){
+                        return stock.update.form.form('validate');
+                    },
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            stock.update.dialog.dialog('close');
+                            stock.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
+                    }
+                });
+            },
+
+            // cancel update operation
+            cancel: function() {
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        // delete row
+        delete: {
+            url: '/api/stock/stock/delete',
+
+            do: function() { // delete
+                // delete action url
+                url = this.url;
+
+                //get selected row data
+                var row = stock.list.getSelected();
                 if (!row)
                     return;
 
-                params.id = row.id;
-                url = this.urls.update;
-            } else {
-                return;
-            }
-
-            //submit form
-            this.form.form('submit',{
-                url: url,
-                queryParams: params,
-                onSubmit: function(){
-                    return stock.form.form('validate');
-                },
-                success: function(data){
-                    var resp = eval('('+data+')');
-                    if (resp.status){
-                        stock.dialog.dialog('close');
-                        stock.datagrid.datagrid('reload');
-                    } else {
-                        $.messager.show({ title: '错误',  msg: resp.message });
+                $.messager.confirm({
+                    title: '确认',
+                    msg: '确认删除股票'+row.name+'?',
+                    url: stock.delete.url,
+                    fn: function(r){
+                        if (r){
+                            $.post(url, {id: row.id}, function(resp, status){
+                                if(status == 'success'){
+                                    if (resp.status){
+                                        stock.list.reload();
+                                    } else {
+                                        $.messager.show({title: '错误', msg: resp.message});
+                                    }
+                                } else {
+                                    $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                }
+                            },'json');
+                        }
                     }
-                }
-            });
+                });
+            },
         },
 
-        cancel: function() { //cancel
-            //clear action
-            this.action = '';
-
-            //close dialog
-            this.dialog.dialog('close');
-        },
+        //init stock
+        init: function() {
+            // init search
+            this.search.init();
+            // init list
+            this.list.init();
+        }
     };
 
     //init page

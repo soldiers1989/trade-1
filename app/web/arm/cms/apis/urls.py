@@ -62,6 +62,9 @@ urlpatterns = [
     path('user/coupon/list', user.coupon.list, name="api.user.coupon.list"),
 
     path('stock/stock/list', stock.stock.list, name="api.stock.stock.list"),
+    path('stock/stock/add', stock.stock.add, name="api.stock.stock.add"),
+    path('stock/stock/update', stock.stock.update, name="api.stock.stock.update"),
+    path('stock/stock/delete', stock.stock.delete, name="api.stock.stock.delete"),
     path('stock/stock/query', stock.stock.query, name="api.stock.stock.query"),
     path('stock/stock/has', stock.stock.has, name="api.stock.stock.has"),
 ]
