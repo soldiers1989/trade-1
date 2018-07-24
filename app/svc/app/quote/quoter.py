@@ -1,5 +1,5 @@
 from lib.stock import quote
 
 
-# quotes object for service
-default = quote.quotes.Quotes()
+# level5 quotes object for service
+default = quote.level5.quotes.Quotes()

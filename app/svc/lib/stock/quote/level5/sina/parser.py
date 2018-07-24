@@ -2,7 +2,7 @@
     parse response
 """
 import math, decimal
-from lib.stock.quote import error
+from lib.stock.quote.level5 import error
 
 
 def tidy(quote):

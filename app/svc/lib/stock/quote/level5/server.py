@@ -5,7 +5,7 @@ import json, threading, time, requests, requests.exceptions
 
 from requests.exceptions import Timeout, ConnectionError
 
-from lib.stock.quote import error
+from lib.stock.quote.level5 import error
 
 
 class Server:

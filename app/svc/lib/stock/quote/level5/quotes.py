@@ -1,7 +1,7 @@
 """
     quote service manager
 """
-from lib.stock.quote import sina, ifeng, icaopan, emoney, error
+from lib.stock.quote.level5 import sina, ifeng, icaopan, emoney, error
 
 
 class Quotes:

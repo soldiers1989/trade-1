@@ -2,8 +2,6 @@
     path for icaopan
 """
 import time
-from lib.stock.util import stock
-
 
 def make(code):
     """

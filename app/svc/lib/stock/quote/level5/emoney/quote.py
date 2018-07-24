@@ -1,12 +1,13 @@
 """
-    agent to sina quote data
+    east money quote data
 """
 import time
-from lib.stock.quote import quote, server, error
-from lib.stock.quote.sina import config, parser, path
+from lib.stock.util import stock
+from lib.stock.quote.level5 import quote, server, error
+from lib.stock.quote.level5.emoney import config, parser, path
 
 
-class SinaQuote(quote.Quote):
+class EmoneyQuote(quote.Quote):
     def __init__(self, hosts=config.HOSTS, timeout=config.TIMEOUT, maxfailed=config.MAXFAILED):
         """
             init sina quote
@@ -17,7 +18,7 @@ class SinaQuote(quote.Quote):
         servers = server.Servers(hosts, timeout, maxfailed)
 
         # init super
-        super(SinaQuote, self).__init__(config.ID, config.NAME, servers)
+        super(EmoneyQuote, self).__init__(config.ID, config.NAME, servers)
 
     def test(self, code):
         """
@@ -27,9 +28,12 @@ class SinaQuote(quote.Quote):
         :param host: str, host in agent
         :return:
         """
+        # add header referer
+        headers = self.headers(code)
         # make path
-        urlpath = path.make([code])
-        return self.servers.test(urlpath, config.HEADERS)
+        urlpath = path.make(code)
+
+        return self.servers.test(urlpath, headers)
 
     def get(self, code):
         """
@@ -38,21 +42,15 @@ class SinaQuote(quote.Quote):
         :param retry: int, retry number if failed
         :return:
         """
-        return self.gets([code])[0]
-
-    def gets(self, codes):
-        """
-            get quote of stocks
-        :param codes: array, stock codes array
-        :param retry: int, retry number if failed
-        :return:
-        """
         try:
             stime = time.time()
+            # make header
+            headers = self.headers(code)
+
             # make path
-            urlpath = path.make(codes)
+            urlpath = path.make(code)
             # request remote service
-            resp = self.servers.get(urlpath, config.HEADERS, config.RETRY).text
+            resp = self.servers.get(urlpath, headers, config.RETRY).text
             # parse result
             results = parser.parse(resp)
             etime = time.time()
@@ -64,6 +62,29 @@ class SinaQuote(quote.Quote):
         except error.NoneServerError as e:
             self.disable()
             self.addfailed(str(e))
+            raise e
         except Exception as e:
             self.addfailed(str(e))
             raise e
+
+    def gets(self, codes):
+        """
+            get quote of stocks
+        :param codes: array, stock codes array
+        :param retry: int, retry number if failed
+        :return:
+        """
+        results = []
+        for code in codes:
+            results.append(self.get(code))
+        return results
+
+    def headers(self, code):
+        """
+            make request headers
+        :param code:
+        :return:
+        """
+        headers = config.HEADERS
+        headers.update({"Referer": "http://quote.eastmoney.com/" + stock.addse(code) + ".html"})
+        return headers

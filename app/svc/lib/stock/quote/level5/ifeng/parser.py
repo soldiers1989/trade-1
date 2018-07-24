@@ -1,7 +1,7 @@
 """
     parser for ifeng quote response
 """
-import json, time, math, decimal
+import json, time, math
 
 
 def tidy(quote):

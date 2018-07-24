@@ -1,7 +1,7 @@
 """
     parser for easy money quote response
 """
-import json, math, decimal
+import math
 
 
 def tidy(quote):

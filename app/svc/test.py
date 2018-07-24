@@ -1,5 +1,3 @@
-from lib.stock.quote import icaopan, emoney, ifeng, sina
-
 class A:
     def __init__(self):
         print('init')
