@@ -1,13 +1,13 @@
 """
     service manager
 """
-import sys, argparse
+import argparse
 
 # actions for app
 actions = ['start', 'stop']
 
 # registered apps
-apps = ['aim', 'api', 'trade', 'quote']
+apps = ['aim', 'atm', 'api', 'trade', 'quote']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -23,9 +23,9 @@ if __name__ == "__main__":
         if app == 'aim':
             import app.aim
             app.aim.service.start(port)
-        elif app == 'api':
-            import app.api
-            app.api.service.start(port)
+        elif app == 'atm':
+            import app.atm
+            app.atm.service.start(port)
         elif app == 'trade':
             import app.trade
             app.trade.service.start(port)

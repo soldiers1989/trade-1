@@ -1,0 +1,1 @@
+from lib.stock.detail.cninfo import list
