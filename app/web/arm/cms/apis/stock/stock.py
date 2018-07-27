@@ -94,6 +94,11 @@ def add(request):
         if form.is_valid():
             params = form.cleaned_data
 
+            # check if stock has exist
+            items = models.Stock.objects.filter(id=params['id'])
+            if(items.exists()):
+                return resp.failure('stock has exists.')
+
             item = models.Stock(id=params['id'],
                                 name=params['name'],
                                 jianpin=params['jianpin'],
