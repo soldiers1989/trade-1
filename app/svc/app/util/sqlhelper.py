@@ -56,7 +56,9 @@ class _Select:
         """
         if self._wheres is None:
             self._wheres = []
-        self._wheres.append(conds)
+
+        if len(conds) > 0:
+            self._wheres.append(conds)
         return self
 
     def orderby(self, *cols):
@@ -117,7 +119,8 @@ class _Select:
             for where in self._wheres:
                wheres.append('`'+ '`=%s and `'.join(where.keys()) + '`=%s ')
 
-            s = s + 'where ' + 'or '.join(wheres)
+            if len(wheres) > 0:
+                s = s + 'where ' + 'or '.join(wheres)
 
         # group by clause
         if self._groupby is not None:
@@ -273,7 +276,10 @@ class _Update:
         """
         if self._wheres is None:
             self._wheres = []
-        self._wheres.append(conds)
+
+        if len(conds) > 0:
+            self._wheres.append(conds)
+
         return self
 
     def sql(self):
@@ -300,7 +306,8 @@ class _Update:
             for where in self._wheres:
                wheres.append('`'+ '`=%s and `'.join(where.keys()) + '`=%s ')
 
-            s = s + 'where ' + 'or '.join(wheres)
+            if len(wheres) > 0:
+                s = s + 'where ' + 'or '.join(wheres)
 
         return s
 
@@ -349,7 +356,10 @@ class _Delete:
         """
         if self._wheres is None:
             self._wheres = []
-        self._wheres.append(conds)
+
+        if len(conds) > 0:
+            self._wheres.append(conds)
+
         return self
 
     def sql(self):
@@ -371,7 +381,8 @@ class _Delete:
             for where in self._wheres:
                wheres.append('`'+ '`=%s, and `'.join(where.keys()) + '`=%s ')
 
-            s = s + 'where ' + 'or '.join(wheres)
+            if len(wheres) > 0:
+                s = s + 'where ' + 'or '.join(wheres)
 
         return s
 
@@ -392,6 +403,25 @@ class _Delete:
 delete = _Delete
 
 
+class _Util:
+    @staticmethod
+    def repeat(s, cnt, sep):
+        """
+            repeat string by @s for @cnt times with separator @sep
+        :param s:
+        :param cnt:
+        :param sep:
+        :return:
+        """
+        v = []
+        for i in range(0, cnt):
+            v.append(s)
+        return sep.join(v)
+
+
+util = _Util
+
+
 if __name__ == '__main__':
     s = select().columns('a', 'b').tables('tb1', 'tb2').where(a=1, b='x').where(a='c').orderby('a').desc()
     print(s.sql())
@@ -408,3 +438,5 @@ if __name__ == '__main__':
     s = delete().table('tb1').where(a=1, b=2).where(a=3, b=4)
     print(s.sql())
     print(s.args())
+
+    print(util.repeat('?', 10, ','))

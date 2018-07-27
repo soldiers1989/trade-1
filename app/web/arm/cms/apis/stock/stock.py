@@ -33,7 +33,7 @@ def list(request):
                 if len(filters) == 0 and words.isdigit():
                     filters['id'] = words
                 else :
-                    q = Q(name=words) | Q(jianpin=words) | Q(quanpin=words)
+                    q = Q(name__startswith=words) | Q(jianpin__startswith=words) | Q(quanpin__startswith=words)
 
             ## get total count ##
             total = models.Stock.objects.filter(q, **filters).count()

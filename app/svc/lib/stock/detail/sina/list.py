@@ -45,31 +45,29 @@ def fetch():
     :return:
     """
     results = []
-    try:
-        page = 1
-        while page < config.MAX_PAGES:
-            # generate current page url
-            pageurl = config.URL % page
 
-            # request page data
-            resp = requests.get(pageurl, timeout=config.TIMEOUT, headers=config.HEADERS)
+    page = 1
+    while page < config.MAX_PAGES:
+        # generate current page url
+        pageurl = config.URL % page
 
-            # translate to json object
-            records = _tojson(resp.text)
-            if records == 'null':
-                break;
+        # request page data
+        resp = requests.get(pageurl, timeout=config.TIMEOUT, headers=config.HEADERS)
 
-            # parse records
-            for record in records:
-                results.append(_parse(record))
+        # translate to json object
+        records = _tojson(resp.text)
+        if records == 'null':
+            break;
 
-            # sleep for a while
-            time.sleep(config.INTERVAL)
+        # parse records
+        for record in records:
+            results.append(_parse(record))
 
-            # fetch next page
-            page = page + 1
-    except Exception as e:
-        print(e)
+        # sleep for a while
+        time.sleep(config.INTERVAL)
+
+        # fetch next page
+        page = page + 1
 
     return results
 

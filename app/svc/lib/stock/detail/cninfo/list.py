@@ -55,8 +55,6 @@ def fetch():
             # add to results
             results.append(_parse(record))
 
-        return results
-
     return results
 
 
