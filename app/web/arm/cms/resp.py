@@ -1,14 +1,14 @@
 """
     api for cms
 """
-import json, decimal
+import json, decimal, datetime
 
 from django.http import HttpResponse
 
 
 class JEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, decimal.Decimal):
+        if isinstance(o, decimal.Decimal) or isinstance(o, datetime.date):
             return str(o)
 
         return super(JEncoder, self).default(o)

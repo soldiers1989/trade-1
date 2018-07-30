@@ -119,8 +119,14 @@
                         {field:'name', title:'名称', sortable:true, width:'10%'},
                         {field:'jianpin', title:'简拼', sortable:true, width:'15%'},
                         {field:'quanpin', title:'全拼', sortable:true, width:'15%'},
-                        {field:'status', title:'状态', sortable:true, width:'10%'},
-                        {field:'limit', title:'限制', sortable:true, width:'10%'},
+                        {field:'status', title:'状态', sortable:true, width:'10%', formatter: function (s) {
+                            opts = {open:'正常', close:'停牌', delisted: '退市'};
+                            return opts[s];
+                        }},
+                        {field:'limit', title:'限制', sortable:true, width:'10%', formatter: function (s) {
+                            opts = {none:'正常', nobuy:'禁买', nodelay: '禁卖'};
+                            return opts[s];
+                        }},
                         {field:'ctime', title:'创建时间', sortable:true, width:'15%', formatter: cube.format.datetime},
                         {field:'mtime', title:'修改时间', sortable:true, width:'15%', formatter: cube.format.datetime}
                     ]],

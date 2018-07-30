@@ -1,0 +1,357 @@
+<table id="coupon_datagrid" style="height: 100%;"></table>
+
+<div id="coupon_toolbar">
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="coupon.add.open()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="coupon.update.open()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="coupon.delete.do()">删除</a>
+    </span>
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="coupon_search_form">
+            <input name="status" data-options="prompt:'状态', editable:false, required:false">
+            <input name="words" class="easyui-textbox">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="coupon.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="coupon.search.reset()">重置</a>
+        </form>
+    </span>
+</div>
+
+<div class="easyui-dialog" id="coupon_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#coupon_add_dialog_buttons'">
+    <form class="easyui-form" id="coupon_add_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input name="user" type="text" label="用户" prompt="输入用户" style="width:100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'名称', prompt:'输入名称', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="money" data-options="label:'金额', prompt:'输入金额', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择状态', editable:false, required:true" style="width: 100%">
+                <option value="unused">未用</option>
+                <option value="used">已用</option>
+            </select>
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="sdate" type="text" class="easyui-datebox" label="起始日" prompt="选择起始日" required style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="edate" type="text" class="easyui-datebox" label="过期日" prompt="选择过期日" required style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="coupon_add_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="coupon.add.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="coupon.add.cancel()" style="width:90px">取消</a>
+</div>
+
+<div class="easyui-dialog" id="coupon_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#coupon_update_dialog_buttons'">
+    <form class="easyui-form" id="coupon_update_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input name="id" type="text" class="easyui-textbox" label="ID" style="width:100%" disabled>
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="user" type="text" class="easyui-textbox" label="用户" style="width:100%" disabled>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'名称', prompt:'输入名称', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="money" data-options="label:'金额', prompt:'输入金额', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择状态', editable:false, required:true" style="width: 100%">
+                <option value="unused">未用</option>
+                <option value="used">已用</option>
+            </select>
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="sdate" type="text" class="easyui-datebox" label="起始日" prompt="选择起始日" required style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="edate" type="text" class="easyui-datebox" label="过期日" prompt="选择过期日" required style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="coupon_update_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="coupon.update.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="coupon.update.cancel()" style="width:90px">取消</a>
+</div>
+
+<script type="text/javascript">
+    // coupon list/add/update/delete
+    var coupon = {
+        // coupon list
+        list: {
+            url: '/api/user/coupon/list',
+            datagrid: $('#coupon_datagrid'),
+
+            init: function() {
+            	//init tree grid
+                this.datagrid.datagrid({
+                    url: this.url,
+                    method: 'post',
+
+                    idField: 'id',
+
+    				striped: true,
+    				fitColumns: true,
+                    pagination: true,
+                    rownumbers: true,
+                    singleSelect: true,
+
+
+    				toolbar: '#coupon_toolbar',
+                    columns: [[
+                        {field:'id', title:'ID', sortable:true, width:'5%'},
+                        {field:'user', title:'用户', sortable:false, width:'10%'},
+                        {field:'name', title:'名称', sortable:true, width:'10%'},
+                        {field:'money', title:'金额', sortable:true, width:'10%'},
+                        {field:'sdate', title:'起始日', sortable:true, width:'15%'},
+                        {field:'edate', title:'截止日', sortable:true, width:'15%'},
+                        {field:'ctime', title:'发放时间', sortable:true, width:'15%', formatter: cube.format.datetime},
+                        {field:'status', title:'状态', sortable:true, width:'5%', formatter: function (s) {
+                            opts = {unused:'未用', used:'已用'};
+                            return opts[s];
+                        }},
+                        {field:'utime', title:'使用时间', sortable:true, width:'15%', formatter: cube.format.datetime}
+                    ]],
+
+                    loadFilter: function (resp) {
+                        return resp.data;
+                    },
+
+                    onLoadSuccess: function(resp) {
+                        $(this).datagrid('enableDnd');
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求优惠券数据失败'});
+                    }
+                });
+            },
+
+            load: function(params) {
+                this.datagrid.datagrid('load', params);
+            },
+
+            reload: function() {
+                this.datagrid.datagrid('reload');
+            },
+
+            getSelected: function() {
+                return this.datagrid.datagrid('getSelected');
+            }
+        },
+
+        //search action
+        search: {
+            form: $('#coupon_search_form'),
+
+            init: function() { //init search form
+                // init status combobox
+                this.form.find('input[name="status"]:first').combobox({
+                    data: [{v:'unused', t:'未用'}, {v:'used', t:'已用'}],
+                    valueField: 'v',
+                    textField: 't'
+                });
+            },
+
+            do: function() { // do search
+                //check search form
+                if(!this.form.form('validate'))
+                    return;
+
+                //get parameters
+                params = {
+                    status: this.form.find('input[name="status"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val()
+                };
+
+                //reload by retrieve conditions
+                coupon.list.load(params);
+            },
+
+            reset: function() { // reset
+                //clear form
+                this.form.form('clear');
+
+                //reload datagrid
+                coupon.list.load({});
+            },
+        },
+
+        //add action
+        add: {
+            url: '/api/user/coupon/add',
+            dialog: $('#coupon_add_dialog'),
+            form: $('#coupon_add_form'),
+
+            init: function() { // init add
+                //init user textbox
+                $('#coupon_add_form').find('input[name="user"]:first').combobox({
+                    url:'/api/user/user/query', 
+                    mode: 'remote',
+
+                    valueField:'id',
+                    textField:'user',
+                    
+                    limitToList: true,
+                    
+                    loadFilter: function(resp) {
+                        return resp.data;
+                    }
+                });
+            },
+
+            open: function() { // open add
+                //reset form
+                this.form.form('clear');
+
+                //open dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','添加优惠券');
+            },
+
+            save: function() { // save add
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: {},
+
+                    onSubmit: function(){
+                        return coupon.add.form.form('validate');
+                    },
+
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            coupon.add.dialog.dialog('close');
+                            coupon.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
+                    }
+                });
+            },
+
+            cancel: function() { //cancel add
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        //update action
+        update: {
+            url: '/api/user/coupon/update',
+            dialog: $('#coupon_update_dialog'),
+            form: $('#coupon_update_form'),
+
+            // open update dialoag
+            open: function() {
+                //get selected row data
+                row = coupon.list.getSelected();
+                if (row){
+                    // clear form
+                    this.form.form('clear');
+
+                    //load form data
+                    this.form.form('load', row);
+
+                    //open dialog
+                    this.dialog.dialog('open').dialog('center').dialog('setTitle','修改优惠券');
+                }
+            },
+
+            // save update results
+            save: function() {
+                var params={};
+                // get selected row data
+                var row = coupon.list.getSelected();
+                if (!row)
+                    return;
+                params.id = row.id;
+                    
+
+                //submit form
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: params,
+                    onSubmit: function(){
+                        return coupon.update.form.form('validate');
+                    },
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            coupon.update.dialog.dialog('close');
+                            coupon.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
+                    }
+                });
+            },
+
+            // cancel update operation
+            cancel: function() {
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        // delete row
+        delete: {
+            url: '/api/user/coupon/delete',
+
+            do: function() { // delete
+                // delete action url
+                url = this.url;
+
+                //get selected row data
+                var row = coupon.list.getSelected();
+                if (!row)
+                    return;
+
+                $.messager.confirm({
+                    title: '确认',
+                    msg: '确认删除优惠券'+row.name+'?',
+                    url: coupon.delete.url,
+                    fn: function(r){
+                        if (r){
+                            $.post(url, {id: row.id}, function(resp, status){
+                                if(status == 'success'){
+                                    if (resp.status){
+                                        coupon.list.reload();
+                                    } else {
+                                        $.messager.show({title: '错误', msg: resp.message});
+                                    }
+                                } else {
+                                    $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                }
+                            },'json');
+                        }
+                    }
+                });
+            },
+        },
+
+        //init coupon
+        init: function() {
+            // init search
+            this.search.init();
+            // init list
+            this.list.init();
+            // init add form
+            this.add.init();
+        }
+    };
+
+    //init page
+    $(function(){
+        //init coupon
+        coupon.init();
+    });
+
+</script>

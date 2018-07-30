@@ -356,8 +356,9 @@ class UserCoupon(models.Model):
     name = models.CharField(max_length=64)
     money = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=16, default='unused') #unused-未使用, used-已使用, deleted-已删除,  expired-已失效
+    sdate = models.DateField() # start date
+    edate = models.DateField()  # expire date
     ctime = models.BigIntegerField()  # create time
-    etime = models.BigIntegerField()  # expire time
     utime = models.BigIntegerField(null=True)  # used time
 
     class Meta:
@@ -365,7 +366,7 @@ class UserCoupon(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        del items['user']
+        items['user'] = items['user'].user if items['user'] else None
         return items
 
 

@@ -14,3 +14,25 @@ class List(forms.Form):
     sdate = forms.DateField(required=False)
     edate = forms.DateField(required=False)
     words = forms.CharField(required=False)
+
+
+class Add(forms.Form):
+    user = forms.IntegerField()
+    name = forms.CharField(min_length=1, max_length=64)
+    money = forms.DecimalField(max_digits=10, decimal_places=2)
+    status = forms.CharField(min_length=1, max_length=16)
+    sdate = forms.DateField()
+    edate = forms.DateField()
+
+
+class Update(forms.Form):
+    id = forms.IntegerField()
+    name = forms.CharField(min_length=1, max_length=64)
+    money = forms.DecimalField(max_digits=10, decimal_places=2)
+    status = forms.CharField(min_length=1, max_length=16)
+    sdate = forms.DateField()
+    edate = forms.DateField()
+
+
+class Delete(forms.Form):
+    id = forms.IntegerField()

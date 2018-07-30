@@ -50,7 +50,6 @@ class SyncStocks(task.Task):
         model.dbcommit()
 
 
-
 if __name__ == "__main__":
     ss = SyncStocks()
     ss.start()

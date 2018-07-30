@@ -1,4 +1,4 @@
-import datetime, util
+import datetime, util, time
 from adb import models
 from cms import auth, resp, hint, forms
 
@@ -16,20 +16,19 @@ def list(request):
             ## form parameters ##
             params = form.cleaned_data
 
-            status, sdate, edate = params['status'], params['sdate'], params['edate']
+            status = params['status']
             ## filters ##
             filters = {}
             if status:
                 filters['status'] = status
-            if sdate:
-                filters['ctime__gte'] = util.time.utime(sdate)
-            if edate:
-                filters['ctime__lt'] = util.time.utime(edate+datetime.timedelta(days=1))
 
             ## search words ##
-            user = params['user']
-            if user:
-                filters['user__id'] = user
+            words = params['words']
+            if words:
+                if words.isdigit():
+                    filters['user__user'] = words
+                else:
+                    filters['name'] = words
 
             ## get total count ##
             total = models.UserCoupon.objects.filter(**filters).count()
@@ -64,7 +63,6 @@ def list(request):
             rows = []
             for obj in objects:
                 obj = obj.dict()
-                del obj['user']
                 rows.append(obj)
 
             ## response data ##
@@ -78,3 +76,69 @@ def list(request):
             return resp.failure(hint.ERR_FORM_DATA)
     except Exception as e:
         return resp.failure(str(e))
+
+
+@auth.need_login
+def add(request):
+    """
+        add
+    :param request:
+    :return:
+    """
+    form = forms.user.coupon.Add(request.POST)
+    if form.is_valid():
+        params = form.cleaned_data
+
+        # check if user has exist
+        items = models.User.objects.filter(id=params['user'])
+        if not items.exists():
+            return resp.failure(hint.ERR_FORM_DATA)
+
+        item = models.UserCoupon(name=params['name'],
+                            money=params['money'],
+                            status=params['status'],
+                            ctime=int(time.time()),
+                            sdate=params['sdate'],
+                            edate=params['edate'],
+                            user_id=params['user'])
+        item.save()
+        return resp.success(data=item.dict())
+    else:
+        return resp.failure(form.errors)
+
+
+@auth.need_login
+def update(request):
+    """
+        update
+    :param request:
+    :return:
+    """
+    form = forms.user.coupon.Update(request.POST)
+    if form.is_valid():
+        params = form.cleaned_data
+
+        models.UserCoupon.objects.filter(id=params['id']).update(name=params['name'],
+                                                            money=params['money'],
+                                                            status=params['status'],
+                                                            sdate=params['sdate'],
+                                                            edate=params['edate'])
+        return resp.success()
+    else:
+        return resp.failure(form.errors)
+
+
+@auth.need_login
+def delete(request):
+    """
+        delete api
+    :param request:
+    :return:
+    """
+    form = forms.user.coupon.Delete(request.POST)
+    if form.is_valid():
+        id = form.cleaned_data['id']
+        models.UserCoupon.objects.filter(id=id).delete()
+        return resp.success()
+    else:
+        return resp.failure(form.errors)

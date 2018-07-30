@@ -11,3 +11,13 @@ def user(request):
     :return:
     """
     return render(request, 'user/user.html')
+
+
+@auth.need_permit
+def coupon(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'user/coupon.html')
