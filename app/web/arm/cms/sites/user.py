@@ -21,3 +21,13 @@ def coupon(request):
     :return:
     """
     return render(request, 'user/coupon.html')
+
+
+@auth.need_permit
+def bill(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'user/bill.html')

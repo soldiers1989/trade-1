@@ -398,7 +398,8 @@ class UserBill(models.Model):
     code = models.CharField(max_length=16, unique=True)
     item = models.CharField(max_length=16)
     detail = models.CharField(max_length=64)
-    bmoney = models.DecimalField(max_digits=10, decimal_places=2) # bill money
+    money = models.DecimalField(max_digits=10, decimal_places=2) # bill money
+    bmoney = models.DecimalField(max_digits=10, decimal_places=2) # before money
     lmoney = models.DecimalField(max_digits=10, decimal_places=2) # left money
     ctime = models.BigIntegerField()  # create time
 
@@ -407,7 +408,7 @@ class UserBill(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        del items['user']
+        items['user'] = items['user'].user if items['user'] else None
         return items
 
 
@@ -426,7 +427,7 @@ class UserCharge(models.Model):
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['account'] = items['account'].name if items['account'] else None
-        del items['user']
+        items['user'] = items['user'].user if items['user'] else None
         return items
 
 
@@ -448,7 +449,7 @@ class UserDraw(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        del items['user']
+        items['user'] = items['user'].user if items['user'] else None
         return items
 
 
@@ -467,7 +468,7 @@ class UserStock(models.Model):
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['stock'] = items['stock'].name if items['stock'] else None
-        del items['user']
+        items['user'] = items['user'].user if items['user'] else None
         return items
 
 

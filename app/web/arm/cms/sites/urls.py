@@ -15,6 +15,7 @@ urlpatterns = [
     path('trade/order/', trade.order, name="cms.trade.order"),
 
     path('user/user/', user.user, name="cms.user.user"),
+    path('user/bill/', user.bill, name="cms.user.bill"),
     path('user/coupon/', user.coupon, name="cms.user.coupon"),
 
     path('stock/stock/', stock.stock, name="cms.stock.stock"),

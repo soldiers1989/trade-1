@@ -8,26 +8,27 @@ class List(forms.Form):
     sort = forms.CharField(initial='id', required=False)
     order = forms.CharField(initial='asc', required=False)
 
-    status = forms.CharField(required=False)
     words = forms.CharField(required=False)
 
 
 class Add(forms.Form):
     user = forms.IntegerField()
-    name = forms.CharField(min_length=1, max_length=64)
+    item = forms.CharField(min_length=1, max_length=16)
+    detail = forms.CharField(max_length=64)
     money = forms.DecimalField(max_digits=10, decimal_places=2)
-    status = forms.CharField(min_length=1, max_length=16)
-    sdate = forms.DateField()
-    edate = forms.DateField()
+    bmoney = forms.DecimalField(max_digits=10, decimal_places=2)
+    lmoney = forms.DecimalField(max_digits=10, decimal_places=2)
+    ctime = forms.DateTimeField()
 
 
 class Update(forms.Form):
     id = forms.IntegerField()
-    name = forms.CharField(min_length=1, max_length=64)
+    item = forms.CharField(min_length=1, max_length=16)
+    detail = forms.CharField(max_length=64)
     money = forms.DecimalField(max_digits=10, decimal_places=2)
-    status = forms.CharField(min_length=1, max_length=16)
-    sdate = forms.DateField()
-    edate = forms.DateField()
+    bmoney = forms.DecimalField(max_digits=10, decimal_places=2)
+    lmoney = forms.DecimalField(max_digits=10, decimal_places=2)
+    ctime = forms.DateTimeField()
 
 
 class Delete(forms.Form):

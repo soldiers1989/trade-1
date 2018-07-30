@@ -1,0 +1,352 @@
+<table id="bill_datagrid" style="height: 100%;"></table>
+
+<div id="bill_toolbar">
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="bill.add.open()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="bill.update.open()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="bill.delete.do()">删除</a>
+    </span>
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="bill_search_form">
+            <input name="words" class="easyui-textbox">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="bill.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="bill.search.reset()">重置</a>
+        </form>
+    </span>
+</div>
+
+<div class="easyui-dialog" id="bill_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#bill_add_dialog_buttons'">
+    <form class="easyui-form" id="bill_add_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input name="user" type="text" label="用户" prompt="输入用户" style="width:100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="item" data-options="label:'项目', prompt:'输入项目', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="detail" data-options="label:'详情', prompt:'输入详情', required:true, validType:['text', 'length[1,64]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="bmoney" data-options="label:'账户金额', prompt:'输入账户金额', required:true, validType:['number']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="money" data-options="label:'发生金额', prompt:'输入发生金额', required:true, validType:['number']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="lmoney" data-options="label:'账户余额', prompt:'输入账户金额', required:true, validType:['number']" style="width:100%">
+        </div>        
+        <div style="margin-bottom:10px">
+            <input name="ctime" type="text" class="easyui-datetimebox" label="发生时间" prompt="选择发生时间" required style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="bill_add_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="bill.add.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="bill.add.cancel()" style="width:90px">取消</a>
+</div>
+
+<div class="easyui-dialog" id="bill_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#bill_update_dialog_buttons'">
+    <form class="easyui-form" id="bill_update_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input name="id" type="text" class="easyui-textbox" label="ID" style="width:100%" disabled>
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="user" type="text" label="用户" prompt="输入用户" style="width:100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="item" data-options="label:'项目', prompt:'输入项目', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="detail" data-options="label:'详情', prompt:'输入详情', required:true, validType:['text', 'length[1,64]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="bmoney" data-options="label:'账户金额', prompt:'输入账户金额', required:true, validType:['number']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="money" data-options="label:'发生金额', prompt:'输入发生金额', required:true, validType:['number']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="lmoney" data-options="label:'账户余额', prompt:'输入账户金额', required:true, validType:['number']" style="width:100%">
+        </div>        
+        <div style="margin-bottom:10px">
+            <input name="ctime" type="text" class="easyui-datetimebox" label="发生时间" prompt="选择发生时间" required style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="bill_update_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="bill.update.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="bill.update.cancel()" style="width:90px">取消</a>
+</div>
+
+<script type="text/javascript">
+    // bill list/add/update/delete
+    var bill = {
+        // bill list
+        list: {
+            url: '/api/user/bill/list',
+            datagrid: $('#bill_datagrid'),
+
+            init: function() {
+            	//init tree grid
+                this.datagrid.datagrid({
+                    url: this.url,
+                    method: 'post',
+
+                    idField: 'id',
+
+    				striped: true,
+    				fitColumns: true,
+                    pagination: true,
+                    rownumbers: true,
+                    singleSelect: true,
+
+
+    				toolbar: '#bill_toolbar',
+                    columns: [[
+                        {field:'id', title:'ID', sortable:true, width:'5%'},
+                        {field:'code', title:'流水号', sortable:false, width:'10%'},
+                        {field:'item', title:'项目', sortable:true, width:'10%'},
+                        {field:'detail', title:'详情', sortable:true, width:'30%'},
+                        {field:'bmoney', title:'账户金额', sortable:true, width:'10%'},
+                        {field:'money', title:'发生金额', sortable:true, width:'10%'},
+                        {field:'lmoney', title:'账户余额', sortable:true, width:'10%'},
+                        {field:'ctime', title:'发放时间', sortable:true, width:'15%', formatter: cube.format.datetime}
+                    ]],
+
+                    loadFilter: function (resp) {
+                        return resp.data;
+                    },
+
+                    onLoadSuccess: function(resp) {
+                        $(this).datagrid('enableDnd');
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求资金流水数据失败'});
+                    }
+                });
+            },
+
+            load: function(params) {
+                this.datagrid.datagrid('load', params);
+            },
+
+            reload: function() {
+                this.datagrid.datagrid('reload');
+            },
+
+            getSelected: function() {
+                return this.datagrid.datagrid('getSelected');
+            }
+        },
+
+        //search action
+        search: {
+            form: $('#bill_search_form'),
+
+            init: function() { //init search form
+                // init status combobox
+                this.form.find('input[name="status"]:first').combobox({
+                    data: [{v:'unused', t:'未用'}, {v:'used', t:'已用'}],
+                    valueField: 'v',
+                    textField: 't'
+                });
+            },
+
+            do: function() { // do search
+                //check search form
+                if(!this.form.form('validate'))
+                    return;
+
+                //get parameters
+                params = {
+                    status: this.form.find('input[name="status"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val()
+                };
+
+                //reload by retrieve conditions
+                bill.list.load(params);
+            },
+
+            reset: function() { // reset
+                //clear form
+                this.form.form('clear');
+
+                //reload datagrid
+                bill.list.load({});
+            },
+        },
+
+        //add action
+        add: {
+            url: '/api/user/bill/add',
+            dialog: $('#bill_add_dialog'),
+            form: $('#bill_add_form'),
+
+            init: function() { // init add
+                //init user textbox
+                $('#bill_add_form').find('input[name="user"]:first').combobox({
+                    url:'/api/user/user/query', 
+                    mode: 'remote',
+
+                    valueField:'id',
+                    textField:'user',
+                    
+                    limitToList: true,
+                    
+                    loadFilter: function(resp) {
+                        return resp.data;
+                    }
+                });
+            },
+
+            open: function() { // open add
+                //reset form
+                this.form.form('clear');
+
+                //open dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','添加资金流水');
+            },
+
+            save: function() { // save add
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: {},
+
+                    onSubmit: function(){
+                        return bill.add.form.form('validate');
+                    },
+
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            bill.add.dialog.dialog('close');
+                            bill.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
+                    }
+                });
+            },
+
+            cancel: function() { //cancel add
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        //update action
+        update: {
+            url: '/api/user/bill/update',
+            dialog: $('#bill_update_dialog'),
+            form: $('#bill_update_form'),
+
+            // open update dialoag
+            open: function() {
+                //get selected row data
+                row = bill.list.getSelected();
+                if (row){
+                    // clear form
+                    this.form.form('clear');
+
+                    //load form data
+                    this.form.form('load', row);
+
+                    //open dialog
+                    this.dialog.dialog('open').dialog('center').dialog('setTitle','修改资金流水');
+                }
+            },
+
+            // save update results
+            save: function() {
+                var params={};
+                // get selected row data
+                var row = bill.list.getSelected();
+                if (!row)
+                    return;
+                params.id = row.id;
+                    
+
+                //submit form
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: params,
+                    onSubmit: function(){
+                        return bill.update.form.form('validate');
+                    },
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            bill.update.dialog.dialog('close');
+                            bill.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
+                    }
+                });
+            },
+
+            // cancel update operation
+            cancel: function() {
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        // delete row
+        delete: {
+            url: '/api/user/bill/delete',
+
+            do: function() { // delete
+                // delete action url
+                url = this.url;
+
+                //get selected row data
+                var row = bill.list.getSelected();
+                if (!row)
+                    return;
+
+                $.messager.confirm({
+                    title: '确认',
+                    msg: '确认删除资金流水'+row.name+'?',
+                    url: bill.delete.url,
+                    fn: function(r){
+                        if (r){
+                            $.post(url, {id: row.id}, function(resp, status){
+                                if(status == 'success'){
+                                    if (resp.status){
+                                        bill.list.reload();
+                                    } else {
+                                        $.messager.show({title: '错误', msg: resp.message});
+                                    }
+                                } else {
+                                    $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                }
+                            },'json');
+                        }
+                    }
+                });
+            },
+        },
+
+        //init bill
+        init: function() {
+            // init search
+            this.search.init();
+            // init list
+            this.list.init();
+            // init add form
+            this.add.init();
+        }
+    };
+
+    //init page
+    $(function(){
+        //init bill
+        bill.init();
+    });
+
+</script>
