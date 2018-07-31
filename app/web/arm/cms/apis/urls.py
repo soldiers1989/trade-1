@@ -74,6 +74,11 @@ urlpatterns = [
     path('user/charge/update', user.charge.update, name="api.user.charge.update"),
     path('user/charge/delete', user.charge.delete, name="api.user.charge.delete"),
 
+    path('user/draw/list', user.draw.list, name="api.user.draw.list"),
+    path('user/draw/add', user.draw.add, name="api.user.draw.add"),
+    path('user/draw/update', user.draw.update, name="api.user.draw.update"),
+    path('user/draw/delete', user.draw.delete, name="api.user.draw.delete"),
+
     path('stock/stock/list', stock.stock.list, name="api.stock.stock.list"),
     path('stock/stock/add', stock.stock.add, name="api.stock.stock.add"),
     path('stock/stock/update', stock.stock.update, name="api.stock.stock.update"),

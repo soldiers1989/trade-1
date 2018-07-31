@@ -41,3 +41,14 @@ def charge(request):
     :return:
     """
     return render(request, 'user/charge.html')
+
+
+@auth.need_permit
+def draw(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'user/draw.html')
+

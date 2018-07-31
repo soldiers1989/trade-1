@@ -1,0 +1,373 @@
+<table id="draw_datagrid" style="height: 100%;"></table>
+
+<div id="draw_toolbar">
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="draw.add.open()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="draw.update.open()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="draw.delete.do()">删除</a>
+    </span>
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="draw_search_form">
+            <input name="status" data-options="prompt:'状态', editable:false, required:false">
+            <input name="words" class="easyui-textbox">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="draw.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="draw.search.reset()">重置</a>
+        </form>
+    </span>
+</div>
+
+<div class="easyui-dialog" id="draw_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#draw_add_dialog_buttons'">
+    <form class="easyui-form" id="draw_add_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="user" type="text" label="用户" prompt="输入用户" style="width:100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="money" data-options="label:'提现金额', prompt:'输入金额', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'账户名称', prompt:'输入银行账户名', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="idc" data-options="label:'身份证号', prompt:'输入身份证号', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="bank" data-options="label:'银行名称', prompt:'输入开户行名称', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="account" data-options="label:'银行卡号', prompt:'输入银行卡号', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择状态', editable:false, required:true" style="width: 100%">
+                <option value="topay">待付款</option>
+                <option value="paid">已付款</option>
+                <option value="denied">已拒绝</option>
+            </select>
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="ctime" type="text" class="easyui-datetimebox" label="发生时间" prompt="选择发生时间" required style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="draw_add_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="draw.add.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="draw.add.cancel()" style="width:90px">取消</a>
+</div>
+
+<div class="easyui-dialog" id="draw_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#draw_update_dialog_buttons'">
+    <form class="easyui-form" id="draw_update_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" disabled>
+        </div>
+         <div style="margin-bottom:10px">
+            <input class="easyui-textbox"  name="user" type="text" label="用户" style="width:100%" disabled>
+        </div>
+         <div style="margin-bottom:10px">
+            <input class="easyui-textbox"  name="code" type="text" label="流水号" style="width:100%" disabled>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="money" data-options="label:'提现金额', prompt:'输入金额', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'账户名称', prompt:'输入银行账户名', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="idc" data-options="label:'身份证号', prompt:'输入身份证号', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="bank" data-options="label:'开户银行', prompt:'输入开户行名称', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="account" data-options="label:'银行账号', prompt:'输入银行卡号', required:true, validType:['text', 'length[1,32]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择状态', editable:false, required:true" style="width: 100%">
+                <option value="topay">待付款</option>
+                <option value="paid">已付款</option>
+                <option value="denied">已拒绝</option>
+            </select>
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="ctime" type="text" class="easyui-datetimebox" label="发生时间" prompt="选择发生时间" required style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="draw_update_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="draw.update.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="draw.update.cancel()" style="width:90px">取消</a>
+</div>
+
+<script type="text/javascript">
+    // draw list/add/update/delete
+    var draw = {
+        // draw list
+        list: {
+            url: '/api/user/draw/list',
+            datagrid: $('#draw_datagrid'),
+
+            init: function() {
+            	//init tree grid
+                this.datagrid.datagrid({
+                    url: this.url,
+                    method: 'post',
+
+                    idField: 'id',
+
+    				striped: true,
+    				fitColumns: true,
+                    pagination: true,
+                    rownumbers: false,
+                    singleSelect: true,
+
+
+    				toolbar: '#draw_toolbar',
+                    columns: [[
+                        {field:'id', title:'ID', sortable:true, width:'5%'},
+                        {field:'user', title:'用户', sortable:false, width:'8%'},
+                        {field:'code', title:'流水号', sortable:false, width:'10%'},
+                        {field:'money', title:'金额', sortable:true, width:'7%'}, 
+                        {field:'name', title:'账户名称', sortable:false, width:'5%'}, 
+                        {field:'idc', title:'身份证号', sortable:false, width:'20%'}, 
+                        {field:'bank', title:'开户银行', sortable:true, width:'8%'}, 
+                        {field:'account', title:'银行账号', sortable:false, width:'20%'}, 
+                        {field:'status', title:'状态', sortable:true, width:'5%', formatter: function (s) {
+                            opts = {topay:'待付款', paid:'已付款', denied:'已拒绝'};
+                            return opts[s];
+                        }},
+                        {field:'ctime', title:'创建时间', sortable:true, width:'12%', formatter: cube.format.datetime},
+                    ]],
+
+                    loadFilter: function (resp) {
+                        return resp.data;
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求提现记录数据失败'});
+                    }
+                });
+            },
+
+            load: function(params) {
+                this.datagrid.datagrid('load', params);
+            },
+
+            reload: function() {
+                this.datagrid.datagrid('reload');
+            },
+
+            getSelected: function() {
+                return this.datagrid.datagrid('getSelected');
+            }
+        },
+
+        //search action
+        search: {
+            form: $('#draw_search_form'),
+
+            init: function() { //init search form
+                // init status combobox
+                this.form.find('input[name="status"]:first').combobox({
+                    data: [{v:'topay', t:'待付款'}, {v:'paid', t:'已付款'}, {v:'denied', t:'已拒绝'}],
+                    valueField: 'v',
+                    textField: 't'
+                });
+            },
+
+            do: function() { // do search
+                //check search form
+                if(!this.form.form('validate'))
+                    return;
+
+                //get parameters
+                params = {
+                    status: this.form.find('input[name="status"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val()
+                };
+
+                //reload by retrieve conditions
+                draw.list.load(params);
+            },
+
+            reset: function() { // reset
+                //clear form
+                this.form.form('clear');
+
+                //reload datagrid
+                draw.list.load({});
+            },
+        },
+
+        //add action
+        add: {
+            url: '/api/user/draw/add',
+            dialog: $('#draw_add_dialog'),
+            form: $('#draw_add_form'),
+
+            init: function() { // init add
+                //init user textbox
+                $('#draw_add_form').find('input[name="user"]:first').combobox({
+                    url:'/api/user/user/query',
+                    mode: 'remote',
+
+                    valueField:'id',
+                    textField:'user',
+
+                    limitToList: true,
+
+                    loadFilter: function(resp) {
+                        return resp.data;
+                    }
+                });
+            },
+
+            open: function() { // open add
+                //reset form
+                this.form.form('clear');
+
+                //open dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','添加提现记录');
+            },
+
+            save: function() { // save add
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: {},
+
+                    onSubmit: function(){
+                        return draw.add.form.form('validate');
+                    },
+
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            draw.add.dialog.dialog('close');
+                            draw.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
+                    }
+                });
+            },
+
+            cancel: function() { //cancel add
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        //update action
+        update: {
+            url: '/api/user/draw/update',
+            dialog: $('#draw_update_dialog'),
+            form: $('#draw_update_form'),
+
+            // open update dialoag
+            open: function() {
+                //get selected row data
+                row = draw.list.getSelected();
+                if (row){
+                    row.ctime = cube.format.datetime(row.ctime);
+
+                    // clear form
+                    this.form.form('clear');
+
+                    //load form data
+                    this.form.form('load', row);
+
+                    //open dialog
+                    this.dialog.dialog('open').dialog('center').dialog('setTitle','修改提现记录');
+                }
+            },
+
+            // save update results
+            save: function() {
+                var params={};
+                // get selected row data
+                var row = draw.list.getSelected();
+                if (!row)
+                    return;
+                params.id = row.id;
+
+
+                //submit form
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: params,
+                    onSubmit: function(){
+                        return draw.update.form.form('validate');
+                    },
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            draw.update.dialog.dialog('close');
+                            draw.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.message });
+                        }
+                    }
+                });
+            },
+
+            // cancel update operation
+            cancel: function() {
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        // delete row
+        delete: {
+            url: '/api/user/draw/delete',
+
+            do: function() { // delete
+                // delete action url
+                url = this.url;
+
+                //get selected row data
+                var row = draw.list.getSelected();
+                if (!row)
+                    return;
+
+                $.messager.confirm({
+                    title: '确认',
+                    msg: '确认删除充值记录'+row.name+'?',
+                    url: draw.delete.url,
+                    fn: function(r){
+                        if (r){
+                            $.post(url, {id: row.id}, function(resp, status){
+                                if(status == 'success'){
+                                    if (resp.status){
+                                        draw.list.reload();
+                                    } else {
+                                        $.messager.show({title: '错误', msg: resp.message});
+                                    }
+                                } else {
+                                    $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                }
+                            },'json');
+                        }
+                    }
+                });
+            },
+        },
+
+        //init draw
+        init: function() {
+            // init search
+            this.search.init();
+            // init list
+            this.list.init();
+            // init add form
+            this.add.init();
+        }
+    };
+
+    //init page
+    $(function(){
+        //init draw
+        draw.init();
+    });
+
+</script>

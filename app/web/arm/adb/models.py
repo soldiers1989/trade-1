@@ -436,9 +436,9 @@ class UserDraw(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     code = models.CharField(max_length=16, unique=True)
     money = models.DecimalField(max_digits=10, decimal_places=2)
-    bank = models.CharField(max_length=16)
     name = models.CharField(max_length=16)
     idc = models.CharField(max_length=32)
+    bank = models.CharField(max_length=16)
     account = models.CharField(max_length=32)
     status = models.CharField(max_length=16, default='paying')
     ctime = models.BigIntegerField()  # create time
