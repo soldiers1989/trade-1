@@ -49,6 +49,8 @@ def list(request):
             if sort and order:
                 order = '-' if order=='desc' else ''
                 orderby = order+sort
+            else:
+                orderby = '-id'
 
             ## pagination##
             page, size, start, end = params['page'], params['rows'], None, None

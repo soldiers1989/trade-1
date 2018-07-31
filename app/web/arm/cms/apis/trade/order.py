@@ -1,7 +1,7 @@
 """
     api for cms
 """
-import time, datetime
+import time, datetime, util
 from django.db import transaction
 from django.db.models import Q
 from adb import models
@@ -50,6 +50,8 @@ def list(request):
             if sort and order:
                 order = '-' if order=='desc' else ''
                 orderby = order+sort
+            else:
+                orderby = '-id'
 
             ## pagination##
             page, size, start, end = params['page'], params['rows'], None, None

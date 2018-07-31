@@ -50,10 +50,13 @@
 <div class="easyui-dialog" id="bill_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#bill_update_dialog_buttons'">
     <form class="easyui-form" id="bill_update_form" method="post" style="margin:0;padding:10px 20px">
         <div style="margin-bottom:10px">
-            <input name="id" type="text" class="easyui-textbox" label="ID" style="width:100%" disabled>
+            <input class="easyui-textbox" name="id" type="text" label="ID" style="width:100%" disabled>
         </div>
         <div style="margin-bottom:10px">
-            <input name="user" type="text" label="用户" prompt="输入用户" style="width:100%" required>
+            <input class="easyui-textbox" name="user" type="text" label="用户" style="width:100%" disabled>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="code" type="text" label="流水号" style="width:100%" disabled>
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="item" data-options="label:'项目', prompt:'输入项目', required:true, validType:['text', 'length[1,16]']" style="width:100%">
@@ -107,13 +110,14 @@
     				toolbar: '#bill_toolbar',
                     columns: [[
                         {field:'id', title:'ID', sortable:true, width:'5%'},
-                        {field:'code', title:'流水号', sortable:false, width:'10%'},
-                        {field:'item', title:'项目', sortable:true, width:'10%'},
-                        {field:'detail', title:'详情', sortable:true, width:'30%'},
-                        {field:'bmoney', title:'账户金额', sortable:true, width:'10%'},
-                        {field:'money', title:'发生金额', sortable:true, width:'10%'},
-                        {field:'lmoney', title:'账户余额', sortable:true, width:'10%'},
-                        {field:'ctime', title:'发放时间', sortable:true, width:'15%', formatter: cube.format.datetime}
+                        {field:'user', title:'用户', sortable:true, width:'8%'},
+                        {field:'code', title:'流水号', sortable:false, width:'8%'},
+                        {field:'item', title:'项目', sortable:true, width:'8%'},
+                        {field:'bmoney', title:'账户金额', sortable:true, width:'8%'},
+                        {field:'money', title:'发生金额', sortable:true, width:'8%'},
+                        {field:'lmoney', title:'账户余额', sortable:true, width:'8%'},
+                        {field:'ctime', title:'发放时间', sortable:true, width:'13%', formatter: cube.format.datetime},
+                        {field:'detail', title:'详情', sortable:false, width:'34%'}
                     ]],
 
                     loadFilter: function (resp) {
@@ -249,6 +253,7 @@
                 //get selected row data
                 row = bill.list.getSelected();
                 if (row){
+                    row.ctime = cube.format.datetime(row.ctime);
                     // clear form
                     this.form.form('clear');
 

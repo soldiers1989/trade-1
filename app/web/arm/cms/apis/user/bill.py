@@ -1,5 +1,6 @@
 import util
 from adb import models
+from django.db.models import Q
 from cms import auth, resp, hint, forms
 
 
@@ -16,22 +17,21 @@ def list(request):
             ## form parameters ##
             params = form.cleaned_data
 
-            status = params['status']
             ## filters ##
             filters = {}
-            if status:
-                filters['status'] = status
 
             ## search words ##
+            q = Q()
             words = params['words']
             if words:
-                if words.isdigit():
-                    filters['user__user'] = words
-                else:
-                    filters['item'] = words
+                if len(words) < 10 and words.isdigit():
+                    filters['id'] = int(words) # id, not phone number
+                else :
+                    q = Q(item=words) | Q(code=words) | Q(user__user=words)
+
 
             ## get total count ##
-            total = models.UserBill.objects.filter(**filters).count()
+            total = models.UserBill.objects.filter(q, **filters).count()
 
 
             # order by#
@@ -40,6 +40,8 @@ def list(request):
             if sort and order:
                 order = '-' if order=='desc' else ''
                 orderby = order+sort
+            else:
+                orderby = '-id'
 
             ## pagination##
             page, size, start, end = params['page'], params['rows'], None, None
@@ -50,14 +52,14 @@ def list(request):
             objects = []
             if orderby:
                 if start is not None and end is not None:
-                    objects = models.UserBill.objects.filter(**filters).order_by(orderby)[start:end]
+                    objects = models.UserBill.objects.filter(q, **filters).order_by(orderby)[start:end]
                 else:
-                    objects = models.UserBill.objects.filter(**filters).order_by(orderby)
+                    objects = models.UserBill.objects.filter(q, **filters).order_by(orderby)
             else:
                 if start is not None and end is not None:
-                    objects = models.UserBill.objects.filter(**filters)[start:end]
+                    objects = models.UserBill.objects.filter(q, **filters)[start:end]
                 else:
-                    objects = models.UserBill.objects.filter(**filters)
+                    objects = models.UserBill.objects.filter(q, **filters)
 
             ## make results ##
             rows = []
