@@ -124,10 +124,6 @@
                         return resp.data;
                     },
 
-                    onLoadSuccess: function(resp) {
-                        $(this).datagrid('enableDnd');
-                    },
-
                     onLoadError: function() {
                         $.messager.show({title: '错误', msg: '请求资金流水数据失败'});
                     }

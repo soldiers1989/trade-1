@@ -426,7 +426,6 @@ class UserCharge(models.Model):
 
     def dict(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['account'] = items['account'].name if items['account'] else None
         items['user'] = items['user'].user if items['user'] else None
         return items
 

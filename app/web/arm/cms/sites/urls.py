@@ -17,6 +17,7 @@ urlpatterns = [
     path('user/user/', user.user, name="cms.user.user"),
     path('user/bill/', user.bill, name="cms.user.bill"),
     path('user/coupon/', user.coupon, name="cms.user.coupon"),
+    path('user/charge/', user.charge, name="cms.user.charge"),
 
     path('stock/stock/', stock.stock, name="cms.stock.stock"),
 ]

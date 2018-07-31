@@ -1,4 +1,4 @@
-import time
+import time, util
 from adb import models
 from cms import auth, resp, hint, forms
 
@@ -11,7 +11,7 @@ def list(request):
     :return:
     """
     try:
-        form = forms.user.coupon.List(request.POST)
+        form = forms.user.charge.List(request.POST)
         if form.is_valid():
             ## form parameters ##
             params = form.cleaned_data
@@ -31,15 +31,14 @@ def list(request):
                     else:
                         filters['user__user'] = words
                 else:
-                    filters['name'] = words
+                    filters['code'] = words
 
             ## get total count ##
-            total = models.UserCoupon.objects.filter(**filters).count()
+            total = models.UserCharge.objects.filter(**filters).count()
 
 
             # order by#
             sort, order =  params['sort'], params['order']
-            orderby = None
             if sort and order:
                 order = '-' if order=='desc' else ''
                 orderby = order+sort
@@ -52,17 +51,16 @@ def list(request):
                 start, end = (page-1)*size, page*size
 
             ## query results ##
-            objects = []
             if orderby:
                 if start is not None and end is not None:
-                    objects = models.UserCoupon.objects.filter(**filters).order_by(orderby)[start:end]
+                    objects = models.UserCharge.objects.filter(**filters).order_by(orderby)[start:end]
                 else:
-                    objects = models.UserCoupon.objects.filter(**filters).order_by(orderby)
+                    objects = models.UserCharge.objects.filter(**filters).order_by(orderby)
             else:
                 if start is not None and end is not None:
-                    objects = models.UserCoupon.objects.filter(**filters)[start:end]
+                    objects = models.UserCharge.objects.filter(**filters)[start:end]
                 else:
-                    objects = models.UserCoupon.objects.filter(**filters)
+                    objects = models.UserCharge.objects.filter(**filters)
 
             ## make results ##
             rows = []
@@ -90,7 +88,7 @@ def add(request):
     :param request:
     :return:
     """
-    form = forms.user.coupon.Add(request.POST)
+    form = forms.user.charge.Add(request.POST)
     if form.is_valid():
         params = form.cleaned_data
 
@@ -99,12 +97,10 @@ def add(request):
         if not items.exists():
             return resp.failure(hint.ERR_FORM_DATA)
 
-        item = models.UserCoupon(name=params['name'],
+        item = models.UserCharge(code=util.rand.uuid(),
                             money=params['money'],
                             status=params['status'],
                             ctime=int(time.time()),
-                            sdate=params['sdate'],
-                            edate=params['edate'],
                             user_id=params['user'])
         item.save()
         return resp.success(data=item.dict())
@@ -119,15 +115,13 @@ def update(request):
     :param request:
     :return:
     """
-    form = forms.user.coupon.Update(request.POST)
+    form = forms.user.charge.Update(request.POST)
     if form.is_valid():
         params = form.cleaned_data
 
-        models.UserCoupon.objects.filter(id=params['id']).update(name=params['name'],
-                                                            money=params['money'],
-                                                            status=params['status'],
-                                                            sdate=params['sdate'],
-                                                            edate=params['edate'])
+        models.UserCharge.objects.filter(id=params['id']).update(money=params['money'],
+                                                                status=params['status'],
+                                                                ctime=int(time.time()))
         return resp.success()
     else:
         return resp.failure(form.errors)
@@ -140,10 +134,10 @@ def delete(request):
     :param request:
     :return:
     """
-    form = forms.user.coupon.Delete(request.POST)
+    form = forms.user.charge.Delete(request.POST)
     if form.is_valid():
         id = form.cleaned_data['id']
-        models.UserCoupon.objects.filter(id=id).delete()
+        models.UserCharge.objects.filter(id=id).delete()
         return resp.success()
     else:
         return resp.failure(form.errors)

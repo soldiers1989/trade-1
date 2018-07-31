@@ -31,3 +31,13 @@ def bill(request):
     :return:
     """
     return render(request, 'user/bill.html')
+
+
+@auth.need_permit
+def charge(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'user/charge.html')
