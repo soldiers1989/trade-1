@@ -1,7 +1,7 @@
 from app.atm import handler, access, protocol
 
 
-class SyncStockList(handler.Handler):
+class SyncAll(handler.Handler):
     """
         handler for query quote service status
     """

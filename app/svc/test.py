@@ -1,11 +1,21 @@
 from lib.stock.quote.daily import quotes
-from xpinyin import Pinyin
+import threading, time
+
+class T(threading.Thread):
+    id = "abc"
+    name = "123"
+    def run(self):
+        print('hello')
 
 if __name__ == "__main__":
-    p = Pinyin()
-    print(p.get_initials(u'中国建工', u''))
-    exit(0)
-    q = quotes.Quotes()
-    results = q.fetch('2018-07-24')
-    print(len(results))
+    t = T()
+    t.start()
 
+    t.join()
+    print(t.id)
+    print(t.name)
+
+    print(T.id)
+    print(T.name)
+
+    time.sleep(3)

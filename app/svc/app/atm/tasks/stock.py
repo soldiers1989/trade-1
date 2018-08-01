@@ -1,21 +1,19 @@
 """
     stock relate tasks
 """
+import threading
 
 from xpinyin import Pinyin
-from app.atm import task, models
-from app.util import rand
-from lib.stock.detail import sina, cninfo
+
+from app.atm import models, timer
+from lib.stock.detail import cninfo
 
 
-class SyncStocks(task.Task):
-    def __init__(self):
-        """
-            init sync stocks task
-        """
-        task.Task.__init__(self, rand.uuid(), 'syncstocks', '同步股票列表')
-
-    def run(self):
+class SyncAll(timer.Runnable):
+    """
+        sync all stock list from cninfo/sina, update local stock list in database
+    """
+    def do(self):
         """
             thread function
         :return:
@@ -51,8 +49,7 @@ class SyncStocks(task.Task):
 
 
 if __name__ == "__main__":
-    ss = SyncStocks()
+    ss = SyncAll()
     ss.start()
-
-    import time
-    time.sleep(100)
+    ss.join()
+    print(ss.is_alive())
