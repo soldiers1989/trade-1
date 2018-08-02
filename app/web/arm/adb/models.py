@@ -547,6 +547,7 @@ class TradeOrder(models.Model):
     id = models.AutoField(primary_key=True)
     trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
     account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
     otype = models.CharField(max_length=16)
     ptype = models.CharField(max_length=16)
     ocount = models.IntegerField()

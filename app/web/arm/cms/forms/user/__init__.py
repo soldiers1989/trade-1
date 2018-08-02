@@ -1,1 +1,1 @@
-from cms.forms.user import user, coupon, bill, charge, draw
+from cms.forms.user import user, coupon, bill, charge, draw, trade

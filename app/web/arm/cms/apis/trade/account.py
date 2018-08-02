@@ -37,7 +37,6 @@ def list(request):
             ## get total count ##
             total = models.TradeAccount.objects.filter(q, **filters).count()
 
-
             # order by#
             sort, order =  params['sort'], params['order']
             if sort and order:

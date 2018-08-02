@@ -20,6 +20,7 @@ urlpatterns = [
     path('user/coupon/', user.coupon, name="cms.user.coupon"),
     path('user/charge/', user.charge, name="cms.user.charge"),
     path('user/draw/', user.draw, name="cms.user.draw"),
+    path('user/trade/', user.trade, name="cms.user.trade"),
 
     path('stock/stock/', stock.stock, name="cms.stock.stock"),
 ]

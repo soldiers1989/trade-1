@@ -69,10 +69,10 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'arm.wsgi.application'
+#WSGI_APPLICATION = 'arm.wsgi.application'
 
 
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+#SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases

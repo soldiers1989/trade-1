@@ -38,13 +38,6 @@ urlpatterns = [
     path('trade/lever/delete', trade.lever.delete, name="api.trade.lever.delete"),
     path('trade/lever/reorder', trade.lever.reorder, name="api.trade.lever.reorder"),
 
-    path('trade/order/list', trade.order.list, name="api.trade.order.list"),
-    path('trade/order/add', trade.order.add, name="api.trade.order.add"),
-    path('trade/order/fees', trade.order.fees, name="api.trade.order.fees"),
-    path('trade/order/margins', trade.order.margins, name="api.trade.order.margins"),
-    path('trade/order/orders', trade.order.orders, name="api.trade.order.orders"),
-    path('trade/order/lever', trade.order.lever, name="api.trade.order.lever"),
-
     path('trade/account/list', trade.account.list, name="api.trade.account.list"),
     path('trade/account/add', trade.account.add, name="api.trade.account.add"),
     path('trade/account/update', trade.account.update, name="api.trade.account.update"),
@@ -63,6 +56,12 @@ urlpatterns = [
     path('user/user/draws', user.user.draws, name="api.user.user.draws"),
     path('user/user/resetpwd', user.user.resetpwd, name="api.user.user.resetpwd"),
 
+    path('user/trade/list', user.trade.list, name="api.user.trade.list"),
+    path('user/trade/add', user.trade.add, name="api.user.trade.add"),
+    path('user/trade/fees', user.trade.fees, name="api.user.trade.fees"),
+    path('user/trade/margins', user.trade.margins, name="api.user.trade.margins"),
+    path('user/trade/orders', user.trade.orders, name="api.user.trade.orders"),
+    path('user/trade/lever', user.trade.lever, name="api.user.trade.lever"),
 
     path('user/coupon/list', user.coupon.list, name="api.user.coupon.list"),
     path('user/coupon/add', user.coupon.add, name="api.user.coupon.add"),

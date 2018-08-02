@@ -21,12 +21,8 @@ def get_admin_id(request):
     :param request:
     :return:
     """
-    stime = time.time()
     id = request.session.get('id')
-    etime = time.time()
-    print(etime-stime)
     return id
-
 
 def set_admin_modules(request, modules):
     """

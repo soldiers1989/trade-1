@@ -14,6 +14,16 @@ def user(request):
 
 
 @auth.need_permit
+def trade(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'user/trade.html')
+
+
+@auth.need_permit
 def coupon(request):
     """
 
