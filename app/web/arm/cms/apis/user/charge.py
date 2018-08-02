@@ -105,7 +105,7 @@ def add(request):
         item.save()
         return resp.success(data=item.dict())
     else:
-        return resp.failure(form.errors)
+        return resp.failure(str(form.errors))
 
 
 @auth.need_login
@@ -124,7 +124,7 @@ def update(request):
                                                                 ctime=int(time.time()))
         return resp.success()
     else:
-        return resp.failure(form.errors)
+        return resp.failure(str(form.errors))
 
 
 @auth.need_login
@@ -140,4 +140,4 @@ def delete(request):
         models.UserCharge.objects.filter(id=id).delete()
         return resp.success()
     else:
-        return resp.failure(form.errors)
+        return resp.failure(str(form.errors))

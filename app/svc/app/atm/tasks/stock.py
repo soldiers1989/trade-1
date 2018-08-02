@@ -52,6 +52,8 @@ class SyncStockFromSina(timer.Runnable):
         # return result
         result = 'local:%d, sina:%d, new:%d' %(localcnt, sinacnt, newcnt)
 
+        return result
+
 
 class SyncStockFromCNInfo(timer.Runnable):
     """
@@ -96,6 +98,8 @@ class SyncStockFromCNInfo(timer.Runnable):
 
         # return result
         result = 'local:%d, sina:%d, new:%d' %(localcnt, cnicnt, newcnt)
+
+        return result
 
 
 # setup stock sync task

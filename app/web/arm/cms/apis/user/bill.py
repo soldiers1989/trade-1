@@ -107,7 +107,7 @@ def add(request):
         item.save()
         return resp.success(data=item.dict())
     else:
-        return resp.failure(form.errors)
+        return resp.failure(str(form.errors))
 
 
 @auth.need_login
@@ -129,7 +129,7 @@ def update(request):
                                                                 ctime=int(params['ctime'].timestamp()))
         return resp.success()
     else:
-        return resp.failure(form.errors)
+        return resp.failure(str(form.errors))
 
 
 @auth.need_login
@@ -145,4 +145,4 @@ def delete(request):
         models.UserBill.objects.filter(id=id).delete()
         return resp.success()
     else:
-        return resp.failure(form.errors)
+        return resp.failure(str(form.errors))

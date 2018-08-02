@@ -21,3 +21,13 @@ def order(request):
     :return:
     """
     return render(request, 'trade/order.html')
+
+
+@auth.need_permit
+def account(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'trade/account.html')

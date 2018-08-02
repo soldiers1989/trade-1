@@ -119,7 +119,7 @@ def query(request):
 
             return resp.success(data=data)
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -144,7 +144,7 @@ def has(request):
             else:
                 return resp.text('false')
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -460,6 +460,6 @@ def resetpwd(request):
 
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))

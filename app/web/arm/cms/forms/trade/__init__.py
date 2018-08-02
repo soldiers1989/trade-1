@@ -1,1 +1,1 @@
-from cms.forms.trade import lever, order
+from cms.forms.trade import lever, order, account

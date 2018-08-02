@@ -25,7 +25,7 @@ SECRET_KEY = '0w)1&&arw=o5vlr%x6#6@h9zw_h_is7@j6o%-8ef7@2_-l7anc'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost']
 
 
 # Application definition
@@ -71,6 +71,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'arm.wsgi.application'
 
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases

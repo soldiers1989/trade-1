@@ -13,6 +13,7 @@ urlpatterns = [
 
     path('trade/lever/', trade.lever, name="cms.trade.lever"),
     path('trade/order/', trade.order, name="cms.trade.order"),
+    path('trade/account/', trade.account, name="cms.trade.account"),
 
     path('user/user/', user.user, name="cms.user.user"),
     path('user/bill/', user.bill, name="cms.user.bill"),

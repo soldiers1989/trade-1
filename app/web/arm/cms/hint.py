@@ -16,3 +16,4 @@ ERR_LOGIN_PASSWORD = '密码错误'
 ERR_NOT_AUTHORIZED = "未授权"
 
 ERR_FORM_DATA = '操作失败，请检查您的输入数据'
+ERR_RECORD_EXISTS = '记录已存在'

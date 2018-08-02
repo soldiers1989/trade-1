@@ -1,0 +1,344 @@
+<table id="account_datagrid" style="height: 100%;"></table>
+
+<div id="account_toolbar">
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="account.add.open()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="account.update.open()">编辑</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="account.delete.do()">删除</a>
+    </span>
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="account_search_form">
+            <input name="disable" data-options="prompt:'状态', editable:false, required:false">
+            <input name="words" class="easyui-textbox">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="account.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="account.search.reset()">重置</a>
+        </form>
+    </span>
+</div>
+
+<div class="easyui-dialog" id="account_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#account_add_dialog_buttons'">
+    <form class="easyui-form" id="account_add_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'账户名称', prompt:'输入证券账户名', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="account" data-options="label:'交易账户', prompt:'输入交易账户', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="lmoney" data-options="label:'账户余额', prompt:'输入账户余额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="cfmin" data-options="label:'最低佣金', prompt:'输入交易佣金最低金额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="cfrate" data-options="label:'佣金费率', prompt:'输入佣金费率（0.0~1.0）', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="tfrate" data-options="label:'印花税率', prompt:'输入印花税率（0.0~1.0）', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="disable" data-options="label:'账户状态', prompt:'选择账户状态', editable:false, required:true" style="width: 100%">
+                <option value="false">启用</option>
+                <option value="true">禁用</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<div id="account_add_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="account.add.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="account.add.cancel()" style="width:90px">取消</a>
+</div>
+
+<div class="easyui-dialog" id="account_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#account_update_dialog_buttons'">
+    <form class="easyui-form" id="account_update_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" disabled>
+        </div>
+         <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="name" data-options="label:'账户名称', prompt:'输入证券账户名', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="account" data-options="label:'交易账户', prompt:'输入交易账户', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="lmoney" data-options="label:'账户余额', prompt:'输入账户余额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="cfmin" data-options="label:'最低佣金', prompt:'输入交易佣金最低金额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="cfrate" data-options="label:'佣金费率', prompt:'输入佣金费率（0.0~1.0）', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="tfrate" data-options="label:'印花税率', prompt:'输入印花税率（0.0~1.0）', required:true, validType:['number', 'range[0,1]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="disable" data-options="label:'是否禁用', prompt:'选择账户状态', editable:false, required:true" style="width: 100%">
+                <option value="false">否</option>
+                <option value="true">是</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+<div id="account_update_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="account.update.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="account.update.cancel()" style="width:90px">取消</a>
+</div>
+
+<script type="text/javascript">
+    // account list/add/update/delete
+    var account = {
+        // account list
+        list: {
+            url: '/api/trade/account/list',
+            datagrid: $('#account_datagrid'),
+
+            init: function() {
+            	//init tree grid
+                this.datagrid.datagrid({
+                    url: this.url,
+                    method: 'post',
+
+                    idField: 'id',
+
+    				striped: true,
+    				fitColumns: true,
+                    pagination: true,
+                    rownumbers: false,
+                    singleSelect: true,
+
+
+    				toolbar: '#account_toolbar',
+                    columns: [[
+                        {field:'id', title:'ID', sortable:true, width:'5%'},
+                        {field:'name', title:'账户名称', sortable:false, width:'10%'},
+                        {field:'account', title:'交易账户', sortable:false, width:'10%'},
+                        {field:'lmoney', title:'账户余额', sortable:true, width:'10%'}, 
+                        {field:'cfmin', title:'最低佣金', sortable:true, width:'10%'}, 
+                        {field:'cfrate', title:'佣金费率', sortable:true, width:'10%'}, 
+                        {field:'tfrate', title:'印花税率', sortable:true, width:'10%'}, 
+                        {field:'disable', title:'是否禁用', sortable:true, width:'5%', formatter: cube.format.boolean},
+                        {field:'ctime', title:'创建时间', sortable:true, width:'15%', formatter: cube.format.datetime},
+                        {field:'utime', title:'更新时间', sortable:true, width:'15%', formatter: cube.format.datetime},
+                    ]],
+
+                    loadFilter: function (resp) {
+                        return resp.data;
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求交易账户记录数据失败'});
+                    }
+                });
+            },
+
+            load: function(params) {
+                this.datagrid.datagrid('load', params);
+            },
+
+            reload: function() {
+                this.datagrid.datagrid('reload');
+            },
+
+            getSelected: function() {
+                return this.datagrid.datagrid('getSelected');
+            }
+        },
+
+        //search action
+        search: {
+            form: $('#account_search_form'),
+
+            init: function() { //init search form
+                // init status combobox
+                this.form.find('input[name="disable"]:first').combobox({
+                    data: [{v:'', t:'全部'}, {v:'true', t:'已禁用'}, {v:'false', t:'已启用'}],
+                    valueField: 'v',
+                    textField: 't'
+                });
+            },
+
+            do: function() { // do search
+                //check search form
+                if(!this.form.form('validate'))
+                    return;
+
+                //get parameters
+                params = {
+                    disable: this.form.find('input[name="disable"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val()
+                };
+
+                //reload by retrieve conditions
+                account.list.load(params);
+            },
+
+            reset: function() { // reset
+                //clear form
+                this.form.form('clear');
+
+                //reload datagrid
+                account.list.load({});
+            },
+        },
+
+        //add action
+        add: {
+            url: '/api/trade/account/add',
+            dialog: $('#account_add_dialog'),
+            form: $('#account_add_form'),
+
+            init: function() { // init add
+            },
+
+            open: function() { // open add
+                //reset form
+                this.form.form('clear');
+
+                //open dialog
+                this.dialog.dialog('open').dialog('center').dialog('setTitle','添加交易账户');
+            },
+
+            save: function() { // save add
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: {},
+
+                    onSubmit: function(){
+                        return account.add.form.form('validate');
+                    },
+
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            account.add.dialog.dialog('close');
+                            account.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.msg });
+                        }
+                    }
+                });
+            },
+
+            cancel: function() { //cancel add
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        //update action
+        update: {
+            url: '/api/trade/account/update',
+            dialog: $('#account_update_dialog'),
+            form: $('#account_update_form'),
+
+            // open update dialoag
+            open: function() {
+                //get selected row data
+                row = account.list.getSelected();
+                if (row){
+                    row.disable = String(row.disable)
+                    // clear form
+                    this.form.form('clear');
+
+                    //load form data
+                    this.form.form('load', row);
+
+                    //open dialog
+                    this.dialog.dialog('open').dialog('center').dialog('setTitle','修改交易账户');
+                }
+            },
+
+            // save update results
+            save: function() {
+                var params={};
+                // get selected row data
+                var row = account.list.getSelected();
+                if (!row)
+                    return;
+                params.id = row.id;
+
+
+                //submit form
+                this.form.form('submit',{
+                    url: this.url,
+                    queryParams: params,
+                    onSubmit: function(){
+                        return account.update.form.form('validate');
+                    },
+                    success: function(data){
+                        var resp = eval('('+data+')');
+                        if (resp.status){
+                            account.update.dialog.dialog('close');
+                            account.list.reload();
+                        } else {
+                            $.messager.show({ title: '错误',  msg: resp.msg });
+                        }
+                    }
+                });
+            },
+
+            // cancel update operation
+            cancel: function() {
+                //close dialog
+                this.dialog.dialog('close');
+            },
+        },
+
+        // delete row
+        delete: {
+            url: '/api/trade/account/delete',
+
+            do: function() { // delete
+                // delete action url
+                url = this.url;
+
+                //get selected row data
+                var row = account.list.getSelected();
+                if (!row)
+                    return;
+
+                $.messager.confirm({
+                    title: '确认',
+                    msg: '确认删除交易账户'+row.name+'?',
+                    url: account.delete.url,
+                    fn: function(r){
+                        if (r){
+                            $.post(url, {id: row.id}, function(resp, status){
+                                if(status == 'success'){
+                                    if (resp.status){
+                                        account.list.reload();
+                                    } else {
+                                        $.messager.show({title: '错误', msg: resp.msg});
+                                    }
+                                } else {
+                                    $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                }
+                            },'json');
+                        }
+                    }
+                });
+            },
+        },
+
+        //init account
+        init: function() {
+            // init search
+            this.search.init();
+            // init list
+            this.list.init();
+            // init add form
+            this.add.init();
+        }
+    };
+
+    //init page
+    $(function(){
+        //init account
+        account.init();
+    });
+
+</script>

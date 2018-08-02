@@ -215,7 +215,7 @@ def lever(request):
 
             return resp.success(data=data)
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -289,7 +289,7 @@ def margins(request):
 
             return resp.success(data=data)
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -326,6 +326,6 @@ def orders(request):
 
             return resp.success(data=data)
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))

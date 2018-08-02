@@ -257,7 +257,7 @@ def add(request):
             item.save()
             return resp.success(data=item.dict())
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -279,7 +279,7 @@ def update(request):
                                                                 disable=params['disable'])
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -298,7 +298,7 @@ def delete(request):
             models.Admin.objects.filter(id=id).delete()
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -320,7 +320,7 @@ def resetpwd(request):
 
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -406,7 +406,7 @@ def addroles(request):
 
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -438,6 +438,6 @@ def delroles(request):
 
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))

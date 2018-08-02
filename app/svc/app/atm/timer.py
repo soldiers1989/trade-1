@@ -35,6 +35,7 @@ class Runnable(threading.Thread):
             'etime':self.status.end_time,
             'result':self.status.result,
             'status':self.status.status,
+            'alive':self.is_alive()
         }
 
     def do(self):
@@ -147,20 +148,14 @@ class Task:
                     self._tasks.pop(i)
                     break
 
-
     def joinall(self):
         """
             join all task
         :return:
         """
         for t in self._tasks:
-            if not t.status.stopped:
-                # join thread
+            if t.is_alive():
                 t.join(0)
-
-                # set stop flag
-                if not t.is_alive():
-                    t.status.stopped = True
 
     def info(self):
         """

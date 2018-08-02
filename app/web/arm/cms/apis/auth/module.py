@@ -96,7 +96,7 @@ def add(request):
             item.save()
             return resp.success(data=item.dict())
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -118,7 +118,7 @@ def update(request):
 
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -137,7 +137,7 @@ def delete(request):
             models.Module.objects.filter(id=id).delete()
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
 
     except Exception as e:
         return resp.failure(str(e))

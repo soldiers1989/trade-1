@@ -48,7 +48,7 @@ def add(request):
             item.save()
             return resp.success(data=item.dict())
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -70,7 +70,7 @@ def update(request):
 
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -89,7 +89,7 @@ def delete(request):
             models.Role.objects.filter(id=id).delete()
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -132,7 +132,7 @@ def moduletree(request):
 
             return resp.success(data=data)
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -185,7 +185,7 @@ def addmodule(request):
 
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
 
@@ -233,6 +233,6 @@ def delmodule(request):
 
             return resp.success()
         else:
-            return resp.failure(form.errors)
+            return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))

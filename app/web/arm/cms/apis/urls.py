@@ -45,6 +45,11 @@ urlpatterns = [
     path('trade/order/orders', trade.order.orders, name="api.trade.order.orders"),
     path('trade/order/lever', trade.order.lever, name="api.trade.order.lever"),
 
+    path('trade/account/list', trade.account.list, name="api.trade.account.list"),
+    path('trade/account/add', trade.account.add, name="api.trade.account.add"),
+    path('trade/account/update', trade.account.update, name="api.trade.account.update"),
+    path('trade/account/delete', trade.account.delete, name="api.trade.account.delete"),
+
     path('user/user/list', user.user.list, name="api.user.user.list"),
     path('user/user/query', user.user.query, name="api.user.user.query"),
     path('user/user/has', user.user.has, name="api.user.user.has"),
