@@ -14,16 +14,16 @@ class JEncoder(json.JSONEncoder):
         return super(JEncoder, self).default(o)
 
 
-def success(message='success', data={}):
+def success(msg='success', data={}):
     """
         success response
-    :param message:
+    :param msg:
     :param data:
     :return:
     """
     resp = {
         'status': True,
-        'message': message,
+        'msg': msg,
         'data': data
     }
 
@@ -32,16 +32,16 @@ def success(message='success', data={}):
     return HttpResponse(resp, content_type='application/json;charset=utf8')
 
 
-def failure(message='failure', data={}):
+def failure(msg='failure', data={}):
     """
         failure response
-    :param message:
+    :param msg:
     :param data:
     :return:
     """
     resp = {
         'status': False,
-        'message': message,
+        'msg': msg,
         'data': data
     }
 

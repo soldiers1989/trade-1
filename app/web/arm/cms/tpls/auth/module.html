@@ -170,7 +170,7 @@
                                     if (resp.status){
                                         module.refresh();
                                     } else {
-                                        $.messager.show({title: '错误', msg: resp.message});
+                                        $.messager.show({title: '错误', msg: resp.msg});
                                     }
                                 } else {
                                     $.messager.show({title: '错误', msg: '请求服务器错误'});
@@ -207,7 +207,7 @@
                         module.dialog.dialog('close');
                         module.treegrid.treegrid('reload');
                     } else {
-                        $.messager.show({ title: '错误',  msg: resp.message });
+                        $.messager.show({ title: '错误',  msg: resp.msg });
                     }
                 }
             });

@@ -98,7 +98,7 @@ def get(request):
     """
     try:
         if request.method != 'GET':
-            return resp.failure(message='method not support')
+            return resp.failure(msg='method not support')
 
         id = request.GET['id']
 

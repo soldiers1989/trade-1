@@ -4,7 +4,7 @@
 import tornado.web
 import tornado.ioloop
 
-from app.atm import config, urls, timer
+from app.atm import config, urls, timer, log, tasks
 
 # application settings
 settings = {
@@ -14,8 +14,11 @@ settings = {
 }
 
 
-# start aim service
+# start atm service
 def start(port):
+    # log start message
+    log.info('start atm service on port %d' % port)
+
     # start timer service
     timer.default.start()
 

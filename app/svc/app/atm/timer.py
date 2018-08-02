@@ -70,7 +70,7 @@ class Task:
     """
         timer task
     """
-    def __init__(self, id, threadcls, exclusive=False, maxkeep=10):
+    def __init__(self, id, name, threadcls, exclusive=False, maxkeep=10):
         """
             init task
         :param id:
@@ -78,8 +78,9 @@ class Task:
         :param exclusive:
         :param maxkeep:
         """
-        # id for task
+        # id/name for task
         self._id = id
+        self._name = name
 
         # thread class for task
         self._threadcls = threadcls
@@ -111,6 +112,13 @@ class Task:
         """
         pass
 
+    def config(self):
+        """
+            timer configure
+        :return:
+        """
+        pass
+
     def execute(self):
         """
             execute task
@@ -133,7 +141,7 @@ class Task:
         self._times += 1
 
         # remove header task
-        if len(self._tasks) >= self._maxkeep:
+        if len(self._tasks) > self._maxkeep:
             for i in range(0, len(self._tasks)):
                 if self._tasks[i].status.stopped is not None and self._tasks[i].status.stopped:
                     self._tasks.pop(i)
@@ -161,8 +169,11 @@ class Task:
         """
         return {
             'id': self._id,
-            'name': self._threadcls.__name__,
+            'name': self._name,
+            'class': self._threadcls.__name__,
+            'config': self.config(),
             'times': self._times,
+            'maxkeep': self._maxkeep,
             'exclusive': self._exclusive,
             'stopped': self._stopped,
         }
@@ -203,7 +214,7 @@ class Task:
         :param obj:
         :return:
         """
-        if not obj:
+        if obj is None:
             return []
 
         if isinstance(obj, list) or isinstance(obj, tuple):
@@ -216,7 +227,7 @@ class CrondTask(Task):
     """
         crontab task
     """
-    def __init__(self, id, threadcls, min=None, hour=None, day=None, month=None, week=None, exclusive=False, maxkeep=10):
+    def __init__(self, id, name, threadcls, min=None, hour=None, day=None, month=None, week=None, exclusive=False, maxkeep=10):
         """
             init a crontab task
         :param id: str, task identifier
@@ -240,7 +251,7 @@ class CrondTask(Task):
         self._last_execute_time = datetime.datetime.now()
 
         # init super class
-        Task.__init__(self, id, threadcls, exclusive, maxkeep)
+        Task.__init__(self, id, name, threadcls, exclusive, maxkeep)
 
     def expired(self, tm):
         """
@@ -278,12 +289,19 @@ class CrondTask(Task):
             # update last execute timestamp
             self._last_execute_time = datetime.datetime.fromtimestamp(tm)
 
+    def config(self):
+        """
+            crontab configure
+        :return:
+        """
+        return 'min%s/hour%s/day%s/month%s/week%s' % (str(self._min), str(self._hour), str(self._day), str(self._month), str(self._week))
+
 
 class TimerTask(Task):
     """
         timer task
     """
-    def __init__(self, id, threadcls, interval, exclusive=False, maxkeep=10):
+    def __init__(self, id, name, threadcls, interval, exclusive=False, maxkeep=10):
         """
             init a timer task
         :param id: str, task identifier
@@ -299,7 +317,7 @@ class TimerTask(Task):
         self._last_execute_time = time.time()
 
         # init super class
-        Task.__init__(self, id, threadcls, exclusive, maxkeep)
+        Task.__init__(self, id, name, threadcls, exclusive, maxkeep)
 
     def expired(self, tm):
         """
@@ -323,6 +341,13 @@ class TimerTask(Task):
             # update last execute timestamp
             self._last_execute_time = tm
 
+    def config(self):
+        """
+            timer task configure
+        :return:
+        """
+        return 'interval: %f S' % self._interval
+
 
 class Timer(threading.Thread):
     """
@@ -338,7 +363,7 @@ class Timer(threading.Thread):
 
         threading.Thread.__init__(self)
 
-    def setup(self, id, threadcls, min=None, hour=None, day=None, month=None, week=None, interval=None, exclusive=False, maxkeep=10):
+    def setup(self, id, name, threadcls, min=None, hour=None, day=None, month=None, week=None, interval=None, exclusive=False, maxkeep=10):
         """
             setup a timer task
         :param threadcls:
@@ -355,9 +380,9 @@ class Timer(threading.Thread):
         self._lock.acquire()
 
         if interval is not None:
-            task = TimerTask(id, threadcls, interval, exclusive, maxkeep)
+            task = TimerTask(id, name, threadcls, interval, exclusive, maxkeep)
         else:
-            task = CrondTask(id, threadcls, min, hour, day, month, week, exclusive, maxkeep)
+            task = CrondTask(id, name, threadcls, min, hour, day, month, week, exclusive, maxkeep)
 
         self._tasks.append(task)
 
@@ -418,6 +443,8 @@ class Timer(threading.Thread):
         for t in self._tasks:
             if t.id == id:
                 return t.status()
+
+        return []
 
     def stop(self):
         """

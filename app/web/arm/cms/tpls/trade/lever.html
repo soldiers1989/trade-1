@@ -180,7 +180,7 @@
                                 if (resp.status){
                                     lever.refresh();
                                 } else {
-                                    $.messager.show({title: '错误', msg: resp.message});
+                                    $.messager.show({title: '错误', msg: resp.msg});
                                 }
                             } else {
                                 $.messager.show({title: '错误', msg: '请求服务器错误'});
@@ -221,7 +221,7 @@
                         lever.dialog.dialog('close');
                         lever.datagrid.datagrid('reload');
                     } else {
-                        $.messager.show({ title: '错误',  msg: resp.message });
+                        $.messager.show({ title: '错误',  msg: resp.msg });
                     }
                 }
             });
@@ -241,7 +241,7 @@
                 if (resp.status){
                     lever.refresh();
                 } else {
-                    $.messager.show({title: '错误', msg: resp.message});
+                    $.messager.show({title: '错误', msg: resp.msg});
                 }
             } else {
                 $.messager.show({title: '错误', msg: '请求服务器错误'});

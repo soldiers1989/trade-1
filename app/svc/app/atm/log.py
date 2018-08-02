@@ -53,6 +53,10 @@ _errorlog = _RedisLog('log_atm_error', redis.log)
 
 def info(msg):
     try:
+        # log to console
+        print(msg)
+
+        # log to redis
         _infolog.log(msg)
     except:
         pass
@@ -67,6 +71,10 @@ def getinfo(wantrecords=20):
 
 def error(msg):
     try:
+        # log to console
+        print(msg)
+
+        # log to redis
         _errorlog.log(msg)
     except:
         pass

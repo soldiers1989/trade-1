@@ -149,7 +149,7 @@
                                     if (resp.status){
                                         role.refresh();
                                     } else {
-                                        $.messager.show({title: '错误', msg: resp.message});
+                                        $.messager.show({title: '错误', msg: resp.msg});
                                     }
                                 } else {
                                     $.messager.show({title: '错误', msg: '请求服务器错误'});
@@ -186,7 +186,7 @@
                         role.dialog.dialog('close');
                         role.datagrid.datagrid('reload');
                     } else {
-                        $.messager.show({ title: '错误',  msg: resp.message });
+                        $.messager.show({ title: '错误',  msg: resp.msg });
                     }
                 }
             });
@@ -265,9 +265,9 @@
             $.post(this.urls.add, params, function(resp, status){
                     if(status == 'success'){
                         if (resp.status){
-                            $.messager.show({title: '成功', msg: resp.message});
+                            $.messager.show({title: '成功', msg: resp.msg});
                         } else {
-                            $.messager.show({title: '错误', msg: resp.message});
+                            $.messager.show({title: '错误', msg: resp.msg});
                         }
                     } else {
                         $.messager.show({title: '错误', msg: '请求服务器错误'});
@@ -286,9 +286,9 @@
             $.post(this.urls.del, params, function(resp, status){
                     if(status == 'success'){
                         if (resp.status){
-                            $.messager.show({title: '成功', msg: resp.message});
+                            $.messager.show({title: '成功', msg: resp.msg});
                         } else {
-                            $.messager.show({title: '错误', msg: resp.message});
+                            $.messager.show({title: '错误', msg: resp.msg});
                         }
                     } else {
                         $.messager.show({title: '错误', msg: '请求服务器错误'});

@@ -231,7 +231,7 @@
                             stock.add.dialog.dialog('close');
                             stock.list.reload();
                         } else {
-                            $.messager.show({ title: '错误',  msg: resp.message });
+                            $.messager.show({ title: '错误',  msg: resp.msg });
                         }
                     }
                 });
@@ -288,7 +288,7 @@
                             stock.update.dialog.dialog('close');
                             stock.list.reload();
                         } else {
-                            $.messager.show({ title: '错误',  msg: resp.message });
+                            $.messager.show({ title: '错误',  msg: resp.msg });
                         }
                     }
                 });
@@ -325,7 +325,7 @@
                                     if (resp.status){
                                         stock.list.reload();
                                     } else {
-                                        $.messager.show({title: '错误', msg: resp.message});
+                                        $.messager.show({title: '错误', msg: resp.msg});
                                     }
                                 } else {
                                     $.messager.show({title: '错误', msg: '请求服务器错误'});

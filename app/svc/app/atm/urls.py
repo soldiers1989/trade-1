@@ -1,6 +1,8 @@
 from app.atm import handlers
 
 handlers = [
-    (r"/stock/sync/all", handlers.stock.SyncAll),
-
+    (r"/task/status", handlers.task.Status),
+    (r"/task/enable", handlers.task.Enable),
+    (r"/task/disable", handlers.task.Disable),
+    (r"/task/execute", handlers.task.Execute)
 ]

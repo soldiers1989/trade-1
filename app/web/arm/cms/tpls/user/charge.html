@@ -212,7 +212,7 @@
                             charge.add.dialog.dialog('close');
                             charge.list.reload();
                         } else {
-                            $.messager.show({ title: '错误',  msg: resp.message });
+                            $.messager.show({ title: '错误',  msg: resp.msg });
                         }
                     }
                 });
@@ -271,7 +271,7 @@
                             charge.update.dialog.dialog('close');
                             charge.list.reload();
                         } else {
-                            $.messager.show({ title: '错误',  msg: resp.message });
+                            $.messager.show({ title: '错误',  msg: resp.msg });
                         }
                     }
                 });
@@ -308,7 +308,7 @@
                                     if (resp.status){
                                         charge.list.reload();
                                     } else {
-                                        $.messager.show({title: '错误', msg: resp.message});
+                                        $.messager.show({title: '错误', msg: resp.msg});
                                     }
                                 } else {
                                     $.messager.show({title: '错误', msg: '请求服务器错误'});

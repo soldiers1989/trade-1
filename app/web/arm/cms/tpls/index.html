@@ -90,7 +90,7 @@
                             if(resp.status){
                                 window.location.assign('/cms/login/');
                             } else {
-                                alert(resp.message);
+                                alert(resp.msg);
                             }
                         },
                         'json'
@@ -149,7 +149,7 @@
                                     // relogin after change passowrd
                                     window.location.assign('/cms/login/');
                                 } else {
-                                    index.user.changepwd.hint.html(resp.message);
+                                    index.user.changepwd.hint.html(resp.msg);
                                 }
                             }
                         });
