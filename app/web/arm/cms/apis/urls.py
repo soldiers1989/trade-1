@@ -1,7 +1,11 @@
 from django.urls import path
+
 from cms.apis import auth, trade, user, stock
+from cms.apis import echo
+
 
 urlpatterns = [
+    path('echo', echo.echo, name="api.echo"),
     path('admin/login', auth.admin.login, name="api.admin.login"),
     path('admin/logout', auth.admin.logout, name="api.admin.logout"),
     path('admin/whoami', auth.admin.whoami, name="api.admin.whoami"),

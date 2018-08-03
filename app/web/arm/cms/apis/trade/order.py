@@ -93,21 +93,24 @@ def add(request):
     form = forms.trade.order.Add(request.POST)
     if form.is_valid():
         params = form.cleaned_data
+        # check trade/account
+        if not models.UserTrade.objects.filter(id=params['trade']).exists() or \
+            not models.TradeAccount.objects.filter(id=params['account']).exists():
+            return resp.failure(hint.ERR_FORM_DATA)
 
-        # check if user has exist
-        items = models.TradeAccount.objects.filter(account=params['account'])
-        if items.exists():
-            return resp.failure(hint.ERR_RECORD_EXISTS)
-
-        item = models.TradeAccount(account=params['account'],
-                                name=params['name'],
-                                lmoney=params['lmoney'],
-                                cfmin=params['cfmin'],
-                                cfrate=params['cfrate'],
-                                tfrate=params['tfrate'],
-                                disable=params['disable'],
-                                ctime=int(time.time()),
-                                mtime=int(time.time()))
+        # add new record
+        item = models.TradeOrder(trade_id=params['trade'],
+                                 account_id=params['account'],
+                                otype=params['otype'],
+                                ptype=params['ptype'],
+                                ocount=params['ocount'],
+                                oprice=params['oprice'],
+                                otime=params['otime'],
+                                ocode=params['ocode'],
+                                dcount=params['dcoout'],
+                                dprice=params['dprice'],
+                                dtime=params['dtime'],
+                                status=params['status'])
         item.save()
         return resp.success(data=item.dict())
     else:
@@ -121,18 +124,22 @@ def update(request):
     :param request:
     :return:
     """
-    form = forms.trade.account.Update(request.POST)
+    form = forms.trade.order.Update(request.POST)
     if form.is_valid():
         params = form.cleaned_data
 
-        models.TradeAccount.objects.filter(id=params['id']).update(account=params['account'],
-                                                                name=params['name'],
-                                                                lmoney=params['lmoney'],
-                                                                cfmin=params['cfmin'],
-                                                                cfrate=params['cfrate'],
-                                                                tfrate=params['tfrate'],
-                                                                disable=params['disable'],
-                                                                mtime=int(time.time()))
+        models.TradeOrder.objects.filter(id=params['id']).update(trade_id=params['trade'],
+                                                                 account_id=params['account'],
+                                                                otype=params['otype'],
+                                                                ptype=params['ptype'],
+                                                                ocount=params['ocount'],
+                                                                oprice=params['oprice'],
+                                                                otime=params['otime'],
+                                                                ocode=params['ocode'],
+                                                                dcount=params['dcoout'],
+                                                                dprice=params['dprice'],
+                                                                dtime=params['dtime'],
+                                                                status=params['status'])
         return resp.success()
     else:
         return resp.failure(str(form.errors))
@@ -145,10 +152,10 @@ def delete(request):
     :param request:
     :return:
     """
-    form = forms.trade.account.Delete(request.POST)
+    form = forms.trade.order.Delete(request.POST)
     if form.is_valid():
         id = form.cleaned_data['id']
-        models.TradeAccount.objects.filter(id=id).delete()
+        models.TradeOrder.objects.filter(id=id).delete()
         return resp.success()
     else:
         return resp.failure(str(form.errors))

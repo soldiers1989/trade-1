@@ -69,10 +69,11 @@ TEMPLATES = [
     },
 ]
 
-#WSGI_APPLICATION = 'arm.wsgi.application'
+
+WSGI_APPLICATION = 'arm.wsgi.application'
 
 
-#SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -83,7 +84,7 @@ DATABASES = {
         'NAME': 'arm',
         'USER': 'root',
         'PASSWORD': 'root',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
         'PORT': '3306'
     }
 }

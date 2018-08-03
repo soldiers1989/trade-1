@@ -102,3 +102,12 @@ def need_permit(func):
         except Exception as e:
             return resp.failure(str(e))
     return check_permit
+
+
+def catch_exception(func):
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except Exception as e:
+            return resp.failure(str(e))
+    return wrapper
