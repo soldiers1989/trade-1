@@ -3,8 +3,9 @@
         "model": "adb.tradeorder",
         "pk": 1,
         "fields": {
-            "trade_id": "1",
+            "trade_id": "3",
             "account_id": "1",
+            "stock_id": "000001",
             "otype": "buy",
             "ptype": "xj",
             "ocount": 100,
@@ -22,8 +23,9 @@
         "model": "adb.tradeorder",
         "pk": 2,
         "fields": {
-            "trade_id": "1",
+            "trade_id": "3",
             "account_id": "1",
+            "stock_id": "000001",
             "otype": "sell",
             "ptype": "xj",
             "ocount": 100,
@@ -41,8 +43,9 @@
         "model": "adb.tradeorder",
         "pk": 3,
         "fields": {
-            "trade_id": "2",
+            "trade_id": "4",
             "account_id": "1",
+            "stock_id": "000004",
             "otype": "buy",
             "ptype": "sj",
             "ocount": 100,
@@ -59,8 +62,9 @@
         "model": "adb.tradeorder",
         "pk": 4,
         "fields": {
-            "trade_id": "2",
+            "trade_id": "4",
             "account_id": "1",
+            "stock_id": "000004",
             "otype": "sell",
             "ptype": "sj",
             "ocount": 100,

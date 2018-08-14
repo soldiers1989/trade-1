@@ -1,30 +1,30 @@
 
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
     <div data-options="region:'west', split:true" style="width: 75%;">
-        <table id="order_datagrid" style="height: 100%;"></table>
+        <table id="trade_datagrid" style="height: 100%;"></table>
     </div>
     <div data-options="region:'center', split:true" style="width: 25%">
         <div class="easyui-panel" title="杠杆详情" style="height:25%;">
-            <table id="order_lever_datagrid"></table>
+            <table id="trade_lever_datagrid"></table>
         </div>
         <div class="easyui-panel" title="费用详情" style="height:25%;">
-            <table id="order_fee_datagrid"></table>
+            <table id="trade_fee_datagrid"></table>
         </div>
         <div class="easyui-panel" title="保证金详情" style="height:25%;">
-            <table id="order_margin_datagrid"></table>
+            <table id="trade_margin_datagrid"></table>
         </div>
         <div class="easyui-panel" title="交易委托详情" style="height:25%;">
-            <table id="order_order_datagrid"></table>
+            <table id="trade_order_datagrid"></table>
         </div>
     </div>
 </div>
 
-<div id="order_toolbar">
+<div id="trade_toolbar">
     <span>
         <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="usertrade.add.open()">新建</a>
     </span>
     <span style="float: right; margin-right: 18px;">
-        <form class="easyui-form" id="order_search_form">
+        <form class="easyui-form" id="trade_search_form">
             <span>日期</span>
             <input name="sdate" class="easyui-datebox" validType="date">
             <span>-</span>
@@ -38,33 +38,33 @@
     </span>
 </div>
 
-<div class="easyui-dialog" id="order_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#order_add_dialog_buttons'">
-    <form class="easyui-form" id="order_add_form" method="post" style="margin:0;padding:10px 20px">
+<div class="easyui-dialog" id="trade_add_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#trade_add_dialog_buttons'">
+    <form class="easyui-form" id="trade_add_form" method="post" style="margin:0;padding:10px 20px">
         <div style="margin-bottom:10px">
-            <input id="order_add_user" name="user" label="用户" prompt="输入用户" style="width:100%" required>
+            <input id="trade_add_user" name="user" label="用户" prompt="输入用户" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-           	<input id="order_add_stock" name="stock" label="股票" prompt="股票代码" style="width:100%" required>
+           	<input id="trade_add_stock" name="stock" label="股票" prompt="股票代码" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-           	<input id="order_add_lever" name="lever" label="杠杆" prompt="选择杠杆" style="width:100%" required>
+           	<input id="trade_add_lever" name="lever" label="杠杆" prompt="选择杠杆" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input id="order_add_coupon" name="coupon" label="优惠券" prompt="选择优惠券" style="width:100%">
+            <input id="trade_add_coupon" name="coupon" label="优惠券" prompt="选择优惠券" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input id="order_add_ptype" name="ptype" label="报价方式" prompt="选择报价方式" style="width:100%">
+            <input id="trade_add_ptype" name="ptype" label="报价方式" prompt="选择报价方式" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'100的整数倍', required:true, validType:['stock', 'min[100]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" id="order_add_oprice" name="oprice" data-options="label:'委托价格', prompt:'>0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" id="trade_add_oprice" name="oprice" data-options="label:'委托价格', prompt:'>0.0', required:true, validType:['number', 'min[0]']" style="width:100%">
         </div>
     </form>
 </div>
 
-<div id="order_add_dialog_buttons">
+<div id="trade_add_dialog_buttons">
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="usertrade.add.save()" style="width:90px">保存</a>
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="usertrade.add.close()" style="width:90px">取消</a>
 </div>
@@ -77,14 +77,14 @@
         add: {
             url: '/api/user/trade/add',
 
-            form: $('#order_add_form'),
-            dialog: $('#order_add_dialog'),
+            form: $('#trade_add_form'),
+            dialog: $('#trade_add_dialog'),
 
             inited: false,
 
             init: function() {
                 //init user textbox
-                $('#order_add_user').combobox({
+                $('#trade_add_user').combobox({
                     url:'/api/user/user/query', 
                     mode: 'remote',
 
@@ -99,13 +99,13 @@
                     
                     onChange: function(newv, oldv) {
                         if($(this).textbox('isValid')){
-                            $('#order_add_coupon').combobox({queryParams: {user:$(this).val(), status:'unused'}}).combobox('reload', '/api/user/coupon/list');
+                            $('#trade_add_coupon').combobox({queryParams: {user:$(this).val(), status:'unused'}}).combobox('reload', '/api/user/coupon/list');
                         }
                     }
                 });
 
                 //init stock combobox
-                $('#order_add_stock').combobox({
+                $('#trade_add_stock').combobox({
                     url:'/api/stock/stock/query',
                     mode: 'remote',
 
@@ -120,7 +120,7 @@
                 });
 
                 //init lever combobox
-                $('#order_add_lever').combobox({
+                $('#trade_add_lever').combobox({
                     url:'/api/trade/lever/list',
                     editable:false,
                     valueField:'id',
@@ -134,7 +134,7 @@
                 });
 
                 //init coupon combobox
-                $('#order_add_coupon').combobox({
+                $('#trade_add_coupon').combobox({
                     editable:false,
                     valueField: 'id',
                     textField: 'money',
@@ -144,18 +144,18 @@
                 });
 
                 //init ptype combobox
-                $('#order_add_ptype').combobox({
+                $('#trade_add_ptype').combobox({
                     editable:false,
                     valueField: 'id',
                     textField: 'text',
                     data: [{id:'sj', text:'市价'},{id:'xj', text:'限价'}],
                     onChange: function(newv, oldv){
                         if (newv == 'sj'){
-                            $('#order_add_oprice').textbox('clear');
-                            $('#order_add_oprice').textbox('disable');
+                            $('#trade_add_oprice').textbox('clear');
+                            $('#trade_add_oprice').textbox('disable');
                         } else {
-                            $('#order_add_oprice').textbox('clear');
-                            $('#order_add_oprice').textbox('enable');
+                            $('#trade_add_oprice').textbox('clear');
+                            $('#trade_add_oprice').textbox('enable');
                         }
                     }
                 });
@@ -165,7 +165,7 @@
             },
 
             reload: function() {
-                $('#order_add_lever').combobox('reload');
+                $('#trade_add_lever').combobox('reload');
             },
 
             open: function() { //open dialog
@@ -212,7 +212,7 @@
         search: {
             url: '/api/user/trade/list',
 
-            form: $('#order_search_form'),
+            form: $('#trade_search_form'),
 
             do: function() { // do search
                 //check search form
@@ -242,7 +242,7 @@
         //trade list
         list: {
             url: '/api/user/trade/list',
-            datagrid: $('#order_datagrid'),
+            datagrid: $('#trade_datagrid'),
 
             init: function() {
                 this.datagrid.datagrid({
@@ -261,12 +261,13 @@
                     pageSize: 20,
                     pageList: [5, 10, 20, 30, 40, 50, 100],
                     
-                    toolbar: '#order_toolbar',
+                    toolbar: '#trade_toolbar',
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
                         {field:'user', title:'用户'},
                         {field:'stock', title:'股票'},
                         {field:'lever', title:'杠杆', sortable:true},
+                        {field:'account', title:'账户', sortable:true},
                         {field:'statusd', title:'状态'},
                         {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.date},
                         {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.date},
@@ -315,7 +316,7 @@
         detail: {
             lever: {
                 url: '/api/user/trade/lever',
-                datagrid: $('#order_lever_datagrid'),
+                datagrid: $('#trade_lever_datagrid'),
 
                 inited: false,
 
@@ -368,7 +369,7 @@
 
             fees: {
                 url: '/api/user/trade/fees',
-                datagrid: $('#order_fee_datagrid'),
+                datagrid: $('#trade_fee_datagrid'),
 
                 inited: false,
 
@@ -423,7 +424,7 @@
 
             margins: {
                 url: '/api/user/trade/margins',
-                datagrid: $('#order_margin_datagrid'),
+                datagrid: $('#trade_margin_datagrid'),
                 
                 inited: false,
 
@@ -477,7 +478,7 @@
 
             orders: {
                 url: '/api/user/trade/orders',
-                datagrid: $('#order_order_datagrid'),
+                datagrid: $('#trade_order_datagrid'),
                 
                 inited: false,
                 
@@ -499,8 +500,8 @@
                             {field:'status', title:'处理状态'},
                             {field:'ostatus', title:'委托状态'},
                             {field:'account', title:'股票账户'},
-                            {field:'otype', title:'委托类别'},
-                            {field:'ptype', title:'报价方式'},
+                            {field:'otype', title:'委托类型'},
+                            {field:'ptype', title:'报价类型'},
                             {field:'ocount', title:'委托数量'},
                             {field:'oprice', title:'委托价格'},
                             {field:'ocode', title:'委托编号'},

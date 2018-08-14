@@ -506,6 +506,7 @@ class UserTrade(models.Model):
         items['user'] = items['user'].user if items['user'] else None
         items['stock'] = items['stock'].name if items['stock'] else None
         items['coupon'] = items['coupon'].money if items['coupon'] else None
+        items['account'] = items['account'].name if items['account'] else None
         items['statusd'] = self.statusd(items['status'])
         items['lever'] = self.tradelever.lever
         return items
@@ -567,7 +568,9 @@ class TradeOrder(models.Model):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['trade'] = items['trade'].id if items['trade'] else None
         items['account'] = items['account'].account if items['account'] else None
+        items['stock'] = items['stock'].name if items['stock'] else None
         return items
+
 
 # tb_trade_margin
 class TradeMargin(models.Model):

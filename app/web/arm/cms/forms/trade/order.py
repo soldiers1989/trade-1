@@ -11,6 +11,8 @@ class List(forms.Form):
     sdate = forms.DateField(required=False)
     edate = forms.DateField(required=False)
 
+    otype = forms.CharField(required=False)
+    ptype = forms.CharField(required=False)
     status = forms.CharField(required=False)
     words = forms.CharField(required=False)
 
