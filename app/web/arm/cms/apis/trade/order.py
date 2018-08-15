@@ -35,7 +35,10 @@ def list(request):
             q = Q()
             words = params['words']
             if words:
-                q = Q(trade=words) | Q(account=words) | Q(ocode=words) | Q(stock=words)
+                if words.isdigit():
+                    q = Q(account__account=words) | Q(stock_id=words) | Q(ocode=words) | Q(trade_id=words)
+                else:
+                    q = Q(stock__name__contains=words) | Q(account__name__contains=words)
 
             ## get total count ##
             total = models.TradeOrder.objects.filter(q, **filters).count()

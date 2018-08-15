@@ -3,6 +3,7 @@
 """
 from cms import auth, resp
 
-@auth.need_permit
+
+@auth.catch_exception
 def echo(request):
     return resp.success(data='echo')

@@ -16,7 +16,7 @@
             "dcount": 100,
             "dprice": 3.24,
             "dtime": 1527261123,
-            "status": "done"
+            "status": "tdeal"
         }
     },
     {
@@ -36,7 +36,7 @@
             "dcount": 100,
             "dprice": 3.24,
             "dtime": 1527261123,
-            "status": "done"
+            "status": "tdeal"
         }
     },
     {
@@ -55,7 +55,7 @@
             "dcount": 100,
             "dprice": 3.24,
             "dtime": 1527261123,
-            "status": "done"
+            "status": "tdeal"
         }
     },
     {
@@ -71,7 +71,7 @@
             "otime": 1527261052,
             "ocode": "o000002",
             "ostatus": "已报",
-            "status": "done"
+            "status": "sent"
         }
     }
   ]

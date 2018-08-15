@@ -1,8 +1,8 @@
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
-    <div data-options="region:'west', split:true" style="width: 75%;">
+    <div data-options="region:'west', split:true" style="width: 80%;">
         <table id="order_datagrid" style="height: 100%;"></table>
     </div>
-    <div data-options="region:'center', split:true" style="width: 25%">
+    <div data-options="region:'center', split:true" style="width: 20%">
         <div class="easyui-panel" title="委托状态" style="height:50%;">
             <table id="order_status_datagrid"></table>
         </div>
@@ -15,19 +15,22 @@
 <div id="order_toolbar">
     <span>
         <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="order.add.open()">新建</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="order.update.open()">编辑</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="order.delete.do()">删除</a>
+        <a href="javascript:void(0)" id="order_edit_menubutton" class="easyui-menubutton" data-options="menu:'#order_edit_menu', disabled:true,iconCls:'icon-edit'">编辑</a>
+        <div id="order_edit_menu" style="width:150px;">
+            <div iconCls="icon-edit" onclick="order.edit.modify.open()">修改</div>
+            <div iconCls="icon-remove" onclick="order.edit.delete.open()">删除</div>
+        </div>
     </span>
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="order_search_form">
-            <input name="otype" data-options="prompt:'委托类型', editable:false, required:false">
-            <input name="ptype" data-options="prompt:'报价类型', editable:false, required:false">
-            <input name="status" data-options="prompt:'交易状态', editable:false, required:false">
+            <input name="otype" data-options="prompt:'委托类型', editable:false, required:false" style="width: 12%;">
+            <input name="ptype" data-options="prompt:'报价类型', editable:false, required:false" style="width: 12%;">
+            <input name="status" data-options="prompt:'交易状态', editable:false, required:false" style="width: 12%;">
             <span>日期</span>
-            <input name="sdate" class="easyui-datebox" validType="date">
+            <input name="sdate" class="easyui-datebox" validType="date" style="width: 12%;">
             <span>-</span>
-            <input name="edate" class="easyui-datebox" validType="date">
-            <input name="words" class="easyui-textbox">
+            <input name="edate" class="easyui-datebox" validType="date" style="width: 12%;">
+            <input name="words" class="easyui-textbox" data-options="prompt:'id/股票/账户/..'">
 
             <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="order.search.do()">查询</a>
             <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="order.search.reset()">重置</a>
@@ -185,23 +188,35 @@
             init: function() { //init search form
                 // init order type combobox
                 this.form.find('input[name="otype"]:first').combobox({
-                    data: [{v:'', t:'全部'}, {v:'buy', t:'买入'}, {v:'sell', t:'卖出'}],
-                    valueField: 'v',
-                    textField: 't'
+                    url: '/api/enum?c=order&i=type',
+                    valueField: 'id',
+                    textField: 'text',
+                    
+                    loadFilter: function(resp){
+                        return resp.data;
+                    }
                 });
 
                 // init price type combobox
                 this.form.find('input[name="ptype"]:first').combobox({
-                    data: [{v:'', t:'全部'}, {v:'xj', t:'限价'}, {v:'sj', t:'市价'}],
-                    valueField: 'v',
-                    textField: 't'
+                    url: '/api/enum?c=order&i=price',
+                    valueField: 'id',
+                    textField: 'text',
+
+                    loadFilter: function(resp){
+                        return resp.data;
+                    }
                 });
 
-                // init price type combobox
-                this.form.find('input[name="ptype"]:first').combobox({
-                    data: [{v:'', t:'全部'}, {v:'xj', t:'限价'}, {v:'sj', t:'市价'}],
-                    valueField: 'v',
-                    textField: 't'
+                // init order status combobox
+                this.form.find('input[name="status"]:first').combobox({
+                    url: '/api/enum?c=order&i=status',
+                    valueField: 'id',
+                    textField: 'text',
+
+                    loadFilter: function(resp){
+                        return resp.data;
+                    }
                 });
             },
 
@@ -212,8 +227,12 @@
 
                 //get parameters
                 params = {
-                    disable: this.form.find('input[name="disable"]:first').val(),
-                    words: this.form.find('input[name="words"]:first').val()
+                    otype: this.form.find('input[name="otype"]:first').val(),
+                    ptype: this.form.find('input[name="ptype"]:first').val(),
+                    status: this.form.find('input[name="status"]:first').val(),
+                    words: this.form.find('input[name="words"]:first').val(),
+                    sdate: this.form.find('input[name="sdate"]:first').val(),
+                    edate: this.form.find('input[name="edate"]:first').val()
                 };
 
                 //reload by retrieve conditions

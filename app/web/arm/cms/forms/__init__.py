@@ -1,1 +1,1 @@
-from cms.forms import auth, trade, user, stock
+from cms.forms import auth, trade, user, stock, enum

@@ -1,5 +1,5 @@
 import util
-
+from cms import enum
 from django.db  import models
 
 
@@ -569,6 +569,9 @@ class TradeOrder(models.Model):
         items['trade'] = items['trade'].id if items['trade'] else None
         items['account'] = items['account'].account if items['account'] else None
         items['stock'] = items['stock'].name if items['stock'] else None
+        items['otype'] = enum.all['order']['type'][items['otype']] if items['otype'] else None
+        items['ptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
+        items['status'] = enum.all['order']['status'][items['status']] if items['status'] else None
         return items
 
 
