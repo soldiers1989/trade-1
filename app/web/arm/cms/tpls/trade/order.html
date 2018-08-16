@@ -128,6 +128,7 @@
                     //get selected row data
                     row = order.list.getSelected();
                     if (row){
+                        console.log(row);
                         //change row time
                         row.dtime = cube.format.datetime(row.dtime);
                         // clear form
@@ -156,7 +157,11 @@
                             var resp = eval('('+data+')');
                             if (resp.status){
                                 order.edit.modify.dialog.dialog('close');
-                                order.list.reload();
+
+                                //update row data
+                                idx = order.list.getSelected();
+                                console.log(resp.data);
+                                order.list.update(idx, resp.data);
                             } else {
                                 $.messager.show({ title: '错误',  msg: resp.msg });
                             }
@@ -291,6 +296,20 @@
 
             getSelected: function() {
                 return this.datagrid.datagrid('getSelected');
+            },
+
+            getSelectedIdx: function() {
+                row = this.getSelected();
+                if (row)
+                    return this.datagrid.datagrid('getRowIndex', row);
+            },
+
+            update: function(rindex, rdata) {
+                alert(rindex);
+                this.datagrid.datagrid('updateRow', {
+                    index: rindex,
+                    row: rdata
+                });
             }
         },
 

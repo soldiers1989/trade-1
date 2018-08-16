@@ -154,8 +154,7 @@ def update(request):
         order.ocode, order.dcount, order.dprice, order.dtime, order.status, order.slog = ocode, dcount, dprice, dtime.timestamp(), status, json.dumps(logs)
         order.save()
 
-
-        return resp.success()
+        return resp.success(data=order.dict())
     else:
         return resp.failure(str(form.errors))
 
@@ -292,12 +291,11 @@ def nextstatus(request):
     if not order:
         return resp.failure(hint.ERR_FORM_DATA)
 
+    nstatus = [order.status]
     # get next status
-    nstatus = state.order.sys.get(order.status)
-    if not nstatus:
-        return resp.failure(msg=hint.ERR_FORM_DATA)
+    nstatus.extend(state.order.sys.get(order.status, []))
 
-    options = [{'id': order.status, 'text': enum.all['order']['status'].get(order.status)}]
+    options = []
     # next status options
     for s in nstatus:
         txt = enum.all['order']['status'].get(s)
