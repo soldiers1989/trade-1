@@ -2,6 +2,8 @@
     enum data definition
 """
 
+
+# all enum data for class
 all = {
     # common enum
     'common': {
@@ -52,7 +54,8 @@ all = {
             'fcanceled':'撤废',
             'pdeal':'部成',
             'tdeal':'已成',
-            'dropped':'废单'
+            'dropped':'废单',
+            'expired': '过期'
         }
     },
 

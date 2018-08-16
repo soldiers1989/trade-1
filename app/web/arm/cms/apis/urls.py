@@ -55,6 +55,7 @@ urlpatterns = [
     path('trade/order/delete', trade.order.delete, name="api.trade.order.delete"),
     path('trade/order/trade', trade.order.trade, name="api.trade.order.trade"),
     path('trade/order/status', trade.order.status, name="api.trade.order.status"),
+    path('trade/order/nextstatus', trade.order.nextstatus, name="api.trade.order.nextstatus"),
 
     path('user/user/list', user.user.list, name="api.user.user.list"),
     path('user/user/query', user.user.query, name="api.user.user.query"),

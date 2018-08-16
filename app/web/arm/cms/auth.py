@@ -1,7 +1,6 @@
 """
      authority control
 """
-import time
 from cms import resp, hint
 from django.shortcuts import redirect
 
@@ -13,7 +12,6 @@ def set_admin_id(request, id):
     :return:
     """
     request.session['id'] = id
-
 
 def get_admin_id(request):
     """

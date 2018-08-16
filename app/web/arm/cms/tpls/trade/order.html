@@ -49,7 +49,7 @@
             <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-combobox" name="status" data-options="label:'交易状态', prompt:'选择交易状态', valueField:'id',textField:'text',url:'/api/enum?c=order&i=status', loadFilter:function(resp){return resp.data;}" required, style="width: 100%">
+            <input class="easyui-combobox" id="_status" name="status" data-options="label:'交易状态', prompt:'选择交易状态'" required, style="width: 100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="ocode" data-options="label:'委托编号', prompt:'输入委托编号', required:true, validType:['text', 'length[1,16]']" style="width:100%">
@@ -81,7 +81,7 @@
             // init edit
             init: function() {
                 //init modify components
-                //this.modify.init();
+                this.modify.init();
             },
 
             // enable edit
@@ -100,15 +100,42 @@
                 dialog: $('#order_update_dialog'),
                 form: $('#order_update_form'),
 
+                // init modify dialog
+                init: function() {
+                    $('#_status').combobox({
+                        url: '/api/enum?c=order&i=status',
+                        method: 'get',
+
+                        valueField:'id',
+                        textField:'text',
+
+                        limitToList: true,
+
+                        loadFilter: function(resp) {
+                            return resp.data;
+                        }
+                    });
+                },
+
+                // setup modify dialog
+                setup: function(id) {
+                    //init status options
+                    $('#_status').combobox('reload', '/api/trade/order/nextstatus?id='+id);
+                },
+
                 // open update dialog
                 open: function() {
                     //get selected row data
                     row = order.list.getSelected();
                     if (row){
+                        //change row time
                         row.dtime = cube.format.datetime(row.dtime);
                         // clear form
                         this.form.form('clear');
                         
+                        // setup dialog
+                        this.setup(row.id);
+
                         //load form data
                         this.form.form('load', row);
 
@@ -141,7 +168,7 @@
                 cancel: function() {
                     //close dialog
                     this.dialog.dialog('close');
-                },
+                }
             },
 
             // delete row
@@ -210,13 +237,13 @@
                         {field:'id', title:'ID', sortable:true},
                         {field:'stock', title:'股票名称', sortable:false},
                         {field:'account', title:'交易账户', sortable:true},
+                        {field:'otype', title:'委托类型', sortable:true},
+                        {field:'ptype', title:'报价类型', sortable:true},
                         {field:'status', title:'委托状态', sortable:true, hidden:true},
                         {field:'nstatus', title:'委托状态', sortable:true}
                     ]],
 
                     columns: [[
-                        {field:'otype', title:'委托类型', sortable:true},
-                        {field:'ptype', title:'报价类型', sortable:true},
                         {field:'ocount', title:'委托数量', sortable:true},
                         {field:'oprice', title:'委托价格', sortable:true},
                         {field:'ocode', title:'委托编号', sortable:true},

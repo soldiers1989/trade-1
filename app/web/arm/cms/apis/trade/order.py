@@ -1,7 +1,7 @@
-import json, datetime, util
+import time, json, datetime, util
 from adb import models
 from django.db.models import Q
-from cms import auth, resp, hint, forms, enum
+from cms import auth, resp, hint, forms, enum, state
 
 
 @auth.need_login
@@ -126,13 +126,35 @@ def update(request):
     """
     form = forms.trade.order.Update(request.POST)
     if form.is_valid():
+        # get parameters
         params = form.cleaned_data
+        id, ocode, dcount, dprice, dtime, status = params['id'], params['ocode'], params['dcount'], params['dprice'], params['dtime'], params['status']
 
-        models.TradeOrder.objects.filter(id=params['id']).update(ocode=params['ocode'],
-                                                                dcount=params['dcount'],
-                                                                dprice=params['dprice'],
-                                                                dtime=params['dtime'].timestamp(),
-                                                                status=params['status'])
+        # get order object
+        order = models.TradeOrder.objects.get(id=id)
+        if order is None:
+            return resp.failure(hint.ERR_FORM_DATA)
+
+        # get admin object
+        admin = models.Admin.objects.get(id=auth.get_admin_id(request))
+        if admin is None:
+            return resp.failure(hint.ERR_NOT_AUTHORIZED)
+
+        # update trade
+
+        # update status change log
+        log = {'user': admin.user, 'before': order.status, 'after': status, 'time': int(time.time())}
+        logs = json.loads(order.slog)
+        if logs is None:
+            logs = [log]
+        else:
+            logs.append(log)
+
+        # update order
+        order.ocode, order.dcount, order.dprice, order.dtime, order.status, order.slog = ocode, dcount, dprice, dtime.timestamp(), status, json.dumps(logs)
+        order.save()
+
+
         return resp.success()
     else:
         return resp.failure(str(form.errors))
@@ -250,3 +272,36 @@ def status(request):
     }
 
     return resp.success(data=data)
+
+
+@auth.catch_exception
+@auth.need_login
+def nextstatus(request):
+    """
+        get next status
+    :param request:
+    :return:
+    """
+    if request.method != 'GET':
+        return resp.failure(msg='method not support')
+
+    id = request.GET['id']
+
+    # get order
+    order = models.TradeOrder.objects.get(id=id)
+    if not order:
+        return resp.failure(hint.ERR_FORM_DATA)
+
+    # get next status
+    nstatus = state.order.sys.get(order.status)
+    if not nstatus:
+        return resp.failure(msg=hint.ERR_FORM_DATA)
+
+    options = [{'id': order.status, 'text': enum.all['order']['status'].get(order.status)}]
+    # next status options
+    for s in nstatus:
+        txt = enum.all['order']['status'].get(s)
+        options.append({'id': s, 'text': txt})
+
+    # response next status options
+    return resp.success(data=options)
