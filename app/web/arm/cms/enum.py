@@ -66,7 +66,8 @@ all = {
             'sold': '已卖',
             'toclose': '待平',
             'closed': '已平',
-            'expired': '过期'
+            'expired': '过期',
+            'discard': '废单'
         }
     },
 

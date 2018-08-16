@@ -53,6 +53,8 @@ urlpatterns = [
     path('trade/order/add', trade.order.add, name="api.trade.order.add"),
     path('trade/order/update', trade.order.update, name="api.trade.order.update"),
     path('trade/order/delete', trade.order.delete, name="api.trade.order.delete"),
+    path('trade/order/trade', trade.order.trade, name="api.trade.order.trade"),
+    path('trade/order/status', trade.order.status, name="api.trade.order.status"),
 
     path('user/user/list', user.user.list, name="api.user.user.list"),
     path('user/user/query', user.user.query, name="api.user.user.query"),
@@ -68,6 +70,7 @@ urlpatterns = [
     path('user/user/resetpwd', user.user.resetpwd, name="api.user.user.resetpwd"),
 
     path('user/trade/list', user.trade.list, name="api.user.trade.list"),
+    path('user/trade/get', user.trade.get, name="api.user.trade.get"),
     path('user/trade/add', user.trade.add, name="api.user.trade.add"),
     path('user/trade/fees', user.trade.fees, name="api.user.trade.fees"),
     path('user/trade/margins', user.trade.margins, name="api.user.trade.margins"),

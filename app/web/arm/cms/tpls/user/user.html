@@ -260,6 +260,9 @@
 
                         //clear detail
                         user.detail.clear();
+
+                        //clear selections
+                        $(this).datagrid('clearSelections');
                     },
 
                     onLoadError: function() {

@@ -1,7 +1,7 @@
-import time, datetime, util
+import json, datetime, util
 from adb import models
 from django.db.models import Q
-from cms import auth, resp, hint, forms
+from cms import auth, resp, hint, forms, enum
 
 
 @auth.need_login
@@ -12,7 +12,7 @@ def list(request):
     :return:
     """
     try:
-        form = forms.trade.order.List(request.POST)
+        form = forms.trade.order.List(request.GET)
         if form.is_valid():
             ## form parameters ##
             params = form.cleaned_data
@@ -98,7 +98,8 @@ def add(request):
         params = form.cleaned_data
         # check trade/account
         if not models.UserTrade.objects.filter(id=params['trade']).exists() or \
-            not models.TradeAccount.objects.filter(id=params['account']).exists():
+            not models.TradeAccount.objects.filter(id=params['account']).exists() or \
+            not models.Stock.objects.filter(id=params['stock']).exists():
             return resp.failure(hint.ERR_FORM_DATA)
 
         # add new record
@@ -108,11 +109,7 @@ def add(request):
                                 ptype=params['ptype'],
                                 ocount=params['ocount'],
                                 oprice=params['oprice'],
-                                otime=params['otime'],
-                                ocode=params['ocode'],
-                                dcount=params['dcoout'],
-                                dprice=params['dprice'],
-                                dtime=params['dtime'],
+                                otime=params['otime'].timestamp(),
                                 status=params['status'])
         item.save()
         return resp.success(data=item.dict())
@@ -131,17 +128,10 @@ def update(request):
     if form.is_valid():
         params = form.cleaned_data
 
-        models.TradeOrder.objects.filter(id=params['id']).update(trade_id=params['trade'],
-                                                                 account_id=params['account'],
-                                                                otype=params['otype'],
-                                                                ptype=params['ptype'],
-                                                                ocount=params['ocount'],
-                                                                oprice=params['oprice'],
-                                                                otime=params['otime'],
-                                                                ocode=params['ocode'],
-                                                                dcount=params['dcoout'],
+        models.TradeOrder.objects.filter(id=params['id']).update(ocode=params['ocode'],
+                                                                dcount=params['dcount'],
                                                                 dprice=params['dprice'],
-                                                                dtime=params['dtime'],
+                                                                dtime=params['dtime'].timestamp(),
                                                                 status=params['status'])
         return resp.success()
     else:
@@ -162,3 +152,101 @@ def delete(request):
         return resp.success()
     else:
         return resp.failure(str(form.errors))
+
+
+@auth.catch_exception
+@auth.need_login
+def trade(request):
+    """
+        get order
+    :param request:
+    :return:
+    """
+    if request.method != 'GET':
+        return resp.failure(msg='method not support')
+
+    id = request.GET['id']
+
+    # get order detail
+    item = models.TradeOrder.objects.get(id=id)
+    if not item:
+        return resp.failure(hint.ERR_FORM_DATA)
+
+    # get trade object
+    trade = item.trade
+
+    rows = []
+    # make results
+    rows.append({'name': '订单ID', 'value': trade.id, 'group': '交易信息'})
+    rows.append({'name': '订单编号', 'value': trade.code, 'group': '交易信息'})
+    rows.append({'name': '订单类型', 'value': enum.all['order']['price'][trade.ptype] if trade.ptype else '', 'group': '交易信息'})
+    rows.append({'name': '订单价格', 'value': trade.oprice, 'group': '交易信息'})
+    rows.append({'name': '订单股数', 'value': trade.ocount, 'group': '交易信息'})
+    rows.append({'name': '持仓价格', 'value': trade.hprice, 'group': '交易信息'})
+    rows.append({'name': '持仓数量', 'value': trade.hcount, 'group': '交易信息'})
+    rows.append({'name': '订单状态', 'value': enum.all['trade']['status'][trade.status] if trade.status else '', 'group': '交易信息'})
+
+    rows.append({'name': '保证金', 'value': trade.margin, 'group': '费用信息'})
+    rows.append({'name': '服务费', 'value': trade.ofee, 'group': '费用信息'})
+    rows.append({'name': '延期天数', 'value': trade.ddays, 'group': '费用信息'})
+    rows.append({'name': '延期费', 'value': trade.dfee, 'group': '费用信息'})
+    rows.append({'name': '订单盈利', 'value': trade.tprofit, 'group': '费用信息'})
+    rows.append({'name': '盈利分成', 'value': trade.sprofit, 'group': '费用信息'})
+
+    rows.append({'name': '用户ID', 'value': trade.user.id, 'group': '用户信息'})
+    rows.append({'name': '用户手机', 'value': trade.user.user, 'group': '用户信息'})
+    rows.append({'name': '账户余额', 'value': trade.user.money, 'group': '用户信息'})
+    rows.append({'name': '禁用标识', 'value': enum.all['common']['disable'][trade.user.disable], 'group': '用户信息'})
+
+    rows.append({'name': '交易账号', 'value': trade.account.account if trade.account else '', 'group': '交易账户'})
+    rows.append({'name': '账户名称', 'value': trade.account.name if trade.account else '', 'group': '交易账户'})
+    rows.append({'name': '可用余额', 'value': trade.account.lmoney if trade.account else '', 'group': '交易账户'})
+    rows.append({'name': '保底佣金', 'value': trade.account.cfmin if trade.account else '', 'group': '交易账户'})
+    rows.append({'name': '佣金费率', 'value': trade.account.cfrate if trade.account else '', 'group': '交易账户'})
+    rows.append({'name': '印花税率', 'value': trade.account.tfrate if trade.account else '', 'group': '交易账户'})
+    rows.append({'name': '禁用标识', 'value': enum.all['common']['disable'][trade.account.disable] if trade.account else '', 'group': '交易账户'})
+
+    ## response data ##
+    data = {
+        'total': len(rows),
+        'rows': rows
+    }
+
+    return resp.success(data=data)
+
+
+@auth.catch_exception
+@auth.need_login
+def status(request):
+    """
+        get order
+    :param request:
+    :return:
+    """
+    if request.method != 'GET':
+        return resp.failure(msg='method not support')
+
+    id = request.GET['id']
+
+    # get order detail
+    item = models.TradeOrder.objects.get(id=id)
+    if not item:
+        return resp.failure(hint.ERR_FORM_DATA)
+
+    # logs
+    rows = []
+    if item.slog:
+        rows = json.loads(item.slog)
+
+    # tidy rows
+    for row in rows:
+        row['before'] = enum.all['order']['status'].get(row['before'])
+        row['after'] = enum.all['order']['status'].get(row['after'])
+
+    ## response data ##
+    data = {
+        'total': len(rows),
+        'rows': rows
+    }
+
+    return resp.success(data=data)

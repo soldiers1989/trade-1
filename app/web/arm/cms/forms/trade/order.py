@@ -25,7 +25,8 @@ class Add(forms.Form):
     ptype = forms.CharField(max_length=16)
     ocount = forms.IntegerField()
     oprice = forms.DecimalField(max_digits=10, decimal_places=2, required=False)
-    otime = forms.IntegerField(required=False)
+    otime = forms.DateTimeField()
+    status = forms.CharField(max_length=16)
 
 
 class Update(forms.Form):
@@ -33,7 +34,7 @@ class Update(forms.Form):
     ocode = forms.CharField(max_length=16)
     dcount = forms.IntegerField(required=False)
     dprice = forms.DecimalField(max_digits=10, decimal_places=2, required=False)
-    dtime = forms.IntegerField(required=False)
+    dtime = forms.DateTimeField()
     status = forms.CharField(max_length=16)
 
 

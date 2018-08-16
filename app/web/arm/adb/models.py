@@ -479,6 +479,7 @@ class UserTrade(models.Model):
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True)
     account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
     code = models.CharField(max_length=20, unique=True)
+    ptype = models.CharField(max_length=16)
     oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     ocount = models.IntegerField()
     hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
@@ -507,17 +508,10 @@ class UserTrade(models.Model):
         items['stock'] = items['stock'].name if items['stock'] else None
         items['coupon'] = items['coupon'].money if items['coupon'] else None
         items['account'] = items['account'].name if items['account'] else None
-        items['statusd'] = self.statusd(items['status'])
+        items['nptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
+        items['nstatus'] = enum.all['trade']['status'][items['status']] if items['status'] else None
         items['lever'] = self.tradelever.lever
         return items
-
-    def statusd(self, s):
-        cm = {
-                'tobuy': '待买入', 'buying': '买入中', 'holding': '持仓中',
-                'tosell': '待卖出', 'selling': '卖出中', 'toclose': '待平仓', 'closing': '平仓中',
-                'finished': '已结束', 'expired': '已失效'
-              }
-        return cm[s]
 
 
 # tb_trade_lever
@@ -555,11 +549,11 @@ class TradeOrder(models.Model):
     oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     otime = models.BigIntegerField()
     ocode = models.CharField(max_length=16, null=True)
-    ostatus = models.CharField(max_length=16, null=True)
     dcount = models.IntegerField(null=True)
     dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     dtime = models.BigIntegerField(null=True)
     status = models.CharField(max_length=16)
+    slog = models.TextField(null=True)
 
     class Meta:
         db_table = 'tb_trade_order'
@@ -571,7 +565,7 @@ class TradeOrder(models.Model):
         items['stock'] = items['stock'].name if items['stock'] else None
         items['otype'] = enum.all['order']['type'][items['otype']] if items['otype'] else None
         items['ptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
-        items['status'] = enum.all['order']['status'][items['status']] if items['status'] else None
+        items['nstatus'] = enum.all['order']['status'][items['status']] if items['status'] else None
         return items
 
 

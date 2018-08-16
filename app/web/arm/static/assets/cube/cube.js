@@ -48,6 +48,16 @@ cube.format = new function() {
 		return date.toLocaleDateString();
 	}
 
+    //format timestamp to time
+    self.time = function(tm) {
+        if(tm == null)
+            return '-';
+
+        var date = new Date();
+        date.setTime(tm*1000);
+        return date.toLocaleTimeString();
+    }
+
 	//form timestamp to datetime
 	self.datetime = function(tm) {
         if(tm == null)
