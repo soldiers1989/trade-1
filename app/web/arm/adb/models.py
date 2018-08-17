@@ -171,6 +171,9 @@ class QuoteServer(models.Model):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
+    def prop(self):
+        pass
+
 
 # tb_trade_agent
 class TradeAgent(models.Model):
@@ -512,6 +515,17 @@ class UserTrade(models.Model):
         items['nstatus'] = enum.all['trade']['status'][items['status']] if items['status'] else None
         items['lever'] = self.tradelever.lever
         return items
+
+    def rdata(self):
+        return self.dict()
+
+    def odata(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['user'], items['stock'], items['coupon'], items['account'] = self.user_id, self.stock_id, self.coupon_id, self.account_id
+        return items;
+
+    def pdata(self):
+        pass
 
 
 # tb_trade_lever

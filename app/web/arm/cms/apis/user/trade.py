@@ -89,6 +89,7 @@ def list(request):
         return resp.failure(str(e))
 
 
+@auth.catch_exception
 @auth.need_login
 def get(request):
     """
@@ -96,18 +97,30 @@ def get(request):
     :param request:
     :return:
     """
-    try:
-        if request.method != 'GET':
-            return resp.failure(msg='method not support')
+    if request.method != 'GET':
+        return resp.failure(msg='method not support')
 
-        id = request.GET['id']
+    # get form data
+    form = forms.user.trade.Get(request.GET)
+    if not form.is_valid():
+        return resp.failure(hint.ERR_FORM_DATA)
 
-        # get order detail
-        item = models.UserTrade.objects.get(id=id)
+    # get parameters
+    id, type = form.cleaned_data['id'], form.cleaned_data['_t']
 
-        return resp.success(data=item.dict())
-    except Exception as e:
-        return resp.failure(str(e))
+    # get user trade detail
+    trade = models.UserTrade.objects.get(id=id)
+
+    # data for want
+    if type=='r':
+        data = trade.rdata()
+    elif type=='p':
+        data = trade.pdata()
+    else:
+        data = trade.odata()
+
+    # want formatted data
+    return resp.success(data=data)
 
 
 @auth.need_login
