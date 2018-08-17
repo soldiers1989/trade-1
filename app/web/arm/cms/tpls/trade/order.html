@@ -128,7 +128,6 @@
                     //get selected row data
                     row = order.list.getSelected();
                     if (row){
-                        console.log(row);
                         //change row time
                         row.dtime = cube.format.datetime(row.dtime);
                         // clear form
@@ -158,10 +157,8 @@
                             if (resp.status){
                                 order.edit.modify.dialog.dialog('close');
 
-                                //update row data
-                                idx = order.list.getSelected();
-                                console.log(resp.data);
-                                order.list.update(idx, resp.data);
+                                //update selected row data
+                                order.list.updateSelected(resp.data);
                             } else {
                                 $.messager.show({ title: '错误',  msg: resp.msg });
                             }
@@ -198,7 +195,8 @@
                                 $.post(url, {id: row.id}, function(resp, status){
                                     if(status == 'success'){
                                         if (resp.status){
-                                            order.list.reload();
+                                            order.list.deleteSelected();
+                                            order.detail.clear();
                                         } else {
                                             $.messager.show({title: '错误', msg: resp.msg});
                                         }
@@ -295,17 +293,26 @@
             },
 
             getSelected: function() {
-                return this.datagrid.datagrid('getSelected');
+                row = this.datagrid.datagrid('getSelected');
+                return row;
             },
 
-            getSelectedIdx: function() {
-                row = this.getSelected();
-                if (row)
-                    return this.datagrid.datagrid('getRowIndex', row);
+            deleteSelected: function() {
+                row = this.datagrid.datagrid('getSelected');
+                if(!row)
+                    return;
+
+                rindex = this.datagrid.datagrid('getRowIndex', row);
+
+                this.datagrid.datagrid('deleteRow', rindex);
             },
 
-            update: function(rindex, rdata) {
-                alert(rindex);
+            updateSelected: function(rdata) {
+                row = this.datagrid.datagrid('getSelected');
+                if(!row)
+                    return;
+
+                rindex = this.datagrid.datagrid('getRowIndex', row);
                 this.datagrid.datagrid('updateRow', {
                     index: rindex,
                     row: rdata
@@ -394,6 +401,7 @@
 
             //clear detail
             clear:function() {
+                this.tabs.clear();
             },
 
             tabs: {
@@ -409,7 +417,7 @@
                         border: false,
 
                         onSelect: function(title, index){
-                             row = order.list.getSelected();
+                            row = order.list.getSelected();
                             if(!row)
                                 return;
 
@@ -431,18 +439,46 @@
                     this.inited = true;
                 },
 
-                show: function() {
+                clear: function() {
                     tab = this.tabs.tabs('getSelected');
-
-                    if(!tab || this.tabs.tabs('getTabIndex', tab) != 0)
-                        this.tabs.tabs('select', 0);
-                    else{
-                        row = order.list.getSelected();
-                        if(!row)
-                            return;
-                        orderid = row.id;
-                        order.detail.trade.show(orderid);
+                    if(tab) {
+                        idx = this.tabs.tabs('getTabIndex', tab);
+                        switch (idx) {
+                            case 0:
+                                order.detail.trade.clear();
+                                break;
+                            case 1:
+                                order.detail.status.clear();
+                                break;
+                            default:
+                                break;
+                        }
                     }
+                },
+
+                show: function() {
+                    row = order.list.getSelected();
+                    if(!row)
+                        return;
+
+                    idx = 0;
+                    tab = this.tabs.tabs('getSelected');
+                    if(tab) {
+                        idx = this.tabs.tabs('getTabIndex', tab);
+                    }
+                    
+                    switch (idx) {
+                        case 0:
+                            order.detail.trade.show(row.id);
+                            break;
+                        case 1:
+                            order.detail.status.show(row.id);
+                            break;
+                        default:
+                            // statements_def
+                            break;
+                    }
+
                 }
             },
 
@@ -453,6 +489,9 @@
                 inited: false,
 
                 init: function(params) {
+                    if (this.inited)
+                        return;
+
                     this.propertygrid.propertygrid({
                         url: this.url,
                         method: 'get',
@@ -480,6 +519,15 @@
 
                     this.inited=true;
                 },
+
+                clear: function() {
+                    if (this.inited){
+                        len = this.propertygrid.propertygrid('getRows').length;
+                        for (i=0; i<len; i++){
+                            this.propertygrid.propertygrid('deleteRow', 0);
+                        }
+                    }
+                },
                 
                 load: function(params) {
                     this.propertygrid.propertygrid('load', params);
@@ -501,6 +549,9 @@
                 inited: false,
 
                 init: function(params) {
+                    if (this.inited)
+                        return;
+
                     this.datagrid.datagrid({
                         url: this.url,
                         method: 'get',
@@ -532,6 +583,15 @@
                     });
 
                     this.inited=true;
+                },
+
+                clear: function() {
+                    if (this.inited){
+                        len = this.datagrid.datagrid('getRows').length;
+                        for (i=0; i<len; i++){
+                            this.datagrid.datagrid('deleteRow', 0);
+                        }
+                    }
                 },
                 
                 load: function(params) {
