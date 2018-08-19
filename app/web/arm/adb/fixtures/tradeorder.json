@@ -12,11 +12,10 @@
             "oprice": 3.24,
             "otime": 1527261052,
             "ocode": "o000001",
-            "ostatus": "已成",
             "dcount": 100,
             "dprice": 3.24,
             "dtime": 1527261123,
-            "status": "tdeal"
+            "status": "tosend"
         }
     },
     {
@@ -32,11 +31,10 @@
             "oprice": 3.24,
             "otime": 1527261052,
             "ocode": "o000002",
-            "ostatus": "已成",
             "dcount": 100,
             "dprice": 3.24,
             "dtime": 1527261123,
-            "status": "tdeal"
+            "status": "notsend"
         }
     },
     {
@@ -45,17 +43,16 @@
         "fields": {
             "trade_id": "4",
             "account_id": "1",
-            "stock_id": "000004",
+            "stock_id": "000100",
             "otype": "buy",
             "ptype": "sj",
             "ocount": 100,
             "otime": 1527261052,
             "ocode": "o000002",
-            "ostatus": "已成",
             "dcount": 100,
             "dprice": 3.24,
             "dtime": 1527261123,
-            "status": "tdeal"
+            "status": "tosend"
         }
     },
     {
@@ -64,14 +61,13 @@
         "fields": {
             "trade_id": "4",
             "account_id": "1",
-            "stock_id": "000004",
+            "stock_id": "000100",
             "otype": "sell",
             "ptype": "sj",
             "ocount": 100,
             "otime": 1527261052,
             "ocode": "o000002",
-            "ostatus": "已报",
-            "status": "sent"
+            "status": "tosend"
         }
     }
   ]

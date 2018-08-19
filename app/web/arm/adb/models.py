@@ -476,31 +476,31 @@ class UserStock(models.Model):
 
 # tb_user_trade
 class UserTrade(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey('User', on_delete=models.CASCADE)
-    stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
-    coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True)
-    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
-    code = models.CharField(max_length=20, unique=True)
-    ptype = models.CharField(max_length=16)
-    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    ocount = models.IntegerField()
-    hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    hcount = models.IntegerField(null=True) # holding count
-    fcount = models.IntegerField(null=True) # free count, sell able
-    bprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    bcount = models.IntegerField(null=True)
-    sprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    scount = models.IntegerField(null=True)
-    margin = models.DecimalField(max_digits=10, decimal_places=2)
-    ofee = models.DecimalField(max_digits=10, decimal_places=2) # open fee
-    ddays = models.IntegerField(null=True) # delay days
-    dfee = models.DecimalField(max_digits=10, decimal_places=2, null=True) # delay fee
-    tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True) # total profit
-    sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True) # share profit
-    status = models.CharField(max_length=16, default='tobuy')
-    ctime = models.BigIntegerField()  # create time
-    ftime = models.BigIntegerField(null=True)  # finish time
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='用户')
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票')
+    coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True, verbose_name='优惠券')
+    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True, verbose_name='证券账户')
+    code = models.CharField(max_length=20, unique=True, verbose_name='订单代码')
+    ptype = models.CharField(max_length=16, verbose_name='报价类型')
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='订单价格')
+    ocount = models.IntegerField(verbose_name='订单数量')
+    hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='持仓价格')
+    hcount = models.IntegerField(null=True, verbose_name='持仓数量') # holding count
+    fcount = models.IntegerField(null=True, verbose_name='可买数量') # free count, sell able
+    bprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入价格')
+    bcount = models.IntegerField(null=True, verbose_name='买入数量')
+    sprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='卖出价格')
+    scount = models.IntegerField(null=True, verbose_name='卖出数量')
+    margin = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='保证金')
+    ofee = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='建仓费') # open fee
+    ddays = models.IntegerField(null=True, verbose_name='天数') # delay days
+    dfee = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='延期费') # delay fee
+    tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利') # total profit
+    sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利分成') # share profit
+    status = models.CharField(max_length=16, default='tobuy', verbose_name='状态')
+    ctime = models.BigIntegerField(verbose_name='订单时间')  # create time
+    ftime = models.BigIntegerField(null=True, verbose_name='结束时间')  # finish time
 
     class Meta:
         db_table = 'tb_user_trade'
@@ -511,22 +511,22 @@ class UserTrade(models.Model):
         items['stock'] = items['stock'].name if items['stock'] else None
         items['coupon'] = items['coupon'].money if items['coupon'] else None
         items['account'] = items['account'].name if items['account'] else None
-        items['nptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
-        items['nstatus'] = enum.all['trade']['status'][items['status']] if items['status'] else None
+        items['ptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
+        items['status'] = enum.all['trade']['status'][items['status']] if items['status'] else None
         items['lever'] = self.tradelever.lever
         return items
-
-    def rdata(self):
-        return self.dict()
 
     def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'], items['stock'], items['coupon'], items['account'] = self.user_id, self.stock_id, self.coupon_id, self.account_id
         return items;
 
-    def pdata(self):
-        pass
+    def rdata(self):
+        return self.dict()
 
+    def pdata(self):
+        fields, items = dict([(f.name, f.verbose_name) for f in self._meta.fields]), self.rdata()
+        return items
 
 # tb_trade_lever
 class TradeLever(models.Model):

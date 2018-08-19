@@ -52,16 +52,16 @@
             <input class="easyui-combobox" id="_status" name="status" data-options="label:'交易状态', prompt:'选择交易状态'" required, style="width: 100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ocode" data-options="label:'委托编号', prompt:'输入委托编号', required:true, validType:['text', 'length[1,16]']" style="width:100%">
+            <input class="easyui-textbox" name="ocode" data-options="label:'委托编号', prompt:'输入委托编号', required:false, validType:['text', 'length[1,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:true, validType:['digits', 'min[1]']" style="width:100%">
+            <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:false, validType:['digits', 'min[1]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="dprice" data-options="label:'成交价格', prompt:'输入成交价格（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" name="dprice" data-options="label:'成交价格', prompt:'输入成交价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-datetimebox" name="dtime" label="成交时间" prompt="选择发生时间" required style="width:100%">
+            <input class="easyui-datetimebox" name="dtime" label="成交时间" prompt="选择发生时间" style="width:100%">
         </div>
     </form>
 </div>

@@ -31,10 +31,10 @@ class Add(forms.Form):
 
 class Update(forms.Form):
     id = forms.IntegerField()
-    ocode = forms.CharField(max_length=16)
+    ocode = forms.CharField(max_length=16, required=False)
     dcount = forms.IntegerField(required=False)
     dprice = forms.DecimalField(max_digits=10, decimal_places=2, required=False)
-    dtime = forms.DateTimeField()
+    dtime = forms.DateTimeField(required=False)
     status = forms.CharField(max_length=16)
 
 

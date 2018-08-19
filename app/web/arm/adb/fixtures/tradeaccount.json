@@ -4,7 +4,7 @@
         "pk": 1,
         "fields": {
             "account": "a00001",
-            "name": "账户1",
+            "name": "张三",
             "lmoney": 100000.0,
             "cfmin": 5.0,
             "cfrate": 0.0002,
@@ -19,7 +19,7 @@
         "pk": 2,
         "fields": {
             "account": "a00002",
-            "name": "账户2",
+            "name": "李师",
             "lmoney": 100000.0,
             "cfmin": 5.0,
             "cfrate": 0.0002,

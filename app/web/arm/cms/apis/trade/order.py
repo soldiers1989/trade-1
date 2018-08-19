@@ -143,12 +143,9 @@ def update(request):
         # update trade
 
         # update status change log
-        log = {'user': admin.user, 'before': order.status, 'after': status, 'time': int(time.time())}
-        logs = json.loads(order.slog)
-        if logs is None:
-            logs = [log]
-        else:
-            logs.append(log)
+        logs = [{'user': admin.user, 'before': order.status, 'after': status, 'time': int(time.time())}]
+        if order.slog is not None:
+            logs.extend(json.loads(order.slog))
 
         # update order
         order.ocode, order.dcount, order.dprice, order.dtime, order.status, order.slog = ocode, dcount, dprice, dtime.timestamp(), status, json.dumps(logs)
