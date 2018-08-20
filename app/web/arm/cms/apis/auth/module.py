@@ -19,7 +19,7 @@ def list(request):
 
         rows = []
         for item in items:
-            row = item.dict()
+            row = item.ddata()
             if(item.parent):
                 row['_parentId'] = row['parent']
             rows.append(row)
@@ -46,7 +46,7 @@ def tree(request):
 
         rows = []
         for item in items:
-            row = item.dict()
+            row = item.ddata()
             if (item.parent):
                 row['_parentId'] = row['parent']
             row['text'] = row['name']
@@ -70,7 +70,7 @@ def get(request):
     try:
         id = request.POST['id']
         item = models.Module.objects.get(id=id)
-        return resp.success(data=item.dict())
+        return resp.success(data=item.ddata())
     except Exception as e:
         return resp.failure(str(e))
 
@@ -94,7 +94,7 @@ def add(request):
                                 disable=params['disable'],
                                 ctime=int(time.time()));
             item.save()
-            return resp.success(data=item.dict())
+            return resp.success(data=item.ddata())
         else:
             return resp.failure(str(form.errors))
     except Exception as e:

@@ -22,8 +22,8 @@
       "dfee": 0.0,
       "tprofit": 1000.00,
       "sprofit": 200.00,
-      "status": "holding",
-      "ctime": 1527261052
+      "status": "hold",
+      "ctime": 1527262052
     }
   },
   {
@@ -49,7 +49,7 @@
       "tprofit": 1000.00,
       "sprofit": 200.00,
       "status": "tobuy",
-      "ctime": 1527261052
+      "ctime": 1527271052
     }
   },
   {
@@ -75,7 +75,7 @@
       "tprofit": 1000.00,
       "sprofit": 200.00,
       "status": "tobuy",
-      "ctime": 1527261052
+      "ctime": 1527265052
     }
   },
   {
@@ -93,7 +93,7 @@
       "margin": 2000.00,
       "ofee": 200.00,
       "status": "tobuy",
-      "ctime": 1527261052
+      "ctime": 1527269052
     }
   }
 ]

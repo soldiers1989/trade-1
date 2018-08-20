@@ -65,7 +65,7 @@ def list(request):
             ## make results ##
             rows = []
             for obj in objects:
-                obj = obj.dict()
+                obj = obj.ddata()
                 rows.append(obj)
 
             ## response data ##
@@ -103,7 +103,7 @@ def add(request):
                             ctime=int(time.time()),
                             user_id=params['user'])
         item.save()
-        return resp.success(data=item.dict())
+        return resp.success(data=item.ddata())
     else:
         return resp.failure(str(form.errors))
 

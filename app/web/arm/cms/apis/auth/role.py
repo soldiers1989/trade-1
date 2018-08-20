@@ -18,7 +18,7 @@ def list(request):
         total = roles.count()
         rows = []
         for role in roles:
-            rows.append(role.dict());
+            rows.append(role.ddata());
 
         data = {
             'total': total,
@@ -46,7 +46,7 @@ def add(request):
                                 disable=params['disable'],
                                 ctime=int(time.time()))
             item.save()
-            return resp.success(data=item.dict())
+            return resp.success(data=item.ddata())
         else:
             return resp.failure(str(form.errors))
     except Exception as e:
@@ -116,7 +116,7 @@ def moduletree(request):
             modules = []
             items = models.Module.objects.all()
             for item in items:
-                modules.append(item.dict())
+                modules.append(item.ddata())
 
             # process data
             nodes = []
@@ -151,7 +151,7 @@ def addmodule(request):
             mid = form.cleaned_data['module']
 
             # get module
-            module = models.Module.objects.get(id=mid).dict()
+            module = models.Module.objects.get(id=mid).ddata()
 
             # get role modules
             mids = []
@@ -163,7 +163,7 @@ def addmodule(request):
             modules = []
             items = models.Module.objects.all()
             for item in items:
-                modules.append(item.dict())
+                modules.append(item.ddata())
 
             # get module childs
             childs = util.tree.childids(module, modules)
@@ -210,7 +210,7 @@ def delmodule(request):
             modules = []
             items = models.Module.objects.all()
             for item in items:
-                modules.append(item.dict())
+                modules.append(item.ddata())
 
             # get childs of delete role's module
             childs = util.tree.childids({'id':mid}, modules)

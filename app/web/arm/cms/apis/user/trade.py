@@ -74,7 +74,7 @@ def list(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -112,8 +112,8 @@ def get(request):
     trade = models.UserTrade.objects.get(id=id)
 
     # data for want
-    if type=='r':
-        data = trade.rdata()
+    if type=='d':
+        data = trade.ddata()
     elif type=='p':
         data = trade.pdata()
     else:
@@ -199,7 +199,7 @@ def add(request):
 @auth.need_login
 def lever(request):
     try:
-        form = forms.user.trade.Get(request.POST)
+        form = forms.user.trade.Get(request.GET)
         if form.is_valid():
             # trade id
             tradeid = form.cleaned_data['id']
@@ -208,17 +208,7 @@ def lever(request):
             object = models.TradeLever.objects.get(trade__id=tradeid)
 
             ## make results ##
-            rows = []
-
-            rows.append({'name':'杠杆', 'value':object.lever})
-            rows.append({'name':'预警线', 'value':object.wline})
-            rows.append({'name':'止损线', 'value':object.sline})
-            rows.append({'name':'保底费用', 'value':object.ofmin})
-            rows.append({'name':'建仓费率', 'value':object.ofrate})
-            rows.append({'name': '延期费率', 'value': object.dfrate})
-            rows.append({'name': '盈利分成', 'value': object.psrate})
-            rows.append({'name': '本金下限', 'value': object.mmin})
-            rows.append({'name': '本金上线限', 'value': object.mmax})
+            rows = object.pdata()
 
             ## response data ##
             data = {
@@ -241,13 +231,13 @@ def fees(request):
     :return:
     """
     try:
-        form = forms.user.trade.Get(request.POST)
+        form = forms.user.trade.Get(request.GET)
         if form.is_valid():
             # trade id
             tradeid = form.cleaned_data['id']
 
             # get fee records of order
-            objects = models.TradeFee.objects.filter(trade__id=tradeid)
+            objects = models.TradeFee.objects.filter(trade__id=tradeid).order_by('-ctime')
 
             ## get total count ##
             total = objects.count()
@@ -255,7 +245,7 @@ def fees(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -278,13 +268,13 @@ def margins(request):
     :return:
     """
     try:
-        form = forms.user.trade.Get(request.POST)
+        form = forms.user.trade.Get(request.GET)
         if form.is_valid():
             # trade id
             tradeid = form.cleaned_data['id']
 
             # get margin records of order
-            objects = models.TradeMargin.objects.filter(trade__id=tradeid)
+            objects = models.TradeMargin.objects.filter(trade__id=tradeid).order_by('-ctime')
 
             ## get total count ##
             total = objects.count()
@@ -292,7 +282,7 @@ def margins(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -315,25 +305,25 @@ def orders(request):
     :return:
     """
     try:
-        form = forms.user.trade.Get(request.POST)
+        form = forms.user.trade.Get(request.GET)
         if form.is_valid():
             # trade id
             tradeid = form.cleaned_data['id']
 
             # get margin records of order
-            objects = models.TradeOrder.objects.filter(trade__id=tradeid)
+            objects = models.TradeOrder.objects.filter(trade__id=tradeid).order_by('-otime')
 
             ## get total count ##
-            total = objects.count()
+            #total = objects.count()
 
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.extend(obj.pdata())
 
             ## response data ##
             data = {
-                'total': total,
+                'total': len(rows),
                 'rows': rows
             }
 

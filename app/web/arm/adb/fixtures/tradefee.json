@@ -46,5 +46,29 @@
             "amoney": 50.0,
             "ctime": 1527261052
         }
+    },
+    {
+        "model": "adb.tradefee",
+        "pk": 5,
+        "fields": {
+            "trade_id": "3",
+            "item": "建仓费",
+            "detail":"中国平安",
+            "nmoney": 50.0,
+            "amoney": 50.0,
+            "ctime": 1527264052
+        }
+    },
+    {
+        "model": "adb.tradefee",
+        "pk": 6,
+        "fields": {
+            "trade_id": "4",
+            "item": "建仓费",
+            "detail":"中国平安",
+            "nmoney": 50.0,
+            "amoney": 50.0,
+            "ctime": 1527281052
+        }
     }
   ]

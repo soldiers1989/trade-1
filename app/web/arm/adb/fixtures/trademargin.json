@@ -6,7 +6,7 @@
             "trade_id": "1",
             "item": "初始",
             "money": 1000.0,
-            "ctime": 1527261052
+            "ctime": 1527269052
         }
     },
     {
@@ -16,7 +16,7 @@
             "trade_id": "1",
             "item": "追加",
             "money": 1000.0,
-            "ctime": 1527261052
+            "ctime": 1527268052
         }
     },
     {
@@ -26,7 +26,7 @@
             "trade_id": "1",
             "item": "追加",
             "money": 1000.0,
-            "ctime": 1527261052
+            "ctime": 1527266052
         }
     },
     {
@@ -36,7 +36,27 @@
             "trade_id": "2",
             "item": "初始",
             "money": 1000.0,
-            "ctime": 1527261052
+            "ctime": 1527263052
+        }
+    },
+    {
+        "model": "adb.trademargin",
+        "pk": 5,
+        "fields": {
+            "trade_id": "3",
+            "item": "初始",
+            "money": 1000.0,
+            "ctime": 1527281052
+        }
+    },
+    {
+        "model": "adb.trademargin",
+        "pk": 6,
+        "fields": {
+            "trade_id": "4",
+            "item": "初始",
+            "money": 1000.0,
+            "ctime": 1527221052
         }
     }
   ]

@@ -27,7 +27,7 @@ def list(request):
 
             rows = []
             for role in roles:
-                rows.append(role.dict())
+                rows.append(role.ddata())
 
             data = {
                 'total': len(rows),
@@ -53,7 +53,7 @@ def get(request):
         if form.is_valid():
             id = form.cleaned_data['id']
             item = models.Lever.objects.get(id=id)
-            return resp.success(data=item.dict())
+            return resp.success(data=item.ddata())
         else:
             return resp.failure(str(form.errors))
     except Exception as e:
@@ -88,7 +88,7 @@ def add(request):
                                  ctime=int(time.time()),
                                  mtime=int(time.time()));
             item.save()
-            return resp.success(data=item.dict())
+            return resp.success(data=item.ddata())
         else:
             return resp.failure(str(form.errors))
     except Exception as e:

@@ -148,7 +148,7 @@ def list(request):
             ## make results ##
             rows = []
             for object in objects:
-                item = object.dict()
+                item = object.ddata()
                 del item['pwd']
                 rows.append(item)
 
@@ -191,7 +191,7 @@ def whoami(request):
         # pack modules to session
         if mobjs is not None:
             for mobj in mobjs:
-                modules.append(mobj.dict())
+                modules.append(mobj.ddata())
                 mtrees.append({
                    'id': mobj.id,
                    'parent': mobj.parent_id,
@@ -231,7 +231,7 @@ def get(request):
     try:
         id = request.POST['id']
         item = models.Admin.objects.get(id=id)
-        return resp.success(data=item.dict())
+        return resp.success(data=item.ddata())
     except Exception as e:
         return resp.failure(str(e))
 
@@ -255,7 +255,7 @@ def add(request):
                                 disable=params['disable'],
                                 ctime=int(time.time()))
             item.save()
-            return resp.success(data=item.dict())
+            return resp.success(data=item.ddata())
         else:
             return resp.failure(str(form.errors))
     except Exception as e:
@@ -350,7 +350,7 @@ def getroles(request):
             rows = []
 
             for role in roles:
-                items = role.dict()
+                items = role.ddata()
 
                 if role.id in roleids:
                     items['checked'] = True
@@ -372,7 +372,7 @@ def getroles(request):
             rows = []
 
             for role in roles:
-                items = role.dict()
+                items = role.ddata()
                 items['checked'] = False
                 rows.append(items);
 

@@ -73,7 +73,7 @@ def list(request):
             ## make results ##
             rows = []
             for obj in objects:
-                row = obj.dict()
+                row = obj.ddata()
 
                 try:
                     row['userstat__tpay'], row['userstat__tdraw'], row['userstat__ttradec'], row['userstat__ttradem'] = obj.userstat.tpay, obj.userstat.tdraw, obj.userstat.ttradec, obj.userstat.ttradem
@@ -206,7 +206,7 @@ def banks(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -243,7 +243,7 @@ def trades(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -280,7 +280,7 @@ def bills(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -317,7 +317,7 @@ def coupons(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -354,7 +354,7 @@ def stocks(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -391,7 +391,7 @@ def charges(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -428,7 +428,7 @@ def draws(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {

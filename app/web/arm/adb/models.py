@@ -16,7 +16,7 @@ class Module(models.Model):
     class Meta:
         db_table = 'tb_module'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['parent'] = items['parent'].id if items['parent'] else None
         return items
@@ -33,7 +33,7 @@ class Role(models.Model):
     class Meta:
         db_table = 'tb_role'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -52,7 +52,7 @@ class Admin(models.Model):
     class Meta:
         db_table = 'tb_admin'
 
-    def dict(self):
+    def ddata(self):
         return dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
 
 
@@ -66,7 +66,7 @@ class AdminRole(models.Model):
     class Meta:
         db_table = 'tb_admin_role'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['role'] = items['role'].id if items['role'] else None
         items['admin'] = items['admin'].id if items['admin'] else None
@@ -83,7 +83,7 @@ class RoleModule(models.Model):
     class Meta:
         db_table = 'tb_role_module'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['role'] = items['role'].id if items['role'] else None
         items['module'] = items['module'].id if items['module'] else None
@@ -106,7 +106,7 @@ class TradeAccount(models.Model):
     class Meta:
         db_table = 'tb_trade_account'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -131,7 +131,7 @@ class Lever(models.Model):
     class Meta:
         db_table = 'tb_lever'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -149,7 +149,7 @@ class QuoteAgent(models.Model):
     class Meta:
         db_table = 'tb_quote_agent'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -167,7 +167,7 @@ class QuoteServer(models.Model):
     class Meta:
         db_table = 'tb_quote_server'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -189,7 +189,7 @@ class TradeAgent(models.Model):
     class Meta:
         db_table = 'tb_trade_agent'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -207,7 +207,7 @@ class TradeServer(models.Model):
     class Meta:
         db_table = 'tb_trade_server'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -226,7 +226,7 @@ class Stock(models.Model):
     class Meta:
         db_table = 'tb_stock'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -244,7 +244,7 @@ class PayGateway(models.Model):
     class Meta:
         db_table = 'tb_pay_gateway'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -263,7 +263,7 @@ class PayAccount(models.Model):
     class Meta:
         db_table = 'tb_pay_account'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -282,7 +282,7 @@ class User(models.Model):
     class Meta:
         db_table = 'tb_user'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         return items
 
@@ -318,7 +318,7 @@ class UserStat(models.Model):
     class Meta:
         db_table = 'tb_user_stat'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         del items['user']
         return items
@@ -326,7 +326,7 @@ class UserStat(models.Model):
     def properties(self):
         props = []
 
-        items = self.dict()
+        items = self.ddata()
         del items['id']
         items['ctime'] = util.time.datetms(items['ctime'])
         items['mtime'] = util.time.datetms(items['mtime'])
@@ -352,6 +352,7 @@ class UserStat(models.Model):
                      'ctime': '统计时间', 'mtime': '统计时间'}
         return key2group[key]
 
+
 # tb_user_coupon
 class UserCoupon(models.Model):
     id = models.AutoField(primary_key=True)
@@ -367,7 +368,7 @@ class UserCoupon(models.Model):
     class Meta:
         db_table = 'tb_user_coupon'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'] = items['user'].user if items['user'] else None
         return items
@@ -388,7 +389,7 @@ class UserBank(models.Model):
     class Meta:
         db_table = 'tb_user_bank'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         del items['user']
         return items
@@ -409,7 +410,7 @@ class UserBill(models.Model):
     class Meta:
         db_table = 'tb_user_bill'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'] = items['user'].user if items['user'] else None
         return items
@@ -427,7 +428,7 @@ class UserCharge(models.Model):
     class Meta:
         db_table = 'tb_user_charge'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'] = items['user'].user if items['user'] else None
         return items
@@ -449,7 +450,7 @@ class UserDraw(models.Model):
     class Meta:
         db_table = 'tb_user_draw'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'] = items['user'].user if items['user'] else None
         return items
@@ -467,7 +468,7 @@ class UserStock(models.Model):
     class Meta:
         db_table = 'tb_user_stock'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['stock'] = items['stock'].name if items['stock'] else None
         items['user'] = items['user'].user if items['user'] else None
@@ -505,7 +506,7 @@ class UserTrade(models.Model):
     class Meta:
         db_table = 'tb_user_trade'
 
-    def dict(self):
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'] = items['user'].user if items['user'] else None
         items['stock'] = items['stock'].name if items['stock'] else None
@@ -521,58 +522,88 @@ class UserTrade(models.Model):
         items['user'], items['stock'], items['coupon'], items['account'] = self.user_id, self.stock_id, self.coupon_id, self.account_id
         return items;
 
-    def rdata(self):
-        return self.dict()
-
     def pdata(self):
-        fields, items = dict([(f.name, f.verbose_name) for f in self._meta.fields]), self.rdata()
-        return items
+        # get data items & fields
+        items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
+
+        # add lever fields
+        fields['lever'] = '杠杆倍数'
+
+        # format time
+        items['ctime'] = util.time.datetms(items['ctime'])
+        items['ftime'] = util.time.datetms(items['ftime'])
+
+        # property data rows
+        rows = []
+        for k, v in items.items():
+            rows.append({'name':fields[k], 'value': v, 'group': '订单详情'})
+
+        return rows
+
 
 # tb_trade_lever
 class TradeLever(models.Model):
-    trade = models.OneToOneField('UserTrade', on_delete=models.CASCADE)
-    lever = models.IntegerField()
-    wline = models.DecimalField(max_digits=2, decimal_places=2)
-    sline = models.DecimalField(max_digits=2, decimal_places=2)
-    ofmin = models.DecimalField(max_digits=10, decimal_places=2)
-    ofrate = models.DecimalField(max_digits=6, decimal_places=6)
-    dfrate = models.DecimalField(max_digits=6, decimal_places=6)
-    psrate = models.DecimalField(max_digits=6, decimal_places=6)
-    mmin = models.DecimalField(max_digits=10, decimal_places=2)
-    mmax = models.DecimalField(max_digits=10, decimal_places=2)
+    trade = models.OneToOneField('UserTrade', on_delete=models.CASCADE, verbose_name='交易订单')
+    lever = models.IntegerField(verbose_name='杠杆倍数')
+    wline = models.DecimalField(max_digits=2, decimal_places=2, verbose_name='预警线')
+    sline = models.DecimalField(max_digits=2, decimal_places=2, verbose_name='止损线')
+    ofmin = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='保底费用')
+    ofrate = models.DecimalField(max_digits=6, decimal_places=6, verbose_name='建仓费率')
+    dfrate = models.DecimalField(max_digits=6, decimal_places=6, verbose_name='延期费率')
+    psrate = models.DecimalField(max_digits=6, decimal_places=6, verbose_name='盈利分成')
+    mmin = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='本金下限')
+    mmax = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='本金上限')
 
     class Meta:
         db_table = 'tb_trade_lever'
 
-    def dict(self):
+    def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        del items['id']
-        del items['trade']
+        items['trade'] = self.trade_id
         return items
+
+    def ddata(self):
+        return self.odata()
+
+    def pdata(self):
+        # get data items & fields
+        items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
+
+        # property data rows
+        rows = []
+        for k, v in items.items():
+            rows.append({'name':fields[k], 'value': v, 'group': '杠杆详情'})
+
+        return rows
 
 
 # tb_trade_order
 class TradeOrder(models.Model):
-    id = models.AutoField(primary_key=True)
-    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
-    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True)
-    stock = models.ForeignKey('Stock', on_delete=models.CASCADE)
-    otype = models.CharField(max_length=16)
-    ptype = models.CharField(max_length=16)
-    ocount = models.IntegerField()
-    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    otime = models.BigIntegerField()
-    ocode = models.CharField(max_length=16, null=True)
-    dcount = models.IntegerField(null=True)
-    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    dtime = models.BigIntegerField(null=True)
-    status = models.CharField(max_length=16)
-    slog = models.TextField(null=True)
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='交易订单')
+    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True, verbose_name='证券账户')
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票代码')
+    otype = models.CharField(max_length=16, verbose_name='委托类型')
+    ptype = models.CharField(max_length=16, verbose_name='报价类型')
+    ocount = models.IntegerField(verbose_name='委托数量')
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='委托价格')
+    otime = models.BigIntegerField(verbose_name='委托时间')
+    ocode = models.CharField(max_length=16, null=True, verbose_name='委托代码')
+    dcount = models.IntegerField(null=True, verbose_name='成交数量')
+    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='成交价格')
+    dtime = models.BigIntegerField(null=True, verbose_name='成交时间')
+    status = models.CharField(max_length=16, verbose_name='委托状态')
+    slog = models.TextField(null=True, verbose_name='状态变更')
 
     class Meta:
         db_table = 'tb_trade_order'
 
-    def dict(self):
+    def odata(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'], items['account'], items['stock'] = self.trade_id, self.account_id, self.stock_id
+        return items
+
+    def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['trade'] = items['trade'].id if items['trade'] else None
         items['account'] = items['account'].account if items['account'] else None
@@ -582,22 +613,58 @@ class TradeOrder(models.Model):
         items['nstatus'] = enum.all['order']['status'][items['status']] if items['status'] else None
         return items
 
+    def pdata(self):
+        # get data items & fields
+        items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
+
+        # process status
+        items['status'] = items['nstatus']
+        del items['nstatus']
+
+        # format order/deal time
+        items['otime'] = util.time.datetms(items['otime'])
+        items['dtime'] = util.time.datetms(items['dtime'])
+
+        # property data rows
+        rows = []
+        for k, v in items.items():
+            rows.append({'name':fields[k], 'value': v, 'group': items['otime']})
+
+        return rows
+
 
 # tb_trade_margin
 class TradeMargin(models.Model):
-    id = models.AutoField(primary_key=True)
-    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
-    item = models.CharField(max_length=16)
-    money = models.DecimalField(max_digits=10, decimal_places=2)
-    ctime = models.BigIntegerField()  # create time
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='交易订单')
+    item = models.CharField(max_length=16, verbose_name='类别')
+    money = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='金额')
+    ctime = models.BigIntegerField(verbose_name='时间')  # create time
 
     class Meta:
         db_table = 'tb_trade_margin'
 
-    def dict(self):
+    def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['trade'] = items['trade'].id if items['trade'] else None
+        items['trade'] = self.trade_id
         return items
+
+    def ddata(self):
+        return self.odata()
+
+    def pdata(self):
+        # get data items & fields
+        items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
+
+        # format ctime
+        items['ctime'] = util.time.datetms(items['ctime'])
+
+        # property data rows
+        rows = []
+        for k, v in items.items():
+            rows.append({'name': fields[k], 'value': v, 'group': items['ctime']})
+
+        return rows
 
 
 # tb_trade_fee
@@ -613,10 +680,27 @@ class TradeFee(models.Model):
     class Meta:
         db_table = 'tb_trade_fee'
 
-    def dict(self):
+    def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['trade'] = items['trade'].id if items['trade'] else None
+        items['trade'] = self.trade_id
         return items
+
+    def ddata(self):
+        return self.odata()
+
+    def pdata(self):
+        # get data items & fields
+        items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
+
+        # format ctime
+        items['ctime'] = util.time.datetms(items['ctime'])
+
+        # property data rows
+        rows = []
+        for k, v in items.items():
+            rows.append({'name': fields[k], 'value': v, 'group': items['ctime']})
+
+        return rows
 
 
 # tb_file

@@ -67,7 +67,7 @@ def list(request):
             ## make results ##
             rows = []
             for obj in objects:
-                rows.append(obj.dict())
+                rows.append(obj.ddata())
 
             ## response data ##
             data = {
@@ -108,7 +108,7 @@ def add(request):
                                 ctime=int(time.time()),
                                 mtime=int(time.time()))
             item.save()
-            return resp.success(data=item.dict())
+            return resp.success(data=item.ddata())
         else:
             return resp.failure(str(form.errors))
     except Exception as e:

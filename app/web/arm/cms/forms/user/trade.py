@@ -16,7 +16,7 @@ class List(forms.Form):
 
 class Get(forms.Form):
     id = forms.IntegerField()
-    _t = forms.ChoiceField(choices=(('o','o'), ('r','r'), ('p','p')), required=False)
+    _t = forms.ChoiceField(choices=(('o','o'), ('d','d'), ('p','p')), required=False)
 
 class Add(forms.Form):
     user = forms.IntegerField()

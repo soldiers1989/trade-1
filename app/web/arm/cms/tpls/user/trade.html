@@ -4,17 +4,32 @@
         <table id="trade_datagrid" style="height: 100%;"></table>
     </div>
     <div data-options="region:'center', split:true" style="width: 25%">
-        <div class="easyui-panel" title="杠杆详情" style="height:25%;">
-            <table id="trade_lever_datagrid"></table>
-        </div>
-        <div class="easyui-panel" title="费用详情" style="height:25%;">
-            <table id="trade_fee_datagrid"></table>
-        </div>
-        <div class="easyui-panel" title="保证金详情" style="height:25%;">
-            <table id="trade_margin_datagrid"></table>
-        </div>
-        <div class="easyui-panel" title="交易委托详情" style="height:25%;">
-            <table id="trade_order_datagrid"></table>
+        <div class="easyui-tabs" id="trade_detail_tabs" fit="true" border="true" plain="true">
+            <div title="订单详情">
+                <div class="easyui-panel" style="height:100%;">
+                    <table id="trade_detail_propertygrid"></table>
+                </div>
+            </div>
+            <div title="交易杠杆">
+                <div class="easyui-panel" style="height:100%;">
+                    <table id="trade_lever_propertygrid"></table>
+                </div>
+            </div>
+            <div title="订单费用">
+                <div class="easyui-panel" style="height:100%;">
+                    <table id="trade_fees_datagrid"></table>
+                </div>
+            </div>
+            <div title="保证金">
+                <div class="easyui-panel" style="height:100%;">
+                    <table id="trade_margins_datagrid"></table>
+                </div>
+            </div>
+            <div title="交易委托">
+                <div class="easyui-panel" style="height:100%;">
+                    <table id="trade_orders_propertygrid"></table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -25,6 +40,7 @@
     </span>
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="trade_search_form">
+            <input name="status" data-options="prompt:'交易状态', editable:false, required:false">
             <span>日期</span>
             <input name="sdate" class="easyui-datebox" validType="date">
             <span>-</span>
@@ -164,10 +180,6 @@
                 this.inited = true;
             },
 
-            reload: function() {
-                $('#trade_add_lever').combobox('reload');
-            },
-
             open: function() { //open dialog
                 //reset form
                 this.form.form('clear');
@@ -214,6 +226,19 @@
 
             form: $('#trade_search_form'),
 
+            init: function() { //init search form
+                 // init order status combobox
+                this.form.find('input[name="status"]:first').combobox({
+                    url: '/api/enum?c=trade&i=status',
+                    valueField: 'id',
+                    textField: 'text',
+
+                    loadFilter: function(resp){
+                        return resp.data;
+                    }
+                });
+            },
+
             do: function() { // do search
                 //check search form
                 if(!this.form.form('validate'))
@@ -221,6 +246,7 @@
 
                 //get parameters
                 params = {
+                    status: this.form.find('input[name="status"]:first').val(),
                     sdate: this.form.find('input[name="sdate"]:first').val(),
                     edate: this.form.find('input[name="edate"]:first').val(),
                     words: this.form.find('input[name="words"]:first').val()
@@ -247,7 +273,7 @@
             init: function() {
                 this.datagrid.datagrid({
                     url: this.url,
-                    method: 'post',
+                    method: 'get',
                     
                     idField: 'id',
             
@@ -296,6 +322,11 @@
                     },
 
                     onLoadSuccess: function(resp) {
+                        // clear current selected detail
+                        usertrade.detail.clear();
+
+                        //clear selections
+                        $(this).datagrid('clearSelections');
                     },
 
                     onLoadError: function() {
@@ -303,37 +334,177 @@
                     },
                     
                     onSelect(index, row) {
-                        usertrade.detail.show(row.id);
+                        // show detail
+                        usertrade.detail.show();
                     }
                 });
             },
 
             load: function(params) {
+                console.log(params);
                 this.datagrid.datagrid('load', params);
+            },
+
+            reload: function() {
+                this.datagrid.datagrid('reload');
+            },
+
+            getSelected: function() {
+                row = this.datagrid.datagrid('getSelected');
+                return row;
+            },
+
+            deleteSelected: function() {
+                row = this.datagrid.datagrid('getSelected');
+                if(!row)
+                    return;
+
+                rindex = this.datagrid.datagrid('getRowIndex', row);
+
+                this.datagrid.datagrid('deleteRow', rindex);
+            },
+
+            updateSelected: function(rdata) {
+                row = this.datagrid.datagrid('getSelected');
+                if(!row)
+                    return;
+
+                rindex = this.datagrid.datagrid('getRowIndex', row);
+                this.datagrid.datagrid('updateRow', {
+                    index: rindex,
+                    row: rdata
+                });
             }
         },
 
         //trade detail
         detail: {
-            lever: {
-                url: '/api/user/trade/lever',
-                datagrid: $('#trade_lever_datagrid'),
+            // tab component
+            tabs: {
+                tabs: $('#trade_detail_tabs'),
+
+                inited: false,
+
+                init: function() {
+                    if (this.inited)
+                        return;
+
+                    this.tabs.tabs({
+                        border: false,
+
+                        onSelect: function(title, index){
+                            row = usertrade.list.getSelected();
+                            if(!row)
+                                return;
+
+                            tradeid = row.id;
+                            switch (index) {
+                                case 0:
+                                    usertrade.detail.trade.show(tradeid);
+                                    break;
+                                case 1:
+                                    usertrade.detail.lever.show(tradeid);
+                                    break;
+                                case 2:
+                                    usertrade.detail.fees.show(tradeid);
+                                    break;
+                                case 3:
+                                    usertrade.detail.margins.show(tradeid);
+                                    break;
+                                case 4:
+                                    usertrade.detail.orders.show(tradeid);
+                                    break;
+                                default:
+                                    // statements_def
+                                    break;
+                            }
+                        }
+                    });
+
+                    this.inited = true;
+                },
+
+                clear: function() {
+                    tab = this.tabs.tabs('getSelected');
+                    if(tab) {
+                        idx = this.tabs.tabs('getTabIndex', tab);
+                        switch (idx) {
+                            case 0:
+                                usertrade.detail.trade.clear();
+                                break;
+                            case 1:
+                                usertrade.detail.lever.clear();
+                                break;
+                            case 2:
+                                usertrade.detail.fees.clear();
+                                break;
+                            case 3:
+                                usertrade.detail.margins.clear();
+                                break;
+                            case 4:
+                                usertrade.detail.orders.clear();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                },
+
+                show: function() {
+                    row = usertrade.list.getSelected();
+                    if(!row)
+                        return;
+
+                    // current trade id
+                    tradeid = row.id;
+                    // current tab index
+                    idx = 0;
+                    tab = this.tabs.tabs('getSelected');
+                    if(tab) {
+                        idx = this.tabs.tabs('getTabIndex', tab);
+                    }
+                    
+                    switch (idx) {
+                        case 0:
+                            usertrade.detail.trade.show(tradeid);
+                            break;
+                        case 1:
+                            usertrade.detail.lever.show(tradeid);
+                            break;
+                        case 2:
+                            usertrade.detail.fees.show(tradeid);
+                            break;
+                        case 3:
+                            usertrade.detail.margins.show(tradeid);
+                            break;
+                        case 4:
+                            usertrade.detail.orders.show(tradeid);
+                            break;
+                        default:
+                            break;
+                    }
+
+                }
+            },
+
+            // trade detail
+            trade: {
+                url: '/api/user/trade/get',
+                propertygrid: $('#trade_detail_propertygrid'),
 
                 inited: false,
 
                 init: function(params) {
-                    this.datagrid.datagrid({
+                    if (this.inited)
+                        return;
+
+                    this.propertygrid.propertygrid({
                         url: this.url,
-                        method: 'post',
+                        method: 'get',
                         queryParams: params,
                         
-                        idField: 'name',
-                
-                        striped: true,
-                        fitColumns: true,
-                        pagination: false,
-                        rownumbers: false,
-                        singleSelect: true,
+                        showGroup: true,
+                        showHeader: true,
 
                         columns: [[
                             {field:'name', title:'名称', width:'50%'},
@@ -348,15 +519,86 @@
                         },
 
                         onLoadError: function() {
-                            $.messager.show({title: '错误', msg: '请求交易杠杆详情失败'});
+                            $.messager.show({title: '错误', msg: '请求订单详情数据失败'});
                         }
                     });
 
                     this.inited=true;
                 },
+
+                clear: function() {
+                    if (this.inited){
+                        len = this.propertygrid.propertygrid('getRows').length;
+                        for (i=0; i<len; i++){
+                            this.propertygrid.propertygrid('deleteRow', 0);
+                        }
+                    }
+                },
                 
                 load: function(params) {
-                    this.datagrid.datagrid('load', params);
+                    this.propertygrid.propertygrid('load', params);
+                },
+
+                show: function(tradeid) {
+                    params = {id:tradeid, _t:'p'};
+                    if(!this.inited)
+                        this.init(params);
+                    else
+                        this.load(params);
+                }
+            },
+
+
+            //trade lever
+            lever: {
+                url: '/api/user/trade/lever',
+                propertygrid: $('#trade_lever_propertygrid'),
+
+                inited: false,
+
+                init: function(params) {
+                    if (this.inited)
+                        return;
+
+                    this.propertygrid.propertygrid({
+                        url: this.url,
+                        method: 'get',
+                        queryParams: params,
+                        
+                        showGroup: true,
+                        showHeader: true,
+
+                        columns: [[
+                            {field:'name', title:'名称', width:'50%'},
+                            {field:'value', title:'取值', width:'50%'}
+                        ]],
+
+                        loadFilter: function (resp) {
+                            return resp.data;
+                        },
+
+                        onLoadSuccess: function(resp) {
+                        },
+
+                        onLoadError: function() {
+                            $.messager.show({title: '错误', msg: '请求交易杠杆数据失败'});
+                        }
+                    });
+
+                    this.inited=true;
+                },
+
+                clear: function() {
+                    if (this.inited){
+                        len = this.propertygrid.propertygrid('getRows').length;
+                        for (i=0; i<len; i++){
+                            this.propertygrid.propertygrid('deleteRow', 0);
+                        }
+                    }
+                },
+                
+                load: function(params) {
+                    this.propertygrid.propertygrid('load', params);
                 },
 
                 show: function(tradeid) {
@@ -368,16 +610,17 @@
                 }
             },
 
+            //trade fees
             fees: {
                 url: '/api/user/trade/fees',
-                datagrid: $('#trade_fee_datagrid'),
+                datagrid: $('#trade_fees_datagrid'),
 
                 inited: false,
 
                 init: function(params) {
                     this.datagrid.datagrid({
                         url: this.url,
-                        method: 'post',
+                        method: 'get',
                         queryParams: params,
                         
                         idField: 'id',
@@ -389,9 +632,9 @@
                         singleSelect: true,
 
                         columns: [[
-                            {field:'item', title:'类目', width:'20%'},
-                            {field:'nmoney', title:'应收', width:'20%'},
-                            {field:'amoney', title:'实收', width:'20%'},
+                            {field:'item', title:'类目', width:'16%'},
+                            {field:'nmoney', title:'应收', width:'22%'},
+                            {field:'amoney', title:'实收', width:'22%'},
                             {field:'ctime', title:'时间', formatter: cube.format.datetime}
                         ]],
 
@@ -409,6 +652,15 @@
 
                     this.inited=true;
                 },
+
+                clear: function() {
+                    if (this.inited){
+                        len = this.datagrid.datagrid('getRows').length;
+                        for (i=0; i<len; i++){
+                            this.datagrid.datagrid('deleteRow', 0);
+                        }
+                    }
+                },
                 
                 load: function(params) {
                     this.datagrid.datagrid('load', params);
@@ -423,16 +675,17 @@
                 }
             },
 
+            // trade margins
             margins: {
                 url: '/api/user/trade/margins',
-                datagrid: $('#trade_margin_datagrid'),
+                datagrid: $('#trade_margins_datagrid'),
                 
                 inited: false,
 
                 init: function(params) {
                    this.datagrid.datagrid({
                         url: this.url,
-                        method: 'post',
+                        method: 'get',
                         queryParams: params,
                         
                         idField: 'id',
@@ -464,6 +717,15 @@
                    this.inited = true;
                 },
 
+                clear: function() {
+                    if (this.inited){
+                        len = this.datagrid.datagrid('getRows').length;
+                        for (i=0; i<len; i++){
+                            this.datagrid.datagrid('deleteRow', 0);
+                        }
+                    }
+                },
+
                 load: function(params) {
                     this.datagrid.datagrid('load', params);
                 },
@@ -477,39 +739,28 @@
                 }
             },
 
+            // trade orders
             orders: {
                 url: '/api/user/trade/orders',
-                datagrid: $('#trade_order_datagrid'),
+                propertygrid: $('#trade_orders_propertygrid'),
                 
                 inited: false,
                 
-                init: function(params) {
-                   this.datagrid.datagrid({
+                 init: function(params) {
+                    if (this.inited)
+                        return;
+
+                    this.propertygrid.propertygrid({
                         url: this.url,
-                        method: 'post',
+                        method: 'get',
                         queryParams: params,
                         
-                        idField: 'id',
-                
-                        striped: true,
-                        fitColumns: true,
-                        pagination: false,
-                        rownumbers: true,
-                        singleSelect: true,
+                        showGroup: true,
+                        showHeader: true,
 
                         columns: [[
-                            {field:'status', title:'处理状态'},
-                            {field:'ostatus', title:'委托状态'},
-                            {field:'account', title:'股票账户'},
-                            {field:'otype', title:'委托类型'},
-                            {field:'ptype', title:'报价类型'},
-                            {field:'ocount', title:'委托数量'},
-                            {field:'oprice', title:'委托价格'},
-                            {field:'ocode', title:'委托编号'},
-                            {field:'otime', title:'委托时间'},
-                            {field:'dcount', title:'成交数量'},
-                            {field:'dprice', title:'成交价格'},
-                            {field:'dtime', title:'成交时间'},
+                            {field:'name', title:'名称', width:'50%'},
+                            {field:'value', title:'取值', width:'50%'}
                         ]],
 
                         loadFilter: function (resp) {
@@ -520,15 +771,24 @@
                         },
 
                         onLoadError: function() {
-                            $.messager.show({title: '错误', msg: '请求交易委托详情失败'});
+                            $.messager.show({title: '错误', msg: '请求交易委托数据失败'});
                         }
                     });
 
-                   this.inited = true;
+                    this.inited=true;
+                },
+
+                clear: function() {
+                    if (this.inited){
+                        len = this.propertygrid.propertygrid('getRows').length;
+                        for (i=0; i<len; i++){
+                            this.propertygrid.propertygrid('deleteRow', 0);
+                        }
+                    }
                 },
 
                 load: function(params) {
-                    this.datagrid.datagrid('load', params);
+                    this.propertygrid.propertygrid('load', params);
                 },
 
                 show: function(tradeid) {
@@ -540,18 +800,30 @@
                 }
             },
 
-            show: function(tradeid) {
-                this.lever.show(tradeid);
-                this.fees.show(tradeid);
-                this.margins.show(tradeid);
-                this.orders.show(tradeid);
-            }
+            //init detail
+            init: function() {
+                this.tabs.init();
+            },
+
+            //show detail
+            show: function() {
+                this.tabs.show();
+            },
+
+            //clear detail
+            clear:function() {
+                this.tabs.clear();
+            },
         },
 
         //init user trade
         init: function() {
-            // init user trade list
+            // init search
+            this.search.init();
+            // init list
             this.list.init();
+            // init detail
+            this.detail.init();
         }
     };
 

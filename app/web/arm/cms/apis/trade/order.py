@@ -71,7 +71,7 @@ def list(request):
             ## make results ##
             rows = []
             for obj in objects:
-                obj = obj.dict()
+                obj = obj.ddata()
                 rows.append(obj)
 
             ## response data ##
@@ -112,7 +112,7 @@ def add(request):
                                 otime=params['otime'].timestamp(),
                                 status=params['status'])
         item.save()
-        return resp.success(data=item.dict())
+        return resp.success(data=item.ddata())
     else:
         return resp.failure(str(form.errors))
 
@@ -151,7 +151,7 @@ def update(request):
         order.ocode, order.dcount, order.dprice, order.dtime, order.status, order.slog = ocode, dcount, dprice, dtime.timestamp(), status, json.dumps(logs)
         order.save()
 
-        return resp.success(data=order.dict())
+        return resp.success(data=order.ddata())
     else:
         return resp.failure(str(form.errors))
 
