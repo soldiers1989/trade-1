@@ -233,6 +233,8 @@
                     valueField: 'id',
                     textField: 'text',
 
+                    multiple: true,
+
                     loadFilter: function(resp){
                         return resp.data;
                     }
@@ -243,10 +245,19 @@
                 //check search form
                 if(!this.form.form('validate'))
                     return;
+                
+                // status list
+                statuslst = []
+
+                // status input
+                statuss = this.form.find('input[name="status"]');
+                for (i=0; i<statuss.length; i++){
+                    statuslst.push($(statuss[i]).val());
+                }
 
                 //get parameters
                 params = {
-                    status: this.form.find('input[name="status"]:first').val(),
+                    status: statuslst.join(','),
                     sdate: this.form.find('input[name="sdate"]:first').val(),
                     edate: this.form.find('input[name="edate"]:first').val(),
                     words: this.form.find('input[name="words"]:first').val()
@@ -295,8 +306,8 @@
                         {field:'account', title:'账户', sortable:true},
                         {field:'ptype', title:'报价'},
                         {field:'status', title:'状态'},
-                        {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.date},
-                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.date},
+                        {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.datetime},
+                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime},
                     ]],
                     columns: [[
                         {field:'lever', title:'杠杆', sortable:true},

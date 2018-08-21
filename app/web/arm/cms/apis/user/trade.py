@@ -24,24 +24,30 @@ def list(request):
             status, sdate, edate = params['status'], params['sdate'], params['edate']
             ## filters ##
             filters = {}
-            if status:
-                filters['status'] = status
             if sdate:
                 filters['ctime__gte'] = util.time.utime(sdate)
             if edate:
                 filters['ctime__lt'] = util.time.utime(edate+datetime.timedelta(days=1))
 
+            qs = []
+            ## status options ##
+            if status:
+                qq = Q()
+                for q in [(Q(status=s)) for s in status.split(',')]:
+                    qq = qq | q
+                qs.append(qq)
+
+
             ## search words ##
-            q = Q()
             words = params['words']
             if words:
                 if len(filters) == 0 and len(words) < 10 and words.isdigit():
                     filters['id'] = int(words) # id, not phone number
                 else :
-                    q = Q(user__user=words) | Q(stock__id=words) | Q(stock__name__contains=words)
+                    qs.append(Q(user__user=words) | Q(stock__id=words) | Q(stock__name__contains=words))
 
             ## get total count ##
-            total = models.UserTrade.objects.filter(q, **filters).count()
+            total = models.UserTrade.objects.filter(*qs, **filters).count()
 
 
             # order by#
@@ -62,14 +68,14 @@ def list(request):
             objects = []
             if orderby:
                 if start is not None and end is not None:
-                    objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby)[start:end]
+                    objects = models.UserTrade.objects.filter(*qs, **filters).order_by(orderby)[start:end]
                 else:
-                    objects = models.UserTrade.objects.filter(q, **filters).order_by(orderby)
+                    objects = models.UserTrade.objects.filter(*qs, **filters).order_by(orderby)
             else:
                 if start is not None and end is not None:
-                    objects = models.UserTrade.objects.filter(q, **filters)[start:end]
+                    objects = models.UserTrade.objects.filter(*qs, **filters)[start:end]
                 else:
-                    objects = models.UserTrade.objects.filter(q, **filters)
+                    objects = models.UserTrade.objects.filter(*qs, **filters)
 
             ## make results ##
             rows = []
