@@ -40,12 +40,6 @@
             </div>
         </div>
         <div id="tab_context_menu" class="easyui-menu">
-            <div iconCls="icon-reload" onclick="index.page.main.refresh();">刷新页面</div>
-            <div iconCls="icon-cancel" onclick="index.page.main.close('current')">关闭当前</div>
-            <div iconCls="" onclick="index.page.main.close('other')">关闭其它</div>
-            <div iconCls="" onclick="index.page.main.close('all')">关闭所有</div>
-            <div iconCls="" onclick="index.page.main.close('right')">关闭右侧</div>
-            <div iconCls="" onclick="index.page.main.close('left')">关闭左侧</div>
         </div>
     </div>
 
@@ -220,6 +214,20 @@
                     tabs: $('#index_main_tabs'),
 
                     show: function() {
+                        // init tabs menu
+                        menus = [
+                            {text: '刷新页面', iconCls: 'icon-reload', onclick: function() {index.page.main.refresh();}},
+                            {text: '关闭当前', iconCls: 'icon-cancel', onclick: function() {index.page.main.close('current');}},
+                            {text: '关闭其它', iconCls: '', onclick: function() {index.page.main.close('other');}},
+                            {text: '关闭所有', iconCls: '', onclick: function() {index.page.main.close('all');}},
+                            {text: '关闭右侧', iconCls: '', onclick: function() {index.page.main.close('right');}},
+                            {text: '关闭左侧', iconCls: '', onclick: function() {index.page.main.close('left');}}
+                        ];
+                        for (i=0; i<menus.length; i++){
+                            $('#tab_context_menu').menu('appendItem', menus[i]);
+                        }
+
+
                         // init tabs
                         this.tabs.tabs({
                             plain: true,
@@ -256,8 +264,6 @@
                         var total = this.tabs.tabs('tabs').length;
                         // current selected tab
                         var index = this.tabs.tabs('getTabIndex', this.tabs.tabs('getSelected'));
-
-                        alert(total+"|"+index);
 
                         switch (option) {
                             case 'current':
