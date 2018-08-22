@@ -17,7 +17,7 @@
         <div style="padding: 5px 10px;background-color: #f9f9f9;">
             <span id="index_user_welcome"></span>
             <span style="float: right;">
-                    <span><a href="#" onclick="index.user.changepwd.open()">修改密码</a></span>
+                    <span><a href="#" onclick="index.cpwd.open()">修改密码</a></span>
                     <span><a href="#" onclick="index.user.logout()">退出</a></span>
             </span>
         </div>
@@ -34,10 +34,18 @@
     </div>
 
     <div data-options="region:'center'">
-        <div class="easyui-tabs" id="index_main_tabs" fit="true" border="true" plain="true">
+        <div class="easyui-tabs" id="index_main_tabs">
             <div title="欢迎">
                 <h1 style="text-align: center;">欢迎使用运营管理系统!</h1>
             </div>
+        </div>
+        <div id="tab_context_menu" class="easyui-menu">
+            <div iconCls="icon-reload" onclick="index.page.main.refresh();">刷新页面</div>
+            <div iconCls="icon-cancel" onclick="index.page.main.close('current')">关闭当前</div>
+            <div iconCls="" onclick="index.page.main.close('other')">关闭其它</div>
+            <div iconCls="" onclick="index.page.main.close('all')">关闭所有</div>
+            <div iconCls="" onclick="index.page.main.close('right')">关闭右侧</div>
+            <div iconCls="" onclick="index.page.main.close('left')">关闭左侧</div>
         </div>
     </div>
 
@@ -55,26 +63,23 @@
 
     <script type="text/javascript">
         var index ={
-            //user
+            //current login user object
             user: {
                 url: '/api/admin/whoami',
                 admin: null,
                 modules: null,
 
-                //init login user
-                init: function() {
-                    //init dialog
-                    this.changepwd.init();
-
+                //user login
+                login: function() {
                     //get login user information
                     $.post(this.url, function(resp, status){
                         if(status=='success'){
-                            //set user data
+                            // set user data
                             index.user.admin = resp.data.admin;
                             index.user.modules = resp.data.modules;
 
-                            //init index page
-                            index.show();
+                            // init index page
+                            index.page.show();
                         } else {
                             window.location('/cms/login/');
                         }
@@ -96,157 +101,220 @@
                         'json'
                     );
                 },
-
-                //change password
-                changepwd: {
-                    url: '/api/admin/pwd/change',
-
-                    dialog: $('#index_dialog_changepwd'),
-                    form: $('#index_form_changepwd'),
-                    hint: $('#index_changepwd_hint'),
-
-                    inited: false,
-
-                    init: function() {
-                        //init change password dialog
-                        this.dialog.dialog({
-                            title: '修改密码',
-                            width: 300,
-                            height:200,
-                            closed: true,
-                            modal: true,
-                            buttons: [
-                            {
-                                text: '保存',
-                                iconCls: 'icon-ok',
-                                handler: function(){
-                                    index.user.changepwd.form.submit();
-                                }
-                            },{
-                                text: '取消',
-                                iconCls: 'icon-cancel',
-                                handler: function(){
-                                    index.user.changepwd.close();
-                                }
-                            }
-                            ]
-                        });
-
-                        //init change passowrd form
-                        this.form.form({
-                            url: index.user.changepwd.url,
-                            type: 'post',
-                            novalidate: true,
-                            onSubmit: function() {
-                                return index.user.changepwd.form.form('enableValidation').form('validate');
-                            },
-                            success: function (data) {
-                                var resp = JSON.parse(data);
-                                if (resp.status) {
-                                    // close change passowrd dialog
-                                    index.user.changepwd.close();
-
-                                    // relogin after change passowrd
-                                    window.location.assign('/cms/login/');
-                                } else {
-                                    index.user.changepwd.hint.html(resp.msg);
-                                }
-                            }
-                        });
-
-                        //set inited flag
-                        this.inited = true;
-
-                    },
-
-                    open: function() {
-                        if(!this.inited)
-                            this.init();
-
-                        //reset form
-                        this.form.form('disableValidation').form('reset');
-
-                        //reset hint
-                        this.hint.html('');
-                        
-                        //open dialog
-                        this.dialog.dialog('open');
-                    },
-
-                    close: function() {
-                        //close dialog
-                        this.dialog.dialog('close');
-                    }
-                }
             },
 
-            //top user information
-            top: {
-                welcome: $('#index_user_welcome'),
+            //user change password object
+            cpwd: {
+                url: '/api/admin/pwd/change',
+
+                dialog: $('#index_dialog_changepwd'),
+                form: $('#index_form_changepwd'),
+                hint: $('#index_changepwd_hint'),
+
+                inited: false,
 
                 init: function() {
-                    this.welcome.text(index.user.admin.user+"，欢迎你！");
-                }
-            },
+                    //init change password dialog
+                    this.dialog.dialog({
+                        title: '修改密码',
+                        width: 300,
+                        height:200,
+                        closed: true,
+                        modal: true,
+                        buttons: [
+                        {
+                            text: '保存',
+                            iconCls: 'icon-ok',
+                            handler: function(){
+                                index.cpwd.form.submit();
+                            }
+                        },{
+                            text: '取消',
+                            iconCls: 'icon-cancel',
+                            handler: function(){
+                                index.cpwd.close();
+                            }
+                        }
+                        ]
+                    });
 
-            //left nav module tree
-            nav: {
-                tree: $('#index_nav_tree'),
+                    //init change passowrd form
+                    this.form.form({
+                        url: this.url,
+                        type: 'post',
+                        novalidate: true,
+                        onSubmit: function() {
+                            return index.cpwd.form.form('enableValidation').form('validate');
+                        },
+                        success: function (data) {
+                            var resp = JSON.parse(data);
+                            if (resp.status) {
+                                // close change passowrd dialog
+                                index.cpwd.close();
 
-                init: function() {
-                    this.tree.tree({
-                        data: index.user.modules,
-
-                        onClick: function(node) {
-                            title = node.text;
-                            url = node.attributes.url;
-                            if(url)
-                                index.main.open(title, url);
+                                // relogin after change passowrd
+                                window.location.assign('/cms/login/');
+                            } else {
+                                index.cpwd.hint.html(resp.msg);
+                            }
                         }
                     });
+
+                    //set inited flag
+                    this.inited = true;
+
                 },
 
+                open: function() {
+                    if(!this.inited)
+                        this.init();
+
+                    //reset form
+                    this.form.form('disableValidation').form('reset');
+
+                    //reset hint
+                    this.hint.html('');
+                    
+                    //open dialog
+                    this.dialog.dialog('open');
+                },
+
+                close: function() {
+                    //close dialog
+                    this.dialog.dialog('close');
+                }
             },
+ 
 
-            //center main container tabs
-            main: {
-                tabs: $('#index_main_tabs'),
+            page: {
+                //top user information
+                top: {
+                    welcome: $('#index_user_welcome'),
 
-                init: function() {
-
+                    show: function() {
+                        this.welcome.text(index.user.admin.user+"，欢迎你！");
+                    }
                 },
 
-                open: function(title, url) {
-                    if(this.tabs.tabs('exists', title)){
-                        this.tabs.tabs('select', title);
-                    } else {
-                        this.tabs.tabs('add', {
-                            title: title,
-                            href: url,
-                            closable: true,
-                            extractor:function(data){
-                                return data;
+                //left nav module tree
+                nav: {
+                    tree: $('#index_nav_tree'),
+
+                    show: function() {
+                        this.tree.tree({
+                            data: index.user.modules,
+
+                            onClick: function(node) {
+                                title = node.text;
+                                url = node.attributes.url;
+                                if(url)
+                                    index.page.main.open(title, url);
                             }
                         });
+                    },
+
+                },
+
+                //center main container tabs
+                main: {
+                    tabs: $('#index_main_tabs'),
+
+                    show: function() {
+                        // init tabs
+                        this.tabs.tabs({
+                            plain: true,
+                            fit: true,
+                            border: true,
+
+                            onContextMenu: function(e, title, index) {
+                                // prevent other event
+                                e.preventDefault();
+
+                                // show menu
+                                $('#tab_context_menu').menu('show', {left: e.pageX, top: e.pageY});
+                            }
+                        });
+                    },
+
+                    open: function(title, url) {
+                        if(this.tabs.tabs('exists', title)){
+                            this.tabs.tabs('select', title);
+                        } else {
+                            this.tabs.tabs('add', {
+                                title: title,
+                                href: url,
+                                closable: true,
+                                extractor:function(data){
+                                    return data;
+                                }
+                            });
+                        }
+                    },
+
+                    close: function(option) {
+                        // total tabs
+                        var total = this.tabs.tabs('tabs').length;
+                        // current selected tab
+                        var index = this.tabs.tabs('getTabIndex', this.tabs.tabs('getSelected'));
+
+                        alert(total+"|"+index);
+
+                        switch (option) {
+                            case 'current':
+                                this.tabs.tabs('close',index);
+                                break;
+                            case 'all':
+                                for (i=1; i<total; i++)
+                                    this.tabs.tabs('close',1);
+                                break;
+                            case 'other':
+                                for (i=total-1; i>index; i--)
+                                    this.tabs.tabs('close', i);
+                                for (i=1; i<index; i++)
+                                    this.tabs.tabs('close', 1);
+                                break;
+                            case 'left':
+                                for (i=1; i<index; i++)
+                                    this.tabs.tabs('close', 1);
+                                break;
+                            case 'right':
+                                for (i=total-1; i>index; i--)
+                                    this.tabs.tabs('close', i);
+                                break;
+                            default:
+                                break;
+                        }
+                    },
+
+                    refresh: function() {
+                        // get tab
+                        var tab = this.tabs.tabs('getSelected');
+
+                        // refresh tab
+                        tab.panel('refresh');
                     }
+                },
+
+                //show index page
+                show: function() {
+                    this.top.show();
+                    this.nav.show();
+                    this.main.show();
                 }
             },
 
             //init index user
             init: function() {
-                this.user.init();
+                // init cpwd object
+                this.cpwd.init();
+                
+                // user login
+                this.user.login();
             },
-
-            //show index page
-            show: function() {
-                this.top.init();
-                this.nav.init();
-                this.main.init();
-            }
         };
 
       
-        $().ready(function (){
+        $(function (){
             //init index
             index.init();
         });

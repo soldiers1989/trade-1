@@ -38,15 +38,24 @@
     <span>
         <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="usertrade.add.open()">新建</a>
     </span>
+    <span>
+        <a href="javascript:void(0)" id="trade_edit_menubutton" class="easyui-menubutton" data-options="menu:'#trade_edit_menu', disabled:true,iconCls:'icon-edit'">编辑</a>
+        <div id="trade_edit_menu" style="width:150px;">
+            <div iconCls="icon-edit" onclick="usertrade.edit.modify.open()">修改</div>
+            <div iconCls="icon-edit" onclick="usertrade.edit.modify.open()">买入</div>
+            <div iconCls="icon-edit" onclick="usertrade.edit.modify.open()">卖出</div>
+            <div iconCls="icon-edit" onclick="usertrade.edit.modify.open()">平仓</div>
+        </div>
+    </span>
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="trade_search_form">
-            <input name="status" data-options="prompt:'交易状态', editable:false, required:false">
+            <input name="status" data-options="prompt:'交易状态', editable:false, required:false" style="width: 16%">
             <span>日期</span>
-            <input name="sdate" class="easyui-datebox" validType="date">
+            <input name="sdate" class="easyui-datebox" validType="date" style="width: 18%">
             <span>-</span>
-            <input name="edate" class="easyui-datebox" validType="date">
+            <input name="edate" class="easyui-datebox" validType="date" style="width: 18%">
 
-            <input name="words" class="easyui-textbox">
+            <input name="words" class="easyui-textbox" style="width: 20%">
 
             <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="usertrade.search.do()">查询</a>
             <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="usertrade.search.reset()">重置</a>
