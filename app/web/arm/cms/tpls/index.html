@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/color.css">
     <link rel="stylesheet" type="text/css" href="/assets/jquery-easyui/1.5.5.2/themes/icon.css">
     <script type="text/javascript" src="/assets/jquery/1.11.3/jquery.min.js"></script>
+    <script type="text/javascript" src="/assets/jquery-cookie/1.4.1/jquery.cookie.js"></script>
     <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/jquery.easyui.min.js"></script>
     <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/datagrid-dnd.js"></script>
     <script type="text/javascript" src="/assets/jquery-easyui/1.5.5.2/locale/easyui-lang-zh_CN.js"></script>
@@ -199,10 +200,11 @@
                             data: index.user.modules,
 
                             onClick: function(node) {
+                                id = node.id;
                                 title = node.text;
                                 url = node.attributes.url;
                                 if(url)
-                                    index.page.main.open(title, url);
+                                    index.page.main.open(id, title, url);
                             }
                         });
                     },
@@ -234,6 +236,16 @@
                             fit: true,
                             border: true,
 
+                            onSelect: function(title, index) {
+                                var tab = $(this).tabs('getTab', index);
+                                console.log('select: ');
+                            },
+
+                            onClose: function(title, index) {
+                                var tab = $(this).tabs('getTab', index);
+                                console.log('close: ' + tab.id);
+                            },
+
                             onContextMenu: function(e, title, index) {
                                 // prevent other event
                                 e.preventDefault();
@@ -244,11 +256,13 @@
                         });
                     },
 
-                    open: function(title, url) {
+                    open: function(id, title, url) {
+                        console.log("open: "+id);
                         if(this.tabs.tabs('exists', title)){
                             this.tabs.tabs('select', title);
                         } else {
                             this.tabs.tabs('add', {
+                                id: id,
                                 title: title,
                                 href: url,
                                 closable: true,
@@ -260,10 +274,11 @@
                     },
 
                     close: function(option) {
+                        var tab = this.tabs.tabs('getSelected');
                         // total tabs
                         var total = this.tabs.tabs('tabs').length;
                         // current selected tab
-                        var index = this.tabs.tabs('getTabIndex', this.tabs.tabs('getSelected'));
+                        var index = this.tabs.tabs('getTabIndex', tab);
 
                         switch (option) {
                             case 'current':
@@ -298,6 +313,10 @@
 
                         // refresh tab
                         tab.panel('refresh');
+                    },
+
+                    save: function(title, url) {
+
                     }
                 },
 
