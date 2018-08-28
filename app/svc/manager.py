@@ -7,7 +7,7 @@ import argparse
 actions = ['start', 'stop']
 
 # registered apps
-apps = ['aim', 'atm', 'api', 'trade', 'quote']
+apps = ['aam', 'aim', 'atm', 'api', 'trade', 'quote']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -20,7 +20,10 @@ if __name__ == "__main__":
     action, app, port = args.action, args.app, args.port
 
     if action == 'start':
-        if app == 'aim':
+        if app == 'aam':
+            import app.aam;
+            app.aam.service.start(port);
+        elif app == 'aim':
             import app.aim
             app.aim.service.start(port)
         elif app == 'atm':

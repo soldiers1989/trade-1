@@ -4,7 +4,7 @@
 import tornado.web
 import tornado.ioloop
 
-from app.aim import config, urls, log
+from app.aam import config, urls, log
 
 # application settings
 settings = {
@@ -14,10 +14,10 @@ settings = {
 }
 
 
-# start aim service
+# start aam service
 def start(port):
     # log start message
-    log.info('start aim service on port %d' % port)
+    log.info('start aam service on port %d' % port)
 
     # start web application
     app = tornado.web.Application(urls.handlers, **settings)

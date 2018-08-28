@@ -1,7 +1,7 @@
 """
-    log for atm
+    log for aam
 """
-from app.atm import redis
+from app.aam import redis
 
 
 class _RedisLog:
@@ -44,11 +44,11 @@ class _RedisLog:
         return records
 
 # info log object
-_infolog = _RedisLog('log_atm_info', redis.log)
+_infolog = _RedisLog('log_aam_info', redis.log)
 
 
 # error log object
-_errorlog = _RedisLog('log_atm_error', redis.log)
+_errorlog = _RedisLog('log_aam_error', redis.log)
 
 
 def info(msg):

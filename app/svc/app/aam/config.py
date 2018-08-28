@@ -1,5 +1,5 @@
 """
-    atm app config
+    aam app config
 """
 # running mode, dev/test/online
 MODE = "dev"
@@ -41,7 +41,7 @@ HEADERS = [
 
 ## redis configure ##
 REDISS = {
-    'atm':{
+    'aam':{
         'dev': {
             'host': '127.0.0.1',
             'port': 6379,
@@ -72,7 +72,7 @@ REDISS = {
 ## database configure ##
 # all databases
 DATABASES = {
-    'atm': {
+    'aam': {
         'dev': {
             'host': '127.0.0.1',
             'user': 'root',

@@ -1,42 +1,42 @@
 
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
     <div data-options="region:'west', split:true" style="width: 75%;">
-        <table id="trade_datagrid" style="height: 100%;"></table>
+        <table id="datagrid_trade" style="height: 100%;"></table>
     </div>
     <div data-options="region:'center', split:true" style="width: 25%">
-        <div id="trade_detail_empty"><p style="text-align: center;">没有选择交易记录!</p></div>
-        <div class="easyui-tabs" id="trade_detail_tabs" fit="true" border="true" plain="true" style="width: 100%">
+        <div id="empty_trade_detail"><p style="text-align: center;">没有选择交易记录!</p></div>
+        <div class="easyui-tabs" id="tabs_trade_detail" fit="true" border="true" plain="true" style="width: 100%">
             <div title="订单详情">
                 <div class="easyui-panel" style="height:100%;">
-                    <div>
-                        <a id="btn_trade_buy" href="#">买入</a>
-                        <a id="btn_trade_sell" href="#">卖出</a>
-                        <a id="btn_trade_close" href="#">平仓</a>
-                        <a id="btn_trade_cancel" href="#">取消</a>
+                    <div style="margin: 6px">
+                        <a href="#" id="btn_trade_buy" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('buy')">买入</a>
+                        <a href="#" id="btn_trade_sell" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('sell')">卖出</a>
+                        <a href="#" id="btn_trade_close" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('close')">平仓</a>
+                        <a href="#" id="btn_trade_cancel" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('cancel')">取消</a>
                     </div>
                     <div>
-                        <table id="trade_detail_propertygrid"></table>
+                        <table id="propertygrid_trade_detail"></table>
                     </div>
                 </div>
             </div>
             <div title="交易杠杆">
                 <div class="easyui-panel" style="height:100%;">
-                    <table id="trade_lever_propertygrid"></table>
+                    <table id="propertygrid_trade_lever"></table>
                 </div>
             </div>
             <div title="订单费用">
                 <div class="easyui-panel" style="height:100%;">
-                    <table id="trade_fees_datagrid"></table>
+                    <table id="datagrid_trade_fees"></table>
                 </div>
             </div>
             <div title="保证金">
                 <div class="easyui-panel" style="height:100%;">
-                    <table id="trade_margins_datagrid"></table>
+                    <table id="datagrid_trade_margins"></table>
                 </div>
             </div>
             <div title="交易委托">
                 <div class="easyui-panel" style="height:100%;">
-                    <table id="trade_orders_propertygrid"></table>
+                    <table id="propertygrid_trade_orders"></table>
                 </div>
             </div>
         </div>
@@ -297,7 +297,7 @@
         //trade list
         list: {
             url: '/api/user/trade/list',
-            datagrid: $('#trade_datagrid'),
+            datagrid: $('#datagrid_trade'),
 
             init: function() {
                 this.datagrid.datagrid({
@@ -322,8 +322,8 @@
                         {field:'user', title:'用户'},
                         {field:'stock', title:'股票'},
                         {field:'account', title:'账户', sortable:true},
-                        {field:'ptype', title:'报价'},
-                        {field:'status', title:'状态'},
+                        {field:'_ptype', title:'报价'},
+                        {field:'_status', title:'状态'},
                         {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.datetime},
                         {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime},
                     ]],
@@ -351,10 +351,7 @@
                     },
 
                     onLoadSuccess: function(resp) {
-                        // clear current selected detail
-                        $('#trade_detail_tabs').hide();
-                        $('#trade_detail_empty').show();
-                        //usertrade.detail.clear();
+                        usertrade.detail.clear();
 
                         //clear selections
                         $(this).datagrid('clearSelections');
@@ -365,8 +362,6 @@
                     },
                     
                     onSelect(index, row) {
-                        $('#trade_detail_tabs').show();
-                        $('#trade_detail_empty').hide();
                         // show detail
                         usertrade.detail.show();
                     }
@@ -374,7 +369,6 @@
             },
 
             load: function(params) {
-                console.log(params);
                 this.datagrid.datagrid('load', params);
             },
 
@@ -414,7 +408,7 @@
         detail: {
             // tab component
             tabs: {
-                tabs: $('#trade_detail_tabs'),
+                tabs: $('#tabs_trade_detail'),
 
                 inited: false,
 
@@ -430,56 +424,11 @@
                             if(!rdata)
                                 return;
 
-                            switch (index) {
-                                case 0:
-                                    usertrade.detail.trade.show(rdata);
-                                    break;
-                                case 1:
-                                    usertrade.detail.lever.show(rdata);
-                                    break;
-                                case 2:
-                                    usertrade.detail.fees.show(rdata);
-                                    break;
-                                case 3:
-                                    usertrade.detail.margins.show(rdata);
-                                    break;
-                                case 4:
-                                    usertrade.detail.orders.show(rdata);
-                                    break;
-                                default:
-                                    // statements_def
-                                    break;
-                            }
+                            usertrade.detail.tabs.selecttab(index, rdata);
                         }
                     });
 
                     this.inited = true;
-                },
-
-                clear: function() {
-                    tab = this.tabs.tabs('getSelected');
-                    if(tab) {
-                        idx = this.tabs.tabs('getTabIndex', tab);
-                        switch (idx) {
-                            case 0:
-                                usertrade.detail.trade.clear();
-                                break;
-                            case 1:
-                                usertrade.detail.lever.clear();
-                                break;
-                            case 2:
-                                usertrade.detail.fees.clear();
-                                break;
-                            case 3:
-                                usertrade.detail.margins.clear();
-                                break;
-                            case 4:
-                                usertrade.detail.orders.clear();
-                                break;
-                            default:
-                                break;
-                        }
-                    }
                 },
 
                 show: function() {
@@ -487,13 +436,30 @@
                     if(!rdata)
                         return;
 
+                    $('#tabs_trade_detail').show();
+                    $('#empty_trade_detail').hide();
+
                     // current tab index
                     idx = 0;
                     tab = this.tabs.tabs('getSelected');
                     if(tab) {
                         idx = this.tabs.tabs('getTabIndex', tab);
                     }
-                    
+
+                    // change tab
+                    this.selecttab(idx, rdata);
+
+                    usertrade.detail.trade.tradeid = rdata.id;
+                },
+
+                clear: function() {
+                    $('#tabs_trade_detail').hide();
+                    $('#empty_trade_detail').show();
+
+                    usertrade.detail.trade.tradeid = null;
+                },
+
+                selecttab: function(idx, rdata) {
                     switch (idx) {
                         case 0:
                             usertrade.detail.trade.show(rdata);
@@ -513,23 +479,33 @@
                         default:
                             break;
                     }
-
                 }
             },
 
             // trade detail
             trade: {
                 url: '/api/user/trade/get',
-                propertygrid: $('#trade_detail_propertygrid'),
+                propertygrid: $('#propertygrid_trade_detail'),
 
                 inited: false,
+                tradeid: null,
+  
+                show: function(rdata) {
+                    if(!this.inited)
+                        this.init(rdata);
+                    else
+                        this.load(rdata);
+
+                    this.resetActions(rdata);
+                },
+
+                load: function(rdata) {
+                    this.propertygrid.propertygrid('load', {id: rdata.id, _t: 'p'});
+                },
 
                 init: function(rdata) {
                     if (this.inited)
                         return;
-
-                    // init operation button
-                    this.initOperateBtns(rdata);
 
                     //init property grid
                     this.initPropertyGrid(rdata);
@@ -538,45 +514,7 @@
                 },
 
                 clear: function() {
-                    this.clearOperateBtns();
-
                     this.clearPropertyGrid();
-                },
-
-
-                initOperateBtns: function(rdata) {
-                    $('#btn_trade_buy').linkbutton({
-                        text: '买入',
-                        onClick: function() {
-                            alert('buy');
-                        }
-                    });
-                    $('#btn_trade_sell').linkbutton({
-                        text: '卖出',
-                        onClick: function() {
-                            alert('sell');
-                        }
-                    });
-                    $('#btn_trade_close').linkbutton({
-                        text: '平仓',
-                        onClick: function() {
-                            alert('close');
-                        }
-                    });
-                    $('#btn_trade_cancel').linkbutton({
-                        text: '取消',
-                        onClick: function() {
-                            alert('cancel');
-                        }
-                    });
-                },
-
-                resetOperateBtns: function() {
-
-                },
-
-                clearOperateBtns: function() {
-                    $('#abcd').hide();
                 },
 
                 initPropertyGrid: function(rdata) {
@@ -615,17 +553,50 @@
                         }
                     }
                 },
-                
-                load: function(rdata) {
-                    $('#abcd').show();
-                    this.propertygrid.propertygrid('load', {id: rdata.id, _t: 'p'});
+
+                resetActions: function(rdata) {
+                    if (['tobuy'].includes(rdata.status)){
+                        $('#btn_trade_buy').linkbutton('enable');
+                    } else {
+                        $('#btn_trade_buy').linkbutton('disable');
+                    }
+
+                    if (['tosell'].includes(rdata.status)){
+                        $('#btn_trade_sell').linkbutton('enable');
+                    } else {
+                        $('#btn_trade_sell').linkbutton('disable');
+                    }
+
+                    if (['toclose'].includes(rdata.status)){
+                        $('#btn_trade_close').linkbutton('enable');
+                    } else {
+                        $('#btn_trade_close').linkbutton('disable');
+                    }
+
+                    if (['tobuy', 'tosell', 'toclose'].includes(rdata.status)){
+                        $('#btn_trade_cancel').linkbutton('enable');
+                    } else {
+                        $('#btn_trade_cancel').linkbutton('disable');
+                    }
                 },
 
-                show: function(rdata) {
-                    if(!this.inited)
-                        this.init(rdata);
-                    else
-                        this.load(rdata);
+                doActions: function(action) {
+                    if(this.tradeid == null){
+                        return;
+                    }
+
+                    var url = '/api/user/trade/deal';
+                    $.post(url, {id: this.tradeid, act: action}, function(resp, status){
+                        if(status == 'success'){
+                            if (resp.status){
+                                alert('success');
+                            } else {
+                                $.messager.show({title: '错误', msg: resp.msg});
+                            }
+                        } else {
+                            $.messager.show({title: '错误', msg: '请求服务器错误'});
+                        }
+                    },'json');
                 }
             },
 
@@ -633,7 +604,7 @@
             //trade lever
             lever: {
                 url: '/api/user/trade/lever',
-                propertygrid: $('#trade_lever_propertygrid'),
+                propertygrid: $('#propertygrid_trade_lever'),
 
                 inited: false,
 
@@ -693,7 +664,7 @@
             //trade fees
             fees: {
                 url: '/api/user/trade/fees',
-                datagrid: $('#trade_fees_datagrid'),
+                datagrid: $('#datagrid_trade_fees'),
 
                 inited: false,
 
@@ -757,7 +728,7 @@
             // trade margins
             margins: {
                 url: '/api/user/trade/margins',
-                datagrid: $('#trade_margins_datagrid'),
+                datagrid: $('#datagrid_trade_margins'),
                 
                 inited: false,
 
@@ -820,7 +791,7 @@
             // trade orders
             orders: {
                 url: '/api/user/trade/orders',
-                propertygrid: $('#trade_orders_propertygrid'),
+                propertygrid: $('#propertygrid_trade_orders'),
                 
                 inited: false,
                 

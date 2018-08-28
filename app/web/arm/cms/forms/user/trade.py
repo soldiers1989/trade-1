@@ -26,3 +26,8 @@ class Add(forms.Form):
     ptype = forms.CharField()
     ocount = forms.IntegerField(min_value=100)
     oprice = forms.DecimalField(required=False)
+
+
+class Deal(forms.Form):
+    id = forms.IntegerField()
+    act = forms.CharField(max_length=16);

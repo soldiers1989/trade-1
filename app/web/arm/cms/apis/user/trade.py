@@ -338,3 +338,29 @@ def orders(request):
             return resp.failure(str(form.errors))
     except Exception as e:
         return resp.failure(str(e))
+
+
+@auth.catch_exception
+@auth.need_login
+def deal(request):
+    """
+        process user trade order
+    :param request:
+    :return:
+    """
+    form = forms.user.trade.Deal(request.POST)
+    if form.is_valid():
+        # trade id
+        tradeid, action = form.cleaned_data['id'], form.cleaned_data['act']
+
+        # process user trade order #
+
+        # get new record data #
+        obj = models.UserTrade.objects.get(id=tradeid)
+
+        ## response data ##
+        data = obj.ddata()
+
+        return resp.success(data=data)
+    else:
+        return resp.failure(str(form.errors))

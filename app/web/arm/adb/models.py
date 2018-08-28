@@ -508,13 +508,14 @@ class UserTrade(models.Model):
 
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['user'] = items['user'].user if items['user'] else None
-        items['stock'] = items['stock'].name if items['stock'] else None
-        items['coupon'] = items['coupon'].money if items['coupon'] else None
-        items['account'] = items['account'].name if items['account'] else None
-        items['ptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
-        items['status'] = enum.all['trade']['status'][items['status']] if items['status'] else None
-        items['lever'] = self.tradelever.lever
+        items['_user'] = items['user'].user if items['user'] else None
+        items['_stock'] = items['stock'].name if items['stock'] else None
+        items['_coupon'] = items['coupon'].money if items['coupon'] else None
+        items['_account'] = items['account'].name if items['account'] else None
+        items['_ptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
+        items['_status'] = enum.all['trade']['status'][items['status']] if items['status'] else None
+
+        items['user'], items['stock'], items['coupon'], items['account'], items['lever'] = self.user_id, self.stock_id, self.coupon_id, self.account_id, self.tradelever.lever
         return items
 
     def odata(self):
@@ -526,6 +527,8 @@ class UserTrade(models.Model):
         # get data items & fields
         items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
 
+        items['user'], items['stock'], items['coupon'], items['account'], items['ptype'], items['status'] = items['_user'], items['_stock'], items['_coupon'], items['_account'], items['_ptype'], items['_status']
+
         # add lever fields
         fields['lever'] = '杠杆倍数'
 
@@ -536,7 +539,8 @@ class UserTrade(models.Model):
         # property data rows
         rows = []
         for k, v in items.items():
-            rows.append({'name':fields[k], 'value': v, 'group': '订单详情'})
+            if fields.get(k):
+                rows.append({'name':fields[k], 'value': v, 'group': '订单详情'})
 
         return rows
 
