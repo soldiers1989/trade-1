@@ -35,12 +35,20 @@ redis_db_not_exist = ProcessError(-1220, '查询DB不存在')
 redis_key_not_exist = ProcessError(-1221, '查询健值不存在')
 
 user_not_exist = ProcessError(-1300, '用户不存在')
+user_money_not_enough = ProcessError(-1300, '用户余额不足')
+
 lever_not_exist = ProcessError(-1301, '杠杆配置不存在')
 lever_has_disabled = ProcessError(-1301, '杠杆配置已禁用')
+
 coupon_not_exist = ProcessError(-1302, '优惠券不存在')
 coupon_has_used = ProcessError(-1302, '优惠券已使用')
+coupon_has_expired = ProcessError(-1302, '优惠券无效或过期')
+
 stock_not_exist = ProcessError(-1303, '股票不存在')
-stock_is_closed = ProcessError(-1304, '股票已停牌')
-stock_is_delisted = ProcessError(-1305, '股票已退市')
-stock_buy_limited = ProcessError(-1306, '股票已禁买')
-stock_delay_limited = ProcessError(-1306, '股票已禁延')
+stock_is_closed = ProcessError(-1303, '股票已停牌')
+stock_is_delisted = ProcessError(-1303, '股票已退市')
+stock_buy_limited = ProcessError(-1303, '股票已禁买')
+stock_delay_limited = ProcessError(-1303, '股票已禁延')
+
+stock_count_error = ProcessError(-1304, '股票数量需为100整数倍')
+stock_price_error = ProcessError(-1304, '股票申报价格超出范围')

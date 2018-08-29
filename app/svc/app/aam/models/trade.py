@@ -54,7 +54,7 @@ class TradeModel(model.Model):
         """
         # select query
         sql = '''
-                select id, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin,mmax, order, disable, ctime, mtime
+                select id, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax, `order`, disable, ctime, mtime
                 from tb_lever
                 where id = %s
             '''
@@ -74,8 +74,8 @@ class TradeModel(model.Model):
         """
         # select query
         sql = '''
-                select id, user, name, money, status, sdate, edate, ctime, utime
-                from tb_coupon
+                select id, user_id, name, money, status, sdate, edate, ctime, utime
+                from tb_user_coupon
                 where id = %s
             '''
 

@@ -1,4 +1,5 @@
-from lib.stock.quote.daily import quotes
+#from lib.stock.quote.daily import quotes
+from lib.stock.quote.level5 import quotes
 import threading, time
 
 class T(threading.Thread):
@@ -8,6 +9,9 @@ class T(threading.Thread):
         print('hello')
 
 if __name__ == "__main__":
+    print(quotes.get('000100'))
+    exit(0)
+
     t = T()
     t.start()
 

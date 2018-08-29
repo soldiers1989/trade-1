@@ -76,3 +76,23 @@ class Quotes:
 
         # no host can be used
         return None
+
+_default = Quotes()
+
+
+def get(code):
+    """
+        get quote by stock code
+    :param code:
+    :return:
+    """
+    return _default.get(code)
+
+
+def gets(codes):
+    """
+        get quotes of stocks by codes
+    :param codes: array of stock codes
+    :return:
+    """
+    return _default.get(codes)
