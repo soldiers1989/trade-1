@@ -6,7 +6,7 @@ from app.aam import config
 
 
 # redis for log
-log = redis.Redis(**config.REDISS['aam'][config.MODE], db=16)
+log = redis.Redis(**config.REDISS['aam'][config.MODE], db=15)
 
 all = {
     'log': log

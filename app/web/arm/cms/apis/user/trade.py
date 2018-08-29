@@ -158,7 +158,6 @@ def add(request):
                 # get user
 
 
-
                 # take margin
 
 

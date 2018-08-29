@@ -29,7 +29,7 @@ class LogGetHandler(handler.Handler):
         elif t == 'error':
             self.write(protocol.success(data=log.geterror(int(n))))
         else:
-            self.write(error.invalid_parameters.data)
+            raise error.invalid_parameters
 
 
 class RedisGetHandler(handler.Handler):

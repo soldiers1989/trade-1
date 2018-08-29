@@ -1,15 +1,14 @@
 """
     pub model base class
 """
-from app.aam import mysql
 
 
 class Model:
-    def __init__(self):
+    def __init__(self, db):
         """
             init model
         """
-        self._db = mysql.get()
+        self._db = db
 
     def dbbegin(self):
         """

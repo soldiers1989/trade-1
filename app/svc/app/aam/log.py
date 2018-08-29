@@ -65,8 +65,8 @@ def info(msg):
 def getinfo(wantrecords=20):
     try:
         return _errorlog.get(wantrecords)
-    except:
-        return ""
+    except Exception as e:
+        return str(e)
 
 
 def error(msg):
@@ -83,5 +83,5 @@ def error(msg):
 def geterror(wantrecords=20):
     try:
         return _errorlog.get(wantrecords)
-    except:
-        return ""
+    except Exception as e:
+        return str(e)

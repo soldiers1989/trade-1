@@ -56,7 +56,7 @@ class DBMysql:
         # connect to database
         self.connect()
 
-        # excute select query
+        # execute select query
         self._cursor.execute(sql, args)
 
         # fetch all results
