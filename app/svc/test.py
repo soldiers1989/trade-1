@@ -8,18 +8,19 @@ class T(threading.Thread):
     def run(self):
         print('hello')
 
+
+class Stm:
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        print('enter')
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print('exit')
+
+
 if __name__ == "__main__":
-    print(quotes.get('000100'))
-    exit(0)
-
-    t = T()
-    t.start()
-
-    t.join()
-    print(t.id)
-    print(t.name)
-
-    print(T.id)
-    print(T.name)
-
-    time.sleep(3)
+    with Stm():
+        print('statement')
+        raise Exception('error')

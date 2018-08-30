@@ -3,7 +3,7 @@
 """
 import datetime
 from app import util
-from app.aam import access, handler, models, protocol, redis, error, log, lock
+from app.aam import access, handler, models, forms, protocol, redis, error, log, lock
 
 
 class AddHandler(handler.Handler):
@@ -16,9 +16,7 @@ class AddHandler(handler.Handler):
         """
 
         ## get arguments ##
-        userid, couponid, leverid, stockid, price, count = self.get_argument('uid'), self.get_argument('cid', None), self.get_argument('lid'), \
-                                                                  self.get_argument('stock'), self.get_argument('price', None), self.get_argument('count')
-        ptype = 'xj' if price is not None else 'sj'
+        form = forms.trade.Add(self)
 
         ## process trade add operation by lock user ##
         with lock.user(userid):
@@ -93,22 +91,20 @@ class AddHandler(handler.Handler):
                 raise error.user_money_not_enough
 
             ## add new trade record ##
-            tradeModel.dbbegin()
+            with tradeModel.begin_transaction():
+                # change user left money
+                tradeModel.usermoney(userid, margin+ofee-coupon_money);
 
-            # change user left money
-            tradeModel.usermoney(userid, margin+ofee-coupon_money);
+                # set user coupon used flag
+                tradeModel.usecoupon(couponid)
 
-            # set user coupon used flag
-            tradeModel.usecoupon(couponid)
+                # add user bill record
+                tradeModel.addbill()
 
-            # add user bill record
+                # add trade order record
 
-            # add trade order record
+                # add trade margin record
 
-            # add trade margin record
+                # add trade fee record
 
-            # add trade fee record
-
-            tradeModel.dbcommit()
-
-            self.write(protocol.success())
+                self.write(protocol.success())

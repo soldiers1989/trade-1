@@ -42,10 +42,16 @@ class DBMysql:
             commit changes to database
         :return:
         """
-        if self._conn is None:
-            return
+        if self._conn is not None:
+            self._conn.commit()
 
-        self._conn.commit()
+    def rollback(self):
+        """
+            rollback transaction
+        :return:
+        """
+        if self._conn is not None:
+            self._conn.rollback()
 
     def select(self, sql, args=None):
         """
