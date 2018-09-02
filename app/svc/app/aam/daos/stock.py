@@ -21,6 +21,6 @@ class StockDao(dao.Dao):
         # execute query
         results = self.select(sql, (id,))
         if len(results) > 0:
-            return models.Stock(results[0])
+            return models.Stock(**results[0])
 
         return None

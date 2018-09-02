@@ -72,14 +72,14 @@ class AddHandler(handler.Handler):
                 if coupon is None:
                     raise error.coupon_not_exist
 
-                if coupon.status != enum.coupon.unused:
+                if coupon.status != enum.coupon.unused.code:
                     raise error.coupon_has_used
 
                 today = datetime.date.today()
                 if today < coupon.sdate or today > coupon.edate:
                     raise error.coupon_has_expired
 
-                coupon_money = coupon['money']
+                coupon_money = coupon.money
 
             # compute margin
             margin = (form.price * form.count / lever.lever)
@@ -94,12 +94,12 @@ class AddHandler(handler.Handler):
                 raise error.user_money_not_enough
 
             ## add new trade record ##
-            with tradeDao.begin_transaction():
+            with tradeDao.transaction():
                 # change user left money
-                tradeDao.usermoney(form.user, margin+ofee-coupon_money);
+                #tradeDao.usermoney(form.user, margin+ofee-coupon_money);
 
                 # set user coupon used flag
-                tradeDao.usecoupon(form.coupon)
+                #tradeDao.usecoupon(form.coupon)
 
                 # add user bill record
 

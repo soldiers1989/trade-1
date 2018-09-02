@@ -23,22 +23,6 @@ class CouponDao(dao.Dao):
         # execute query
         results = self.select(sql, (id,))
         if len(results) > 0:
-            return models.UserCoupon(results[0])
+            return models.UserCoupon(**results[0])
 
         return None
-
-    def use(self, id):
-        """
-            use coupon
-        :param couponid:
-        :return:
-        """
-        # update query
-        sql = '''
-                update tb_coupon
-                set status=%s, utime=%s
-                where id=%s
-            '''
-
-        # execute update
-        self.execute(sql, ('used', int(time.time()), id))

@@ -22,6 +22,6 @@ class UserDao(dao.Dao):
         # execute query
         results = self.select(sql, (id,))
         if len(results) > 0:
-            return models.User(results[0])
+            return models.User(**results[0])
 
         return None

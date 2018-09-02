@@ -3,7 +3,42 @@ from web import dao
 
 
 class TradeDao(dao.Dao):
-    def add_margin(self, tradeid, money, item):
+    def useCounpon(self, couponid):
+        """
+            use coupon
+        :param couponid:
+        :return:
+        """
+        # update query
+        sql = '''
+                update tb_coupon
+                set status=%s, utime=%s
+                where id=%s
+            '''
+
+        # execute update
+        self.execute(sql, ('used', int(time.time()), couponid))
+
+    def useMoney(self, userid, money):
+        """
+            use money of user
+        :param userid:
+        :param money:
+        :return:
+        """
+        pass
+
+    def addBill(self, money, item, detail):
+        """
+            add bill record
+        :param money:
+        :param item:
+        :param detail:
+        :return:
+        """
+        pass
+
+    def addMargin(self, tradeid, money, item):
         """
             add margin
         :return:
@@ -17,7 +52,7 @@ class TradeDao(dao.Dao):
         # execute insert
         self.execute(sql, (tradeid, money, item, int(time.time())))
 
-    def add_fee(self, tradeid, item, nmoney, amoney, detail):
+    def addFee(self, tradeid, item, nmoney, amoney, detail):
         """
             add fee
         :return:
@@ -31,7 +66,7 @@ class TradeDao(dao.Dao):
         # execute insert
         self.execute(sql, (tradeid, item, nmoney, amoney, detail, int(time.time())))
 
-    def add_trade(self, userid, stockid, couponid, code, ptype, price, count, margin, ofee):
+    def addTrade(self, userid, stockid, couponid, code, ptype, price, count, margin, ofee):
         """
             add user trade order
         :param userid:
@@ -52,7 +87,7 @@ class TradeDao(dao.Dao):
         # execute insert
         self.execute(sql, (userid, stockid, couponid, code, ptype, price, count, margin, ofee, 'tobuy',int(time.time())))
 
-    def add_lever(self, tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax):
+    def addLever(self, tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax):
         """
             add lever of trade
         :return:

@@ -42,7 +42,7 @@ class Dao:
         """
         self._db = db
 
-    def tansaction(self):
+    def transaction(self):
         """
             get transaction of current model
         :return:

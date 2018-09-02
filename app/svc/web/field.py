@@ -64,7 +64,7 @@ class Field:
         try:
             return self.valid(self.value(val))
         except validator.ErrorValidation as e:
-            raise ErrorFieldValue('%s-%s: %s' % (str(self.code), str(self.name), str(e)))
+            raise ErrorFieldValue('%s: %s' % (str(self.code), str(e)))
 
 
 class EnumField(Field):
