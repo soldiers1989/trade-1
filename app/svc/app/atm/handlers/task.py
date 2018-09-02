@@ -24,7 +24,6 @@ class Status(handler.Handler):
             'rows': results
         }
 
-
         # response
         self.write(protocol.success(data=data))
 

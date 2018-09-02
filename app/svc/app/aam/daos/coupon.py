@@ -2,7 +2,8 @@
     coupon dao
 """
 import time
-from app.aam import dao
+from web import dao
+from app.aam import models
 
 
 class CouponDao(dao.Dao):
@@ -20,9 +21,9 @@ class CouponDao(dao.Dao):
             '''
 
         # execute query
-        results = self.dbselect(sql, (id,))
+        results = self.select(sql, (id,))
         if len(results) > 0:
-            return results[0]
+            return models.UserCoupon(results[0])
 
         return None
 

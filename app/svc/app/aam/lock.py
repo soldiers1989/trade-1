@@ -2,7 +2,7 @@
     lock for business
 """
 import time
-from app.aam import redis
+from app.aam import myredis
 
 
 class _LockException(Exception):
@@ -14,7 +14,7 @@ exception = _LockException
 
 class _UserLock:
     def __init__(self, userid):
-        self._key = 'lock_' + userid
+        self._key = 'lock_' + str(userid)
 
     def __enter__(self):
         """
@@ -22,10 +22,10 @@ class _UserLock:
         :param userid:
         :return:
         """
-        if redis.lock.get(self._key) is not None:
+        if myredis.lock.get(self._key) is not None:
             raise exception()
 
-        redis.lock.set(self._key, time.time())
+        myredis.lock.set(self._key, time.time())
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
@@ -33,7 +33,7 @@ class _UserLock:
         :param userid:
         :return:
         """
-        redis.lock.delete(self._key)
+        myredis.lock.delete(self._key)
 
 
 def user(userid):

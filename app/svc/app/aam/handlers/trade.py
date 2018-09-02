@@ -3,7 +3,7 @@
 """
 import datetime
 from app import util
-from app.aam import access, handler, models, forms, protocol, redis, error, log, lock
+from app.aam import enum, access, handler, daos, forms, models, protocol, myredis, error, log, lock
 
 
 class AddHandler(handler.Handler):
@@ -14,76 +14,79 @@ class AddHandler(handler.Handler):
             add new trade request
         :return:
         """
-
         ## get arguments ##
-        form = forms.trade.Add(self)
+        form = forms.trade.Add(**self.arguments)
 
         ## process trade add operation by lock user ##
-        with lock.user(userid):
-            # init trade model #
-            tradeModel = models.trade.TradeModel(self.db)
+        with lock.user(form.user):
+            # init trade dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+            userDao = daos.user.UserDao(self.db)
+            stockDao = daos.stock.StockDao(self.db)
+            leverDao = daos.lever.LeverDao(self.db)
+            couponDao = daos.coupon.CouponDao(self.db)
 
             ## check arguments ##
             # check user
-            user = tradeModel.getuser(userid)
+            user = userDao.get(form.user)
             if user is None:
                 raise error.user_not_exist
 
-            if user['disable']:
+            if user.disable:
                 raise error.user_not_exist
 
             # check stock
-            stock = tradeModel.getstock(stockid)
+            stock = stockDao.get(form.stock)
             if stock is None:
                 raise error.stock_not_exist
 
-            if stock['status'] == 'close':
+            if stock.status == enum.stock.closed:
                 raise error.stock_is_closed
 
-            if stock['status'] == 'delisted':
+            if stock.status == enum.stock.delisted:
                 raise error.stock_is_delisted
 
-            if stock['limit'] == 'nobuy' or stock['limit'] == 'nodelay':
+            if stock.limit == enum.risk.nobuy or stock.limit == enum.risk.nodelay:
                 raise error.stock_buy_limited
 
             # check stock count
-            if count < 100 or count%100 != 0:
+            if form.count < 100 or form.count%100 != 0:
                 raise error.stock_count_error
 
             # check order price
-            if price is not None and not util.stock.valid_price(stockid, price):
+            if form.price is not None and not util.stock.valid_price(form.stock, form.price):
                 raise error.stock_price_error
 
             # check lever
-            lever = tradeModel.getlever(leverid)
+            lever = leverDao.get(form.lever)
             if lever is None:
                 raise error.lever_not_exist
 
-            if lever['disable']:
+            if lever.disable:
                 raise error.lever_has_disabled
 
             # check coupon
             coupon_money = 0.0
-            if couponid is not None:
-                coupon = tradeModel.getcoupon(couponid)
+            if form.coupon is not None:
+                coupon = couponDao.get(form.coupon)
                 if coupon is None:
                     raise error.coupon_not_exist
 
-                if coupon['status'] != 'unused':
+                if coupon.status != enum.coupon.unused:
                     raise error.coupon_has_used
 
                 today = datetime.date.today()
-                if today < coupon['sdate'] or today > coupon['edate']:
+                if today < coupon.sdate or today > coupon.edate:
                     raise error.coupon_has_expired
 
                 coupon_money = coupon['money']
 
             # compute margin
-            margin = (price * count / lever['lever'])
+            margin = (form.price * form.count / lever.lever)
 
             # compute open fee
-            ofee = price * count * lever['ofrate']
-            ofee = ofee if ofee > lever['ofmin'] else lever['ofmin']
+            ofee = form.price * form.count * lever.ofrate
+            ofee = ofee if ofee > lever.ofmin else lever.ofmin
 
             # check user left money
             left_money = user['money']
@@ -91,15 +94,15 @@ class AddHandler(handler.Handler):
                 raise error.user_money_not_enough
 
             ## add new trade record ##
-            with tradeModel.begin_transaction():
+            with tradeDao.begin_transaction():
                 # change user left money
-                tradeModel.usermoney(userid, margin+ofee-coupon_money);
+                tradeDao.usermoney(form.user, margin+ofee-coupon_money);
 
                 # set user coupon used flag
-                tradeModel.usecoupon(couponid)
+                tradeDao.usecoupon(form.coupon)
 
                 # add user bill record
-                tradeModel.addbill()
+
 
                 # add trade order record
 

@@ -1,11 +1,10 @@
 """
-    user dao
+    stock dao
 """
 from web import dao
 from app.aam import models
 
-
-class UserDao(dao.Dao):
+class StockDao(dao.Dao):
     def get(self, id):
         """
             get stock
@@ -14,14 +13,14 @@ class UserDao(dao.Dao):
         """
         # select query
         sql = '''
-                select id, user, pwd, phone, money, disable, ctime, ltime
-                from tb_user
+                select id, name, jianpin, quanpin, status, `limit`, ctime, mtime
+                from tb_stock
                 where id = %s
             '''
 
         # execute query
         results = self.select(sql, (id,))
         if len(results) > 0:
-            return models.User(results[0])
+            return models.Stock(results[0])
 
         return None

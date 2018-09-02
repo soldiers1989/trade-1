@@ -1,7 +1,7 @@
 """
     service admin
 """
-from app.aam import access, handler, protocol, redis, error, log
+from app.aam import access, handler, protocol, myredis, error, log
 
 
 class EchoHandler(handler.Handler):
@@ -44,7 +44,7 @@ class RedisGetHandler(handler.Handler):
         db, type, name = self.get_argument('db'), self.get_argument('t', None), self.get_argument('n')
 
         # get redis db
-        db = redis.all.get(db)
+        db = myredis.all.get(db)
         if db is None:
             raise error.redis_db_not_exist
 
@@ -79,7 +79,7 @@ class RedisDelHandler(handler.Handler):
         db, name = self.get_argument('db'), self.get_argument('n')
 
         # get redis db
-        db = redis.all.get(db)
+        db = myredis.all.get(db)
         if db is None:
             raise error.redis_db_not_exist
 

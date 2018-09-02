@@ -86,7 +86,7 @@ class _Stock:
         stock status
     """
     open = _Enum('open', '正常')
-    close = _Enum('close', '停牌')
+    closed = _Enum('closed', '停牌')
     delisted = _Enum('delisted', '退市')
 
 stock = _Stock
@@ -101,3 +101,18 @@ class _Risk:
     nodelay = _Enum('nodelay', '禁延')
 
 risk = _Risk
+
+
+def values(enumcls):
+    choices = []
+    attrs = dir(enumcls)
+    for name in attrs:
+        attr = getattr(enumcls, name)
+        if isinstance(attr, _Enum):
+            choices.append(attr.code)
+    return choices
+
+
+if __name__ == '__main__':
+    choices = values(risk)
+    print(choices)
