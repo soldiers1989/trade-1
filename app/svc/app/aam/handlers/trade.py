@@ -2,8 +2,9 @@
     service admin
 """
 import datetime
-from app import util
-from app.aam import enum, access, handler, daos, forms, models, protocol, myredis, error, log, lock
+from app import rules
+from app.util import rand
+from app.aam import enum, access, handler, daos, forms, protocol, error, lock, tpl
 
 
 class AddHandler(handler.Handler):
@@ -49,14 +50,6 @@ class AddHandler(handler.Handler):
             if stock.limit == enum.risk.nobuy or stock.limit == enum.risk.nodelay:
                 raise error.stock_buy_limited
 
-            # check stock count
-            if form.count < 100 or form.count%100 != 0:
-                raise error.stock_count_error
-
-            # check order price
-            if form.price is not None and not util.stock.valid_price(form.stock, form.price):
-                raise error.stock_price_error
-
             # check lever
             lever = leverDao.get(form.lever)
             if lever is None:
@@ -65,12 +58,28 @@ class AddHandler(handler.Handler):
             if lever.disable:
                 raise error.lever_has_disabled
 
+            # check stock count
+            if not rules.trade.valid_buy_count(form.count):
+                raise error.stock_count_error
+
+            # check order price
+            if form.price is None or not rules.trade.valid_buy_price(form.stock, form.price):
+                raise error.stock_price_error
+
+            capital = form.price * form.count
+            # check lever money limit
+            if capital > lever.mmax or capital< lever.mmin:
+                raise error.lever_capital_denied
+
             # check coupon
-            coupon_money = 0.0
+            coupon_id, coupon_money = None, 0.0
             if form.coupon is not None:
                 coupon = couponDao.get(form.coupon)
                 if coupon is None:
                     raise error.coupon_not_exist
+
+                if coupon.user_id != form.user:
+                    raise error.invalid_parameters
 
                 if coupon.status != enum.coupon.unused.code:
                     raise error.coupon_has_used
@@ -82,32 +91,37 @@ class AddHandler(handler.Handler):
                 coupon_money = coupon.money
 
             # compute margin
-            margin = (form.price * form.count / lever.lever)
+            margin = capital / lever.lever
 
-            # compute open fee
-            ofee = form.price * form.count * lever.ofrate
-            ofee = ofee if ofee > lever.ofmin else lever.ofmin
+            # compute order money
+            cost = margin - coupon_money
 
             # check user left money
-            left_money = user['money']
-            if left_money < margin + ofee - coupon_money:
+            before_money, left_money = user.money, user.money - cost
+            if before_money < cost:
                 raise error.user_money_not_enough
 
             ## add new trade record ##
             with tradeDao.transaction():
-                # change user left money
-                #tradeDao.usermoney(form.user, margin+ofee-coupon_money);
+                # use user coupon
+                if coupon_id is not None:
+                    tradeDao.use_counpon(coupon_id)
 
-                # set user coupon used flag
-                #tradeDao.usecoupon(form.coupon)
+                # add user bill
+                tradeDao.add_bill(form.user, before_money, left_money, cost, tpl.bill.margin.item, tpl.bill.margin.detail%(str(margin),))
 
-                # add user bill record
-
+                # use user money
+                tradeDao.use_money(form.user, cost)
 
                 # add trade order record
+                code = rand.uuid()
+                tradeDao.add_trade(form.user, form.stock, form.coupon, code, form.ptype, form.price, form.count, margin)
+                tradeobj = tradeDao.get_by_code(code)
 
                 # add trade margin record
+                tradeDao.add_margin(tradeobj.id, margin, tpl.trademargin.init.item, tpl.trademargin.init.detail%(str(margin),))
 
-                # add trade fee record
+                # add trade lever record
+                tradeDao.add_lever(tradeobj.id, lever.lever, lever.wline, lever.sline, lever.ofmin, lever.ofrate, lever.dfrate, lever.psrate, lever.mmin, lever.mmax)
 
                 self.write(protocol.success())

@@ -54,3 +54,31 @@ class Stock(model.Model):
     limit = field.EnumField(max_length=8, default='none', choices=enum.values(enum.risk))
     ctime = field.IntegerField()
     mtime = field.IntegerField()
+
+
+class UserTrade(model.Model):
+    id = field.IntegerField()
+    user_id = field.IntegerField()
+    stock_id = field.StringField(max_length=8)
+    coupon_id = field.IntegerField(null=True)
+    account_id = field.IntegerField(null=True)
+    code = field.StringField(max_length=16)
+    ptype = field.EnumField(choices=enum.values(enum.ptype))
+    oprice = field.DecimalField(digits=10, decimals=2)
+    ocount = field.IntegerField()
+    hprice = field.DecimalField(null=True, digits=10, decimals=2)
+    hcount = field.IntegerField(null=True) # holding count
+    fcount = field.IntegerField(null=True) # free count, sell able
+    bprice = field.DecimalField(null=True, digits=10, decimals=2)
+    bcount = field.IntegerField(null=True)
+    sprice = field.DecimalField(null=True, digits=10, decimals=2)
+    scount = field.IntegerField(null=True)
+    margin = field.DecimalField(null=True, digits=10, decimals=2)
+    ofee = field.DecimalField(null=True, digits=10, decimals=2) # open fee
+    ddays = field.IntegerField(null=True) # delay days
+    dfee = field.DecimalField(null=True, digits=10, decimals=2) # delay fee
+    tprofit = field.DecimalField(null=True, digits=10, decimals=2) # total profit
+    sprofit = field.DecimalField(null=True, digits=10, decimals=2) # share profit
+    status = field.EnumField(choices=enum.values(enum.trade))
+    ctime = field.IntegerField()  # create time
+    ftime = field.IntegerField(null=True)  # finish time

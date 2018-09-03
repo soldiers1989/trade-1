@@ -39,6 +39,7 @@ user_money_not_enough = ProcessError(-1300, '用户余额不足')
 
 lever_not_exist = ProcessError(-1301, '杠杆配置不存在')
 lever_has_disabled = ProcessError(-1301, '杠杆配置已禁用')
+lever_capital_denied = ProcessError(-1301, '委托金额超出范围')
 
 coupon_not_exist = ProcessError(-1302, '优惠券不存在')
 coupon_has_used = ProcessError(-1302, '优惠券已使用')

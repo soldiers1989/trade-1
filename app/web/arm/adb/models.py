@@ -494,7 +494,7 @@ class UserTrade(models.Model):
     sprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='卖出价格')
     scount = models.IntegerField(null=True, verbose_name='卖出数量')
     margin = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='保证金')
-    ofee = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='建仓费') # open fee
+    ofee = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='建仓费') # open fee
     ddays = models.IntegerField(null=True, verbose_name='天数') # delay days
     dfee = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='延期费') # delay fee
     tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利') # total profit
@@ -642,6 +642,7 @@ class TradeMargin(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
     trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='交易订单')
     item = models.CharField(max_length=16, verbose_name='类别')
+    detail = models.CharField(max_length=64, blank=True, verbose_name='详情')
     money = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='金额')
     ctime = models.BigIntegerField(verbose_name='时间')  # create time
 

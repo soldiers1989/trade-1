@@ -12,4 +12,4 @@ class Add(form.Form):
     coupon = field.IntegerField(null=True)
     price = field.DecimalField(null=True, digits=10, decimals=2)
     count = field.IntegerField()
-    ptype = field.EnumField(choices=enum.values(enum.ptype))
+    ptype = field.EnumField(null=True, choices=enum.values(enum.ptype))
