@@ -66,9 +66,9 @@ def valid_buy_count(count):
     :param count:
     :return:
     """
-    if count > 100 and count % 100 == 0:
-        return True
-    return False
+    if count < 100 or count % 100 != 0:
+        return False
+    return True
 
 
 def valid_buy_price(code, price):

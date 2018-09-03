@@ -80,5 +80,6 @@ class UserTrade(model.Model):
     tprofit = field.DecimalField(null=True, digits=10, decimals=2) # total profit
     sprofit = field.DecimalField(null=True, digits=10, decimals=2) # share profit
     status = field.EnumField(choices=enum.values(enum.trade))
+    slog = field.StringField(null=True)
     ctime = field.IntegerField()  # create time
     ftime = field.IntegerField(null=True)  # finish time

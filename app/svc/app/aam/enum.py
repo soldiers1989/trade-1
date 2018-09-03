@@ -61,11 +61,16 @@ class _Trade:
         trade status
     """
     tobuy = _Enum('tobuy', '待买')
+    cancelbuy = _Enum('cancelbuy', '买撤')
     hold = _Enum('hold', '持仓')
     tosell = _Enum('tosell', '待卖')
+    cancelsell = _Enum('cancelsell', '卖撤')
     sold = _Enum('sold', '已卖')
     toclose = _Enum('toclose', '待平')
+    cancelclose = _Enum('cancelclose', '平撤')
     closed = _Enum('closed', '已平')
+    canceled = _Enum('canceled', '已撤')
+    expired = _Enum('expired', '过期')
     discard = _Enum('discard', '废单')
 
 trade = _Trade

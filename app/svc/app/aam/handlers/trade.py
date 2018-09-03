@@ -7,7 +7,7 @@ from app.util import rand
 from app.aam import enum, access, handler, daos, forms, protocol, error, lock, tpl
 
 
-class AddHandler(handler.Handler):
+class BuyHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
@@ -16,7 +16,7 @@ class AddHandler(handler.Handler):
         :return:
         """
         ## get arguments ##
-        form = forms.trade.Add(**self.arguments)
+        form = forms.trade.Buy(**self.arguments)
 
         ## process trade add operation by lock user ##
         with lock.user(form.user):
@@ -125,3 +125,31 @@ class AddHandler(handler.Handler):
                 tradeDao.add_lever(tradeobj.id, lever.lever, lever.wline, lever.sline, lever.ofmin, lever.ofrate, lever.dfrate, lever.psrate, lever.mmin, lever.mmax)
 
                 self.write(protocol.success())
+
+
+class SellHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.Sell(**self.arguments)
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init trade dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+
+
+class CloseHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        pass
+
+
+class CancelHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        pass
+

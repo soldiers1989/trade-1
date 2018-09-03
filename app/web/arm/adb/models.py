@@ -500,6 +500,7 @@ class UserTrade(models.Model):
     tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利') # total profit
     sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利分成') # share profit
     status = models.CharField(max_length=16, default='tobuy', verbose_name='状态')
+    slog = models.TextField(null=True)
     ctime = models.BigIntegerField(verbose_name='订单时间')  # create time
     ftime = models.BigIntegerField(null=True, verbose_name='结束时间')  # finish time
 

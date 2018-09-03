@@ -6,5 +6,5 @@ handlers = [
     (r"/admin/redis/get", handlers.admin.RedisGetHandler),
     (r"/admin/redis/del", handlers.admin.RedisDelHandler),
 
-    (r"/trade/add", handlers.trade.AddHandler),
+    (r"/trade/buy", handlers.trade.BuyHandler),
 ]
