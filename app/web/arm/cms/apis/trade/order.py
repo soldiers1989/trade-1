@@ -143,7 +143,7 @@ def update(request):
         # update trade
 
         # update status change log
-        logs = [{'user': admin.user, 'before': order.status, 'after': status, 'time': int(time.time())}]
+        logs = [{'user': admin.user, 'action':'修改', 'before': enum.all['order']['status'].get(order.status), 'after': enum.all['order']['status'].get(status), 'time': int(time.time())}]
         if order.slog is not None:
             logs.extend(json.loads(order.slog))
 
@@ -255,11 +255,6 @@ def status(request):
     rows = []
     if item.slog:
         rows = json.loads(item.slog)
-
-    # tidy rows
-    for row in rows:
-        row['before'] = enum.all['order']['status'].get(row['before'])
-        row['after'] = enum.all['order']['status'].get(row['after'])
 
     ## response data ##
     data = {

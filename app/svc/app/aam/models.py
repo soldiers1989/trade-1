@@ -2,7 +2,7 @@
     field
 """
 from web import model, field
-from app.aam import enum
+from app.aam import suite
 
 
 class User(model.Model):
@@ -21,7 +21,7 @@ class UserCoupon(model.Model):
     user_id = field.IntegerField()
     name = field.StringField()
     money = field.DecimalField(digits=10, decimals=2)
-    status = field.EnumField(choices=enum.values(enum.coupon))
+    status = field.EnumField(choices=suite.enum.values(suite.enum.coupon))
     sdate = field.DateField()
     edate = field.DateField()
     ctime = field.IntegerField()
@@ -50,8 +50,21 @@ class Stock(model.Model):
     name = field.StringField(max_length=16)
     jianpin = field.StringField(max_length=16)
     quanpin = field.StringField(max_length=32)
-    status = field.EnumField(max_length=8, default='open', choices=enum.values(enum.stock))
-    limit = field.EnumField(max_length=8, default='none', choices=enum.values(enum.risk))
+    status = field.EnumField(max_length=8, default='open', choices=suite.enum.values(suite.enum.stock))
+    limit = field.EnumField(max_length=8, default='none', choices=suite.enum.values(suite.enum.risk))
+    ctime = field.IntegerField()
+    mtime = field.IntegerField()
+
+
+class TradeAccount(model.Model):
+    id = field.IntegerField()
+    account = field.StringField(max_length=16)
+    name = field.StringField(max_length=16)
+    lmoney = field.DecimalField(digits=10, decimals=2)
+    cfmin = field.DecimalField(digits=10, decimals=2)
+    cfrate = field.DecimalField(digits=6, decimals=6)
+    tfrate = field.DecimalField(digits=6, decimals=6)
+    disable = field.BooleanField()
     ctime = field.IntegerField()
     mtime = field.IntegerField()
 
@@ -63,7 +76,7 @@ class UserTrade(model.Model):
     coupon_id = field.IntegerField(null=True)
     account_id = field.IntegerField(null=True)
     code = field.StringField(max_length=16)
-    ptype = field.EnumField(choices=enum.values(enum.ptype))
+    ptype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
     oprice = field.DecimalField(digits=10, decimals=2)
     ocount = field.IntegerField()
     hprice = field.DecimalField(null=True, digits=10, decimals=2)
@@ -79,7 +92,7 @@ class UserTrade(model.Model):
     dfee = field.DecimalField(null=True, digits=10, decimals=2) # delay fee
     tprofit = field.DecimalField(null=True, digits=10, decimals=2) # total profit
     sprofit = field.DecimalField(null=True, digits=10, decimals=2) # share profit
-    status = field.EnumField(choices=enum.values(enum.trade))
+    status = field.EnumField(choices=suite.enum.values(suite.enum.trade))
     slog = field.StringField(null=True)
     ctime = field.IntegerField()  # create time
     ftime = field.IntegerField(null=True)  # finish time

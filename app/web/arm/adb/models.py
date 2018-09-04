@@ -488,7 +488,7 @@ class UserTrade(models.Model):
     ocount = models.IntegerField(verbose_name='订单数量')
     hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='持仓价格')
     hcount = models.IntegerField(null=True, verbose_name='持仓数量') # holding count
-    fcount = models.IntegerField(null=True, verbose_name='可买数量') # free count, sell able
+    fcount = models.IntegerField(null=True, verbose_name='可卖数量') # free count, sell able
     bprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入价格')
     bcount = models.IntegerField(null=True, verbose_name='买入数量')
     sprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='卖出价格')
@@ -500,7 +500,6 @@ class UserTrade(models.Model):
     tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利') # total profit
     sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利分成') # share profit
     status = models.CharField(max_length=16, default='tobuy', verbose_name='状态')
-    slog = models.TextField(null=True)
     ctime = models.BigIntegerField(verbose_name='订单时间')  # create time
     ftime = models.BigIntegerField(null=True, verbose_name='结束时间')  # finish time
 

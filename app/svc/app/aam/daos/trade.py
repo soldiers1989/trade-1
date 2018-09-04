@@ -1,7 +1,7 @@
 import time
 from web import dao
 from app.util import rand
-from app.aam import enum, models
+from app.aam import suite, models
 
 class TradeDao(dao.Dao):
     def get_by_id(self, id):
@@ -58,7 +58,7 @@ class TradeDao(dao.Dao):
             '''
 
         # execute update
-        self.execute(sql, (enum.coupon.used.code, int(time.time()), couponid))
+        self.execute(sql, (suite.enum.coupon.used.code, int(time.time()), couponid))
 
     def use_money(self, userid, money):
         """
@@ -144,7 +144,34 @@ class TradeDao(dao.Dao):
             '''
 
         # execute insert
-        self.execute(sql, (userid, stockid, couponid, code, ptype, price, count, margin, enum.trade.tobuy.code, int(time.time())))
+        self.execute(sql, (userid, stockid, couponid, code, ptype, price, count, margin, suite.enum.trade.tobuy.code, int(time.time())))
+
+    def add_order(self, trade, account, stock, otype, ptype, oprice, ocount, operator):
+        """
+            add new trade order
+        :param trade:
+        :param account:
+        :param stock:
+        :param otype:
+        :param ptype:
+        :param ocount:
+        :param oprice:
+        :return:
+        """
+        # insert query
+        sql = '''
+                insert into tb_trade_order(trade_id, account_id, stock_id, otype, ptype, oprice, ocount, otime, status, slog)
+                values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            '''
+
+        #prepare status & status log
+        otime = int(time.time())
+        status_code, status_name = suite.enum.order.notsend.code, suite.enum.order.notsend.name
+        logobj = [suite.status.format(operator, suite.enum.otype.buy.name, '', status_name, otime)]
+        slog = suite.status.dumps(logobj)
+
+        # execute insert
+        self.execute(sql, (trade, account, stock, otype, ptype, oprice, ocount, otime, status_code, slog))
 
     def add_lever(self, tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax):
         """
@@ -159,3 +186,20 @@ class TradeDao(dao.Dao):
 
         # execute insert
         self.execute(sql, (tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax))
+
+    def sell_stock(self, tradeid, count):
+        """
+            sell stock of specified trade with count
+        :param tradeid:
+        :param count:
+        :return:
+        """
+        # update query
+        sql = '''
+                update tb_user_trade
+                set fcount = fcount-%s
+                where id=%s
+            '''
+
+        # execute update
+        self.execute(sql, (count, tradeid))
