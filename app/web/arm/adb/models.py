@@ -483,12 +483,12 @@ class UserTrade(models.Model):
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True, verbose_name='优惠券')
     account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True, verbose_name='证券账户')
     code = models.CharField(max_length=20, unique=True, verbose_name='订单代码')
-    ptype = models.CharField(max_length=16, verbose_name='报价类型')
-    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='订单价格')
-    ocount = models.IntegerField(verbose_name='订单数量')
+    optype = models.CharField(max_length=16, verbose_name='买入类型')
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入报价')
+    ocount = models.IntegerField(verbose_name='买入数量')
     hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='持仓价格')
     hcount = models.IntegerField(null=True, verbose_name='持仓数量') # holding count
-    fcount = models.IntegerField(null=True, verbose_name='可卖数量') # free count, sell able
+    fcount = models.IntegerField(null=True, verbose_name='可用数量') # free count, sell able
     bprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入价格')
     bcount = models.IntegerField(null=True, verbose_name='买入数量')
     sprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='卖出价格')
@@ -500,6 +500,7 @@ class UserTrade(models.Model):
     tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利') # total profit
     sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利分成') # share profit
     status = models.CharField(max_length=16, default='tobuy', verbose_name='状态')
+    slog = models.TextField(null=True, verbose_name='状态变更')
     ctime = models.BigIntegerField(verbose_name='订单时间')  # create time
     ftime = models.BigIntegerField(null=True, verbose_name='结束时间')  # finish time
 
@@ -584,11 +585,11 @@ class TradeLever(models.Model):
 # tb_trade_order
 class TradeOrder(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='交易订单')
     account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True, verbose_name='证券账户')
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票代码')
+    tcode = models.CharField(max_length=16, verbose_name='交易编号')
     otype = models.CharField(max_length=16, verbose_name='委托类型')
-    ptype = models.CharField(max_length=16, verbose_name='报价类型')
+    optype = models.CharField(max_length=16, verbose_name='报价类型')
     ocount = models.IntegerField(verbose_name='委托数量')
     oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='委托价格')
     otime = models.BigIntegerField(verbose_name='委托时间')
@@ -596,8 +597,10 @@ class TradeOrder(models.Model):
     dcount = models.IntegerField(null=True, verbose_name='成交数量')
     dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='成交价格')
     dtime = models.BigIntegerField(null=True, verbose_name='成交时间')
+    dcode = models.CharField(max_length=16, null=True, verbose_name='成交代码')
     status = models.CharField(max_length=16, verbose_name='委托状态')
     slog = models.TextField(null=True, verbose_name='状态变更')
+    utime = models.BigIntegerField(verbose_name='更新时间')
 
     class Meta:
         db_table = 'tb_trade_order'

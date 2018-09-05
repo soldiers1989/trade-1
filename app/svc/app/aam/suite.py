@@ -56,6 +56,8 @@ class _Status:
         :param jsonstr:
         :return:
         """
+        if jsonstr is None:
+            return []
         return json.loads(jsonstr)
 
     @staticmethod
@@ -65,31 +67,42 @@ class _Status:
         :param obj:
         :return:
         """
+        if obj is None:
+            return '[]'
+
         return json.dumps(obj)
 
 status = _Status
 
 
-class _Trade:
-    # user trade state transition limit
-    user = {
-        'hold': ['tosell'],
-    }
-
-    # system trade state transition limit
-    sys = {
-        'tobuy': ['hold', 'expired', 'discard'],
-        'hold': ['toclose'],
-        'tosell': ['sold', 'hold'],
-        'toclose': ['closed', 'hold']
-    }
-
-trade = _Trade
-
-
 class _State:
+    class _Trade:
+        # trade state transition limit by user
+        user = {
+            'tobuy': ['cancelbuy'],
+            'hold': ['tosell'],
+            'tosell': ['cancelsell']
+        }
+
+        # trade state transition limit buy system
+        sys = {
+            'tobuy': ['hold', 'expired', 'discard'],
+            'cancelbuy': ['hold', 'canceled'],
+            'hold': ['toclose'],
+            'tosell': ['sold', 'hold'],
+            'cancelsell': ['hold', 'sold'],
+            'toclose': ['closed', 'hold']
+        }
+
+        # trade state transition limit buy trader
+        trader = sys
+
+        all = {'user': user, 'sys': sys, 'trader': trader}
+
+    trade = _Trade
+
     class _Order:
-        # user trade order state transition limit
+        # trade order state transition limit by system
         user = {
             'notsend': ['tocancel'],
             'tosend': ['tocancel'],
@@ -97,7 +110,7 @@ class _State:
             'sent': ['tocancel']
         }
 
-        # system trade order state transition limit
+        # trade order state transition limit by system
         sys = {
             'notsend': ['tosend', 'sending', 'sent', 'pdeal', 'tdeal', 'dropped', 'expired'],
             'tosend': ['sending', 'sent', 'pdeal', 'tdeal', 'dropped', 'expired'],
@@ -106,6 +119,11 @@ class _State:
             'tocancel': ['canceling', 'pcanceled', 'tcanceled','fcanceled', 'expired'],
             'canceling': ['pcanceled', 'tcanceled', 'expired']
         }
+
+        # trade order state transition limit buy trader
+        trader = sys
+
+        all = {'user': user, 'sys': sys, 'trader': trader}
 
     order = _Order
 
@@ -124,7 +142,20 @@ class _Pair:
 
 
 class _Enum:
-    class _Otype:
+    class _OAction:
+        """
+            order action
+        """
+        buy = _Pair('buy', '买入')
+        sell = _Pair('sell', '卖出')
+        close = _Pair('close', '平仓')
+        cancel = _Pair('cancel', '撤销')
+        notify = _Pair('notify', '回报')
+
+    oaction = _OAction
+
+
+    class _OType:
         """
             trade order type
         """
@@ -132,7 +163,7 @@ class _Enum:
         sell = _Pair('sell', '卖出')
         close = _Pair('close', '平仓')
 
-    otype = _Otype
+    otype = _OType
 
     class _PType:
         """
@@ -152,7 +183,7 @@ class _Enum:
         sending = _Pair('sending', '正报')
         sent = _Pair('sent', '已报')
         tocancel = _Pair('tocancel', '待撤')
-        canceling = _Pair('canceling', '待撤')
+        canceling = _Pair('canceling', '正撤')
         pcanceled = _Pair('pcanceled', '部撤')
         tcanceled = _Pair('tcanceled', '已撤')
         fcanceled = _Pair('fcanceled', '撤废')
@@ -168,16 +199,30 @@ class _Enum:
             trade status
         """
         tobuy = _Pair('tobuy', '待买')
-        cancelbuy = _Pair('cancelbuy', '买撤')
-        hold = _Pair('hold', '持仓')
-        tosell = _Pair('tosell', '待卖')
-        cancelsell = _Pair('cancelsell', '卖撤')
-        sold = _Pair('sold', '已卖')
-        toclose = _Pair('toclose', '待平')
-        cancelclose = _Pair('cancelclose', '平撤')
-        closed = _Pair('closed', '已平')
+        buying = _Pair('buying', '正买')
+        cancelbuy = _Pair('cancelbuy', '撤买')
+        buycanceling = _Pair('buycanceling', '正撤买')
+
         canceled = _Pair('canceled', '已撤')
+
+        hold = _Pair('hold', '持仓')
+
+        tosell = _Pair('tosell', '待卖')
+        selling = _Pair('selling', '正卖')
+        cancelsell = _Pair('cancelsell', '撤卖')
+        sellcanceling = _Pair('sellcanceling', '正撤卖')
+
+        sold = _Pair('sold', '已卖')
+
+        toclose = _Pair('toclose', '待平')
+        closing = _Pair('closing', '正平')
+        cancelclose = _Pair('cancelclose', '撤平')
+        closecanceling = _Pair('closecanceling', '正撤平')
+
+        closed = _Pair('closed', '已平')
+
         expired = _Pair('expired', '过期')
+
         discard = _Pair('discard', '废单')
 
     trade = _Trade

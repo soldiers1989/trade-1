@@ -24,6 +24,7 @@ class MetaModel(type):
 
         # save fields
         attrs['__fields__'] = fields
+        attrs['fields'] = list(fields.keys())
 
         return type.__new__(cls, name, bases, attrs)
 
@@ -53,5 +54,6 @@ class TestModel(Model):
 
 if __name__ == '__main__':
     a = TestModel(id=2, name='abc', sex='male', disable=True, age=12)
-    a.id = 1
+    a.id = 3
     print(a)
+    print(TestModel.fields)

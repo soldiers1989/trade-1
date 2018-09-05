@@ -1,26 +1,22 @@
 """
     user dao
 """
-from web import dao
+from web import dao, sqlhelper
 from app.aam import models
 
 
 class UserDao(dao.Dao):
-    def get(self, id):
+    def get(self, **conds):
         """
             get stock
         :param user:
         :return:
         """
         # select query
-        sql = '''
-                select id, user, pwd, phone, money, disable, ctime, ltime
-                from tb_user
-                where id = %s
-            '''
+        q = sqlhelper.select().columns(*models.User.fields).tables('tb_user').where(**conds)
 
         # execute query
-        results = self.select(sql, (id,))
+        results = self.select(q.sql(), q.args())
         if len(results) > 0:
             return models.User(**results[0])
 

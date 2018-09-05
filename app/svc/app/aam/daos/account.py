@@ -1,26 +1,21 @@
 """
     trade account dao
 """
-from web import dao
+from web import dao, sqlhelper
 from app.aam import models
 
 
 class AccountDao(dao.Dao):
-    def get(self):
+    def select_one(self):
         """
             get a usable account for trade
         :return:
         """
         # select query
-        sql = '''
-                select id, account, name, lmoney, cfmin, cfrate, tfrate, disable, ctime, mtime
-                from tb_trade_account
-                where disable=%s
-                order by lmoney desc
-            '''
+        q = sqlhelper.select().columns(*models.TradeAccount.fields).tables('tb_trade_account').where(disable=False).orderby('lmoney').desc()
 
         # execute query
-        results = self.select(sql, (False,))
+        results = self.select(q.sql(), q.args())
         if len(results) > 0:
             return models.TradeAccount(**results[0])
 

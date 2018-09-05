@@ -1,48 +1,25 @@
 import time
-from web import dao
-from app.util import rand
+
 from app.aam import suite, models
+from app.util import rand
+from web import dao, sqlhelper
+
 
 class TradeDao(dao.Dao):
-    def get_by_id(self, id):
+    def get_trade(self, **conds):
         """
             get trade record by id
         :return:
         """
         # select query
-        sql = '''
-                select id, user_id, stock_id, coupon_id, account_id, code, ptype, oprice, ocount, hprice, hcount, fcount, bprice, bcount, sprice, scount, margin, ofee, ddays, dfee, tprofit, sprofit, status, ctime, ftime
-                from tb_user_trade
-                where id = %s
-            '''
+        q = sqlhelper.select().columns(*models.UserTrade.fields).tables('tb_user_trade').where(**conds)
 
         # execute query
-        results = self.select(sql, (id,))
+        results = self.select(q.sql(), q.args())
         if len(results) > 0:
             return models.UserTrade(**results[0])
 
         return None
-
-    def get_by_code(self, code):
-        """
-            get trade record by code
-        :param code:
-        :return:
-        """
-        # select query
-        sql = '''
-                select id, user_id, stock_id, coupon_id, account_id, code, ptype, oprice, ocount, hprice, hcount, fcount, bprice, bcount, sprice, scount, margin, ofee, ddays, dfee, tprofit, sprofit, status, ctime, ftime
-                from tb_user_trade
-                where code = %s
-            '''
-
-        # execute query
-        results = self.select(sql, (code,))
-        if len(results) > 0:
-            return models.UserTrade(**results[0])
-
-        return None
-
 
     def use_counpon(self, couponid):
         """
@@ -52,7 +29,7 @@ class TradeDao(dao.Dao):
         """
         # update query
         sql = '''
-                update tb_coupon
+                update tb_user_coupon
                 set status=%s, utime=%s
                 where id=%s
             '''
@@ -139,39 +116,12 @@ class TradeDao(dao.Dao):
         """
         # insert query
         sql = '''
-                insert into tb_user_trade(user_id, stock_id, coupon_id, code, ptype, oprice, ocount, margin, status, ctime)
+                insert into tb_user_trade(user_id, stock_id, coupon_id, code, optype, oprice, ocount, margin, status, ctime)
                 values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             '''
 
         # execute insert
         self.execute(sql, (userid, stockid, couponid, code, ptype, price, count, margin, suite.enum.trade.tobuy.code, int(time.time())))
-
-    def add_order(self, trade, account, stock, otype, ptype, oprice, ocount, operator):
-        """
-            add new trade order
-        :param trade:
-        :param account:
-        :param stock:
-        :param otype:
-        :param ptype:
-        :param ocount:
-        :param oprice:
-        :return:
-        """
-        # insert query
-        sql = '''
-                insert into tb_trade_order(trade_id, account_id, stock_id, otype, ptype, oprice, ocount, otime, status, slog)
-                values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            '''
-
-        #prepare status & status log
-        otime = int(time.time())
-        status_code, status_name = suite.enum.order.notsend.code, suite.enum.order.notsend.name
-        logobj = [suite.status.format(operator, suite.enum.otype.buy.name, '', status_name, otime)]
-        slog = suite.status.dumps(logobj)
-
-        # execute insert
-        self.execute(sql, (trade, account, stock, otype, ptype, oprice, ocount, otime, status_code, slog))
 
     def add_lever(self, tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax):
         """
@@ -187,19 +137,15 @@ class TradeDao(dao.Dao):
         # execute insert
         self.execute(sql, (tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax))
 
-    def sell_stock(self, tradeid, count):
+    def update_trade(self, tradeid, **cvals):
         """
-            sell stock of specified trade with count
+            update trade
         :param tradeid:
-        :param count:
+        :param cvals:
         :return:
         """
         # update query
-        sql = '''
-                update tb_user_trade
-                set fcount = fcount-%s
-                where id=%s
-            '''
+        q = sqlhelper.update().table('tb_user_trade').set(**cvals).where(id=tradeid)
 
-        # execute update
-        self.execute(sql, (count, tradeid))
+        # execute sql
+        self.execute(q.sql(), q.args())

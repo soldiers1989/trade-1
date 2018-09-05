@@ -1,25 +1,23 @@
 """
     lever dao
 """
-from web import dao
+from web import dao, sqlhelper
 from app.aam import models
 
+
 class LeverDao(dao.Dao):
-    def get(self, id):
+    def get(self, **conds):
         """
             get lever
         :param leverid:
         :return:
         """
         # select query
-        sql = '''
-                select id, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax, `order`, disable, ctime, mtime
-                from tb_lever
-                where id = %s
-            '''
+        q = sqlhelper.select().columns(*models.Lever.fields).tables('tb_lever').where(**conds)
+
 
         # execute query
-        results = self.select(sql, (id,))
+        results = self.select(q.sql(), q.args())
         if len(results) > 0:
             return models.Lever(**results[0])
 

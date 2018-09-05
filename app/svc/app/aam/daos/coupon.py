@@ -1,27 +1,23 @@
 """
     coupon dao
 """
-import time
-from web import dao
+from web import dao, sqlhelper
 from app.aam import models
 
 
 class CouponDao(dao.Dao):
-    def get(self, id):
+    def get(self, **conds):
         """
             get coupon
         :param id:
         :return:
         """
         # select query
-        sql = '''
-                select id, user_id, name, money, status, sdate, edate, ctime, utime
-                from tb_user_coupon
-                where id = %s
-            '''
+        q = sqlhelper.select().columns(*models.UserCoupon.fields).tables('tb_user_coupon').where(**conds)
+
 
         # execute query
-        results = self.select(sql, (id,))
+        results = self.select(q.sql(), q.args())
         if len(results) > 0:
             return models.UserCoupon(**results[0])
 

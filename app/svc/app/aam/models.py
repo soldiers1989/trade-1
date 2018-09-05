@@ -76,7 +76,7 @@ class UserTrade(model.Model):
     coupon_id = field.IntegerField(null=True)
     account_id = field.IntegerField(null=True)
     code = field.StringField(max_length=16)
-    ptype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
+    optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
     oprice = field.DecimalField(digits=10, decimals=2)
     ocount = field.IntegerField()
     hprice = field.DecimalField(null=True, digits=10, decimals=2)
@@ -96,3 +96,22 @@ class UserTrade(model.Model):
     slog = field.StringField(null=True)
     ctime = field.IntegerField()  # create time
     ftime = field.IntegerField(null=True)  # finish time
+
+
+class TradeOrder:
+    id = field.IntegerField()
+    account_id = field.IntegerField()
+    stock_id = field.StringField(max_length=8)
+    otype = field.StringField(max_length=16)
+    optype = field.StringField(max_length=16)
+    ocount = field.IntegerField()
+    oprice = field.DecimalField(digits=10, decimals=2, null=True)
+    otime = field.IntegerField()
+    ocode = field.StringField(max_length=16, null=True)
+    dcount = field.IntegerField(null=True)
+    dprice = field.DecimalField(digits=10, decimals=2, null=True)
+    dtime = field.IntegerField(null=True)
+    dcode = field.StringField(max_length=16, null=True)
+    status = field.StringField(max_length=16)
+    slog = field.StringField(null=True)
+    utime = field.IntegerField()

@@ -1,25 +1,22 @@
 """
     stock dao
 """
-from web import dao
+from web import dao, sqlhelper
 from app.aam import models
 
+
 class StockDao(dao.Dao):
-    def get(self, id):
+    def get(self, **conds):
         """
             get stock
         :param user:
         :return:
         """
         # select query
-        sql = '''
-                select id, name, jianpin, quanpin, status, `limit`, ctime, mtime
-                from tb_stock
-                where id = %s
-            '''
+        q = sqlhelper.select().columns(*models.Stock.fields).tables('tb_stock').where(**conds)
 
         # execute query
-        results = self.select(sql, (id,))
+        results = self.select(q.sql(), q.args())
         if len(results) > 0:
             return models.Stock(**results[0])
 

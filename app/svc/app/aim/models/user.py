@@ -2,8 +2,9 @@
     user model
 """
 import time
+
 from app.aim import model
-from app.util import sqlhelper
+from web import sqlhelper
 
 
 class UserModel(model.Model):

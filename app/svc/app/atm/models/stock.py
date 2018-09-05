@@ -1,6 +1,7 @@
 import time
+
 from app.atm import model
-from app.util import sqlhelper
+from web import sqlhelper
 
 
 class Stock(model.Model):
@@ -14,7 +15,7 @@ class Stock(model.Model):
         :return:
         """
         # select query object
-        q = sqlhelper\
+        q = sqlhelper \
             .select()\
             .columns('id', 'name', 'jianpin', 'quanpin', 'status', 'limit', 'ctime', 'mtime')\
             .tables('tb_stock')\
@@ -36,7 +37,7 @@ class Stock(model.Model):
         tm = int(time.time())
 
         # insert query object
-        q = sqlhelper\
+        q = sqlhelper \
             .insert()\
             .columns('id', 'name', 'jianpin', 'quanpin', 'status', 'limit', 'ctime', 'mtime')\
             .table('tb_stock')\
@@ -56,7 +57,7 @@ class Stock(model.Model):
         q = sqlhelper.update().table('tb_stock').set(**cvals)
 
         # create sql
-        sql = q.sql() + ' where id in ('+ sqlhelper.util.repeat('%s', len(ids), ',') +')'
+        sql = q.sql() + ' where id in (' + sqlhelper.util.repeat('%s', len(ids), ',') + ')'
 
         # args
         args = []

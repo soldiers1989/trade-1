@@ -36,6 +36,7 @@ redis_db_not_exist = ProcessError(-1220, '查询DB不存在')
 redis_key_not_exist = ProcessError(-1221, '查询健值不存在')
 
 user_not_exist = ProcessError(-1300, '用户不存在')
+user_has_disabled = ProcessError(-1300, '用户被禁用')
 user_money_not_enough = ProcessError(-1300, '用户余额不足')
 
 lever_not_exist = ProcessError(-1301, '杠杆配置不存在')
@@ -58,3 +59,8 @@ stock_price_error = ProcessError(-1304, '股票申报价格超出范围')
 account_money_not_enough = ProcessError(-1305, '股票交易账户余额不足')
 stock_count_not_enough = ProcessError(-1305, '股票可用数量不足')
 stock_count_not_match = ProcessError(-1305, '股票持仓和可用数量不一致')
+
+trade_order_cancel_denied = ProcessError(-1306, '当前委托不可撤销')
+trade_order_notify_denied = ProcessError(-1306, '当前委托目标状态禁止转换')
+
+order_type_not_exists = ProcessError(-1307, '委托类型不存在')

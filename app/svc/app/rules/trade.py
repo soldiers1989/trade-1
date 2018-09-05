@@ -57,7 +57,34 @@ def valid_buy_time(ptype, tm = time.time()):
     :param tm:
     :return:
     """
-    pass
+    return True
+
+
+def valid_sell_time(ptype, tm = time.time()):
+    """
+
+    :param tm:
+    :return:
+    """
+    return True
+
+
+def valid_close_time(ptype, tm = time.time()):
+    """
+
+    :param tm:
+    :return:
+    """
+    return True
+
+
+def valid_cancel_time(tm = time.time()):
+    """
+
+    :param tm:
+    :return:
+    """
+    return True
 
 
 def valid_buy_count(count):
@@ -81,15 +108,6 @@ def valid_buy_price(code, price):
     return True
 
 
-def valid_sell_time(ptype, tm = time.time()):
-    """
-
-    :param tm:
-    :return:
-    """
-    pass
-
-
 def valid_sell_price(code, price):
     """
 
@@ -97,5 +115,14 @@ def valid_sell_price(code, price):
     :param price:
     :return:
     """
-    pass
+    return True
 
+
+def valid_close_price(code, price):
+    """
+
+    :param code:
+    :param price:
+    :return:
+    """
+    return True
