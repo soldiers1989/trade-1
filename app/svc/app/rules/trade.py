@@ -51,7 +51,7 @@ def get_close_quote(code, date=datetime.date.today()):
     pass
 
 
-def valid_buy_time(ptype, tm = time.time()):
+def valid_user_buy_time(ptype, tm = time.time()):
     """
 
     :param tm:
@@ -60,7 +60,7 @@ def valid_buy_time(ptype, tm = time.time()):
     return True
 
 
-def valid_sell_time(ptype, tm = time.time()):
+def valid_user_sell_time(ptype, tm = time.time()):
     """
 
     :param tm:
@@ -69,7 +69,7 @@ def valid_sell_time(ptype, tm = time.time()):
     return True
 
 
-def valid_close_time(ptype, tm = time.time()):
+def valid_user_close_time(ptype, tm = time.time()):
     """
 
     :param tm:
@@ -78,7 +78,7 @@ def valid_close_time(ptype, tm = time.time()):
     return True
 
 
-def valid_cancel_time(tm = time.time()):
+def valid_user_cancel_time(tm = time.time()):
     """
 
     :param tm:
@@ -87,7 +87,7 @@ def valid_cancel_time(tm = time.time()):
     return True
 
 
-def valid_buy_count(count):
+def valid_user_buy_count(count):
     """
         check if buy
     :param count:
@@ -98,7 +98,7 @@ def valid_buy_count(count):
     return True
 
 
-def valid_buy_price(code, price):
+def valid_user_buy_price(code, price):
     """
         check if price if a valid order price for stock in current time
     :param code: str, stock code
@@ -108,7 +108,7 @@ def valid_buy_price(code, price):
     return True
 
 
-def valid_sell_price(code, price):
+def valid_user_sell_price(code, price):
     """
 
     :param code:
@@ -118,7 +118,53 @@ def valid_sell_price(code, price):
     return True
 
 
-def valid_close_price(code, price):
+def valid_user_close_price(code, price):
+    """
+
+    :param code:
+    :param price:
+    :return:
+    """
+    return True
+
+
+def valid_sys_buy_time(ptype, tm = time.time()):
+    """
+
+    :param tm:
+    :return:
+    """
+    return True
+
+
+def valid_sys_sell_time(ptype, tm = time.time()):
+    """
+
+    :param tm:
+    :return:
+    """
+    return True
+
+
+def valid_sys_close_time(ptype, tm = time.time()):
+    """
+
+    :param tm:
+    :return:
+    """
+    return True
+
+
+def valid_sys_cancel_time(tm = time.time()):
+    """
+
+    :param tm:
+    :return:
+    """
+    return True
+
+
+def valid_sys_close_price(code, price):
     """
 
     :param code:

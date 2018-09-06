@@ -95,6 +95,7 @@ class UserTrade(model.Model):
     status = field.EnumField(choices=suite.enum.values(suite.enum.trade))
     slog = field.StringField(null=True)
     ctime = field.IntegerField()  # create time
+    utime = field.IntegerField()  # update time
     ftime = field.IntegerField(null=True)  # finish time
 
 
@@ -114,4 +115,5 @@ class TradeOrder:
     dcode = field.StringField(max_length=16, null=True)
     status = field.StringField(max_length=16)
     slog = field.StringField(null=True)
+    ctime = field.IntegerField()
     utime = field.IntegerField()

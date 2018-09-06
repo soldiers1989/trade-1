@@ -19,7 +19,7 @@ class UserBuyHandler(handler.Handler):
         form = forms.trade.UserBuy(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_buy_time(form.ptype, time.time()):
+        if not rules.trade.valid_user_buy_time(form.ptype):
             raise error.not_trading_time
 
         ## process trade add operation by lock user ##
@@ -59,11 +59,11 @@ class UserBuyHandler(handler.Handler):
                 raise error.lever_has_disabled
 
             # check stock count
-            if not rules.trade.valid_buy_count(form.count):
+            if not rules.trade.valid_user_buy_count(form.count):
                 raise error.stock_count_error
 
             # check order price
-            if form.price is None or not rules.trade.valid_buy_price(form.stock, form.price):
+            if form.price is None or not rules.trade.valid_user_buy_price(form.stock, form.price):
                 raise error.stock_price_error
 
             # check capital
@@ -140,7 +140,7 @@ class UserSellHandler(handler.Handler):
         form = forms.trade.UserSell(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_sell_time(form.ptype, time.time()):
+        if not rules.trade.valid_user_sell_time(form.ptype):
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -154,8 +154,12 @@ class UserSellHandler(handler.Handler):
             if tradeobj is None or form.user != tradeobj.user_id:
                 raise error.invalid_parameters
 
+            # check current trade status
+            if tradeobj.status != suite.enum.trade.hold.code:
+                raise error.trade_operation_denied
+
             # check stock
-            stock = stockDao.get(form.stock)
+            stock = stockDao.get(id=tradeobj.stock_id)
             if stock is None:
                 raise error.stock_not_exist
 
@@ -165,23 +169,100 @@ class UserSellHandler(handler.Handler):
             if stock.status == suite.enum.stock.delisted:
                 raise error.stock_is_delisted
 
-            # check free count #
-            if not tradeobj.fcount > 0:
+            # check free count /hold count #
+            if not tradeobj.fcount > 0 :
                 raise error.stock_count_not_enough
+            if tradeobj.hcount != tradeobj.fcount:
+                raise error.stock_count_not_match
 
             # check price #
-            if form.ptype == suite.enum.ptype.xj.code and not rules.trade.valid_sell_price(tradeobj.stock_id, form.price):
+            if form.ptype == suite.enum.ptype.xj.code and not rules.trade.valid_user_sell_price(tradeobj.stock_id, form.price):
                 raise error.stock_price_error
+
+            # prepare status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            time_now = int(time.time())
+            logs.append(suite.status.trade.format(suite.enum.operator.user.code,
+                                                  suite.enum.oaction.sell.code,
+                                                  form.ptype,
+                                                  str(form.price),
+                                                  tradeobj.fcount,
+                                                  tradeobj.status,
+                                                  suite.enum.trade.tosell.code,
+                                                  time_now))
+            slog = suite.status.trade.dumps(logs)
 
             # add new order #
             with tradeDao.transaction():
                 # update free count #
-                tradeDao.update_trade(tradeobj.id, fcount=0, status=suite.enum.trade.tosell.code)
+                tradeDao.update_trade(tradeobj.id, optype=form.ptype, oprice=form.price, ocount=tradeobj.fcount, fcount=0, status=suite.enum.trade.tosell.code, slog=slog, utime=time_now)
 
-                # add new order #
-                tradeDao.add_order(tradeobj.id, tradeobj.account_id, tradeobj.stock_id,
-                                   suite.enum.otype.sell.code, form.ptype, form.price, tradeobj.fcount,
-                                   form.operator, suite.enum.oaction.sell.code)
+                # success #
+                self.write(protocol.success(msg=info.msg_sell_success))
+
+
+class UserCloseHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.UserClose(**self.arguments)
+
+        ## check trade time ##
+        if not rules.trade.valid_user_close_time(form.ptype):
+            raise error.not_trading_time
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init trade dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+            stockDao = daos.stock.StockDao(self.db)
+
+            # check trade object #
+            tradeobj = tradeDao.get_trade(id=form.trade)
+            if tradeobj is None or form.user != tradeobj.user_id:
+                raise error.invalid_parameters
+
+            # check current trade status
+            if tradeobj.status != suite.enum.trade.hold.code:
+                raise error.trade_operation_denied
+
+            # check stock
+            stock = stockDao.get(id=tradeobj.stock_id)
+            if stock is None:
+                raise error.stock_not_exist
+            if stock.status == suite.enum.stock.closed:
+                raise error.stock_is_closed
+            if stock.status == suite.enum.stock.delisted:
+                raise error.stock_is_delisted
+
+            # check free count /hold count #
+            if not tradeobj.fcount > 0 :
+                raise error.stock_count_not_enough
+            if tradeobj.hcount != tradeobj.fcount:
+                raise error.stock_count_not_match
+
+            # check price #
+            if form.ptype == suite.enum.ptype.xj.code and not rules.trade.valid_user_close_price(tradeobj.stock_id, form.price):
+                raise error.stock_price_error
+
+            # prepare status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            time_now = int(time.time())
+            logs.append(suite.status.trade.format(suite.enum.operator.user.code,
+                                                  suite.enum.oaction.close.code,
+                                                  form.ptype,
+                                                  str(form.price),
+                                                  tradeobj.fcount,
+                                                  tradeobj.status,
+                                                  suite.enum.trade.toclose.code,
+                                                  time_now))
+            slog = suite.status.trade.dumps(logs)
+
+            # add new order #
+            with tradeDao.transaction():
+                # update free count #
+                tradeDao.update_trade(tradeobj.id, optype=form.ptype, oprice=form.price, ocount=tradeobj.fcount, fcount=0, status=suite.enum.trade.toclose.code, slog=slog, utime=time_now)
 
                 # success #
                 self.write(protocol.success(msg=info.msg_sell_success))
@@ -192,10 +273,10 @@ class UserCancelHandler(handler.Handler):
     @access.needtoken
     def post(self):
         ## get arguments ##
-        form = forms.trade.Cancel(**self.arguments)
+        form = forms.trade.UserCancel(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_cancel_time():
+        if not rules.trade.valid_user_cancel_time():
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -203,44 +284,169 @@ class UserCancelHandler(handler.Handler):
             # init dao #
             tradeDao = daos.trade.TradeDao(self.db)
 
-            # get order object #
-            orderobj = tradeDao.get_order(form.order)
-            if orderobj is None:
-                raise error.invalid_parameters
-
             # check trade object #
-            tradeobj = tradeDao.get_by_id(orderobj.trade_id)
+            tradeobj = tradeDao.get_trade(id=form.trade)
             if tradeobj is None or form.user != tradeobj.user_id:
                 raise error.invalid_parameters
 
-            # check order status #
-            if suite.enum.order.tocancel.code not in suite.state.order.all.get(form.operator).get(orderobj.status, []):
-                raise error.trade_order_cancel_denied
+            next_status = None
+            # check trade status #
+            if tradeobj.status in [suite.enum.trade.tobuy.code, suite.enum.trade.buying.code]:
+                next_status = suite.enum.trade.cancelbuy.code
+            elif tradeobj.status in [suite.enum.trade.tosell.code, suite.enum.trade.selling.code]:
+                next_status = suite.enum.trade.cancelsell.code
+            elif tradeobj.status in [suite.enum.trade.toclose.code, suite.enum.trade.closing.code]:
+                next_status = suite.enum.trade.cancelclose.code
+            else:
+                raise error.trade_operation_denied
 
             # append new status log
-            logs = suite.status.loads(orderobj.slog)
-            otime = int(time.time())
-            logs.append(suite.status.format(form.operator, suite.enum.oaction.cancel.code, orderobj.status, suite.enum.order.tocancel.code, otime))
-            slog = suite.status.dumps(logs)
+            logs = suite.status.trade.loads(tradeobj.slog)
+            time_now = int(time.time())
+            logs.append(suite.status.trade.format(suite.enum.operator.user.code,
+                                            suite.enum.oaction.cancel.code,
+                                            tradeobj.optype,
+                                            str(tradeobj.oprice),
+                                            tradeobj.ocount,
+                                            tradeobj.status,
+                                            next_status,
+                                            time_now))
+            slog = suite.status.trade.dumps(logs)
 
             # change order status #
             with tradeDao.transaction():
                 # update order #
-                tradeDao.update_order(orderobj.id, status=suite.enum.order.tocancel.code, slog=slog, utime=otime)
+                tradeDao.update_trade(tradeobj.id, status=next_status, slog=slog, utime=time_now)
+
+                # success #
+                self.write(protocol.success(msg=info.msg_cancel_success))
+
+
+class SysBuyHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.SysBuy(**self.arguments)
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init trade dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+            stockDao = daos.stock.StockDao(self.db)
+
+            # check trade object #
+            tradeobj = tradeDao.get_trade(id=form.trade)
+            if tradeobj is None or form.user != tradeobj.user_id:
+                raise error.invalid_parameters
+
+            ## check trade time ##
+            if not rules.trade.valid_sys_buy_time(tradeobj.optype):
+                raise error.not_trading_time
+
+            # check current trade status
+            if tradeobj.status != suite.enum.trade.tobuy.code:
+                raise error.trade_operation_denied
+
+            # check stock
+            stock = stockDao.get(id=tradeobj.stock_id)
+            if stock is None:
+                raise error.stock_not_exist
+            if stock.status == suite.enum.stock.closed:
+                raise error.stock_is_closed
+            if stock.status == suite.enum.stock.delisted:
+                raise error.stock_is_delisted
+            if stock.limit == suite.enum.risk.nobuy or stock.limit == suite.enum.risk.nodelay:
+                raise error.stock_buy_limited
+
+            # prepare status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            time_now = int(time.time())
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.buy.code,
+                                                  tradeobj.optype,
+                                                  str(tradeobj.oprice),
+                                                  tradeobj.ocount,
+                                                  tradeobj.status,
+                                                  suite.enum.trade.buying.code,
+                                                  time_now))
+            slog = suite.status.trade.dumps(logs)
+
+            # add new order #
+            with tradeDao.transaction():
+                # update free count #
+                tradeDao.update_trade(tradeobj.id, status=suite.enum.trade.buying.code, slog=slog, utime=time_now)
 
                 # success #
                 self.write(protocol.success(msg=info.msg_sell_success))
 
 
-class CloseHandler(handler.Handler):
+class SysSellHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
         ## get arguments ##
-        form = forms.trade.Sell(**self.arguments)
+        form = forms.trade.SysSell(**self.arguments)
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init trade dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+            stockDao = daos.stock.StockDao(self.db)
+
+            # check trade object #
+            tradeobj = tradeDao.get_trade(id=form.trade)
+            if tradeobj is None or form.user != tradeobj.user_id:
+                raise error.invalid_parameters
+
+            ## check trade time ##
+            if not rules.trade.valid_sys_sell_time(tradeobj.optype):
+                raise error.not_trading_time
+
+            # check current trade status
+            if tradeobj.status != suite.enum.trade.tosell.code:
+                raise error.trade_operation_denied
+
+            # check stock
+            stock = stockDao.get(id=tradeobj.stock_id)
+            if stock is None:
+                raise error.stock_not_exist
+            if stock.status == suite.enum.stock.closed:
+                raise error.stock_is_closed
+            if stock.status == suite.enum.stock.delisted:
+                raise error.stock_is_delisted
+
+            # prepare status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            time_now = int(time.time())
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.sell.code,
+                                                  tradeobj.optype,
+                                                  str(tradeobj.oprice),
+                                                  tradeobj.ocount,
+                                                  tradeobj.status,
+                                                  suite.enum.trade.selling.code,
+                                                  time_now))
+            slog = suite.status.trade.dumps(logs)
+
+            # add new order #
+            with tradeDao.transaction():
+                # update free count #
+                tradeDao.update_trade(tradeobj.id, status=suite.enum.trade.buying.code, slog=slog, utime=time_now)
+
+                # success #
+                self.write(protocol.success(msg=info.msg_sell_success))
+
+
+class SysCloseHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.SysClose(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_close_time(form.ptype, time.time()):
+        if not rules.trade.valid_sys_close_time(form.ptype, time.time()):
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -258,111 +464,82 @@ class CloseHandler(handler.Handler):
             stock = stockDao.get(form.stock)
             if stock is None:
                 raise error.stock_not_exist
-
             if stock.status == suite.enum.stock.closed:
                 raise error.stock_is_closed
-
             if stock.status == suite.enum.stock.delisted:
                 raise error.stock_is_delisted
 
-            # check hold/free count #
-            if tradeobj.fcount != tradeobj.hcount:
-                raise error.stock_count_not_match
-
-            # check price #
-            if form.ptype == suite.enum.ptype.xj.code and not rules.trade.valid_close_price(tradeobj.stock_id, form.price):
-                raise error.stock_price_error
+            # prepare status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            time_now = int(time.time())
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.close.code,
+                                                  tradeobj.optype,
+                                                  str(tradeobj.oprice),
+                                                  tradeobj.ocount,
+                                                  tradeobj.status,
+                                                  suite.enum.trade.closing.code,
+                                                  time_now))
+            slog = suite.status.trade.dumps(logs)
 
             # add new order #
             with tradeDao.transaction():
                 # update free count #
-                tradeDao.update_trade(tradeobj.id, fcount=0, status=suite.enum.trade.toclose.code)
-
-                # add new order #
-                tradeDao.add_order(tradeobj.id, tradeobj.account_id, tradeobj.stock_id,
-                                   suite.enum.otype.close.code, form.ptype, form.price, tradeobj.fcount,
-                                   form.operator, suite.enum.oaction.close.code)
+                tradeDao.update_trade(tradeobj.id,  status=suite.enum.trade.closing.code, slog=slog, utime=time_now)
 
                 # success #
                 self.write(protocol.success(msg=info.msg_sell_success))
 
 
-class NotifyHandler(handler.Handler):
-    """
-        notify trade order results
-    """
+class SysCancelHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
         ## get arguments ##
-        form = forms.trade.Notify(**self.arguments)
+        form = forms.trade.UserCancel(**self.arguments)
+
+        ## check trade time ##
+        if not rules.trade.valid_user_cancel_time():
+            raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
         with lock.user(form.user):
             # init dao #
             tradeDao = daos.trade.TradeDao(self.db)
 
-            # get order object #
-            orderobj = tradeDao.get_order(form.order)
-            if orderobj is None:
-                raise error.invalid_parameters
-
             # check trade object #
-            tradeobj = tradeDao.get_by_id(orderobj.trade_id)
+            tradeobj = tradeDao.get_trade(id=form.trade)
             if tradeobj is None or form.user != tradeobj.user_id:
                 raise error.invalid_parameters
 
-            # check order status #
-            if form.status not in suite.state.order.all.get(form.operator).get(orderobj.status, []):
-                raise error.trade_order_notify_denied
+            next_status = None
+            # check trade status #
+            if tradeobj.status in [suite.enum.trade.cancelbuy.code]:
+                next_status = suite.enum.trade.buycanceling.code
+            elif tradeobj.status in [suite.enum.trade.cancelsell.code]:
+                next_status = suite.enum.trade.sellcanceling.code
+            elif tradeobj.st in [suite.enum.trade.cancelclose.code]:
+                next_status = suite.enum.trade.closecanceling.code
+            else:
+                raise error.trade_operation_denied
 
-            # append new order status log
-            logs = suite.status.loads(orderobj.slog)
-            otime = int(time.time())
-            logs.append(suite.status.format(form.operator, suite.enum.oaction.notify.code, orderobj.status, form.status, otime))
-            slog = suite.status.dumps(logs)
-
-            isdone, dtime = False, None
-            # check if order has done
-            if form.dcount + form.ccount == orderobj.ocount:
-                isdone = True
-                dtime = int(time.time())
-
-
+            # append new status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            time_now = int(time.time())
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.cancel.code,
+                                                  tradeobj.optype,
+                                                  str(tradeobj.oprice),
+                                                  tradeobj.ocount,
+                                                  tradeobj.status,
+                                                  next_status,
+                                                  time_now))
+            slog = suite.status.trade.dumps(logs)
 
             # change order status #
             with tradeDao.transaction():
                 # update order #
-                tradeDao.update_order(orderobj.id, dcount=form.dcount, dprice=form.dprice, dtime=dtime, status=form.status, slog=slog, utime=otime)
-
-                # update trade #
-                if isdone:
-                    # trade status log
-                    logs = suite.status.loads(tradeobj.slog)
-                    otime = int(time.time())
-
-                    if orderobj.otype == suite.enum.otype.buy.code:
-                        # to buy complete status log
-                        logs.append(suite.status.format(form.operator, suite.enum.oaction.notify.code, tradeobj.status, suite.enum.trade.hold.code, otime))
-                        slog = suite.status.dumps(logs)
-
-                        # buy order completed
-                        tradeDao.update_trade(tradeobj.id, bcount=form.dcount, bprice=form.dprice, hcount=form.dcount, hprice=form.dprice,
-                                              status=suite.enum.trade.hold, slog=slog)
-                    elif orderobj.otype == suite.enum.otype.sell.code:
-                        # to buy complete status log
-                        logs.append(suite.status.format(form.operator, suite.enum.oaction.notify.code, tradeobj.status, suite.enum.trade.sold.code, otime))
-                        slog = suite.status.dumps(logs)
-
-                        # sell order completed
-                        tradeDao.update_trade(tradeobj.id, scount=form.dcount, sprice=form.sprice, hcount=form.dcount, hprice=form.dprice,
-                                              status=suite.enum.trade.sold, slog=slog)
-                    elif orderobj.otype == suite.enum.otype.close.code:
-                        # close order completed
-                        pass
-                    else:
-                        raise error.order_type_not_exists
-
+                tradeDao.update_trade(tradeobj.id, status=next_status, slog=slog, utime=time_now)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_notify_success))
+                self.write(protocol.success(msg=info.msg_cancel_success))

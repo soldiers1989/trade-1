@@ -62,5 +62,7 @@ stock_count_not_match = ProcessError(-1305, '股票持仓和可用数量不一�
 
 trade_order_cancel_denied = ProcessError(-1306, '当前委托不可撤销')
 trade_order_notify_denied = ProcessError(-1306, '当前委托目标状态禁止转换')
+trade_operation_denied = ProcessError(-1306, '当前状态不允许该操作')
 
 order_type_not_exists = ProcessError(-1307, '委托类型不存在')
+

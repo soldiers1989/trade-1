@@ -502,6 +502,7 @@ class UserTrade(models.Model):
     status = models.CharField(max_length=16, default='tobuy', verbose_name='状态')
     slog = models.TextField(null=True, verbose_name='状态变更')
     ctime = models.BigIntegerField(verbose_name='订单时间')  # create time
+    utime = models.BigIntegerField(verbose_name='更新时间')  # update time
     ftime = models.BigIntegerField(null=True, verbose_name='结束时间')  # finish time
 
     class Meta:
@@ -600,6 +601,7 @@ class TradeOrder(models.Model):
     dcode = models.CharField(max_length=16, null=True, verbose_name='成交代码')
     status = models.CharField(max_length=16, verbose_name='委托状态')
     slog = models.TextField(null=True, verbose_name='状态变更')
+    ctime = models.BigIntegerField(verbose_name='创建时间')
     utime = models.BigIntegerField(verbose_name='更新时间')
 
     class Meta:

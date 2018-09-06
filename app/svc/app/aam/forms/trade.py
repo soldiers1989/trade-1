@@ -22,42 +22,59 @@ class UserSell(form.Form):
     price = field.DecimalField(digits=10, decimals=2)
 
 
-class UserCancel(form.Form):
-    operator = field.EnumField(choices=suite.enum.values(suite.enum.operator))
-    user = field.IntegerField()
-    order = field.IntegerField()
-
-
-class SysClose(form.Form):
-    operator = field.EnumField(choices=suite.enum.values(suite.enum.operator))
+class UserClose(form.Form):
     user = field.IntegerField()
     trade = field.IntegerField()
     ptype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
     price = field.DecimalField(digits=10, decimals=2)
 
 
+class UserCancel(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()
+
+
+class SysBuy(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()
+
+
+class SysSell(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()
+
+
+class SysClose(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()
+
+
+class SysCancel(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()
+
+
 class SysBought(form.Form):
-    operator = field.EnumField(choices=suite.enum.values(suite.enum.operator))
     user = field.IntegerField()
     trade = field.IntegerField()
     count = field.IntegerField()
     price = field.DecimalField(digits=10, decimals=2)
 
 
-class Sold(form.Form):
-    operator = field.EnumField(choices=suite.enum.values(suite.enum.operator))
+class SysSold(form.Form):
     user = field.IntegerField()
     trade = field.IntegerField()
     count = field.IntegerField()
     price = field.DecimalField(digits=10, decimals=2)
 
 
-class Notify(form.Form):
-    operator = field.EnumField(choices=suite.enum.values(suite.enum.operator))
+class SysClosed(form.Form):
     user = field.IntegerField()
-    order = field.IntegerField()
-    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
-    ocode = field.StringField()
-    dcount = field.IntegerField()
-    dprice = field.IntegerField()
-    ccount = field.IntegerField()
+    trade = field.IntegerField()
+    count = field.IntegerField()
+    price = field.DecimalField(digits=10, decimals=2)
+
+
+class SysCanceled(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()

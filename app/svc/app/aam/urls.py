@@ -8,16 +8,16 @@ handlers = [
 
     (r"/trade/user/buy", handlers.trade.UserBuyHandler),
     (r"/trade/user/sell", handlers.trade.UserSellHandler),
+    (r"/trade/user/close", handlers.trade.UserCloseHandler),
     (r"/trade/user/cancel", handlers.trade.UserCancelHandler),
 
-    (r"/trade/sys/buy", handlers.trade.CloseHandler),
-    (r"/trade/sys/sell", handlers.trade.CloseHandler),
-    (r"/trade/sys/close1", handlers.trade.CloseHandler),
-    (r"/trade/sys/close2", handlers.trade.CloseHandler),
-    (r"/trade/sys/cancel", handlers.trade.CloseHandler),
+    (r"/trade/sys/buy", handlers.trade.SysBuyHandler),
+    (r"/trade/sys/sell", handlers.trade.SysSellHandler),
+    (r"/trade/sys/close", handlers.trade.SysCloseHandler),
+    (r"/trade/sys/cancel", handlers.trade.SysCancelHandler),
 
-    (r"/trade/sys/bought", handlers.trade.CloseHandler),
-    (r"/trade/sys/sold", handlers.trade.CloseHandler),
-    (r"/trade/sys/closed", handlers.trade.CloseHandler),
-    (r"/trade/sys/canceled", handlers.trade.CloseHandler),
+    (r"/trade/sys/bought", handlers.trade.SysBoughtHandler),
+    (r"/trade/sys/sold", handlers.trade.SysSoldHandler),
+    (r"/trade/sys/closed", handlers.trade.SysClosedHandler),
+    (r"/trade/sys/canceled", handlers.trade.SysCanceledHandler),
 ]
