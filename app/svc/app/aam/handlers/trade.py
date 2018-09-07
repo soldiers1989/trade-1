@@ -1,7 +1,7 @@
 """
     trade management
 """
-import datetime, time
+import datetime, time, decimal
 from app import rules
 from app.util import rand
 from app.aam import suite, access, handler, daos, forms, protocol, error, info, lock
@@ -77,7 +77,7 @@ class UserBuyHandler(handler.Handler):
                 raise error.lever_capital_denied
 
             # check coupon
-            coupon_id, coupon_money = None, 0.0
+            coupon_id, coupon_money = None, decimal.Decimal('0.00')
             if form.coupon is not None:
                 coupon = couponDao.get(id=form.coupon)
                 if coupon is None:
@@ -112,10 +112,10 @@ class UserBuyHandler(handler.Handler):
                     tradeDao.use_counpon(coupon_id)
 
                 # add user bill
-                tradeDao.add_bill(form.user, before_money, left_money, cost, suite.tpl.bill.margin.item, suite.tpl.bill.margin.detail%(str(margin),))
+                tradeDao.add_bill(form.user, before_money, left_money, cost, suite.tpl.bill.tmargin.item, suite.tpl.bill.tmargin.detail%(str(margin),))
 
                 # use user money
-                tradeDao.use_money(form.user, cost)
+                tradeDao.update_money(form.user, left_money)
 
                 # add trade order record
                 code = rand.uuid()
@@ -129,7 +129,7 @@ class UserBuyHandler(handler.Handler):
                 tradeDao.add_lever(tradeobj.id, lever.lever, lever.wline, lever.sline, lever.ofmin, lever.ofrate, lever.dfrate, lever.psrate, lever.mmin, lever.mmax)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_buy_success))
+                self.write(protocol.success(msg=info.msg_user_buy_success, data={'trade': tradeobj.id}))
 
 
 class UserSellHandler(handler.Handler):
@@ -195,10 +195,12 @@ class UserSellHandler(handler.Handler):
             # add new order #
             with tradeDao.transaction():
                 # update free count #
-                tradeDao.update_trade(tradeobj.id, optype=form.ptype, oprice=form.price, ocount=tradeobj.fcount, fcount=0, status=suite.enum.trade.tosell.code, slog=slog, utime=time_now)
+                tradeDao.update_trade(tradeobj.id, optype=form.ptype, oprice=form.price, ocount=tradeobj.fcount, fcount=0,
+                                      status=suite.enum.trade.tosell.code, slog=slog,
+                                      utime=time_now, ostime=time_now)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_sell_success))
+                self.write(protocol.success(msg=info.msg_user_sell_success, data={'trade': tradeobj.id}))
 
 
 class UserCloseHandler(handler.Handler):
@@ -262,10 +264,12 @@ class UserCloseHandler(handler.Handler):
             # add new order #
             with tradeDao.transaction():
                 # update free count #
-                tradeDao.update_trade(tradeobj.id, optype=form.ptype, oprice=form.price, ocount=tradeobj.fcount, fcount=0, status=suite.enum.trade.toclose.code, slog=slog, utime=time_now)
+                tradeDao.update_trade(tradeobj.id, optype=form.ptype, oprice=form.price, ocount=tradeobj.fcount, fcount=0,
+                                      status=suite.enum.trade.toclose.code, slog=slog,
+                                      utime=time_now, stime=time_now)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_sell_success))
+                self.write(protocol.success(msg=info.msg_user_close_success, data={'trade': tradeobj.id}))
 
 
 class UserCancelHandler(handler.Handler):
@@ -283,19 +287,31 @@ class UserCancelHandler(handler.Handler):
         with lock.user(form.user):
             # init dao #
             tradeDao = daos.trade.TradeDao(self.db)
+            userDao = daos.user.UserDao(self.db)
 
             # check trade object #
             tradeobj = tradeDao.get_trade(id=form.trade)
             if tradeobj is None or form.user != tradeobj.user_id:
                 raise error.invalid_parameters
 
+            # check user object #
+            userobj = userDao.get(id=form.user)
+            if userobj is None:
+                raise error.invalid_parameters
+
             next_status = None
             # check trade status #
-            if tradeobj.status in [suite.enum.trade.tobuy.code, suite.enum.trade.buying.code]:
+            if tradeobj.status in [suite.enum.trade.tobuy.code]:
+                next_status = suite.enum.trade.canceled.code
+            elif tradeobj.status in [suite.enum.trade.buying.code]:
                 next_status = suite.enum.trade.cancelbuy.code
-            elif tradeobj.status in [suite.enum.trade.tosell.code, suite.enum.trade.selling.code]:
+            elif tradeobj.status in [suite.enum.trade.tosell.code]:
+                next_status = suite.enum.trade.hold.code
+            elif tradeobj.status in [suite.enum.trade.selling.code]:
                 next_status = suite.enum.trade.cancelsell.code
-            elif tradeobj.status in [suite.enum.trade.toclose.code, suite.enum.trade.closing.code]:
+            elif tradeobj.status in [suite.enum.trade.toclose.code]:
+                next_status = suite.enum.trade.hold.code
+            elif tradeobj.status in [suite.enum.trade.closing.code]:
                 next_status = suite.enum.trade.cancelclose.code
             else:
                 raise error.trade_operation_denied
@@ -315,11 +331,28 @@ class UserCancelHandler(handler.Handler):
 
             # change order status #
             with tradeDao.transaction():
-                # update order #
-                tradeDao.update_trade(tradeobj.id, status=next_status, slog=slog, utime=time_now)
+                if next_status == suite.enum.trade.hold.code:
+                    # tosell/toclose->hold #
+                    tradeDao.update_trade(tradeobj.id, status=next_status, slog=slog, utime=time_now)
+                else:
+                    # tobuy->canceled, return margin #
+                    # by canceled, need return margin #
+                    tradeDao.update_trade(tradeobj.id,
+                                          status=next_status, slog=slog,
+                                          utime=int(time.time()), etime=time_now)
+
+                    # add bill
+                    money = tradeobj.margin
+                    bmoney, lmoney = userobj.money, userobj.money+money
+                    tradeDao.add_bill(tradeobj.user_id, bmoney, lmoney, money,
+                                      suite.tpl.bill.rmargin.item,
+                                      suite.tpl.bill.rmargin.detail%(str(money)))
+
+                    # return margin
+                    tradeDao.update_money(tradeobj.user_id, lmoney)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_cancel_success))
+                self.write(protocol.success(msg=info.msg_user_cancel_success, data={'trade': tradeobj.id}))
 
 
 class SysBuyHandler(handler.Handler):
@@ -378,7 +411,7 @@ class SysBuyHandler(handler.Handler):
                 tradeDao.update_trade(tradeobj.id, status=suite.enum.trade.buying.code, slog=slog, utime=time_now)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_sell_success))
+                self.write(protocol.success(msg=info.msg_sys_buy_success, data={'trade': tradeobj.id}))
 
 
 class SysSellHandler(handler.Handler):
@@ -435,7 +468,7 @@ class SysSellHandler(handler.Handler):
                 tradeDao.update_trade(tradeobj.id, status=suite.enum.trade.buying.code, slog=slog, utime=time_now)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_sell_success))
+                self.write(protocol.success(msg=info.msg_sys_sell_success, data={'trade': tradeobj.id}))
 
 
 class SysCloseHandler(handler.Handler):
@@ -488,7 +521,7 @@ class SysCloseHandler(handler.Handler):
                 tradeDao.update_trade(tradeobj.id,  status=suite.enum.trade.closing.code, slog=slog, utime=time_now)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_sell_success))
+                self.write(protocol.success(msg=info.msg_sys_close_success, data={'trade': tradeobj.id}))
 
 
 class SysCancelHandler(handler.Handler):
@@ -542,4 +575,335 @@ class SysCancelHandler(handler.Handler):
                 tradeDao.update_trade(tradeobj.id, status=next_status, slog=slog, utime=time_now)
 
                 # success #
-                self.write(protocol.success(msg=info.msg_cancel_success))
+                self.write(protocol.success(msg=info.msg_sys_cancel_success, data={'trade': tradeobj.id}))
+
+
+class SysBoughtHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.SysBought(**self.arguments)
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+
+            # check trade object #
+            tradeobj = tradeDao.get_trade(id=form.trade)
+            if tradeobj is None or form.user != tradeobj.user_id:
+                raise error.invalid_parameters
+
+            # check lever object #
+            leverobj = tradeDao.get_lever(form.trade)
+            if leverobj is None:
+                raise error.server_exception
+
+            next_status = suite.enum.trade.hold.code
+            # trade status must be[tobuy, buying, cancelbuy, buycanceling]#
+            if tradeobj.status not in [suite.enum.trade.tobuy.code,
+                                       suite.enum.trade.buying.code,
+                                       suite.enum.trade.cancelbuy.code,
+                                       suite.enum.trade.buycanceling.code]:
+                raise error.trade_operation_denied
+
+            # compute open fee
+            ofee = max(leverobj.ofmin, leverobj.ofrate*form.count*form.price)
+
+            # append new status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            time_now = int(time.time())
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.buy.code,
+                                                  tradeobj.optype,
+                                                  str(form.price),
+                                                  form.count,
+                                                  tradeobj.status,
+                                                  next_status,
+                                                  time_now))
+            slog = suite.status.trade.dumps(logs)
+
+            # change order status #
+            with tradeDao.transaction():
+                # update order #
+                tradeDao.update_trade(tradeobj.id, hprice=form.price, hcount=form.count, fcount=form.count,
+                                      bprice=form.price, bcount=form.count,
+                                      ofee=ofee, status=next_status, slog=slog,
+                                      utime=time_now, btime=time_now)
+
+                # success #
+                self.write(protocol.success(msg=info.msg_sys_bought_success, data={'trade': tradeobj.id}))
+
+
+class SysSoldHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.SysSold(**self.arguments)
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+            userDao = daos.user.UserDao(self.db)
+
+            # check trade object #
+            tradeobj = tradeDao.get_trade(id=form.trade)
+            if tradeobj is None or form.user != tradeobj.user_id:
+                raise error.invalid_parameters
+
+            # check lever object #
+            leverobj = tradeDao.get_lever(form.trade)
+            if leverobj is None:
+                raise error.server_exception
+
+            # check user object #
+            userobj = userDao.get(id=form.user)
+            if userobj is None:
+                raise error.invalid_parameters
+
+
+            # trade status must be[tobuy, buying, cancelbuy, buycanceling]#
+            if tradeobj.status not in [suite.enum.trade.tosell.code,
+                                       suite.enum.trade.selling.code,
+                                       suite.enum.trade.cancelsell.code,
+                                       suite.enum.trade.sellcanceling.code]:
+                raise error.trade_operation_denied
+
+            # process hold count/status
+            hcount, next_status = tradeobj.hcount - form.count, None
+            if hcount > 0:
+                next_status = suite.enum.trade.hold.code
+            elif hcount == 0:
+                next_status = suite.enum.trade.sold.code
+            else:
+                raise error.sold_count_not_match
+
+            # process sold count/price
+            scount, sprice = 0 if tradeobj.scount is None else tradeobj.scount, decimal.Decimal('0.00') if tradeobj.sprice is None else tradeobj.sprice
+            sprice = (form.count*form.price + scount*sprice)/(scount+form.count)
+            scount = scount + form.count
+
+            # append new status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.sell.code,
+                                                  tradeobj.optype,
+                                                  str(form.price),
+                                                  form.count,
+                                                  tradeobj.status,
+                                                  next_status,
+                                                  int(time.time())))
+            slog = suite.status.trade.dumps(logs)
+
+            # change order status #
+            with tradeDao.transaction():
+                if next_status != suite.enum.trade.sold.code:
+                    # trade not completed #
+                    tradeDao.update_trade(tradeobj.id, hcount=hcount,
+                                          sprice=sprice, scount=scount,
+                                          status=next_status, slog=slog,
+                                          utime=int(time.time()))
+                else:
+                    # trade has completed #
+                    ofee, dfee, margin = tradeobj.ofee, tradeobj.dfee, tradeobj.margin
+                    tprofit = scount * sprice - tradeobj.bcount * tradeobj.bprice
+                    sprofit = max(decimal.Decimal('0.00'), tprofit * leverobj.psrate)
+
+                    # money for settlement#
+                    money = tprofit + margin - sprofit - ofee - dfee
+                    bmoney = userobj.money
+                    lmoney = userobj.money + money
+
+                    # update trade record
+                    tradeDao.update_trade(tradeobj.id, hcount=hcount,
+                                          sprice=sprice, scount=scount,
+                                          tprofit=tprofit, sprofit=sprofit,
+                                          status=next_status, slog=slog,
+                                          utime=int(time.time()), stime=int(time.time(), etime=int(time.time())))
+
+                    # add user bill
+                    tradeDao.add_bill(tradeobj.user_id, bmoney, lmoney, money,
+                                      suite.tpl.bill.profit.item,
+                                      suite.tpl.bill.profit.detail%(str(money)))
+
+                    # update user left money
+                    tradeDao.update_money(userobj.id, lmoney)
+
+                # success #
+                self.write(protocol.success(msg=info.msg_sys_sold_success, data={'trade': tradeobj.id}))
+
+
+class SysClosedHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.SysClosed(**self.arguments)
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+            userDao = daos.user.UserDao(self.db)
+
+            # check trade object #
+            tradeobj = tradeDao.get_trade(id=form.trade)
+            if tradeobj is None or form.user != tradeobj.user_id:
+                raise error.invalid_parameters
+
+            # check lever object #
+            leverobj = tradeDao.get_lever(form.trade)
+            if leverobj is None:
+                raise error.server_exception
+
+            # check user object #
+            userobj = userDao.get(id=form.user)
+            if userobj is None:
+                raise error.invalid_parameters
+
+
+            # trade status must be[toclose, closing, cancelclose, closecanceling]#
+            if tradeobj.status not in [suite.enum.trade.toclose.code,
+                                       suite.enum.trade.closing.code,
+                                       suite.enum.trade.cancelclose.code,
+                                       suite.enum.trade.closecanceling.code]:
+                raise error.trade_operation_denied
+
+            # process hold count/status
+            hcount, next_status = tradeobj.hcount - form.count, None
+            if hcount > 0:
+                next_status = suite.enum.trade.hold.code
+            elif hcount == 0:
+                next_status = suite.enum.trade.closed.code
+            else:
+                raise error.sold_count_not_match
+
+            # process sold count/price
+            scount, sprice = 0 if tradeobj.scount is None else tradeobj.scount, decimal.Decimal('0.00') if tradeobj.sprice is None else tradeobj.sprice
+            sprice = (form.count*form.price + scount*sprice)/(scount+form.count)
+            scount = scount + form.count
+
+            # append new status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.close.code,
+                                                  tradeobj.optype,
+                                                  str(form.price),
+                                                  form.count,
+                                                  tradeobj.status,
+                                                  next_status,
+                                                  int(time.time())))
+            slog = suite.status.trade.dumps(logs)
+
+            # change order status #
+            with tradeDao.transaction():
+                if next_status != suite.enum.trade.sold.code:
+                    # trade not completed #
+                    tradeDao.update_trade(tradeobj.id, hcount=hcount,
+                                          sprice=sprice, scount=scount,
+                                          status=next_status, slog=slog,
+                                          utime=int(time.time()))
+                else:
+                    # trade has completed #
+                    ofee, dfee, margin = tradeobj.ofee, tradeobj.dfee, tradeobj.margin
+                    tprofit = scount * sprice - tradeobj.bcount * tradeobj.bprice
+                    sprofit = max(decimal.Decimal('0.00'), tprofit * leverobj.psrate)
+
+                    # money for settlement#
+                    money = tprofit + margin - sprofit - ofee - dfee
+                    bmoney = userobj.money
+                    lmoney = userobj.money + money
+
+                    # update trade record
+                    tradeDao.update_trade(tradeobj.id, hcount=hcount,
+                                          sprice=sprice, scount=scount,
+                                          tprofit=tprofit, sprofit=sprofit,
+                                          status=next_status, slog=slog,
+                                          utime=int(time.time()), stime=int(time.time()), etime=int(time.time()))
+
+                    # add user bill
+                    tradeDao.add_bill(tradeobj.user_id, bmoney, lmoney, money,
+                                      suite.tpl.bill.profit.item,
+                                      suite.tpl.bill.profit.detail%(str(money)))
+
+                    # update user left money
+                    tradeDao.update_money(userobj.id, lmoney)
+
+                # success #
+                self.write(protocol.success(msg=info.msg_sys_closed_success, data={'trade': tradeobj.id}))
+
+
+class SysCanceledHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.SysCanceled(**self.arguments)
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+            userDao = daos.user.UserDao(self.db)
+
+            # check trade object #
+            tradeobj = tradeDao.get_trade(id=form.trade)
+            if tradeobj is None or form.user != tradeobj.user_id:
+                raise error.invalid_parameters
+
+            # check user object #
+            userobj = userDao.get(id=form.user)
+            if userobj is None:
+                raise error.invalid_parameters
+
+            next_status, etime = None, None
+            # check trade status #
+            if tradeobj.status in [suite.enum.trade.cancelbuy.code, suite.enum.trade.buycanceling.code]:
+                etime = int(time.time())
+                next_status = suite.enum.trade.canceled.code
+            elif tradeobj.status in [suite.enum.trade.cancelsell.code, suite.enum.trade.sellcanceling.code,
+                                     suite.enum.trade.cancelclose.code, suite.enum.trade.closecanceling.code]:
+                next_status = suite.enum.trade.hold.code
+            else:
+                raise error.trade_operation_denied
+
+            # append new status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.cancel.code,
+                                                  tradeobj.optype,
+                                                  str(tradeobj.oprice),
+                                                  tradeobj.ocount,
+                                                  tradeobj.status,
+                                                  next_status,
+                                                  time.time()))
+            slog = suite.status.trade.dumps(logs)
+
+            # change order status #
+            with tradeDao.transaction():
+                if next_status == suite.enum.trade.hold.code:
+                    # sell/close canceled, just update free count #
+                    tradeDao.update_trade(tradeobj.id, fcount=tradeobj.hcount,
+                                          status=next_status, slog=slog,
+                                          utime=int(time.time()), etime=etime)
+                else:
+                    # by canceled, need return margin #
+                    tradeDao.update_trade(tradeobj.id,
+                                          status=next_status, slog=slog,
+                                          utime=int(time.time()), etime=etime)
+
+                    # add bill
+                    money = tradeobj.margin
+                    bmoney, lmoney = userobj.money, userobj.money+money
+                    tradeDao.add_bill(tradeobj.user_id, bmoney, lmoney, money,
+                                      suite.tpl.bill.rmargin.item,
+                                      suite.tpl.bill.rmargin.detail%(str(money)))
+
+                    # return margin
+                    tradeDao.update_money(tradeobj.user_id, lmoney)
+
+                # success #
+                self.write(protocol.success(msg=info.msg_sys_canceled_success, data={'trade': tradeobj.id}))

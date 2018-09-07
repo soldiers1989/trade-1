@@ -37,7 +37,7 @@ class TradeDao(dao.Dao):
         # execute update
         self.execute(sql, (suite.enum.coupon.used.code, int(time.time()), couponid))
 
-    def use_money(self, userid, money):
+    def update_money(self, userid, money):
         """
             use money of user
         :param userid:
@@ -47,7 +47,7 @@ class TradeDao(dao.Dao):
         # update query
         sql = '''
                 update tb_user
-                set money = money-%s
+                set money = %s
                 where id=%s
             '''
 
@@ -116,13 +116,13 @@ class TradeDao(dao.Dao):
         """
         # insert query
         sql = '''
-                insert into tb_user_trade(user_id, stock_id, coupon_id, code, optype, oprice, ocount, margin, status, ctime, utime)
-                values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                insert into tb_user_trade(user_id, stock_id, coupon_id, code, optype, oprice, ocount, margin, status, ctime, utime, obtime)
+                values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             '''
 
         timenow = int(time.time())
         # execute insert
-        self.execute(sql, (userid, stockid, couponid, code, ptype, price, count, margin, suite.enum.trade.tobuy.code, timenow, timenow))
+        self.execute(sql, (userid, stockid, couponid, code, ptype, price, count, margin, suite.enum.trade.tobuy.code, timenow, timenow, timenow))
 
     def add_lever(self, tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax):
         """
@@ -137,6 +137,22 @@ class TradeDao(dao.Dao):
 
         # execute insert
         self.execute(sql, (tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax))
+
+    def get_lever(self, tradeid):
+        """
+            get lever of trade
+        :param tradeid:
+        :return:
+        """
+        # select query
+        q = sqlhelper.select().columns(*models.TradeLever.fields).tables('tb_trade_lever').where(trade_id=tradeid)
+
+        # execute query
+        results = self.select(q.sql(), q.args())
+        if len(results) > 0:
+            return models.TradeLever(**results[0])
+
+        return None
 
     def update_trade(self, tradeid, **cvals):
         """

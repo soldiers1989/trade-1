@@ -96,7 +96,11 @@ class UserTrade(model.Model):
     slog = field.StringField(null=True)
     ctime = field.IntegerField()  # create time
     utime = field.IntegerField()  # update time
-    ftime = field.IntegerField(null=True)  # finish time
+    obtime = field.IntegerField(null=True)  # order buy time
+    btime = field.IntegerField(null=True)  # bought time
+    ostime = field.IntegerField(null=True)  # order sell time
+    stime = field.IntegerField(null=True)  # sold time
+    etime = field.IntegerField(null=True) # end time
 
 
 class TradeOrder:
@@ -117,3 +121,17 @@ class TradeOrder:
     slog = field.StringField(null=True)
     ctime = field.IntegerField()
     utime = field.IntegerField()
+
+
+class TradeLever(model.Model):
+    id = field.IntegerField()
+    trade_id = field.IntegerField()
+    lever = field.IntegerField()
+    wline = field.DecimalField(digits=2, decimals=2)
+    sline = field.DecimalField(digits=2, decimals=2)
+    ofmin = field.DecimalField(digits=10, decimals=2)
+    ofrate = field.DecimalField(digits=6, decimals=6)
+    dfrate = field.DecimalField(digits=6, decimals=6)
+    psrate = field.DecimalField(digits=6, decimals=6)
+    mmin = field.DecimalField(digits=10, decimals=2)
+    mmax = field.DecimalField(digits=10, decimals=2)

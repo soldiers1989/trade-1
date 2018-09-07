@@ -501,9 +501,13 @@ class UserTrade(models.Model):
     sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利分成') # share profit
     status = models.CharField(max_length=16, default='tobuy', verbose_name='状态')
     slog = models.TextField(null=True, verbose_name='状态变更')
-    ctime = models.BigIntegerField(verbose_name='订单时间')  # create time
+    ctime = models.BigIntegerField(verbose_name='创建时间')  # create time
     utime = models.BigIntegerField(verbose_name='更新时间')  # update time
-    ftime = models.BigIntegerField(null=True, verbose_name='结束时间')  # finish time
+    obtime = models.BigIntegerField(null=True, verbose_name='委买时间')
+    btime = models.BigIntegerField(null=True, verbose_name='买入时间')
+    ostime = models.BigIntegerField(null=True, verbose_name='委卖时间')
+    stime = models.BigIntegerField(null=True, verbose_name='卖出时间')
+    etime = models.BigIntegerField(null=True, verbose_name='结束时间')
 
     class Meta:
         db_table = 'tb_user_trade'

@@ -66,3 +66,5 @@ trade_operation_denied = ProcessError(-1306, '当前状态不允许该操作')
 
 order_type_not_exists = ProcessError(-1307, '委托类型不存在')
 
+sold_count_not_match = ProcessError(-1308, '卖出成交数量和委托数量不一致')
+
