@@ -15,7 +15,7 @@ def list(request):
     :return:
     """
     try:
-        form = forms.user.user.List(request.POST)
+        form = forms.user.user.List(request.GET)
         if form.is_valid():
             ## form parameters ##
             params = form.cleaned_data

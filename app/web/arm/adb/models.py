@@ -518,7 +518,7 @@ class UserTrade(models.Model):
         items['_stock'] = items['stock'].name if items['stock'] else None
         items['_coupon'] = items['coupon'].money if items['coupon'] else None
         items['_account'] = items['account'].name if items['account'] else None
-        items['_ptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
+        items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
         items['_status'] = enum.all['trade']['status'][items['status']] if items['status'] else None
 
         items['user'], items['stock'], items['coupon'], items['account'], items['lever'] = self.user_id, self.stock_id, self.coupon_id, self.account_id, self.tradelever.lever
