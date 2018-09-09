@@ -18,6 +18,11 @@ class Get(forms.Form):
     id = forms.IntegerField()
     _t = forms.ChoiceField(choices=(('o','o'), ('d','d'), ('p','p')), required=False)
 
+
+class GetOrders(forms.Form):
+    code = forms.CharField(max_length=16)
+
+
 class Add(forms.Form):
     user = forms.IntegerField()
     stock = forms.CharField()

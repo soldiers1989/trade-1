@@ -482,7 +482,7 @@ class UserTrade(models.Model):
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票')
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True, verbose_name='优惠券')
     account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True, verbose_name='证券账户')
-    code = models.CharField(max_length=20, unique=True, verbose_name='订单代码')
+    code = models.CharField(max_length=16, unique=True, verbose_name='订单代码')
     optype = models.CharField(max_length=16, verbose_name='买入类型')
     oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入报价')
     ocount = models.IntegerField(verbose_name='买入数量')
@@ -533,14 +533,14 @@ class UserTrade(models.Model):
         # get data items & fields
         items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
 
-        items['user'], items['stock'], items['coupon'], items['account'], items['ptype'], items['status'] = items['_user'], items['_stock'], items['_coupon'], items['_account'], items['_ptype'], items['_status']
+        items['user'], items['stock'], items['coupon'], items['account'], items['optype'], items['status'] = items['_user'], items['_stock'], items['_coupon'], items['_account'], items['_optype'], items['_status']
 
         # add lever fields
         fields['lever'] = '杠杆倍数'
 
         # format time
         items['ctime'] = util.time.datetms(items['ctime'])
-        items['ftime'] = util.time.datetms(items['ftime'])
+        items['etime'] = util.time.datetms(items['etime'])
 
         # property data rows
         rows = []
@@ -613,17 +613,16 @@ class TradeOrder(models.Model):
 
     def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['trade'], items['account'], items['stock'] = self.trade_id, self.account_id, self.stock_id
+        items['account'], items['stock'] = self.account_id, self.stock_id
         return items
 
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['trade'] = items['trade'].id if items['trade'] else None
         items['account'] = items['account'].account if items['account'] else None
         items['stock'] = items['stock'].name if items['stock'] else None
         items['otype'] = enum.all['order']['type'][items['otype']] if items['otype'] else None
-        items['ptype'] = enum.all['order']['price'][items['ptype']] if items['ptype'] else None
-        items['nstatus'] = enum.all['order']['status'][items['status']] if items['status'] else None
+        items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
+        items['_status'] = enum.all['order']['status'][items['status']] if items['status'] else None
         return items
 
     def pdata(self):
@@ -631,8 +630,11 @@ class TradeOrder(models.Model):
         items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
 
         # process status
-        items['status'] = items['nstatus']
-        del items['nstatus']
+        items['optype'] = items['_optype']
+        items['status'] = items['_status']
+        del items['_optype']
+        del items['_status']
+        del items['slog']
 
         # format order/deal time
         items['otime'] = util.time.datetms(items['otime'])

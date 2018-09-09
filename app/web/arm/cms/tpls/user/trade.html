@@ -319,6 +319,7 @@
                     toolbar: '#trade_toolbar',
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
+                        {field:'code', title:'代码'},
                         {field:'user', title:'用户'},
                         {field:'stock', title:'股票'},
                         {field:'account', title:'账户', sortable:true},
@@ -802,7 +803,7 @@
                     this.propertygrid.propertygrid({
                         url: this.url,
                         method: 'get',
-                        queryParams: {id: rdata.id},
+                        queryParams: {code: rdata.code},
                         
                         showGroup: true,
                         showHeader: true,
@@ -837,7 +838,7 @@
                 },
 
                 load: function(rdata) {
-                    this.propertygrid.propertygrid('load', {id: rdata.id});
+                    this.propertygrid.propertygrid('load', {code: rdata.code});
                 },
 
                 show: function(rdata) {

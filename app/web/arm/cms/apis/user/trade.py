@@ -310,13 +310,13 @@ def orders(request):
     :return:
     """
     try:
-        form = forms.user.trade.Get(request.GET)
+        form = forms.user.trade.GetOrders(request.GET)
         if form.is_valid():
             # trade id
-            tradeid = form.cleaned_data['id']
+            tcode = form.cleaned_data['code']
 
             # get margin records of order
-            objects = models.TradeOrder.objects.filter(trade__id=tradeid).order_by('-otime')
+            objects = models.TradeOrder.objects.filter(tcode=tcode).order_by('-otime')
 
             ## get total count ##
             #total = objects.count()
