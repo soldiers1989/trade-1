@@ -72,6 +72,7 @@ def list(request):
             rows = []
             for obj in objects:
                 obj = obj.ddata()
+                del obj['slog']
                 rows.append(obj)
 
             ## response data ##
@@ -183,21 +184,18 @@ def trade(request):
     if request.method != 'GET':
         return resp.failure(msg='method not support')
 
-    id = request.GET['id']
+    code = request.GET['code']
 
     # get order detail
-    item = models.TradeOrder.objects.get(id=id)
-    if not item:
+    trade = models.UserTrade.objects.get(code=code)
+    if not trade:
         return resp.failure(hint.ERR_FORM_DATA)
-
-    # get trade object
-    trade = item.trade
 
     rows = []
     # make results
     rows.append({'name': '订单ID', 'value': trade.id, 'group': '交易信息'})
     rows.append({'name': '订单编号', 'value': trade.code, 'group': '交易信息'})
-    rows.append({'name': '订单类型', 'value': enum.all['order']['price'][trade.ptype] if trade.ptype else '', 'group': '交易信息'})
+    rows.append({'name': '订单类型', 'value': enum.all['order']['price'][trade.optype] if trade.optype else '', 'group': '交易信息'})
     rows.append({'name': '订单价格', 'value': trade.oprice, 'group': '交易信息'})
     rows.append({'name': '订单股数', 'value': trade.ocount, 'group': '交易信息'})
     rows.append({'name': '持仓价格', 'value': trade.hprice, 'group': '交易信息'})

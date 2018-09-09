@@ -241,12 +241,13 @@
                         {field:'stock', title:'股票名称', sortable:false},
                         {field:'account', title:'交易账户', sortable:true},
                         {field:'otype', title:'委托类型', sortable:true},
-                        {field:'ptype', title:'报价类型', sortable:true},
+                        {field:'optype', title:'报价类型', sortable:true},
                         {field:'status', title:'委托状态', sortable:true, hidden:true},
-                        {field:'nstatus', title:'委托状态', sortable:true}
+                        {field:'_status', title:'委托状态', sortable:true}
                     ]],
 
                     columns: [[
+                        {field:'tcode', title:'交易代码', sortable:true},
                         {field:'ocount', title:'委托数量', sortable:true},
                         {field:'oprice', title:'委托价格', sortable:true},
                         {field:'ocode', title:'委托编号', sortable:true},
@@ -421,13 +422,12 @@
                             if(!row)
                                 return;
 
-                            orderid = row.id;
                             switch (index) {
                                 case 0:
-                                    order.detail.trade.show(orderid);
+                                    order.detail.trade.show(row.tcode);
                                     break;
                                 case 1:
-                                    order.detail.status.show(orderid);
+                                    order.detail.status.show(row.id);
                                     break;
                                 default:
                                     // statements_def
@@ -469,7 +469,7 @@
                     
                     switch (idx) {
                         case 0:
-                            order.detail.trade.show(row.id);
+                            order.detail.trade.show(row.tcode);
                             break;
                         case 1:
                             order.detail.status.show(row.id);
@@ -533,8 +533,8 @@
                     this.propertygrid.propertygrid('load', params);
                 },
 
-                show: function(orderid) {
-                    params = {id:orderid};
+                show: function(tcode) {
+                    params = {code:tcode};
                     if(!this.inited)
                         this.init(params);
                     else
