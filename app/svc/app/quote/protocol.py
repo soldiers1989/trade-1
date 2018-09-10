@@ -1,7 +1,15 @@
 """
     protocol for quote service
 """
-import json
+import json, decimal
+
+
+class JEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return str(o)
+
+        return super(JEncoder, self).default(o)
 
 
 def success(msg = 'success', data = None):
@@ -17,10 +25,10 @@ def success(msg = 'success', data = None):
         'data': data
     }
 
-    return json.dumps(ret)
+    return json.dumps(ret, cls=JEncoder)
 
 
-def failed(msg = 'failed', data = None):
+def failed(status=-1, msg = 'failed', data = None):
     """
         error return format
     :param msg:
@@ -28,9 +36,9 @@ def failed(msg = 'failed', data = None):
     """
     # make formatted return
     ret = {
-        'status': -1,
+        'status': status,
         'msg': msg,
         'data': data
     }
 
-    return json.dumps(ret)
+    return json.dumps(ret, cls=JEncoder)

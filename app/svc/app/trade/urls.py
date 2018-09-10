@@ -1,22 +1,22 @@
-from app.trade import handler
+from app.trade import  handlers
 
 handlers = [
-    (r"/login", handler.Login),
-    (r"/logout", handler.Logout),
-    (r"/status", handler.Status),
-    (r"/query/gdxx", handler.QueryGdxx),
-    (r"/query/dqzc", handler.QueryDqzc),
-    (r"/query/dqcc", handler.QueryDqcc),
-    (r"/query/drwt", handler.QueryDrwt),
-    (r"/query/drcj", handler.QueryDrcj),
-    (r"/query/kcwt", handler.QueryKcwt),
-    (r"/query/lswt", handler.QueryLswt),
-    (r"/query/lscj", handler.QueryLscj),
-    (r"/query/jgd", handler.QueryJgd),
-    (r"/query/gphq", handler.QueryGphq),
-    (r"/order/xjmr", handler.OrderXjmr),
-    (r"/order/xjmc", handler.OrderXjmc),
-    (r"/order/sjmr", handler.OrderSjmr),
-    (r"/order/sjmc", handler.OrderSjmc),
-    (r"/order/cancel", handler.OrderCancel)
+    (r"/login", handlers.trade.Login),
+    (r"/logout", handlers.trade.Logout),
+    (r"/status", handlers.trade.Status),
+    (r"/query/gdxx", handlers.trade.QueryGdxx),
+    (r"/query/dqzc", handlers.trade.QueryDqzc),
+    (r"/query/dqcc", handlers.trade.QueryDqcc),
+    (r"/query/drwt", handlers.trade.QueryDrwt),
+    (r"/query/drcj", handlers.trade.QueryDrcj),
+    (r"/query/kcwt", handlers.trade.QueryKcwt),
+    (r"/query/lswt", handlers.trade.QueryLswt),
+    (r"/query/lscj", handlers.trade.QueryLscj),
+    (r"/query/jgd", handlers.trade.QueryJgd),
+    (r"/query/gphq", handlers.trade.QueryGphq),
+    (r"/order/xjmr", handlers.trade.OrderXjmr),
+    (r"/order/xjmc", handlers.trade.OrderXjmc),
+    (r"/order/sjmr", handlers.trade.OrderSjmr),
+    (r"/order/sjmc", handlers.trade.OrderSjmc),
+    (r"/order/cancel", handlers.trade.OrderCancel)
 ]

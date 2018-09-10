@@ -1,10 +1,12 @@
 """
     trade management
 """
-import datetime, time, decimal
-from app import rules
-from app.util import rand
+import datetime
+import decimal
+import time
+
 from app.aam import suite, access, handler, daos, forms, protocol, error, info, lock
+from app.util import rand
 
 
 class UserBuyHandler(handler.Handler):
@@ -19,7 +21,7 @@ class UserBuyHandler(handler.Handler):
         form = forms.trade.UserBuy(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_buy_time(form.ptype):
+        if not app.aam.rules.trade.valid_user_buy_time(form.ptype):
             raise error.not_trading_time
 
         ## process trade add operation by lock user ##
@@ -59,11 +61,11 @@ class UserBuyHandler(handler.Handler):
                 raise error.lever_has_disabled
 
             # check stock count
-            if not rules.trade.valid_user_buy_count(form.count):
+            if not app.aam.rules.trade.valid_user_buy_count(form.count):
                 raise error.stock_count_error
 
             # check order price
-            if form.price is None or not rules.trade.valid_user_buy_price(form.stock, form.price):
+            if form.price is None or not app.aam.rules.trade.valid_user_buy_price(form.stock, form.price):
                 raise error.stock_price_error
 
             # check capital
@@ -140,7 +142,7 @@ class UserSellHandler(handler.Handler):
         form = forms.trade.UserSell(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_sell_time(form.ptype):
+        if not app.aam.rules.trade.valid_user_sell_time(form.ptype):
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -176,7 +178,7 @@ class UserSellHandler(handler.Handler):
                 raise error.stock_count_not_match
 
             # check price #
-            if form.ptype == suite.enum.ptype.xj.code and not rules.trade.valid_user_sell_price(tradeobj.stock_id, form.price):
+            if form.ptype == suite.enum.ptype.xj.code and not app.aam.rules.trade.valid_user_sell_price(tradeobj.stock_id, form.price):
                 raise error.stock_price_error
 
             # prepare status log
@@ -211,7 +213,7 @@ class UserCloseHandler(handler.Handler):
         form = forms.trade.UserClose(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_close_time(form.ptype):
+        if not app.aam.rules.trade.valid_user_close_time(form.ptype):
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -245,7 +247,7 @@ class UserCloseHandler(handler.Handler):
                 raise error.stock_count_not_match
 
             # check price #
-            if form.ptype == suite.enum.ptype.xj.code and not rules.trade.valid_user_close_price(tradeobj.stock_id, form.price):
+            if form.ptype == suite.enum.ptype.xj.code and not app.aam.rules.trade.valid_user_close_price(tradeobj.stock_id, form.price):
                 raise error.stock_price_error
 
             # prepare status log
@@ -280,7 +282,7 @@ class UserCancelHandler(handler.Handler):
         form = forms.trade.UserCancel(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_cancel_time():
+        if not app.aam.rules.trade.valid_user_cancel_time():
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -374,7 +376,7 @@ class SysBuyHandler(handler.Handler):
                 raise error.invalid_parameters
 
             ## check trade time ##
-            if not rules.trade.valid_sys_buy_time(tradeobj.optype):
+            if not app.aam.rules.trade.valid_sys_buy_time(tradeobj.optype):
                 raise error.not_trading_time
 
             # check current trade status
@@ -433,7 +435,7 @@ class SysSellHandler(handler.Handler):
                 raise error.invalid_parameters
 
             ## check trade time ##
-            if not rules.trade.valid_sys_sell_time(tradeobj.optype):
+            if not app.aam.rules.trade.valid_sys_sell_time(tradeobj.optype):
                 raise error.not_trading_time
 
             # check current trade status
@@ -479,7 +481,7 @@ class SysCloseHandler(handler.Handler):
         form = forms.trade.SysClose(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_sys_close_time(form.ptype, time.time()):
+        if not app.aam.rules.trade.valid_sys_close_time(form.ptype, time.time()):
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -532,7 +534,7 @@ class SysCancelHandler(handler.Handler):
         form = forms.trade.UserCancel(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_cancel_time():
+        if not app.aam.rules.trade.valid_user_cancel_time():
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -904,6 +906,67 @@ class SysCanceledHandler(handler.Handler):
 
                     # return margin
                     tradeDao.update_money(tradeobj.user_id, lmoney)
+
+                # success #
+                self.write(protocol.success(msg=info.msg_sys_canceled_success, data={'trade': tradeobj.id}))
+
+
+class SysDroppedHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        ## get arguments ##
+        form = forms.trade.SysDropped(**self.arguments)
+
+        ## process trade sell operation by lock user ##
+        with lock.user(form.user):
+            # init dao #
+            tradeDao = daos.trade.TradeDao(self.db)
+            userDao = daos.user.UserDao(self.db)
+
+            # check trade object #
+            tradeobj = tradeDao.get_trade(id=form.trade)
+            if tradeobj is None or form.user != tradeobj.user_id:
+                raise error.invalid_parameters
+
+            # check user object #
+            userobj = userDao.get(id=form.user)
+            if userobj is None:
+                raise error.invalid_parameters
+
+            # check trade status #
+            if tradeobj.status not in [suite.enum.trade.tobuy.code]:
+                raise error.trade_operation_denied
+
+            next_status, etime = suite.enum.trade.dropped.code, int(time.time())
+            # append new status log
+            logs = suite.status.trade.loads(tradeobj.slog)
+            logs.append(suite.status.trade.format(suite.enum.operator.sys.code,
+                                                  suite.enum.oaction.drop.code,
+                                                  tradeobj.optype,
+                                                  str(tradeobj.oprice),
+                                                  tradeobj.ocount,
+                                                  tradeobj.status,
+                                                  next_status,
+                                                  etime))
+            slog = suite.status.trade.dumps(logs)
+
+            # change order status #
+            with tradeDao.transaction():
+                # return margin #
+                tradeDao.update_trade(tradeobj.id,
+                                      status=next_status, slog=slog,
+                                      utime=etime, etime=etime)
+
+                # add bill
+                money = tradeobj.margin
+                bmoney, lmoney = userobj.money, userobj.money+money
+                tradeDao.add_bill(tradeobj.user_id, bmoney, lmoney, money,
+                                  suite.tpl.bill.rmargin.item,
+                                  suite.tpl.bill.rmargin.detail%(str(money)))
+
+                # return margin
+                tradeDao.update_money(tradeobj.user_id, lmoney)
 
                 # success #
                 self.write(protocol.success(msg=info.msg_sys_canceled_success, data={'trade': tradeobj.id}))

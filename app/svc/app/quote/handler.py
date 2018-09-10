@@ -1,39 +1,32 @@
+"""
+    base handler
+"""
 import tornado.web
-from app.quote import quoter, protocol
+from app.quote import config
 
 
-class QueryStatus(tornado.web.RequestHandler):
+class Handler(tornado.web.RequestHandler):
     """
-        handler for query quote service status
+        base handler for request handlers
     """
-    def get(self):
+    def initialize(self):
         """
-            get quote service status
+            overwrite: initialize
         :return:
         """
-        try:
-            data = quoter.default.status()
-            self.write(protocol.success(data=data))
-        except Exception as e:
-            self.write(protocol.failed(msg=str(e)))
+        pass
 
-
-class QueryCurrent(tornado.web.RequestHandler):
-    """
-        handler for query current quote of stock
-    """
-    def get(self):
+    def set_default_headers(self):
         """
-            get quote
+            overwrite: set default headers
         :return:
         """
-        try:
-            codes = self.get_argument('code').split(',')
-            if len(codes) == 1:
-                data = quoter.default.get(codes[0])
-            else:
-                data = quoter.default.gets(codes)
+        for header in config.HEADERS:
+            self.set_header(*header)
 
-            self.write(protocol.success(data=data))
-        except Exception as e:
-            self.write(protocol.failed(msg=str(e)))
+    @property
+    def arguments(self):
+        args = {}
+        for arg in self.request.arguments.keys():
+            args[arg] = self.get_argument(arg)
+        return args

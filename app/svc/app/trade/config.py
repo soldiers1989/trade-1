@@ -5,6 +5,19 @@
 DEBUG = False
 AUTORELOAD = True
 
+
+# token for access
+TOKEN_NAME = '_token'
+TOKEN_VALUE = 'abc'
+
+
+# public headers for response
+HEADERS = [
+    ('Content-Type', 'application/json;charset=utf8'),
+    ('Server', 'nginx/1.0')
+]
+
+
 # agents for trade
 AGENTS = [
     ('agent1', '172.16.21.137', 81),

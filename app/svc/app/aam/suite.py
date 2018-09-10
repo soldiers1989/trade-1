@@ -159,7 +159,7 @@ class _Enum:
         sell = _Pair('sell', '卖出')
         close = _Pair('close', '平仓')
         cancel = _Pair('cancel', '撤销')
-        notify = _Pair('notify', '回报')
+        drop = _Pair('drop', '弃单')
 
     oaction = _OAction
 
@@ -232,7 +232,7 @@ class _Enum:
 
         expired = _Pair('expired', '过期')
 
-        discard = _Pair('discard', '废单')
+        dropped = _Pair('dropped', '废单')
 
     trade = _Trade
 

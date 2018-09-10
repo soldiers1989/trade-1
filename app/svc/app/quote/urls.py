@@ -1,6 +1,6 @@
-from app.quote import handler
+from app.quote import handlers
 
 handlers = [
-    (r"/status", handler.QueryStatus),
-    (r"/current", handler.QueryCurrent)
+    (r"/status", handlers.quote.QueryStatus),
+    (r"/quote", handlers.quote.QueryCurrent)
 ]

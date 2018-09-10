@@ -9,7 +9,6 @@ from app.trade import config, urls
 
 # application settings
 settings = {
-    'cookie_secret': config.COOKIE_SECRET,
     'autoreload': config.AUTORELOAD,
     'debug': config.DEBUG,
 }

@@ -78,3 +78,8 @@ class SysClosed(form.Form):
 class SysCanceled(form.Form):
     user = field.IntegerField()
     trade = field.IntegerField()
+
+
+class SysDropped(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()
