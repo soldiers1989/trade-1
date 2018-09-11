@@ -2,7 +2,7 @@ from lib.stock import trade
 from app.trade import config
 
 
-def create():
+def _create():
     """
         trader for trade service
     """
@@ -21,4 +21,4 @@ def create():
     return trades
 
 # trader default instance
-default = create()
+default = _create()

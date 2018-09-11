@@ -16,6 +16,7 @@ class ErrorFieldNotSpecified(Exception):
     def __init__(self, err = 'unknown field type'):
         super().__init__(err)
 
+
 class ErrorFieldValue(Exception):
     def __init__(self, err):
         super().__init__(err)

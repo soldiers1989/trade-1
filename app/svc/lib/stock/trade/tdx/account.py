@@ -74,10 +74,7 @@ class Account(account.Account):
         """
         try:
             # send query
-            resp = self._traders.queryc(protocol.query.dqzc)
-
-            # upgrade response
-            return protocol.upgrade(resp, protocol.alias.idqzc)
+            return self._traders.queryc(protocol.query.dqzc)
         except Exception as e:
             return protocol.failed(str(e))
 

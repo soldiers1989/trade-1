@@ -1,7 +1,83 @@
-from app.trade import access, handler, trader, protocol
+from app.trade import access, handler, trader, protocol, alias
+from lib.stock import trade
 
 
-class Login(handler.Handler):
+class AddAccount(handler.Handler):
+    """
+        add new account
+    """
+    @access.needtoken
+    def get(self):
+        """
+            add new account
+        :return:
+        """
+        try:
+            # (login-account, login-password, trade-account, trade-password, department, version, agent servers, trade servers)
+            ('29633865', '456789', '29633865', '456789', '0', '7.16', AGENTS, S_ZXJT)  # 中信建投
+
+            laccount, lpwd, taccount, tpwd,   = self.get_argument('laccount'), self.get_argument('lpwd'), self.get_argument('taccount'), self.get_argument('tpwd')
+            dept, version = self.get_argument('dept'), self.get_argument('version')
+            sagents, strades = self.get_argument('agents'), self.get_argument('trades')
+
+            agentservers = []
+            for a0 in sagents.split('|'):
+                agents = []
+                for a1 in a0.split(','):
+                    agents.append(a1.strip())
+                agentservers.append(agents)
+
+            tradeservers = []
+            for t0 in strades.split('|'):
+                trades = []
+                for t1 in t0.split(','):
+                    trades.append(t1.strip())
+                tradeservers.append(trades)
+
+            acount = trade.tdx.account.Account(laccount, lpwd, taccount, tpwd, dept, version, agentservers, tradeservers)
+
+            resp = trader.default.add(laccount, acount)
+            self.write(resp)
+        except Exception as e:
+            self.write(protocol.failed(msg=str(e)))
+
+
+class DelAccount(handler.Handler):
+    """
+        delete account
+    """
+    @access.needtoken
+    def get(self):
+        """
+            delete account
+        :return:
+        """
+        try:
+            aid = self.get_argument('account', None)
+            resp = trader.default.delete(aid)
+            self.write(resp)
+        except Exception as e:
+            self.write(protocol.failed(msg=str(e)))
+
+
+class ClearAccount(handler.Handler):
+    """
+        clear all account
+    """
+    @access.needtoken
+    def get(self):
+        """
+            clear all account
+        :return:
+        """
+        try:
+            resp = trader.default.clear()
+            self.write(resp)
+        except Exception as e:
+            self.write(protocol.failed(msg=str(e)))
+
+
+class LoginAccount(handler.Handler):
     """
         login
     """
@@ -19,7 +95,7 @@ class Login(handler.Handler):
             self.write(protocol.failed(msg=str(e)))
 
 
-class Logout(handler.Handler):
+class LogoutAccount(handler.Handler):
     """
         login
     """
@@ -37,7 +113,7 @@ class Logout(handler.Handler):
             self.write(protocol.failed(msg=str(e)))
 
 
-class Status(handler.Handler):
+class StatusAccount(handler.Handler):
     """
         handler for query account status
     """
@@ -68,7 +144,7 @@ class QueryGdxx(handler.Handler):
         try:
             aid = self.get_argument('account')
             resp = trader.default.query_gdxx(aid)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.gdxx))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -86,7 +162,7 @@ class QueryDqzc(handler.Handler):
         try:
             aid = self.get_argument('account')
             resp = trader.default.query_dqzc(aid)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.dqzc))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -104,7 +180,7 @@ class QueryDqcc(handler.Handler):
         try:
             aid = self.get_argument('account')
             resp = trader.default.query_dqcc(aid)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.dqcc))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -122,7 +198,7 @@ class QueryDrwt(handler.Handler):
         try:
             aid = self.get_argument('account')
             resp = trader.default.query_drwt(aid)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.drwt))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -140,7 +216,7 @@ class QueryDrcj(handler.Handler):
         try:
             aid = self.get_argument('account')
             resp = trader.default.query_drcj(aid)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.drcj))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -158,7 +234,7 @@ class QueryKcwt(handler.Handler):
         try:
             aid = self.get_argument('account')
             resp = trader.default.query_kcwt(aid)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.kcwt))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -176,7 +252,7 @@ class QueryLswt(handler.Handler):
         try:
             aid, sdate, edate = self.get_argument('account'), self.get_argument('sdate'), self.get_argument('edate')
             resp = trader.default.query_lswt(aid, sdate, edate)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.lswt))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -194,7 +270,7 @@ class QueryLscj(handler.Handler):
         try:
             aid, sdate, edate = self.get_argument('account'), self.get_argument('sdate'), self.get_argument('edate')
             resp = trader.default.query_lscj(aid, sdate, edate)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.lscj))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -212,7 +288,7 @@ class QueryJgd(handler.Handler):
         try:
             aid, sdate, edate = self.get_argument('account'), self.get_argument('sdate'), self.get_argument('edate')
             resp = trader.default.query_jgd(aid, sdate, edate)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.jgd))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -230,7 +306,7 @@ class QueryGphq(handler.Handler):
         try:
             aid, code = self.get_argument('account'), self.get_argument('code')
             resp = trader.default.query_gphq(aid, code)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.gphq))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -248,7 +324,7 @@ class OrderXjmr(handler.Handler):
         try:
             aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
             resp = trader.default.order_xjmr(aid, gddm, code, price, count)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.xjmr))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -266,7 +342,7 @@ class OrderXjmc(handler.Handler):
         try:
             aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
             resp = trader.default.order_xjmc(aid, gddm, code, price, count)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.xjmc))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -284,7 +360,7 @@ class OrderSjmr(handler.Handler):
         try:
             aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
             resp = trader.default.order_sjmr(aid, gddm, code, price, count)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.sjmr))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -302,7 +378,7 @@ class OrderSjmc(handler.Handler):
         try:
             aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
             resp = trader.default.order_sjmc(aid, gddm, code, price, count)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.sjmc))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))
 
@@ -320,6 +396,6 @@ class OrderCancel(handler.Handler):
         try:
             aid, seid, orderno = self.get_argument('account'), self.get_argument('seid'), self.get_argument('orderno')
             resp = trader.default.cancel_order(aid, seid, orderno)
-            self.write(resp)
+            self.write(protocol.upgrade(resp, alias.wtcd))
         except Exception as e:
             self.write(protocol.failed(msg=str(e)))

@@ -8,6 +8,12 @@ from decimal import Decimal
 _BaseUrl = "http://localhost:9000"
 
 
+# quote api error
+class QuoteApiError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
+
 # current quote summary
 class _Quote(dict):
     def __init__(self, **kwargs):
