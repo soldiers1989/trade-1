@@ -1,11 +1,12 @@
 """
     user handlers
 """
-from tlib import validator, hash
-from .. import access, handler, daos, error, protocol, verify, forms
+from trpc import sms
+from tlib import validator, hash, rand
+from .. import access, handler, daos, error, protocol, verify, forms, config, msgtpl
 
 
-class GetSIDHandler(handler.Handler):
+class SessionGetHandler(handler.Handler):
     @access.exptproc
     def get(self):
         """
@@ -37,7 +38,7 @@ class UserExistHandler(handler.Handler):
         return self.write(protocol.success(data=data))
 
 
-class RegisterHandler(handler.Handler):
+class UserRegHandler(handler.Handler):
     @access.exptproc
     def post(self):
         """
@@ -45,7 +46,11 @@ class RegisterHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.user.UserRegister(**self.arguments)
+        form = forms.user.UserReg(**self.arguments)
+
+        # generate password if not set
+        if form.pwd is None:
+            form.pwd = rand.alnum(8)
 
         # check arguments
         if not validator.phone(form.phone) and not validator.password(form.pwd):
@@ -78,7 +83,7 @@ class RegisterHandler(handler.Handler):
         self.write(protocol.success(data={'uid':user.id, 'sid': self.session.id}))
 
 
-class LoginHandler(handler.Handler):
+class UserLoginHandler(handler.Handler):
     @access.exptproc
     def post(self):
         """
@@ -88,24 +93,58 @@ class LoginHandler(handler.Handler):
         # get parameters
         form = forms.user.UserLogin(**self.arguments)
 
+        # check parameters
+        if form.pwd is None and form.vcode is None:
+            raise error.invalid_parameters
+
         # init user model
         userdao = daos.user.UserDao(self.db)
 
         # get user from database
         user = userdao.get(user=form.user)
 
-        ## check user ##
-        # user not exist or password invalid
-        if user is None or hash.sha1(form.pwd) != user.pwd:
-            raise error.user_or_pwd_invalid
+        # user not exist
+        if user is None: # register
+            if form.vcode is None:
+                raise error.invalid_parameters
 
-        # user has disabled
-        if user.disable:
-            raise error.user_disabled
+            # check verify code
+            scode = verify.sms.get(form.phone)
+            if scode is None or form.vcode.lower() != scode.lower():
+                raise error.wrong_sms_verify_code
+
+            # generate password if not set
+            if form.pwd is None:
+                form.pwd = rand.alnum(8)
+
+            # check arguments
+            if not validator.phone(form.user) and not validator.password(form.pwd):
+                raise error.invalid_parameters
+
+            # init user model
+            userdao = daos.user.UserDao(self.db)
+
+            # create user
+            userdao.add(form.user, hash.sha1(form.pwd))
+
+            # get user
+            user = userdao.get(user=form.user)
+        else: # login
+            # password invalid
+            if form.pwd is not None and hash.sha1(form.pwd) != user.pwd:
+                raise error.user_or_pwd_invalid
+
+            # verify code invalid
+            vcode = verify.sms.get(form.user)
+            if form.vcode and vcode and form.vcode.lower() != vcode.lower():
+                raise error.user_or_pwd_invalid
+
+            # user has disabled
+            if user.disable:
+                raise error.user_disabled
 
         # get user id
         uid, phone = user.id, user.phone
-
         # set user session
         self.session.set('uid', uid)
         self.session.set('phone', phone)
@@ -114,7 +153,7 @@ class LoginHandler(handler.Handler):
         self.write(protocol.success(data={'uid':uid, 'sid': self.session.id}))
 
 
-class LogoutHandler(handler.Handler):
+class UserLogoutHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
     def post(self):
@@ -129,7 +168,74 @@ class LogoutHandler(handler.Handler):
         self.write(protocol.success())
 
 
-class ChangePwdHandler(handler.Handler):
+class UserVerifyHandler(handler.Handler):
+    @access.exptproc
+    def get(self):
+        """
+            send sms
+        :return:
+        """
+        # get login user phone number
+        phone = self.session.get('phone')
+        if phone is None:
+            raise error.user_not_login
+
+        # get arguments
+        form = forms.user.UserVerifyGet(**self.arguments)
+
+        # check phone number
+        if not validator.phone(phone):
+            raise error.invalid_parameters
+
+        # get message template
+        tpl = msgtpl.sms.get(form.type)
+        if tpl is None:
+            raise error.invalid_parameters
+
+        # check verify code length
+        if not validator.range(form.length, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
+            raise error.invalid_parameters
+
+        # generate verify code
+        code = rand.num(form.length)
+
+        # save verify code
+        verify.sms.set(phone, code, config.EXPIRE_VERIFY_CODE)
+
+        # send message by template
+        sms.send(phone, tpl.format(code))
+
+        # response data
+        data = {
+            'expires': config.EXPIRE_VERIFY_CODE
+        }
+
+        self.write(protocol.success(data = data))
+
+    @access.exptproc
+    def post(self):
+        """
+            check sms
+        :return:
+        """
+        # get login user phone number
+        phone = self.session.get('phone')
+        if phone is None:
+            raise error.user_not_login
+
+        # get arguments
+        form = forms.user.UserVerifyPost(**self.arguments)
+
+        # verify code
+        sc = verify.sms.get(phone)
+        if sc is None or form.code.lower() != sc.lower():
+            raise error.wrong_sms_verify_code
+
+        # response success
+        self.write(protocol.success())
+
+
+class UserPwdChangeHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
     def post(self):
@@ -138,7 +244,7 @@ class ChangePwdHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.user.UserChangePwd(**self.arguments)
+        form = forms.user.UserPwdChange(**self.arguments)
 
         # check new password
         if not validator.password(form.npwd):
@@ -161,7 +267,7 @@ class ChangePwdHandler(handler.Handler):
         self.write(protocol.success())
 
 
-class ResetPwdHandler(handler.Handler):
+class UserPwdResetHandler(handler.Handler):
     @access.exptproc
     def post(self):
         """
@@ -169,7 +275,7 @@ class ResetPwdHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.user.UserResetPwd(**self.arguments)
+        form = forms.user.UserPwdReset(**self.arguments)
 
         # check verify code
         if verify.sms.get(form.phone) != form.vcode:

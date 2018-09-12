@@ -2,30 +2,39 @@
     form data for trade request
 """
 from tlib.web import form, field
-from .. import suite
 
 
 class UserExist(form.Form):
     phone = field.StringField(max_length=16)
 
 
-class UserRegister(form.Form):
+class UserReg(form.Form):
     phone = field.StringField(max_length=16)
-    pwd = field.StringField(max_length=16)
+    pwd = field.StringField(max_length=16, null=True)
     vcode = field.StringField(max_length=16)
 
 
-class UserLogin(form.form):
+class UserLogin(form.Form):
     user = field.StringField(max_length=16)
-    pwd = field.StringField(max_length=16)
+    pwd = field.StringField(max_length=16, null=True)
+    vcode = field.StringField(max_length=16, null=True)
 
 
-class UserChangePwd(form.Form):
+class UserVerifyGet(form.Form):
+    type = field.StringField(max_length=16)
+    length = field.IntegerField()
+
+
+class UserVerifyPost(form.Form):
+    code = field.StringField(max_length=16)
+
+
+class UserPwdChange(form.Form):
     opwd = field.StringField(max_length=16)
     npwd = field.StringField(max_length=16)
 
 
-class UserResetPwd(form.Form):
+class UserPwdReset(form.Form):
     phone = field.StringField(max_length=16)
     vcode = field.StringField(max_length=16)
     npwd = field.StringField(max_length=16)

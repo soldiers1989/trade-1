@@ -2,7 +2,9 @@
     log for aim
 """
 from . import redis
+from tlib import logger
 
+_logger = logger.create('aim.log')
 
 class _RedisLog:
     def __init__(self, name, redis, maxrecords = 1000):
@@ -54,6 +56,15 @@ _errorlog = _RedisLog('log_aim_error', redis.log)
 def info(msg):
     try:
         _infolog.log(msg)
+        _logger.info(msg)
+    except:
+        pass
+
+
+def error(msg):
+    try:
+        _errorlog.log(msg)
+        _logger.error(msg)
     except:
         pass
 
@@ -63,13 +74,6 @@ def getinfo(wantrecords=20):
         return _errorlog.get(wantrecords)
     except:
         return ""
-
-
-def error(msg):
-    try:
-        _errorlog.log(msg)
-    except:
-        pass
 
 
 def geterror(wantrecords=20):

@@ -73,3 +73,10 @@ class Handler(tornado.web.RequestHandler):
         # update session expire time if current user is login
         if self.current_user is not None:
             self.session.expire(config.SESSION_TIMEOUT)
+
+    @property
+    def arguments(self):
+        args = {}
+        for arg in self.request.arguments.keys():
+            args[arg] = self.get_argument(arg)
+        return args

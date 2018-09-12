@@ -3,17 +3,19 @@ from . import handlers
 handlers = [
     (r"/admin/echo", handlers.admin.EchoHandler),
 
-    (r"/user/sid", handlers.user.GetSIDHandler),
+    (r"/user/session/get", handlers.user.SessionGetHandler),
+
     (r"/user/exist", handlers.user.UserExistHandler),
-    (r"/user/register", handlers.user.RegisterHandler),
-    (r"/user/vimg", handlers.user.UserExistHandler),
-    (r"/user/vsms", handlers.user.UserExistHandler),
+    (r"/user/reg", handlers.user.UserRegHandler),
 
-    (r"/user/login", handlers.user.LoginHandler),
-    (r"/user/logout", handlers.user.LogoutHandler),
+    (r"/user/login", handlers.user.UserLoginHandler),
+    (r"/user/logout", handlers.user.UserLogoutHandler),
 
-    (r"/user/pwd/change", handlers.user.ChangePwdHandler),
-    (r"/user/pwd/reset", handlers.user.ResetPwdHandler),
+    (r"/user/verify", handlers.user.UserVerifyHandler),
+
+    (r"/user/pwd/change", handlers.user.UserPwdChangeHandler),
+    (r"/user/pwd/reset", handlers.user.UserPwdResetHandler),
+
     (r"/user/bank/get", handlers.user.GetBankHandler),
     (r"/user/bank/add", handlers.user.AddBankHandler),
     (r"/user/bank/del", handlers.user.DelBankHandler),
@@ -24,9 +26,8 @@ handlers = [
     (r"/user/draw/get", handlers.user.GetDrawHandler),
     (r"/user/stock/get", handlers.user.GetStockHandler),
 
-    (r"/verify/gsms", handlers.verify.GeneralSmsHandler),
-    (r"/verify/usms", handlers.verify.UserSmsHandler),
-    (r"/verify/code", handlers.verify.CodeHandler),
-    (r"/verify/gimg", handlers.verify.GeneralImageHandler),
-    (r"/verify/simg", handlers.verify.SessionImageHandler),
+    (r"/verify/sms", handlers.verify.VerifySmsHandler),
+    (r"/verify/id/get", handlers.verify.VerifyIDGetHandler),
+    (r"/verify/image/general", handlers.verify.VerifyImageGeneralHandler),
+    (r"/verify/image/session", handlers.verify.VerifyImageSessionHandler),
 ]

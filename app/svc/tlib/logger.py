@@ -1,6 +1,7 @@
 import os, logging
 
-_default_log_level = logging.DEBUG
+
+_default_log_level = logging.NOTSET
 _default_log_format = "[%(asctime)s][%(name)s][%(levelname)s]%(messsage)s[%(filename)s, %(lineno)d]"
 _default_log_file_dir = "./log"
 
@@ -31,14 +32,14 @@ def create(name, logdir=_default_log_file_dir, format=_default_log_format, level
     handler.setLevel(level)
 
     # create formater
-    formarter = logging.Formatter(format)
+    #formarter = logging.Formatter(format)
 
     # set logger formarter
-    console.setFormatter(formarter)
-    handler.setFormatter(formarter)
+    #console.setFormatter(formarter)
+    #handler.setFormatter(formarter)
 
     # set handler
-    logger.addHandler(console)
+    #logger.addHandler(console)
     logger.addHandler(handler)
 
     return logger
