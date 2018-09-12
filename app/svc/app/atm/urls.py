@@ -1,4 +1,4 @@
-from app.atm import handlers
+from . import handlers
 
 handlers = [
     (r"/task/status", handlers.task.Status),

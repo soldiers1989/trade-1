@@ -1,8 +1,9 @@
 import time
 
-from app.aam import suite, models
-from app.util import rand
-from web import dao, sqlhelper
+from tlib import rand
+from tlib.web import dao
+from tlib.web import sqlhelper
+from .. import suite, models
 
 
 class TradeDao(dao.Dao):

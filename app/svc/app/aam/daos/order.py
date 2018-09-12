@@ -2,8 +2,11 @@
     order dao
 """
 import time
-from web import dao, sqlhelper
-from app.aam import models, suite
+
+from tlib.web import dao
+
+from .. import models, suite
+from tlib.web import sqlhelper
 
 
 class OrderDao(dao.Dao):

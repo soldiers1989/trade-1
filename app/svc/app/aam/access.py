@@ -2,7 +2,7 @@
     access protection
 """
 import tornado.web
-from app.aam import error, config, log
+from . import error, config, log
 
 
 def needtoken(handler_func):

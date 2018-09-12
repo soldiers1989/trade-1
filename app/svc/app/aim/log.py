@@ -1,7 +1,7 @@
 """
     log for aim
 """
-from app.aim import redis
+from . import redis
 
 
 class _RedisLog:

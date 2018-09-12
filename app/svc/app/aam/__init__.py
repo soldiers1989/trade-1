@@ -1,1 +1,1 @@
-from app.aam import service
+from . import service

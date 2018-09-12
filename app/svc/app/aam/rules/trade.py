@@ -1,7 +1,7 @@
 """
     trade relate utility
 """
-import api
+import trpc
 import time, datetime
 
 
@@ -132,7 +132,7 @@ def valid_user_buy_price(code, price):
     :param price: float, order price
     :return:
     """
-    q = api.quote.get_quote(code)
+    q = trpc.quote.get_quote(code)
     if price < q.dtj or price > q.ztj:
         return False
 
@@ -146,7 +146,7 @@ def valid_user_sell_price(code, price):
     :param price:
     :return:
     """
-    q = api.quote.get_quote(code)
+    q = trpc.quote.get_quote(code)
     if price < q.dtj or price > q.ztj:
         return False
 
@@ -160,7 +160,7 @@ def valid_user_close_price(code, price):
     :param price:
     :return:
     """
-    q = api.quote.get_quote(code)
+    q = trpc.quote.get_quote(code)
     if price < q.dtj or price > q.ztj:
         return False
 
@@ -226,7 +226,7 @@ def valid_sys_close_price(code, price):
     :param price:
     :return:
     """
-    q = api.quote.get_quote(code)
+    q = trpc.quote.get_quote(code)
     if price < q.dtj or price > q.ztj:
         return False
 

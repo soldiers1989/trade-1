@@ -2,7 +2,7 @@
     lock for business
 """
 import time
-from app.aam import myredis
+from . import myredis
 
 
 class _LockException(Exception):

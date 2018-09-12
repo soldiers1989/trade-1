@@ -1,1 +1,1 @@
-from app.aam.handlers import admin, trade
+from . import admin, trade

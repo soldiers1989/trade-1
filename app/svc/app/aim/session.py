@@ -2,8 +2,9 @@
     http session
 """
 import time
-from app.aim import redis
-from app.util import rand
+
+from . import redis
+from tlib import rand
 
 
 class _Session:

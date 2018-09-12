@@ -1,5 +1,5 @@
 #from lib.stock.quote.daily import quotes
-from lib.stock.quote.level5 import quotes
+from tlib.stock.quote.level5 import quotes
 import threading, time
 
 class T(threading.Thread):

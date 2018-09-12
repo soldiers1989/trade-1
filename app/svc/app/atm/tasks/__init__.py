@@ -1,4 +1,4 @@
 """
     all tasks
 """
-from app.atm.tasks import stock, test
+from . import stock, test

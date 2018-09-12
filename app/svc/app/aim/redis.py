@@ -2,7 +2,7 @@
     redis object for aim app
 """
 import redis
-from app.aim import config
+from . import config
 
 # redis for session
 session = redis.Redis(**config.REDISS['aim'][config.MODE], db=0)

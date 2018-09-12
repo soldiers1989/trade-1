@@ -1,5 +1,5 @@
-from app.atm import config
-from app.util import mysql
+from . import config
+from tlib import mysql
 
 # mysql databases
 _atm = config.DATABASES['atm'][config.MODE]

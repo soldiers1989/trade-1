@@ -1,5 +1,5 @@
-from app.aam import config
-from app.util import mysql
+from tlib import mysql
+from . import config
 
 # mysql databases
 _aam = config.DATABASES['aam'][config.MODE]

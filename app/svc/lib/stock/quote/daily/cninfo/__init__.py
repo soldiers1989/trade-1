@@ -1,1 +1,0 @@
-from lib.stock.quote.daily.cninfo import quote

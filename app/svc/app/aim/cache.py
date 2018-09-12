@@ -1,7 +1,7 @@
 """
     sms manager
 """
-from app.aim import redis
+from . import redis
 
 
 # cache storage with get/set

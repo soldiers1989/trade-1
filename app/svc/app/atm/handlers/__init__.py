@@ -1,1 +1,1 @@
-from app.atm.handlers import task
+from . import task

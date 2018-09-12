@@ -1,1 +1,1 @@
-from app.aam.rules import trade
+from . import trade

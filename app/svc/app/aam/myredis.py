@@ -2,7 +2,7 @@
     redis object for aam app
 """
 import redis
-from app.aam import config
+from . import config
 
 
 # redis for log

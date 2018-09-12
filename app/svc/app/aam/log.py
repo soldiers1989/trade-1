@@ -1,7 +1,7 @@
 """
     log for aam
 """
-from app.aam import myredis
+from . import myredis
 
 
 class _RedisLog:

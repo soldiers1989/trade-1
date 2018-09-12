@@ -2,7 +2,7 @@
     access protection
 """
 import tornado.web
-from app.aim import error, config, log
+from . import error, config, log
 
 
 def needlogin(handler_func):

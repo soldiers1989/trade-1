@@ -1,1 +1,1 @@
-from app.aam.forms import trade
+from . import trade

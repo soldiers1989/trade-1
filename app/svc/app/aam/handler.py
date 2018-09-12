@@ -2,7 +2,7 @@
     base handler
 """
 import tornado.web
-from app.aam import config, mysql
+from . import config, mysql
 
 
 class Handler(tornado.web.RequestHandler):

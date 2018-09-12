@@ -1,7 +1,7 @@
 """
     verify code definition
 """
-from app.aim import redis
+from . import redis
 
 
 # image verify code storage with get/set

@@ -1,8 +1,10 @@
 """
     user dao
 """
-from web import dao, sqlhelper
-from app.aam import models
+from tlib.web import dao
+
+from .. import models
+from tlib.web import sqlhelper
 
 
 class UserDao(dao.Dao):

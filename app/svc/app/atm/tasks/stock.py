@@ -1,12 +1,12 @@
 """
     stock relate tasks
 """
-import threading
 
 from xpinyin import Pinyin
-from app.util import rand
-from app.atm import models, timer
-from lib.stock.detail import cninfo, sina
+
+from .. import daos, timer, mysql
+from tlib import rand
+from tlib.stock.detail import cninfo, sina
 
 
 class SyncStockFromSina(timer.Runnable):
@@ -19,11 +19,11 @@ class SyncStockFromSina(timer.Runnable):
         :return:
         """
         # stock model
-        model = models.stock.Stock()
+        stockdao = daos.stock.Stock(mysql.get())
 
         newstocks, localstocks = [], {}
         # fetch all stocks from local database
-        stocks = model.get()
+        stocks = stockdao.get()
         for stock in stocks:
             localstocks[stock['id']] = stock['name']
         localcnt = len(stocks)
@@ -44,10 +44,10 @@ class SyncStockFromSina(timer.Runnable):
             jianpin = py.get_initials(name, u'').lower()
             quanpin = py.get_pinyin(name, u'')
             status, limit = 'open', 'none'
-            model.add(id, name, jianpin, quanpin, status, limit)
+            stockdao.add(id, name, jianpin, quanpin, status, limit)
 
         # commit exchanges
-        model.dbcommit()
+        stockdao.commit()
 
         # return result
         result = 'local:%d, sina:%d, new:%d' %(localcnt, sinacnt, newcnt)
@@ -66,11 +66,11 @@ class SyncStockFromCNInfo(timer.Runnable):
         :return:
         """
         # stock model
-        model = models.stock.Stock()
+        stockdao = daos.stock.Stock(mysql.get())
 
         newstocks, localstocks = [], {}
         # fetch all stocks from local database
-        stocks = model.get()
+        stocks = stockdao.get()
         for stock in stocks:
             localstocks[stock['id']] = stock['name']
         localcnt = len(stocks)
@@ -91,10 +91,10 @@ class SyncStockFromCNInfo(timer.Runnable):
             jianpin = py.get_initials(name, u'').lower()
             quanpin = py.get_pinyin(name, u'')
             status, limit = 'open', 'none'
-            model.add(id, name, jianpin, quanpin, status, limit)
+            stockdao.add(id, name, jianpin, quanpin, status, limit)
 
         # commit exchanges
-        model.dbcommit()
+        stockdao.commit()
 
         # return result
         result = 'local:%d, sina:%d, new:%d' %(localcnt, cnicnt, newcnt)

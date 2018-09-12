@@ -1,7 +1,7 @@
 """
     service admin
 """
-from app.aam import access, handler, protocol, myredis, error, log
+from .. import access, handler, protocol, myredis, error, log
 
 
 class EchoHandler(handler.Handler):

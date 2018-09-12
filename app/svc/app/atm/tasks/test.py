@@ -2,8 +2,9 @@
     test task for timer
 """
 import datetime
-from app.atm import timer
-from app.util import rand
+
+from .. import timer
+
 
 class TimerTestTask(timer.Runnable):
     def do(self):

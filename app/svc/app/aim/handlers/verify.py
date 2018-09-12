@@ -1,8 +1,9 @@
 """
     service verifier, including image, sms
 """
-from app.util import sms, image, rand, validator
-from app.aim import access, handler, error, protocol, config, models, verify, msgtpl
+from .. import access, handler, error, protocol, config, verify, msgtpl
+from tlib import rand, image, validator
+from trpc import sms
 
 
 class CodeHandler(handler.Handler):

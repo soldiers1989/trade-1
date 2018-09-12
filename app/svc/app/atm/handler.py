@@ -2,7 +2,7 @@
     base handler
 """
 import tornado.web
-from app.atm import config
+from . import config
 
 
 class Handler(tornado.web.RequestHandler):

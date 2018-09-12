@@ -1,7 +1,7 @@
 """
     log for atm
 """
-from app.atm import redis
+from . import redis
 
 
 class _RedisLog:

@@ -1,7 +1,7 @@
 """
     error definition
 """
-from app.aim import protocol
+from . import protocol
 
 
 class ProcessError(Exception):

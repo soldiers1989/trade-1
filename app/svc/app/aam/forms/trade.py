@@ -1,8 +1,8 @@
 """
     form data for trade request
 """
-from web import form, field
-from app.aam import suite
+from tlib.web import form, field
+from .. import suite
 
 
 class UserBuy(form.Form):

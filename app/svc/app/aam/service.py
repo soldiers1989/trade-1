@@ -4,7 +4,7 @@
 import tornado.web
 import tornado.ioloop
 
-from app.aam import config, urls, log
+from . import config, urls, log
 
 # application settings
 settings = {

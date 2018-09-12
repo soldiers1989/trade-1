@@ -1,4 +1,4 @@
-from app.aam import handlers
+from . import handlers
 
 handlers = [
     (r"/admin/echo", handlers.admin.EchoHandler),

@@ -2,7 +2,7 @@
     redis object for atm app
 """
 import redis
-from app.atm import config
+from . import config
 
 
 # redis for log
