@@ -1,7 +1,7 @@
 """
     user model
 """
-import time
+import time, datetime
 from .. import models
 from tlib.web import dao, sqlhelper
 
@@ -65,12 +65,15 @@ class UserDao(dao.Dao):
         :return:
         """
         # select query object
-        q = sqlhelper.select().columns('id', 'name', 'idc', 'bank', 'account', 'deleted', 'ctime', 'mtime', 'user_id').tables('tb_user_bank').where(**conds)
+        q = sqlhelper.select().columns(*models.UserBank.fields).tables('tb_user_bank').where(**conds)
 
+        banks = []
         # excute query
         results = self.select(q.sql(), q.args())
+        for result in results:
+            banks.append(models.UserBank(**result))
 
-        return results
+        return banks
 
     def addbank(self, user, name, idc, bank, account):
         """
@@ -113,17 +116,18 @@ class UserDao(dao.Dao):
         """
         # select query
         sql = '''
-                select id, name, money, status, ctime, etime, utime, user_id
+                select id, name, money, status, ctime, utime, sdate, edate, user_id
                 from tb_user_coupon
-                where user_id=%s and status=%s and ctime<=%s and etime>=%s
+                where user_id=%s and status=%s and sdate<=%s and edate>=%s
             '''
 
-        # get current time
-        tm = int(time.time())
+        # get current date
+        today = datetime.date.today()
 
         # execute query
-        results = self.select(sql, (user, 'unused', tm, tm))
-
+        results = self.select(sql, (user, 'unused', today, today))
+        if results is None:
+            results = []
         return results
 
     def usecoupon(self, user, id):
@@ -147,7 +151,7 @@ class UserDao(dao.Dao):
         """
         # select query
         sql = '''
-                select id, code, item, detail, bmoney, lmoney, ctime, user_id
+                select id, code, item, detail, money, bmoney, lmoney, ctime, user_id
                 from tb_user_bill
                 where user_id=%s
                 order by ctime desc
@@ -155,6 +159,8 @@ class UserDao(dao.Dao):
 
         # execute query
         results = self.select(sql, (user,))
+        if results is None:
+            results = []
 
         return results
 
@@ -174,6 +180,8 @@ class UserDao(dao.Dao):
 
         # execute query
         results = self.select(sql, (user,))
+        if results is None:
+            results = []
 
         return results
 
@@ -193,6 +201,8 @@ class UserDao(dao.Dao):
 
         # execute query
         results = self.select(sql, (user,))
+        if results is None:
+            results = []
 
         return results
 
@@ -212,5 +222,7 @@ class UserDao(dao.Dao):
 
         # execute query
         results = self.select(sql, (user,))
+        if results is None:
+            results = []
 
         return results

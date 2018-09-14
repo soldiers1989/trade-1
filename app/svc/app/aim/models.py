@@ -29,6 +29,64 @@ class UserCoupon(model.Model):
     utime = field.IntegerField(null=True)
 
 
+class UserBank(model.Model):
+    id = field.IntegerField()
+    user_id = field.IntegerField()
+    bank = field.StringField(max_length=16)
+    name = field.StringField(max_length=16)
+    idc = field.StringField(max_length=32)
+    account = field.StringField(max_length=32)
+    deleted = field.BooleanField(default=False)
+    ctime = field.IntegerField()  # create time
+    mtime = field.IntegerField()  # modify time
+
+
+class UserBill(model.Model):
+    id = field.IntegerField()
+    user_id = field.IntegerField()
+    code = field.StringField(max_length=16)
+    item = field.StringField(max_length=16)
+    detail = field.StringField(max_length=64)
+    money = field.DecimalField(digits=10, decimals=2) # bill money
+    bmoney = field.DecimalField(digits=10, decimals=2) # before money
+    lmoney = field.DecimalField(digits=10, decimals=2) # left money
+    ctime = field.IntegerField()  # create time
+
+
+# tb_user_charge
+class UserCharge(model.Model):
+    id = field.IntegerField()
+    user_id = field.IntegerField()
+    code = field.StringField(max_length=16)
+    money = field.DecimalField(digits=10, decimals=2)  # bill money
+    status = field.StringField(max_length=16)
+    ctime = field.IntegerField()  # create time
+
+
+# tb_user_draw
+class UserDraw(model.Model):
+    id = field.IntegerField()
+    user_id = field.IntegerField()
+    code = field.StringField(max_length=16)
+    money = field.DecimalField(digits=10, decimals=2)
+    name = field.StringField(max_length=16)
+    idc = field.StringField(max_length=32)
+    bank = field.StringField(max_length=16)
+    account = field.StringField(max_length=32)
+    status = field.StringField(max_length=16, default='paying')
+    ctime = field.IntegerField()  # create time
+
+
+# tb_user_stock
+class UserStock(model.Model):
+    id = field.IntegerField()
+    user_id = field.IntegerField()
+    stock_id = field.StringField(max_length=16)
+    deleted = field.BooleanField(default=False)
+    ctime = field.IntegerField()  # create time
+    dtime = field.IntegerField(null=True)  # delete time
+
+
 class Lever(model.Model):
     id = field.IntegerField()
     lever = field.IntegerField()

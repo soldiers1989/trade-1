@@ -15,8 +15,9 @@ class _Session:
         self._id = id
         self._redis = redis
 
-        if self._redis.exists(self._id):
-            self.set('ctime', time.time())
+        #if self._redis.exists(self._id):
+        self.set('ctime', time.time())
+
 
     @property
     def id(self):

@@ -6,7 +6,7 @@ handlers = [
     (r"/user/session/get", handlers.user.SessionGetHandler),
 
     (r"/user/exist", handlers.user.UserExistHandler),
-    (r"/user/reg", handlers.user.UserRegHandler),
+    (r"/user/register", handlers.user.UserRegisterHandler),
 
     (r"/user/login", handlers.user.UserLoginHandler),
     (r"/user/logout", handlers.user.UserLogoutHandler),

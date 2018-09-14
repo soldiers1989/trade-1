@@ -38,7 +38,7 @@ class UserExistHandler(handler.Handler):
         return self.write(protocol.success(data=data))
 
 
-class UserRegHandler(handler.Handler):
+class UserRegisterHandler(handler.Handler):
     @access.exptproc
     def post(self):
         """
@@ -278,7 +278,8 @@ class UserPwdResetHandler(handler.Handler):
         form = forms.user.UserPwdReset(**self.arguments)
 
         # check verify code
-        if verify.sms.get(form.phone) != form.vcode:
+        sc = verify.sms.get(form.phone)
+        if sc is None or sc != form.vcode:
             raise error.wrong_sms_verify_code
 
         # check user if exist
@@ -318,18 +319,7 @@ class GetBankHandler(handler.Handler):
         banks = userdao.getbank(user_id=uid, deleted=False)
 
         # response data
-        data = []
-        for bank in banks:
-            data.append({'id':bank.get('id'),
-                         'name': bank.get('name'),
-                         'idc': bank.get('idc'),
-                         'bank': bank.get('bank'),
-                         'account': bank.get('account'),
-                         'ctime': bank.get('ctime'),
-                         'mtime': bank.get('mtime'),
-                         'user': bank.get('user_id')})
-
-        self.write(protocol.success(data=data))
+        self.write(protocol.success(data=banks))
 
 
 class AddBankHandler(handler.Handler):
@@ -396,18 +386,7 @@ class GetCouponHandler(handler.Handler):
         coupons = userdao.getcoupon(uid)
 
         # response data
-        data = []
-        for coupon in coupons:
-            data.append({'id':coupon.get('id'),
-                         'name': coupon.get('name'),
-                         'money': coupon.get('money'),
-                         'status': coupon.get('status'),
-                         'ctime': coupon.get('ctime'),
-                         'etime': coupon.get('etime'),
-                         'utime': coupon.get('utime'),
-                         'user': coupon.get('user_id')})
-
-        self.write(protocol.success(data=data))
+        self.write(protocol.success(data=coupons))
 
 
 class GetBillHandler(handler.Handler):
@@ -427,19 +406,7 @@ class GetBillHandler(handler.Handler):
         # get user bills
         bills = userdao.getbill(uid)
 
-        # response data
-        data = []
-        for bill in bills:
-            data.append({'id':bill.get('id'),
-                         'code': bill.get('code'),
-                         'item': bill.get('item'),
-                         'detail': bill.get('detail'),
-                         'bmoney': bill.get('bmoney'),
-                         'lmoney': bill.get('lmoney'),
-                         'ctime': bill.get('ctime'),
-                         'user': bill.get('user_id')})
-
-        self.write(protocol.success(data=data))
+        self.write(protocol.success(data=bills))
 
 
 class GetChargeHandler(handler.Handler):
@@ -460,16 +427,7 @@ class GetChargeHandler(handler.Handler):
         charges = userdao.getcharge(uid)
 
         # response data
-        data = []
-        for charge in charges:
-            data.append({'id': charge.get('id'),
-                         'code': charge.get('code'),
-                         'money': charge.get('money'),
-                         'status': charge.get('status'),
-                         'ctime': charge.get('ctime'),
-                         'user': charge.get('user_id')})
-
-        self.write(protocol.success(data=data))
+        self.write(protocol.success(data=charges))
 
 
 class GetDrawHandler(handler.Handler):
@@ -490,20 +448,7 @@ class GetDrawHandler(handler.Handler):
         draws = userdao.getdraw(uid)
 
         # response data
-        data = []
-        for draw in draws:
-            data.append({'id': draw.get('id'),
-                         'code': draw.get('code'),
-                         'money': draw.get('money'),
-                         'name': draw.get('name'),
-                         'idc': draw.get('idc'),
-                         'bank': draw.get('bank'),
-                         'account': draw.get('account'),
-                         'status': draw.get('status'),
-                         'ctime': draw.get('ctime'),
-                         'user': draw.get('user_id')})
-
-        self.write(protocol.success(data=data))
+        self.write(protocol.success(data=draws))
 
 
 class GetStockHandler(handler.Handler):
@@ -524,12 +469,4 @@ class GetStockHandler(handler.Handler):
         stocks = userdao.getstock(uid)
 
         # response data
-        data = []
-        for stock in stocks:
-            data.append({'id': stock.get('id'),
-                         'code': stock.get('code'),
-                         'name': stock.get('name'),
-                         'ctime': stock.get('ctime'),
-                         'user': stock.get('user')})
-
-        self.write(protocol.success(data=data))
+        self.write(protocol.success(data=stocks))
