@@ -21,6 +21,7 @@ class Stm:
 
 
 if __name__ == "__main__":
-    with Stm():
+    s = Stm()
+    with s:
         print('statement')
         raise Exception('error')

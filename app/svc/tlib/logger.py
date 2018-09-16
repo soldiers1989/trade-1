@@ -14,22 +14,22 @@ def create(name, logdir=_default_log_file_dir, format=_default_log_format, level
         Logger object
     """
     # make log directory
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
+    #if not os.path.exists(logdir):
+    #    os.makedirs(logdir)
 
     # create new logger
     logger = logging.getLogger(name);
 
     # create console handler
-    console = logging.StreamHandler()
+    #console = logging.StreamHandler()
 
     # create file handler
-    file = os.path.join(logdir, name)
-    handler = logging.FileHandler(file)
+    #file = os.path.join(logdir, name)
+    #handler = logging.FileHandler(file)
 
     # set logger level
-    console.setLevel(level)
-    handler.setLevel(level)
+    #console.setLevel(level)
+    #handler.setLevel(level)
 
     # create formater
     #formarter = logging.Formatter(format)
@@ -40,6 +40,6 @@ def create(name, logdir=_default_log_file_dir, format=_default_log_format, level
 
     # set handler
     #logger.addHandler(console)
-    logger.addHandler(handler)
+    #logger.addHandler(handler)
 
     return logger
