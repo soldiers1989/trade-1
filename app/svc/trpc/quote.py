@@ -3,9 +3,14 @@
 """
 import requests
 from decimal import Decimal
+from  tlib import token
 
 # base url for remote quote service
 _BaseUrl = "http://localhost:9000"
+
+# token for access remote trade service
+_ENABLE_KEY = True
+_PRIVATE_KEY = "abc"
 
 
 # quote api error
@@ -57,6 +62,18 @@ class _Level5(dict):
         super().__init__(self, **kwargs)
 
 
+def _make_token(params):
+    """
+        add token to params
+    :param params:
+    :return:
+    """
+    if not _ENABLE_KEY:
+        return params
+
+    return token.generate(params, _PRIVATE_KEY)
+
+
 def get_quote(code):
     """
         get current quote summary of stock by @code
@@ -64,7 +81,16 @@ def get_quote(code):
     :return:
     """
     url = _BaseUrl+"/quote"
-    resp = requests.get(url, params={'code':code}).json()
+
+    params = {
+        'code': code
+    }
+    params = _make_token(params)
+
+    resp = requests.get(url, params=params).json()
+    if resp.get('status') != 0:
+        raise QuoteApiError(resp.get('msg'))
+
     return _Quote(**resp.get('data').get('quote'))
 
 
@@ -75,5 +101,14 @@ def get_level5(code):
     :return:
     """
     url = _BaseUrl+"/quote"
-    resp = requests.get(url, params={'code':code}).json()
+
+    params = {
+        'code': code
+    }
+    params = _make_token(params)
+
+    resp = requests.get(url, params=params).json()
+    if resp.get('status') != 0:
+        raise QuoteApiError(resp.get('msg'))
+
     return _Level5(**resp.get('data').get('quote'))

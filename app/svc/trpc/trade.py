@@ -3,12 +3,14 @@
 """
 import requests, datetime
 from decimal import Decimal
+from tlib import token
 
 # base url for remote trade service
 _BaseUrl = "http://localhost:9000"
 
 # token for access remote trade service
-_Token = "abc"
+_ENABLE_KEY = True
+_PRIVATE_KEY = "abc"
 
 # quote api error
 class TradeApiError(Exception):
@@ -233,6 +235,18 @@ class _Wtcd:
         super().__init__(self, **kwargs)
 
 
+def _make_token(params):
+    """
+        add token to params
+    :param params:
+    :return:
+    """
+    if not _ENABLE_KEY:
+        return params
+
+    return token.generate(params, _PRIVATE_KEY)
+
+
 def add_account(laccount, lpwd, taccount, tpwd, dept, version, agentservers, tradeservers):
     """
         添加股票账户
@@ -269,8 +283,8 @@ def add_account(laccount, lpwd, taccount, tpwd, dept, version, agentservers, tra
         'version': version,
         'agents': sagentservers,
         'trades': stradeservers,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -288,8 +302,8 @@ def delete_account(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -305,8 +319,8 @@ def clear_account():
     url = _BaseUrl+"/account/clear"
 
     params = {
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -325,6 +339,7 @@ def login_account(account):
     params = {
         'account': account
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -342,8 +357,8 @@ def logout_account(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -362,8 +377,8 @@ def status_account(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -382,8 +397,8 @@ def query_gdxx(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -408,8 +423,8 @@ def query_dqzc(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -430,8 +445,8 @@ def query_dqcc(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -456,8 +471,8 @@ def query_drwt(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -482,8 +497,8 @@ def query_drcj(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -508,8 +523,8 @@ def query_kcwt(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -534,8 +549,8 @@ def query_lswt(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -560,8 +575,8 @@ def query_lscj(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -586,8 +601,8 @@ def query_jgd(account):
 
     params = {
         'account': account,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -613,8 +628,8 @@ def query_gphq(account, code):
     params = {
         'account': account,
         'code': code,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -647,8 +662,8 @@ def order_xjmr(account, gddm, code, price, count):
         'code': code,
         'price': price,
         'count': count,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -681,8 +696,8 @@ def order_xjmc(account, gddm, code, price, count):
         'code': code,
         'price': price,
         'count': count,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -715,8 +730,8 @@ def order_sjmr(account, gddm, code, price, count):
         'code': code,
         'price': price,
         'count': count,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -749,8 +764,8 @@ def order_sjmc(account, gddm, code, price, count):
         'code': code,
         'price': price,
         'count': count,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 
@@ -781,8 +796,8 @@ def order_cancel(account, seid, orderno):
         'account': account,
         'seid': seid,
         'orderno': orderno,
-        '_token': _Token
     }
+    params = _make_token(params)
 
     resp = requests.get(url, params=params).json()
 

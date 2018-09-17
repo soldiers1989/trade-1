@@ -175,7 +175,6 @@ class Callback(handler.Handler):
 
 
     @access.exptproc
-    @access.needtoken
     def post(self):
         return self.get()
 

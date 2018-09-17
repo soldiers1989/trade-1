@@ -57,6 +57,100 @@ def add_task(id, name, cond, remoteurl):
         raise CrondApiError(resp.get('msg'))
 
 
+def del_task(id):
+    """
+        delete a timer task
+    :param id:
+    :return:
+    """
+    url = _BaseUrl+"/task/del"
+
+    params = {
+        'id': id,
+    }
+    params = _make_token(params)
+
+    resp = requests.get(url, params=params).json()
+
+    if resp.get('status') != 0:
+        raise CrondApiError(resp.get('msg'))
+
+
+def clear_task():
+    """
+        clear all timer task
+    :param id:
+    :return:
+    """
+    url = _BaseUrl+"/task/clear"
+
+    params = {
+    }
+    params = _make_token(params)
+
+    resp = requests.get(url, params=params).json()
+
+    if resp.get('status') != 0:
+        raise CrondApiError(resp.get('msg'))
+
+
+def disable_task(id):
+    """
+        disable a timer task
+    :param id:
+    :return:
+    """
+    url = _BaseUrl+"/task/disable"
+
+    params = {
+        'id': id,
+    }
+    params = _make_token(params)
+
+    resp = requests.get(url, params=params).json()
+
+    if resp.get('status') != 0:
+        raise CrondApiError(resp.get('msg'))
+
+
+def enable_task(id):
+    """
+        enable a timer task
+    :param id:
+    :return:
+    """
+    url = _BaseUrl+"/task/enable"
+
+    params = {
+        'id': id,
+    }
+    params = _make_token(params)
+
+    resp = requests.get(url, params=params).json()
+
+    if resp.get('status') != 0:
+        raise CrondApiError(resp.get('msg'))
+
+
+def execute_task(id):
+    """
+        enable a timer task
+    :param id:
+    :return:
+    """
+    url = _BaseUrl+"/task/execute"
+
+    params = {
+        'id': id,
+    }
+    params = _make_token(params)
+
+    resp = requests.get(url, params=params).json()
+
+    if resp.get('status') != 0:
+        raise CrondApiError(resp.get('msg'))
+
+
 def get_status(id = None):
     """
         get status of all time task or specified @id
