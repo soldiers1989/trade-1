@@ -27,15 +27,30 @@ class TaskManager:
         remotetask = task.RemoteTask(id, name, url)
 
         # add to timer
-        timer.default.setup(id, name, cond, remotetask, exclusive, maxkeep)
+        timer.default.add(id, name, cond, remotetask, exclusive, maxkeep)
 
-    def status(self, id):
+    def delete(self, id):
         """
-            get task status
+            delete a timer task
         :param id:
         :return:
         """
-        return timer.default.status(id)
+        timer.default.delete(id)
+
+    def clear(self):
+        """
+            clear all timer tasks
+        :return:
+        """
+        timer.default.clear()
+
+    def exist(self, id):
+        """
+            check if task with id has exist
+        :param id:
+        :return:
+        """
+        return timer.default.exist(id)
 
     def enable(self, id):
         """
@@ -71,3 +86,19 @@ class TaskManager:
         :return:
         """
         timer.default.notify(id, seq, status, result)
+
+    def status(self, id):
+        """
+            get task status
+        :param id:
+        :return:
+        """
+        return timer.default.status(id)
+
+    def detail(self, id):
+        """
+            get detail information
+        :param id:
+        :return:
+        """
+        return timer.default.detail(id)

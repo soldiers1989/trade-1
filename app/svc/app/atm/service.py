@@ -2,9 +2,9 @@
     pub service
 """
 import tornado.web
-import tornado.ioloop
+import tornado.ioloop, logging
 
-from . import config, urls, timer, log, tasks
+from . import config, urls, timer
 
 # application settings
 settings = {
@@ -16,8 +16,11 @@ settings = {
 
 # start atm service
 def start(port):
+    # init logging
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+
     # log start message
-    log.info('start atm service on port %d' % port)
+    logging.info('start aam service on port %d' % port)
 
     # start timer service
     timer.default.start()

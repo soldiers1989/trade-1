@@ -2,9 +2,9 @@
     pub service
 """
 import tornado.web
-import tornado.ioloop
+import tornado.ioloop, logging
 
-from . import config, urls, logger
+from . import config, urls
 
 # application settings
 settings = {
@@ -16,8 +16,11 @@ settings = {
 
 # start aim service
 def start(port):
+    # init logging
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+
     # log start message
-    logger.info('start aim service on port %d' % port)
+    logging.info('start aim service on port %d' % port)
 
     # start web application
     app = tornado.web.Application(urls.handlers, **settings)

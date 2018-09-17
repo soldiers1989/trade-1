@@ -1,7 +1,7 @@
 """
     remote task
 """
-import requests
+import requests, logging
 from .. import timer, config
 
 
@@ -18,8 +18,10 @@ class RemoteTask(timer.Runnable):
 
     def execute(self, seq):
         try:
-            callback = config.CALLBACK_URL % (str(id), str(seq))
-            resp = requests.get(self._url, params={'callback': callback}).json()
-            return resp.get('status'), resp.get('msg')
+            callback = config.CALLBACK_URL % (str(self._id), str(seq))
+            requests.get(self._url, params={'callback': callback})
+            logging.info('execute: %s, callback: %s' % (self._url, callback))
+            return True, 'executed'
         except Exception as e:
+            logging.error(str(e))
             return False, str(e)

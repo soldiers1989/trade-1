@@ -1,8 +1,8 @@
 """
     access protection
 """
-import tornado.web
-from . import error, config, log
+import tornado.web, logging
+from . import error, config
 
 
 def needtoken(handler_func):
@@ -27,11 +27,11 @@ def exptproc(handler_func):
             return handler_func(self, *args, **kwargs)
         except tornado.web.MissingArgumentError as e:
             self.write(error.missing_parameters.data)
-            log.error(str(e))
+            logging.error(str(e))
         except error.ProcessError as e:
             self.write(e.data)
-            log.error(str(e))
+            logging.error(str(e))
         except Exception as e:
             self.write(error.server_exception.data)
-            log.error(str(e))
+            logging.error(str(e))
     return wrapper

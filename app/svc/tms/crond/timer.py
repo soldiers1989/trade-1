@@ -9,6 +9,11 @@ class ConditionError(Exception):
         super().__init__(self, *args, **kwargs)
 
 
+class TimerError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
+
 class Runnable:
     def execute(self, seq):
         pass
@@ -19,14 +24,14 @@ class _Status:
     TODO, DOING, DONE = 'todo', 'doing', 'done'
 
     def __init__(self):
-        self.stime = None
-        self.etime = None
-
         self.status = _Status.TODO # executor status
 
+        self.estime = None # execute start time
+        self.eetime = None # execute end time
         self.estatus = None # execute status
         self.eresult = None # execute result
 
+        self.retime = None # runnable end time
         self.rstatus = None # runnable status
         self.rresult = None # runnable result
 
@@ -64,13 +69,15 @@ class _Executor(threading.Thread):
         :return:
         """
         self._status.status = _Status.DOING
-        self._status.stime = time.time()
+
+        self._status.estime = time.time()
         try:
             # do something
             self._status.estatus, self._status.eresult = self._runnable.execute(self._seq)
         except Exception as e:
             self._status.estatus, self._status.eresult = False, str(e)
-        self._status.etime = time.time()
+        self._status.eetime = time.time()
+
         self._status.status = _Status.DONE
 
     def done(self):
@@ -89,6 +96,7 @@ class _Executor(threading.Thread):
         :param rresult:
         :return:
         """
+        self._status.retime = time.time()
         self._status.rstatus = rstatus
         self._status.rresult = rresult
 
@@ -98,12 +106,18 @@ class _Executor(threading.Thread):
         :return:
         """
         return {
-            'stime':self._status.stime,
-            'etime':self._status.etime,
-            'result':self._status.result,
-            'status':self._status.status,
-            'rresult': self._status.rresult,
+            'seq': self._seq,
+            'status': self._status.status,
+
+            'estime':self._status.estime,
+            'eetime':self._status.eetime,
+            'estatus': self._status.estatus,
+            'eresult': self._status.eresult,
+
+            'retime': self._status.retime,
             'rstatus': self._status.rstatus,
+            'rresult': self._status.rresult,
+
             'alive':self.is_alive()
         }
 
@@ -358,6 +372,7 @@ class _Task:
         for executor in self._executors:
             if seq == executor.seq:
                 executor.notify(status, result)
+                break
 
     def join(self):
         """
@@ -497,7 +512,7 @@ class _TimerTask(_Task):
         :param maxkeep:
         """
         # timer interval in seconds
-        self._interval = interval
+        self._interval = int(interval)
 
         # last execute timestamp
         self._last_execute_time = time.time()
@@ -542,12 +557,12 @@ class _Timer(threading.Thread):
             init timer
         """
         self._lock = threading.RLock()
-        self._tasks = []
+        self._tasks = {}
         self._stopped = False
 
         threading.Thread.__init__(self)
 
-    def setup(self, id, name, condstr, runnable, exclusive=False, maxkeep=10):
+    def add(self, id, name, condstr, runnable, exclusive=False, maxkeep=10):
         """
 
         :param id:
@@ -562,11 +577,35 @@ class _Timer(threading.Thread):
             raise ConditionError('timer setup condition not valid')
 
         with self._lock:
+            if self._tasks.get(id) is not None:
+                raise TimerError('timer task with id: %s has exist' % str(id))
+
             if isinstance(condstr, int) or condstr.isdigit():
                 task = _TimerTask(id, name, condstr, runnable, exclusive, maxkeep)
             else:
                 task = _CrondTask(id, name, condstr, runnable, exclusive, maxkeep)
-            self._tasks.append(task)
+
+            self._tasks[id] = task
+
+    def delete(self, id):
+        """
+            delete a timer task
+        :param id:
+        :return:
+        """
+        with self._lock:
+            if self._tasks.get(id) is None:
+                raise TimerError('time task with id: %s not exist' % (str(id)))
+
+            self._tasks.pop(id)
+
+    def clear(self):
+        """
+            clear all tasks
+        :return:
+        """
+        with self._lock:
+            self._tasks.clear()
 
     def exist(self, id):
         """
@@ -575,9 +614,8 @@ class _Timer(threading.Thread):
         :return:
         """
         with self._lock:
-            for t in self._tasks:
-                if t.id == id:
-                    return True
+            if self._tasks.get(id) is not None:
+                return True
             return False
 
     def enable(self, id):
@@ -587,9 +625,10 @@ class _Timer(threading.Thread):
         :return:
         """
         with self._lock:
-            for t in self._tasks:
-                if t.id == id:
-                    t.enable()
+            t = self._tasks.get(id)
+            if t is None:
+                raise TimerError('time task with id: %s not exist' % (str(id)))
+            t.enable()
 
     def disable(self, id):
         """
@@ -598,9 +637,10 @@ class _Timer(threading.Thread):
         :return:
         """
         with self._lock:
-            for t in self._tasks:
-                if t.id == id:
-                    t.disable()
+            t = self._tasks.get(id)
+            if t is None:
+                raise TimerError('time task with id: %s not exist' % (str(id)))
+            t.disable()
 
     def execute(self, id):
         """
@@ -609,9 +649,10 @@ class _Timer(threading.Thread):
         :return:
         """
         with self._lock:
-            for t in self._tasks:
-                if t.id == id:
-                    t.execute()
+            t = self._tasks.get(id)
+            if t is None:
+                raise TimerError('time task with id: %s not exist' % (str(id)))
+            t.execute()
 
     def notify(self, id, seq, status, result):
         """
@@ -621,9 +662,10 @@ class _Timer(threading.Thread):
         :return:
         """
         with self._lock:
-            for t in self._tasks:
-                if t.id == id:
-                    t.notify(seq, status, result)
+            t = self._tasks.get(id)
+            if t is None:
+                raise TimerError('time task with id: %s not exist' % (str(id)))
+            t.notify(seq, status, result)
 
     def status(self, id=None):
         """
@@ -631,20 +673,33 @@ class _Timer(threading.Thread):
         :param id:
         :return:
         """
+        results = []
         with self._lock:
             # get timer status
             if id is None:
-                results = []
-                for t in self._tasks:
+                for t in self._tasks.values():
                     results.append(t.status())
-                return results
+            else:
+                # get specified task status
+                t = self._tasks.get(id)
+                if t is None:
+                    raise TimerError('time task with id: %s not exist' % (str(id)))
+                results.append(t.status())
 
-            # get specified task status
-            for t in self._tasks:
-                if t.id == id:
-                    return t.status()
+        return results
 
-        return []
+    def detail(self, id):
+        """
+            get detail of task by @id
+        :param id:
+        :return:
+        """
+        with self._lock:
+            t = self._tasks.get(id)
+            if t is None:
+                raise TimerError('time task with id: %s not exist' % (str(id)))
+
+            return t.detail()
 
     def stop(self):
         """
@@ -672,7 +727,7 @@ class _Timer(threading.Thread):
     def _schedule(self):
         with self._lock:
             # schedule all tasks
-            for task in self._tasks:
+            for task in self._tasks.values():
                 # schedule task
                 task.schedule(time.time())
                 # join task
@@ -684,23 +739,21 @@ default = _Timer()
 
 # demo task
 class _TimerDemoTask(Runnable):
-    def execute(self):
-        print('timer demo task')
+    def execute(self, seq):
+        print('timer demo task %s' % str(seq))
 
 
 class _CrondDemoTask(Runnable):
-    def execute(self):
-        print('crond demo task')
+    def execute(self, seq):
+        print('crond demo task %s' % str(seq))
 
 
 if __name__ == '__main__':
     default.start()
 
-    default.setup('abc', 'timerdemo', 1, _TimerDemoTask())
-    default.setup('efg', 'cronddemo', '*/2 * * * *', _CrondDemoTask())
+    default.add('abc', 'timerdemo', 1, _TimerDemoTask())
+    default.add('efg', 'cronddemo', '*/2 * * * *', _CrondDemoTask())
 
     while True:
         time.sleep(60)
         print(default.status())
-
-

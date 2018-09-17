@@ -15,8 +15,11 @@ settings = {
 
 # start atm service
 def start(port):
+    # init logging
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+
     # log start message
-    logging.info('start atm service on port %d' % port)
+    logging.info('start crond service on port %d' % port)
 
     # start timer service
     timer.default.start()

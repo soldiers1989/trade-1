@@ -1,7 +1,7 @@
 """
     service admin
 """
-from .. import access, handler, protocol, myredis, error, log
+from .. import access, handler, protocol, myredis, error
 
 
 class EchoHandler(handler.Handler):
@@ -13,23 +13,6 @@ class EchoHandler(handler.Handler):
         :return:
         """
         self.write(protocol.success(msg='success', data='echo'))
-
-
-class LogGetHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def get(self):
-        """
-            get log by t(type: info, error), n(number of records want)
-        :return:
-        """
-        t, n = self.get_argument('t'), self.get_argument('n')
-        if t == 'info':
-            self.write(protocol.success(data=log.getinfo(int(n))))
-        elif t == 'error':
-            self.write(protocol.success(data=log.geterror(int(n))))
-        else:
-            raise error.invalid_parameters
 
 
 class RedisGetHandler(handler.Handler):
