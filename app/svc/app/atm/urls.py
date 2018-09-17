@@ -1,8 +1,6 @@
 from . import handlers
 
 handlers = [
-    (r"/task/status", handlers.task.Status),
-    (r"/task/enable", handlers.task.Enable),
-    (r"/task/disable", handlers.task.Disable),
-    (r"/task/execute", handlers.task.Execute)
+    (r"/task/sync/stock/all/sina", handlers.task.SyncSinaAllStock),
+    (r"/task/sync/stock/all/cninfo", handlers.task.SyncCNInfoAllStock),
 ]

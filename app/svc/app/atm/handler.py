@@ -16,3 +16,10 @@ class Handler(tornado.web.RequestHandler):
         """
         for header in config.HEADERS:
             self.set_header(*header)
+
+    @property
+    def arguments(self):
+        args = {}
+        for arg in self.request.arguments.keys():
+            args[arg] = self.get_argument(arg)
+        return args

@@ -1,19 +1,17 @@
 """
     stock relate tasks
 """
-
 from xpinyin import Pinyin
 
-from .. import daos, timer, mysql
-from tlib import rand
+from .. import daos, mysql, task
 from tlib.stock.detail import cninfo, sina
 
 
-class SyncStockFromSina(timer.Runnable):
+class SyncSinaAllStock(task.Task):
     """
         sync all stock list from sina, update local stock list in database
     """
-    def do(self):
+    def execute(self):
         """
             thread function
         :return:
@@ -50,17 +48,17 @@ class SyncStockFromSina(timer.Runnable):
         stockdao.commit()
 
         # return result
-        result = 'local:%d, sina:%d, new:%d' %(localcnt, sinacnt, newcnt)
+        result = 'local:%d, remote:%d, new:%d' %(localcnt, sinacnt, newcnt)
 
         return result
 
 
-class SyncStockFromCNInfo(timer.Runnable):
+class SyncCNInfoAllStock(task.Task):
     """
         sync all stock list from cninfo, update local stock list in database
     """
 
-    def do(self):
+    def execute(self):
         """
             thread function
         :return:
@@ -97,12 +95,6 @@ class SyncStockFromCNInfo(timer.Runnable):
         stockdao.commit()
 
         # return result
-        result = 'local:%d, sina:%d, new:%d' %(localcnt, cnicnt, newcnt)
+        result = 'local:%d, remote:%d, new:%d' %(localcnt, cnicnt, newcnt)
 
         return result
-
-
-# setup stock sync task
-timer.default.setup(rand.uuid(), '新浪股票列表同步', SyncStockFromSina, min=0, hour=1, exclusive=True, maxkeep=20)
-timer.default.setup(rand.uuid(), '巨潮股票列表同步', SyncStockFromCNInfo, min=0, hour=7, exclusive=True, maxkeep=20)
-

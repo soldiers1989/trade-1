@@ -4,7 +4,7 @@
 import tornado.web
 import tornado.ioloop, logging
 
-from . import config, urls, timer
+from . import config, urls
 
 # application settings
 settings = {
@@ -21,9 +21,6 @@ def start(port):
 
     # log start message
     logging.info('start aam service on port %d' % port)
-
-    # start timer service
-    timer.default.start()
 
     # start web application
     app = tornado.web.Application(urls.handlers, **settings)

@@ -151,7 +151,6 @@ class Callback(handler.Handler):
        callbank for remote task execute results
     """
     @access.exptproc
-    @access.needtoken
     def get(self):
         """
             remote callback
