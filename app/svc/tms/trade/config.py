@@ -2,13 +2,13 @@
     configure for trade service
 """
 # debug/autoreload flag for tornado
-DEBUG = False
+DEBUG = True
 AUTORELOAD = True
 
 
-# token for access
-TOKEN_NAME = '_token'
-TOKEN_VALUE = 'abc'
+# private key for access
+ENABLE_KEY = True
+PRIVATE_KEY = 'abc'
 
 
 # public headers for response

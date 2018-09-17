@@ -3,9 +3,12 @@
 """
 
 # debug/autoreload flag for tornado
-DEBUG = False
+DEBUG = True
 AUTORELOAD = True
 
+# private key for access
+ENABLE_KEY = True
+PRIVATE_KEY = 'abc'
 
 # public headers for response
 HEADERS = [

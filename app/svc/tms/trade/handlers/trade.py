@@ -6,6 +6,7 @@ class AddAccount(handler.Handler):
     """
         add new account
     """
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -43,6 +44,7 @@ class DelAccount(handler.Handler):
     """
         delete account
     """
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -61,6 +63,7 @@ class ClearAccount(handler.Handler):
     """
         clear all account
     """
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -78,6 +81,7 @@ class LoginAccount(handler.Handler):
     """
         login
     """
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -96,6 +100,7 @@ class LogoutAccount(handler.Handler):
     """
         login
     """
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -114,6 +119,8 @@ class StatusAccount(handler.Handler):
     """
         handler for query account status
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -132,6 +139,8 @@ class QueryGdxx(handler.Handler):
     """
         query gdxx
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -150,6 +159,8 @@ class QueryDqzc(handler.Handler):
     """
         query dqzc
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -168,6 +179,8 @@ class QueryDqcc(handler.Handler):
     """
         query dqzc
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -186,6 +199,8 @@ class QueryDrwt(handler.Handler):
     """
         query drwt
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -204,6 +219,8 @@ class QueryDrcj(handler.Handler):
     """
         query drcj
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -222,6 +239,8 @@ class QueryKcwt(handler.Handler):
     """
         query kcwt
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -240,6 +259,8 @@ class QueryLswt(handler.Handler):
     """
         query lswt
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -258,6 +279,8 @@ class QueryLscj(handler.Handler):
     """
         query lscj
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -276,6 +299,8 @@ class QueryJgd(handler.Handler):
     """
         query jgd
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -294,6 +319,8 @@ class QueryGphq(handler.Handler):
     """
         query gphq
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -312,6 +339,8 @@ class OrderXjmr(handler.Handler):
     """
         order xjmr
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -330,6 +359,8 @@ class OrderXjmc(handler.Handler):
     """
         order xjmc
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -348,6 +379,8 @@ class OrderSjmr(handler.Handler):
     """
         order sjmr
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -366,6 +399,8 @@ class OrderSjmc(handler.Handler):
     """
         order sjmc
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """
@@ -384,6 +419,8 @@ class OrderCancel(handler.Handler):
     """
         order cancel
     """
+
+    @access.exptproc
     @access.needtoken
     def get(self):
         """

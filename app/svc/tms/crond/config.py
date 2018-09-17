@@ -5,12 +5,12 @@
 MODE = "dev"
 
 # configure for tornado appliaction
-DEBUG = False
+DEBUG = True
 AUTORELOAD = True
 
-# token for access
-TOKEN_NAME = '_token'
-TOKEN_VALUE = 'abc'
+# private key for access
+ENABLE_KEY = True
+PRIVATE_KEY = 'abc'
 
 # cookie expire time in seconds
 COOKIE_SECRET = 'abc'

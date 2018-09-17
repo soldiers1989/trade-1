@@ -29,6 +29,29 @@ def _parse(record):
     return result
 
 
+def _last_trading_day():
+    """
+        get last trading day
+    :return:
+    """
+    last_trading_day = datetime.today()
+
+    # skip weekend
+    if last_trading_day.isoweekday() == 7:
+        last_trading_day = last_trading_day - timedelta(2)
+    elif last_trading_day.isoweekday() == 6:
+        last_trading_day = last_trading_day - timedelta(1)
+    else:
+        pass
+
+    # skip holidays
+    while last_trading_day.strftime('%Y-%m-%d') in config.HOLIDAYS:
+        last_trading_day = last_trading_day - timedelta(1)
+
+    #last trading day
+    return last_trading_day
+
+
 def fetch():
     """
         fetch stock list
@@ -37,7 +60,7 @@ def fetch():
     results = []
 
     # get last date string
-    lastday = (datetime.today()-timedelta(1)).strftime('%Y%m%d')
+    lastday = _last_trading_day().strftime('%Y-%m-%d')
 
     # get each market data
     for market in config.MARKETS:
@@ -51,9 +74,10 @@ def fetch():
         records = resp.get('records')
 
         # parse each record
-        for record in records:
-            # add to results
-            results.append(_parse(record))
+        if records is not None:
+            for record in records:
+                # add to results
+                results.append(_parse(record))
 
     return results
 

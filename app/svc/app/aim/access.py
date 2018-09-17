@@ -3,6 +3,22 @@
 """
 import tornado.web, logging
 from . import error, config
+from tlib import token
+
+
+def needtoken(handler_func):
+    """
+        handler access protection
+    :param handler_func:
+    :return:
+    """
+    def wrapper(self, *args, **kwargs):
+        if config.ENABLE_KEY and not token.validate(self.arguments, config.PRIVATE_KEY):
+            self.write(error.invalid_access.data)
+        else:
+            return handler_func(self, *args, **kwargs)
+
+    return wrapper
 
 
 def needlogin(handler_func):
@@ -16,22 +32,6 @@ def needlogin(handler_func):
             self.write(error.user_not_login.data)
         else:
             return handler_func(self, *args, **kwargs)
-    return wrapper
-
-
-def needtoken(handler_func):
-    """
-        handler access protection
-    :param handler_func:
-    :return:
-    """
-    def wrapper(self, *args, **kwargs):
-        token = self.get_argument(config.TOKEN_NAME)
-        if token != config.TOKEN_VALUE:
-            self.write(error.invalid_access.data)
-        else:
-            return handler_func(self, *args, **kwargs)
-
     return wrapper
 
 

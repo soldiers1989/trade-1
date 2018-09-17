@@ -1,7 +1,9 @@
 """
     access protection
 """
-from . import protocol, config
+import logging, tornado.web
+from . import error, config
+from tlib import token
 
 
 def needtoken(handler_func):
@@ -11,10 +13,25 @@ def needtoken(handler_func):
     :return:
     """
     def wrapper(self, *args, **kwargs):
-        token = self.get_argument(config.TOKEN_NAME)
-        if token != config.TOKEN_VALUE:
-            self.write(protocol.failed(msg='未授权'))
+        if config.ENABLE_KEY and not token.validate(self.arguments, config.PRIVATE_KEY):
+            self.write(error.invalid_access.data)
         else:
             return handler_func(self, *args, **kwargs)
 
+    return wrapper
+
+
+def exptproc(handler_func):
+    def wrapper(self, *args, **kwargs):
+        try:
+            return handler_func(self, *args, **kwargs)
+        except tornado.web.MissingArgumentError as e:
+            self.write(error.missing_parameters.data)
+            logging.error(str(e))
+        except error.ProcessError as e:
+            self.write(e.data)
+            logging.error(str(e))
+        except Exception as e:
+            self.write(error.server_exception.data)
+            logging.error(str(e))
     return wrapper
