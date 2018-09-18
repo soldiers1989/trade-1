@@ -2,74 +2,27 @@
     trade relate utility
 """
 import trpc
-import time, datetime
+import time
+from . import calendar
 
 
-HOLIDAYS = [
-    "2018-09-24", "2018-10-01", "2018-10-02", "2018-10-03", "2018-10-04", "2018-10-05",
-]
-
-
-def _is_trading_day(tm = time.time()):
-    """
-        trading day: except weekday and holiday
-    :param tm:
-    :return:
-    """
-    # date time
-    dt = datetime.datetime.fromtimestamp(tm)
-
-    # check weekday
-    if dt.isoweekday() in [6, 7]:
-        return False
-
-    # check holiday
-    if dt.date().strftime('%Y-%m-%d') in HOLIDAYS:
-        return False
-
-    return True
-
-
-def _is_auction_time(tm = time.time()):
-    """
-        auction time: 9:15~9:25, 14:57~15:00
-    :param tm:
-    :return:
-    """
-    # date time
-    dtm = datetime.datetime.fromtimestamp(tm).time()
-
-    if (dtm > datetime.time(9, 15) and dtm < datetime.time(9, 25)) \
-        or (dtm > datetime.time(14, 57) and dtm < datetime.time(15, 00)) :
-        return True
-
-    return False
-
-
-def _is_trading_time(tm = time.time()):
-    """
-        trading time: 9:30~11:30, 13:00~14:57
-    :param tm:
-    :return:
-    """
-    # date time
-    dtm = datetime.datetime.fromtimestamp(tm).time()
-
-    if (dtm > datetime.time(9, 30) and dtm < datetime.time(11, 30)) \
-        or (dtm > datetime.time(13, 00) and dtm < datetime.time(14, 57)):
-        return True
-
-    return False
+class _PType:
+    sj = 'sj'
+    xj = 'xj'
 
 
 def valid_user_buy_time(ptype, tm = time.time()):
     """
-
+        限价7*24小时，市价只能连续竞价时间
     :param tm:
     :return:
     """
-    # check trading day
-    if _is_trading_day() and _is_trading_time():
+    # check clear time
+    if calendar.is_clearing_time(tm):
+        return False
+
+    # check price type & trading time
+    if ptype == _PType.xj or calendar.is_trading_time(tm):
         return True
 
     return False
@@ -81,8 +34,12 @@ def valid_user_sell_time(ptype, tm = time.time()):
     :param tm:
     :return:
     """
-    # check trading day
-    if _is_trading_day() and _is_trading_time():
+    # check clear time
+    if calendar.is_clearing_time(tm):
+        return False
+
+    # check price type & trading time
+    if ptype == _PType.xj or calendar.is_trading_time(tm):
         return True
 
     return False
@@ -90,12 +47,16 @@ def valid_user_sell_time(ptype, tm = time.time()):
 
 def valid_user_close_time(ptype, tm = time.time()):
     """
-
+        系统发起的用户订单市价平仓
     :param tm:
     :return:
     """
-    # check trading day
-    if _is_trading_day() and _is_trading_time():
+    # check clear time
+    if calendar.is_clearing_time(tm):
+        return False
+
+    # check price type
+    if ptype == _PType.xj or calendar.is_trading_time(tm):
         return True
 
     return False
@@ -103,12 +64,12 @@ def valid_user_close_time(ptype, tm = time.time()):
 
 def valid_user_cancel_time(tm = time.time()):
     """
-
+        清算时间不能取消订单
     :param tm:
     :return:
     """
     # check trading day
-    if _is_trading_day() and _is_trading_time():
+    if not calendar.is_clearing_time(tm):
         return True
 
     return False
@@ -173,11 +134,18 @@ def valid_sys_buy_time(ptype, tm = time.time()):
     :param tm:
     :return:
     """
-    # check trading day
-    if _is_trading_day() and _is_trading_time():
-        return True
-
-    return False
+    # check price type
+    if ptype == _PType.xj:
+        if calendar.is_auction_time(tm) or calendar.is_trading_time(tm):
+            return True
+        else:
+            return False
+    else:
+        # check trading day
+        if calendar.is_trading_time(tm):
+            return True
+        else:
+            return False
 
 
 def valid_sys_sell_time(ptype, tm = time.time()):
@@ -186,24 +154,38 @@ def valid_sys_sell_time(ptype, tm = time.time()):
     :param tm:
     :return:
     """
-    # check trading day
-    if _is_trading_day() and _is_trading_time():
-        return True
-
-    return False
+    # check price type
+    if ptype == _PType.xj:
+        if calendar.is_auction_time(tm) or calendar.is_trading_time(tm):
+            return True
+        else:
+            return False
+    else:
+        # check trading day
+        if calendar.is_trading_time(tm):
+            return True
+        else:
+            return False
 
 
 def valid_sys_close_time(ptype, tm = time.time()):
     """
-
+        系统平仓指令
     :param tm:
     :return:
     """
-    # check trading day
-    if _is_trading_day() and _is_trading_time():
-        return True
-
-    return False
+    # check price type
+    if ptype == _PType.xj:
+        if calendar.is_auction_time(tm) or calendar.is_trading_time(tm):
+            return True
+        else:
+            return False
+    else:
+        # check trading day
+        if calendar.is_trading_time(tm):
+            return True
+        else:
+            return False
 
 
 def valid_sys_cancel_time(tm = time.time()):
@@ -213,7 +195,7 @@ def valid_sys_cancel_time(tm = time.time()):
     :return:
     """
     # check trading day
-    if _is_trading_day() and _is_trading_time():
+    if calendar.is_trading_time(tm):
         return True
 
     return False

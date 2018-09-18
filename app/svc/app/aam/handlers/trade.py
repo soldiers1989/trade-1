@@ -6,7 +6,7 @@ import decimal
 import time
 
 from tlib import rand
-from .. import suite, access, handler, daos, forms, protocol, error, info, lock, rules
+from .. import suite, access, handler, daos, forms, protocol, error, info, lock, trade
 
 
 class UserBuyHandler(handler.Handler):
@@ -21,7 +21,7 @@ class UserBuyHandler(handler.Handler):
         form = forms.trade.UserBuy(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_buy_time(form.ptype):
+        if not trade.rule.valid_user_buy_time(form.ptype):
             raise error.not_trading_time
 
         ## process trade add operation by lock user ##
@@ -61,11 +61,11 @@ class UserBuyHandler(handler.Handler):
                 raise error.lever_has_disabled
 
             # check stock count
-            if not rules.trade.valid_user_buy_count(form.count):
+            if not trade.rule.valid_user_buy_count(form.count):
                 raise error.stock_count_error
 
             # check order price
-            if form.price is None or not rules.trade.valid_user_buy_price(form.stock, form.price):
+            if form.price is None or not trade.rule.valid_user_buy_price(form.stock, form.price):
                 raise error.stock_price_error
 
             # check capital
@@ -142,7 +142,7 @@ class UserSellHandler(handler.Handler):
         form = forms.trade.UserSell(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_sell_time(form.ptype):
+        if not trade.rule.valid_user_sell_time(form.ptype):
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -178,7 +178,7 @@ class UserSellHandler(handler.Handler):
                 raise error.stock_count_not_match
 
             # check price #
-            if form.ptype == suite.enum.ptype.xj.code and not rules.trade.valid_user_sell_price(tradeobj.stock_id, form.price):
+            if form.ptype == suite.enum.ptype.xj.code and not trade.rule.valid_user_sell_price(tradeobj.stock_id, form.price):
                 raise error.stock_price_error
 
             # prepare status log
@@ -213,7 +213,7 @@ class UserCloseHandler(handler.Handler):
         form = forms.trade.UserClose(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_close_time(form.ptype):
+        if not trade.rule.valid_user_close_time(form.ptype):
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -247,7 +247,7 @@ class UserCloseHandler(handler.Handler):
                 raise error.stock_count_not_match
 
             # check price #
-            if form.ptype == suite.enum.ptype.xj.code and not rules.trade.valid_user_close_price(tradeobj.stock_id, form.price):
+            if form.ptype == suite.enum.ptype.xj.code and not trade.rule.valid_user_close_price(tradeobj.stock_id, form.price):
                 raise error.stock_price_error
 
             # prepare status log
@@ -282,7 +282,7 @@ class UserCancelHandler(handler.Handler):
         form = forms.trade.UserCancel(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_cancel_time():
+        if not trade.rule.valid_user_cancel_time():
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -376,7 +376,7 @@ class SysBuyHandler(handler.Handler):
                 raise error.invalid_parameters
 
             ## check trade time ##
-            if not rules.trade.valid_sys_buy_time(tradeobj.optype):
+            if not trade.rule.valid_sys_buy_time(tradeobj.optype):
                 raise error.not_trading_time
 
             # check current trade status
@@ -435,7 +435,7 @@ class SysSellHandler(handler.Handler):
                 raise error.invalid_parameters
 
             ## check trade time ##
-            if not rules.trade.valid_sys_sell_time(tradeobj.optype):
+            if not trade.rule.valid_sys_sell_time(tradeobj.optype):
                 raise error.not_trading_time
 
             # check current trade status
@@ -481,7 +481,7 @@ class SysCloseHandler(handler.Handler):
         form = forms.trade.SysClose(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_sys_close_time(form.ptype, time.time()):
+        if not trade.rule.valid_sys_close_time(form.ptype, time.time()):
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
@@ -534,7 +534,7 @@ class SysCancelHandler(handler.Handler):
         form = forms.trade.UserCancel(**self.arguments)
 
         ## check trade time ##
-        if not rules.trade.valid_user_cancel_time():
+        if not trade.rule.valid_user_cancel_time():
             raise error.not_trading_time
 
         ## process trade sell operation by lock user ##
