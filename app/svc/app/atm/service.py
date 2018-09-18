@@ -20,7 +20,7 @@ def start(port):
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
 
     # log start message
-    logging.info('start aam service on port %d' % port)
+    logging.info('start atm service on port %d' % port)
 
     # start web application
     app = tornado.web.Application(urls.handlers, **settings)

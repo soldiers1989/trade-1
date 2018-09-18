@@ -27,7 +27,6 @@ def generate(params, key):
 
     # key string
     keystr = valuestr+timenow+key
-    print(keystr)
 
     # generate token
     token = hashlib.sha1(keystr.encode()).hexdigest()
@@ -47,6 +46,10 @@ def validate(params, key):
     :return:
         True for validate passed, otherwise False
     """
+    # check parameters
+    if '_tm' not in params.keys() or '_token' not in params.keys():
+        return False
+
     # get timestamp
     timenow = params['_tm']
 
@@ -65,7 +68,6 @@ def validate(params, key):
 
     # key string
     keystr = valuestr+timenow+key
-    print(keystr)
 
     # generate token
     ctoken = hashlib.sha1(keystr.encode()).hexdigest()[20:]

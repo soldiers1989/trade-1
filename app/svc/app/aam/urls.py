@@ -6,6 +6,10 @@ handlers = [
     (r"/admin/redis/get", handlers.admin.RedisGetHandler),
     (r"/admin/redis/del", handlers.admin.RedisDelHandler),
 
+    (r"/stock/list", handlers.stock.StockListHandler),
+    (r"/stock/get", handlers.stock.StockGetHandler),
+    (r"/stock/add", handlers.stock.StockAddHandler),
+
     (r"/trade/user/buy", handlers.trade.UserBuyHandler),
     (r"/trade/user/sell", handlers.trade.UserSellHandler),
     (r"/trade/user/close", handlers.trade.UserCloseHandler),

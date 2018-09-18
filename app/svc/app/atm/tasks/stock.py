@@ -1,100 +1,88 @@
 """
     stock relate tasks
 """
+import logging
 from xpinyin import Pinyin
 
-from .. import daos, mysql, task
+from .. import task
 from tlib.stock.detail import cninfo, sina
+from trpc import aam
 
 
-class SyncSinaAllStock(task.Task):
+class SyncAll(task.Task):
     """
-        sync all stock list from sina, update local stock list in database
+        sync stock from remote source: sina/cninfo/...etc
     """
     def execute(self):
         """
-            thread function
+            sync stock
         :return:
         """
-        # stock model
-        stockdao = daos.stock.Stock(mysql.get())
-
-        newstocks, localstocks = [], {}
-        # fetch all stocks from local database
-        stocks = stockdao.get()
+        # get local stock list
+        localstocks = {}
+        stocks = aam.stock.list()
         for stock in stocks:
-            localstocks[stock['id']] = stock['name']
-        localcnt = len(stocks)
+            localstocks[stock['id']] = stock['id']
 
-        # fetch all stocks from cninfo
-        stocks = sina.list.fetch()
-        for stock in stocks:
+        # new stocks
+        newstocks = []
+
+        # get remote stocks from
+        remotestocks = self._fetch()
+        for stock in remotestocks:
             if localstocks.get(stock['code']) is None:
                 newstocks.append(stock)
-        sinacnt, newcnt = len(stocks), len(newstocks)
 
         # pinyin translater
         py = Pinyin()
 
-        # add new stocks to database
+        tidystocks = []
+        # tidy new stocks
         for stock in newstocks:
             id, name = stock['code'], stock['name']
             jianpin = py.get_initials(name, u'').lower()
             quanpin = py.get_pinyin(name, u'')
-            status, limit = 'open', 'none'
-            stockdao.add(id, name, jianpin, quanpin, status, limit)
+            tidystocks.append({
+                'id': id,
+                'name': name,
+                'jianpin': jianpin,
+                'quanpin': quanpin,
+                'status': 'open',
+                'limit': 'none'
+            })
 
-        # commit exchanges
-        stockdao.commit()
+        # add new stocks
+        resp = aam.stock.add(tidystocks)
 
-        # return result
-        result = 'local:%d, remote:%d, new:%d' %(localcnt, sinacnt, newcnt)
+        # add/failed count
+        added, failed = len(resp.get('added')), len(resp.get('failed'))
 
-        return result
+        return 'local:%d, remote:%d, added:%d, failed:%d' % (len(localstocks), len(remotestocks), added, failed)
 
 
-class SyncCNInfoAllStock(task.Task):
-    """
-        sync all stock list from cninfo, update local stock list in database
-    """
-
-    def execute(self):
+    def _fetch(self):
         """
-            thread function
+            fetch stocks from source sites
         :return:
         """
-        # stock model
-        stockdao = daos.stock.Stock(mysql.get())
+        # none-repeated stocks fetched
+        stocks = {}
 
-        newstocks, localstocks = [], {}
-        # fetch all stocks from local database
-        stocks = stockdao.get()
-        for stock in stocks:
-            localstocks[stock['id']] = stock['name']
-        localcnt = len(stocks)
+        # sync from sina
+        try:
+            sinas = sina.list.fetch()
+            for stock in sinas:
+                stocks[stock['code']] = stock
+        except Exception as e:
+            logging.error('sync stocks from sina error: %s' % str(e))
 
-        # fetch all stocks from cninfo
-        stocks = cninfo.list.fetch()
-        for stock in stocks:
-            if localstocks.get(stock['code']) is None:
-                newstocks.append(stock)
-        cnicnt, newcnt = len(stocks), len(newstocks)
+        # sync from cninfo
+        try:
+            cninfos = cninfo.list.fetch()
+            for stock in cninfos:
+                stocks[stock['code']] = stock
+        except Exception as e:
+            logging.error('sync stocks from sina error: %s' % str(e))
 
-        # pinyin translater
-        py = Pinyin()
-
-        # add new stocks to database
-        for stock in newstocks:
-            id, name = stock['code'], stock['name']
-            jianpin = py.get_initials(name, u'').lower()
-            quanpin = py.get_pinyin(name, u'')
-            status, limit = 'open', 'none'
-            stockdao.add(id, name, jianpin, quanpin, status, limit)
-
-        # commit exchanges
-        stockdao.commit()
-
-        # return result
-        result = 'local:%d, remote:%d, new:%d' %(localcnt, cnicnt, newcnt)
-
-        return result
+        # all stocks fetched
+        return list(stocks.values())

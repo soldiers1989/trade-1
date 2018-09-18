@@ -29,6 +29,7 @@ class _Select:
         self._orderby = None
         self._order = None
         self._groupby = None
+        self._limit = None
 
     def columns(self, *cols):
         """
@@ -95,6 +96,16 @@ class _Select:
         self._order = 'desc'
         return self
 
+    def limit(self, count, pos=0):
+        """
+            limit results start from @pos with @count records
+        :param count:
+        :param pos:
+        :return:
+        """
+        self._limit = '%d,%d' % (pos, count)
+        return self
+
     def sql(self):
         """
 
@@ -133,6 +144,10 @@ class _Select:
         # order clause
         if self._order is not None:
             s = s + self._order
+
+        # limit clause
+        if self._limit is not None:
+            s = s + ' ' + self._limit
 
         return s
 

@@ -27,10 +27,6 @@ class ProcessError(Exception):
 
 missing_parameters = ProcessError(-1100, '缺少必要的访问参数')
 invalid_parameters = ProcessError(-1100, '非法的访问参数')
-invalid_phone = ProcessError(-1100, '错误的手机号')
 
 server_exception = ProcessError(-1200, '服务器处理异常')
 invalid_access = ProcessError(-1201, '未授权的非法访问')
-
-redis_db_not_exist = ProcessError(-1220, '查询DB不存在')
-redis_key_not_exist = ProcessError(-1221, '查询健值不存在')
