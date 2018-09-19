@@ -7,7 +7,7 @@ AUTORELOAD = True
 
 
 # private key for access
-ENABLE_KEY = True
+ENABLE_KEY = False
 PRIVATE_KEY = 'abc'
 
 

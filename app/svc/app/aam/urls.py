@@ -25,4 +25,7 @@ handlers = [
     (r"/trade/sys/closed", handlers.trade.SysClosedHandler),
     (r"/trade/sys/canceled", handlers.trade.SysCanceledHandler),
     (r"/trade/sys/dropped", handlers.trade.SysDroppedHandler),
+    (r"/trade/sys/expired", handlers.trade.SysExpiredHandler),
+
+    (r"/trade/order/notify", handlers.trade.TradeNotifyHandler),
 ]

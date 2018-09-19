@@ -9,7 +9,7 @@ DEBUG = True
 AUTORELOAD = True
 
 # private key for access
-ENABLE_KEY = True
+ENABLE_KEY = False
 PRIVATE_KEY = 'abc'
 
 # cookie expire time in seconds

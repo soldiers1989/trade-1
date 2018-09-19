@@ -6,7 +6,7 @@ from decimal import Decimal
 from tlib import token
 
 # base url for remote trade service
-_BaseUrl = "http://localhost:9000"
+_BaseUrl = "http://localhost:10003"
 
 # token for access remote trade service
 _ENABLE_KEY = True

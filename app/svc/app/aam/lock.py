@@ -7,9 +7,7 @@ from . import myredis
 
 class _LockException(Exception):
     def __init__(self):
-        Exception.__init__(self, '操作频繁，请稍后重试')
-
-exception = _LockException
+        Exception.__init__(self, '用户正在操作，请稍后重试')
 
 
 class _UserLock:
@@ -23,7 +21,7 @@ class _UserLock:
         :return:
         """
         if myredis.lock.get(self._key) is not None:
-            raise exception()
+            raise _LockException()
 
         myredis.lock.set(self._key, time.time())
 

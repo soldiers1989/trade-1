@@ -120,6 +120,7 @@ class TradeOrder:
     dcode = field.StringField(max_length=16, null=True)
     status = field.StringField(max_length=16)
     slog = field.StringField(null=True)
+    callback = field.StringField(null=True)
     ctime = field.IntegerField()
     utime = field.IntegerField()
 

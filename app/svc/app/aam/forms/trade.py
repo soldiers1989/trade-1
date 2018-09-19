@@ -83,3 +83,19 @@ class SysCanceled(form.Form):
 class SysDropped(form.Form):
     user = field.IntegerField()
     trade = field.IntegerField()
+
+
+class TradeNotify(form.Form):
+    code = field.StringField()
+    stock = field.StringField()
+    otype = field.EnumField(choices=suite.enum.values(suite.enum.otype))
+    optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
+    ocount = field.IntegerField()
+    oprice = field.DecimalField(digits=10, decimals=2)
+    ocode = field.StringField()
+    otime = field.IntegerField()
+    dcount = field.IntegerField(null=True)
+    dprice = field.DecimalField(null=True, digits=10, decimals=2)
+    dcode = field.StringField(null=True)
+    dtime = field.IntegerField(null=True)
+    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
