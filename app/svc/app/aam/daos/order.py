@@ -26,7 +26,7 @@ class OrderDao(dao.Dao):
 
         return None
 
-    def add_order(self, trade, account, stock, otype, ptype, oprice, ocount, operator, action):
+    def add_order(self, account, stock, tcode, otype, ptype, oprice, ocount, operator, action):
         """
             add new trade order
         :param trade:
@@ -40,7 +40,7 @@ class OrderDao(dao.Dao):
         """
         # insert query
         sql = '''
-                insert into tb_trade_order(trade_id, account_id, stock_id, otype, ptype, oprice, ocount, otime, status, slog, ctime, utime)
+                insert into tb_trade_order(account_id, stock_id, tcode, otype, ptype, oprice, ocount, otime, status, slog, ctime, utime)
                 values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             '''
 
@@ -50,7 +50,7 @@ class OrderDao(dao.Dao):
         slog = suite.status.dumps(logobj)
 
         # execute insert
-        self.execute(sql, (trade, account, stock, otype, ptype, oprice, ocount, otime, suite.enum.order.notsend.code, slog, otime, otime))
+        self.execute(sql, (account, stock, tcode, otype, ptype, oprice, ocount, otime, suite.enum.order.notsend.code, slog, otime, otime))
 
 
     def update_order(self, orderid, **cvals):

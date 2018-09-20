@@ -108,6 +108,7 @@ class TradeOrder:
     id = field.IntegerField()
     account_id = field.IntegerField()
     stock_id = field.StringField(max_length=8)
+    tcode = field.StringField()
     otype = field.StringField(max_length=16)
     optype = field.StringField(max_length=16)
     ocount = field.IntegerField()
