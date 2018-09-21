@@ -59,18 +59,27 @@ all = {
         }
     },
 
-
     # user trade status
     'trade': {
         'status': {
             'tobuy': '待买',
+            'buying': '正买',
+            'cancelbuy': '撤买',
+            'buycanceling': '正撤买',
+            'canceled': '已撤',
             'hold': '持仓',
             'tosell': '待卖',
+            'selling': '正卖',
+            'cancelsell': '撤卖',
+            'sellcanceling': '正撤卖',
             'sold': '已卖',
             'toclose': '待平',
+            'closing': '正平',
+            'cancelclose': '撤平',
+            'closecanceling': '正撤平',
             'closed': '已平',
             'expired': '过期',
-            'discard': '废单'
+            'dropped': '废单'
         }
     },
 

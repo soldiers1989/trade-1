@@ -481,7 +481,7 @@ class UserTrade(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='用户')
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票')
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True, verbose_name='优惠券')
-    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True, verbose_name='证券账户')
+    account = models.CharField(null=True, max_length=16, verbose_name='交易账户')
     code = models.CharField(max_length=16, unique=True, verbose_name='订单代码')
     optype = models.CharField(max_length=16, verbose_name='买入类型')
     oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入报价')
@@ -517,23 +517,22 @@ class UserTrade(models.Model):
         items['_user'] = items['user'].user if items['user'] else None
         items['_stock'] = items['stock'].name if items['stock'] else None
         items['_coupon'] = items['coupon'].money if items['coupon'] else None
-        items['_account'] = items['account'].name if items['account'] else None
         items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
         items['_status'] = enum.all['trade']['status'][items['status']] if items['status'] else None
 
-        items['user'], items['stock'], items['coupon'], items['account'], items['lever'] = self.user_id, self.stock_id, self.coupon_id, self.account_id, self.tradelever.lever
+        items['user'], items['stock'], items['coupon'], items['lever'] = self.user_id, self.stock_id, self.coupon_id, self.tradelever.lever
         return items
 
     def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['user'], items['stock'], items['coupon'], items['account'] = self.user_id, self.stock_id, self.coupon_id, self.account_id
+        items['user'], items['stock'], items['coupon'] = self.user_id, self.stock_id, self.coupon_id
         return items;
 
     def pdata(self):
         # get data items & fields
         items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
 
-        items['user'], items['stock'], items['coupon'], items['account'], items['optype'], items['status'] = items['_user'], items['_stock'], items['_coupon'], items['_account'], items['_optype'], items['_status']
+        items['user'], items['stock'], items['coupon'], items['optype'], items['status'] = items['_user'], items['_stock'], items['_coupon'], items['_optype'], items['_status']
 
         # add lever fields
         fields['lever'] = '杠杆倍数'

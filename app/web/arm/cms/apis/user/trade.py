@@ -5,9 +5,10 @@ import time, datetime, util
 from django.db import transaction
 from django.db.models import Q
 from adb import models
-from cms import auth, resp, hint, forms
+from cms import auth, resp, hint, forms, error
 
 
+@auth.catch_exception
 @auth.need_login
 def list(request):
     """
@@ -15,84 +16,81 @@ def list(request):
     :param request:
     :return:
     """
-    try:
-        form = forms.user.trade.List(request.GET)
-        if form.is_valid():
-            ## form parameters ##
-            params = form.cleaned_data
+    form = forms.user.trade.List(request.GET)
+    if not form.is_valid():
+        raise error.invalid_parameters
 
-            status, sdate, edate = params['status'], params['sdate'], params['edate']
-            ## filters ##
-            filters = {}
-            if sdate:
-                filters['ctime__gte'] = util.time.utime(sdate)
-            if edate:
-                filters['ctime__lt'] = util.time.utime(edate+datetime.timedelta(days=1))
+    ## form parameters ##
+    params = form.cleaned_data
 
-            qs = []
-            ## status options ##
-            if status:
-                qq = Q()
-                for q in [(Q(status=s)) for s in status.split(',')]:
-                    qq = qq | q
-                qs.append(qq)
+    status, sdate, edate = params['status'], params['sdate'], params['edate']
+    ## filters ##
+    filters = {}
+    if sdate:
+        filters['ctime__gte'] = util.time.utime(sdate)
+    if edate:
+        filters['ctime__lt'] = util.time.utime(edate+datetime.timedelta(days=1))
 
-
-            ## search words ##
-            words = params['words']
-            if words:
-                if len(filters) == 0 and len(words) < 10 and words.isdigit():
-                    filters['id'] = int(words) # id, not phone number
-                else :
-                    qs.append(Q(user__user=words) | Q(stock__id=words) | Q(stock__name__contains=words))
-
-            ## get total count ##
-            total = models.UserTrade.objects.filter(*qs, **filters).count()
+    qs = []
+    ## status options ##
+    if status:
+        qq = Q()
+        for q in [(Q(status=s)) for s in status.split(',')]:
+            qq = qq | q
+        qs.append(qq)
 
 
-            # order by#
-            sort, order =  params['sort'], params['order']
-            orderby = None
-            if sort and order:
-                order = '-' if order=='desc' else ''
-                orderby = order+sort
-            else:
-                orderby = '-id'
+    ## search words ##
+    words = params['words']
+    if words:
+        if len(filters) == 0 and len(words) < 10 and words.isdigit():
+            filters['id'] = int(words) # id, not phone number
+        else :
+            qs.append(Q(user__user=words) | Q(stock__id=words) | Q(stock__name__contains=words))
 
-            ## pagination##
-            page, size, start, end = params['page'], params['rows'], None, None
-            if page and size:
-                start, end = (page-1)*size, page*size
+    ## get total count ##
+    total = models.UserTrade.objects.filter(*qs, **filters).count()
 
-            ## query results ##
-            objects = []
-            if orderby:
-                if start is not None and end is not None:
-                    objects = models.UserTrade.objects.filter(*qs, **filters).order_by(orderby)[start:end]
-                else:
-                    objects = models.UserTrade.objects.filter(*qs, **filters).order_by(orderby)
-            else:
-                if start is not None and end is not None:
-                    objects = models.UserTrade.objects.filter(*qs, **filters)[start:end]
-                else:
-                    objects = models.UserTrade.objects.filter(*qs, **filters)
 
-            ## make results ##
-            rows = []
-            for obj in objects:
-                rows.append(obj.ddata())
+    # order by#
+    sort, order =  params['sort'], params['order']
+    orderby = None
+    if sort and order:
+        order = '-' if order=='desc' else ''
+        orderby = order+sort
+    else:
+        orderby = '-id'
 
-            ## response data ##
-            data = {
-                'total': total,
-                'rows': rows
-            }
+    ## pagination##
+    page, size, start, end = params['page'], params['rows'], None, None
+    if page and size:
+        start, end = (page-1)*size, page*size
 
-            return resp.success(data=data)
+    ## query results ##
+    objects = []
+    if orderby:
+        if start is not None and end is not None:
+            objects = models.UserTrade.objects.filter(*qs, **filters).order_by(orderby)[start:end]
         else:
-            return resp.failure(hint.ERR_FORM_DATA)
-    except Exception as e:
-        return resp.failure(str(e))
+            objects = models.UserTrade.objects.filter(*qs, **filters).order_by(orderby)
+    else:
+        if start is not None and end is not None:
+            objects = models.UserTrade.objects.filter(*qs, **filters)[start:end]
+        else:
+            objects = models.UserTrade.objects.filter(*qs, **filters)
+
+    ## make results ##
+    rows = []
+    for obj in objects:
+        rows.append(obj.ddata())
+
+    ## response data ##
+    data = {
+        'total': total,
+        'rows': rows
+    }
+
+    return resp.success(data=data)
 
 
 @auth.catch_exception

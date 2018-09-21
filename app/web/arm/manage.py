@@ -1,8 +1,11 @@
 #!/usr/bin/env python
-import os
-import sys
+
+import os, sys, logging
 
 if __name__ == "__main__":
+    # init logging
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "arm.settings")
     try:
         from django.core.management import execute_from_command_line

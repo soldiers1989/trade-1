@@ -1,6 +1,7 @@
 """
      authority control
 """
+import logging
 from cms import resp, hint
 from django.shortcuts import redirect
 
@@ -84,6 +85,7 @@ def need_login(func):
             else:
                 return func(request)
         except Exception as e:
+            logging.error(str(e))
             return resp.failure(str(e))
     return check_login
 
@@ -98,6 +100,7 @@ def need_permit(func):
             else:
                 return func(request)
         except Exception as e:
+            logging.error(str(e))
             return resp.failure(str(e))
     return check_permit
 
@@ -107,5 +110,6 @@ def catch_exception(func):
         try:
             return func(self, *args, **kwargs)
         except Exception as e:
+            logging.error(str(e))
             return resp.failure(str(e))
     return wrapper
