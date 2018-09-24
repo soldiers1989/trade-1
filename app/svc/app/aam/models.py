@@ -75,7 +75,7 @@ class UserTrade(model.Model):
     user_id = field.IntegerField()
     stock_id = field.StringField(max_length=8)
     coupon_id = field.IntegerField(null=True)
-    account_id = field.IntegerField(null=True)
+    account = field.StringField(null=True, max_lenght=16)
     code = field.StringField(max_length=16)
     optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
     oprice = field.DecimalField(digits=10, decimals=2)

@@ -7,10 +7,20 @@ from .. import suite, models
 
 
 class TradeDao(dao.Dao):
+    def get_trade_by_status(self, status):
+        """
+            get trade records by status
+        :param status: str, status split by ','
+        :return:
+            list
+        """
+
+
     def get_trade(self, **conds):
         """
-            get trade record by id
+            get trade record by conditions
         :return:
+            None, or first matched trade object
         """
         # select query
         q = sqlhelper.select().columns(*models.UserTrade.fields).tables('tb_user_trade').where(**conds)

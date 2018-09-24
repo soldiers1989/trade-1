@@ -5,6 +5,10 @@ from tlib.web import form, field
 from .. import suite
 
 
+class ListForm(form.Form):
+    status = field.StringField(null=True)
+
+
 class UserBuy(form.Form):
     user = field.IntegerField()
     stock = field.StringField()

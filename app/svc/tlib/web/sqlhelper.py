@@ -128,7 +128,7 @@ class _Select:
         if self._wheres is not None:
             wheres = []
             for where in self._wheres:
-               wheres.append('`'+ '`=%s and `'.join(where.keys()) + '`=%s ')
+                wheres.append('`'+ '`=%s and `'.join(where.keys()) + '`=%s ')
 
             if len(wheres) > 0:
                 s = s + 'where ' + 'or '.join(wheres)

@@ -7,6 +7,24 @@ from tlib import rand
 from .. import suite, daos, error, lock, trade, mysql, forms
 
 
+def list_trade(**conds):
+    """
+        get trade records
+    :param conds:
+    :return:
+    """
+    # connect database
+    db = mysql.get()
+
+    # init dao object
+    dao = daos.trade.TradeDao(db)
+
+    # get records
+    results = dao.list_trade(**conds)
+
+    return results
+
+
 def user_buy(form):
     """
         process user buy

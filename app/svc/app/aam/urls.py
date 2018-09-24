@@ -10,6 +10,9 @@ handlers = [
     (r"/stock/get", handlers.stock.StockGetHandler),
     (r"/stock/add", handlers.stock.StockAddHandler),
 
+
+    (r"/trade/list", handlers.trade.ListHandler),
+
     (r"/trade/user/buy", handlers.trade.UserBuyHandler),
     (r"/trade/user/sell", handlers.trade.UserSellHandler),
     (r"/trade/user/close", handlers.trade.UserCloseHandler),

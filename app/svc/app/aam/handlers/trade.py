@@ -4,6 +4,24 @@
 from .. import access, handler, forms, protocol, info, beans
 
 
+class ListHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def get(self):
+        """
+            get trade records
+        :return:
+        """
+        # get arguments
+        form = forms.trade.ListForm(**self.arguments)
+
+        # get trade records
+        results = beans.trade.list_trade(**form)
+
+        # success
+        self.write(protocol.success(data=results))
+
+
 class UserBuyHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
