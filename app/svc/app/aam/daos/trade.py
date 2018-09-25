@@ -14,6 +14,7 @@ class TradeDao(dao.Dao):
         :return:
             list
         """
+        pass
 
 
     def get_trade(self, **conds):

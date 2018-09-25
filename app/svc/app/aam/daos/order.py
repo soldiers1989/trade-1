@@ -52,7 +52,6 @@ class OrderDao(dao.Dao):
         # execute insert
         self.execute(sql, (account, stock, tcode, otype, ptype, oprice, ocount, otime, suite.enum.order.notsend.code, slog, otime, otime))
 
-
     def update_order(self, orderid, **cvals):
         """
             update order

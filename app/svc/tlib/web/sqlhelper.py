@@ -18,6 +18,131 @@ class SQLError(Exception):
         return self._msg
 
 
+class _Cond:
+    # operators->sql format templates
+    OPERATORS = ('eq', 'lt', 'le', 'gt', 'ge', 'in', 'startswith', 'endswith', 'contains')
+
+    def __init__(self, name, value):
+        """
+            init cond
+        :param lvalue: obj, left value
+        :param rvalue: obj, right value
+        """
+        self._name, self._not, self._operator = _Cond.parse(name)
+        self._value = value
+
+    def sql(self):
+        """
+            sql
+        :return:
+        """
+        if self._operator == 'eq':
+            if self._not:
+                return 'not `%s`='%(self._name)+'%s'
+            else:
+                return '`%s`=' % (self._name) + '%s'
+        elif self._operator == 'lt':
+            if self._not:
+                return 'not `%s`<' % (self._name) + '%s'
+            else:
+                return '`%s`<' % (self._name) + '%s'
+        elif self._operator == 'le':
+            if self._not:
+                return 'not `%s`<=' % (self._name) + '%s'
+            else:
+                return '`%s`<=' % (self._name) + '%s'
+        elif self._operator == 'gt':
+            if self._not:
+                return 'not `%s`>' % (self._name) + '%s'
+            else:
+                return '`%s`>' % (self._name) + '%s'
+        elif self._operator == 'ge':
+            if self._not:
+                return 'not `%s`>=' % (self._name) + '%s'
+            else:
+                return '`%s`>=' % (self._name) + '%s'
+        elif self._operator == 'in':
+            if isinstance(self._value, list) or isinstance(self._value, tuple):
+                nelmts = len(self._value)
+            else:
+                nelmts = 1
+
+            if self._not:
+                return '`%s` not in (%s)' % (self._name, ','.join(['%s' for i in range(0, nelmts)]))
+            else:
+                return '`%s` in (%s)' % (self._name, ','.join(['%s' for i in range(0, nelmts)]))
+        elif self._operator == 'startswith':
+            if self._not:
+                return '`%s` not like ' % self._name + '%s%%'
+            else:
+                return '`%s` like ' % self._name + '%s%%'
+        elif self._operator == 'endswith':
+            if self._not:
+                return '`%s` not like %%' % self._name + '%s'
+            else:
+                return '`%s` like %%' % self._name + '%s'
+        elif self._operator == 'contains':
+            if self._not:
+                return '`%s` not like %%' % self._name + '%s%%'
+            else:
+                return '`%s` like %%' % self._name + '%s%%'
+        else:
+            raise SQLError('条件格式错误：%s' % self._operator)
+
+    def args(self):
+        if isinstance(self._value, list) or isinstance(self._value, tuple):
+            return list(self._value)
+        else:
+            return [str(self._value)]
+
+    @staticmethod
+    def parse(name):
+        """
+            name format: xxx/xxx<__not>__(eq/lt/le/gt/ge/in/startswith/endswith/contains)
+        :param name:
+        :return:
+            name(str), not(boolean), operator(str)
+        """
+        # parse name
+        items = name.split('__')
+        nitems = len(items)
+
+        # check parse results
+        if nitems == 0 or nitems > 3:
+            raise SQLError('条件格式错误：%s' % name)
+
+        # parse condition
+        if nitems == 1:
+            return items[0], False, 'eq'
+        elif nitems == 2:
+            if items[1] not in _Cond.OPERATORS:
+                raise SQLError('条件格式错误：%s' % name)
+            return items[0], False, items[1]
+        elif nitems == 3:
+            if items[2] not in _Cond.OPERATORS or items[1] !='not':
+                raise SQLError('条件格式错误：%s' % name)
+            return items[0], True, items[2]
+        else:
+            SQLError('条件格式错误：%s' % name)
+
+
+class _Query:
+    def __init__(self, **kwargs):
+        pass
+
+    def __and__(self, other):
+        pass
+
+    def __or__(self, other):
+        pass
+
+    def sql(self):
+        pass
+
+    def args(self):
+        pass
+
+
 class _Select:
     """
         select sql
