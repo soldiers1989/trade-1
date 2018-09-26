@@ -1,6 +1,7 @@
 """
     sql generator
 """
+import copy
 
 
 class SQLError(Exception):
@@ -17,130 +18,223 @@ class SQLError(Exception):
     def __str__(self):
         return self._msg
 
+class _Node:
+    """
+    A single internal node in the tree graph. A Node should be viewed as a
+    connection (the root) with the children being either leaf nodes or other
+    Node instances.
+    """
+    # Standard connector type. Clients usually won't use this at all and
+    # subclasses will usually override the value.
+    default = 'DEFAULT'
 
-class _Cond:
-    # operators->sql format templates
-    OPERATORS = ('eq', 'lt', 'le', 'gt', 'ge', 'in', 'startswith', 'endswith', 'contains')
+    def __init__(self, children=None, connector=None, negated=False):
+        """Construct a new Node. If no connector is given, use the default."""
+        self.children = children[:] if children else []
+        self.connector = connector or self.default
+        self.negated = negated
 
-    def __init__(self, name, value):
-        """
-            init cond
-        :param lvalue: obj, left value
-        :param rvalue: obj, right value
-        """
-        self._name, self._not, self._operator = _Cond.parse(name)
-        self._value = value
+    # Required because django.db.models.query_utils.Q. Q. __init__() is
+    # problematic, but it is a natural Node subclass in all other respects.
+    @classmethod
+    def _new_instance(cls, children=None, connector=None, negated=False):
+        obj = _Node(children, connector, negated)
+        obj.__class__ = cls
+        return obj
+
+    def __str__(self):
+        template = '(NOT (%s: %s))' if self.negated else '(%s: %s)'
+        return template % (self.connector, ', '.join(str(c) for c in self.children))
+
+    def __repr__(self):
+        return "<%s: %s>" % (self.__class__.__name__, self)
+
+    def __deepcopy__(self, memodict):
+        obj = _Node(connector=self.connector, negated=self.negated)
+        obj.__class__ = self.__class__
+        obj.children = copy.deepcopy(self.children, memodict)
+        return obj
+
+    def __len__(self):
+        """Return the the number of children this node has."""
+        return len(self.children)
+
+    def __bool__(self):
+        """Return whether or not this node has children."""
+        return bool(self.children)
+
+    def __contains__(self, other):
+        """Return True if 'other' is a direct child of this instance."""
+        return other in self.children
+
+    def __eq__(self, other):
+        if self.__class__ != other.__class__:
+            return False
+        if (self.connector, self.negated) == (other.connector, other.negated):
+            return self.children == other.children
+        return False
+
+    def __hash__(self):
+        return hash((self.__class__, self.connector, self.negated) + tuple(self.children))
+
+    def add(self, data, conn_type, squash=True):
+        if data in self.children:
+            return data
+        if not squash:
+            self.children.append(data)
+            return data
+        if self.connector == conn_type:
+            # We can reuse self.children to append or squash the node other.
+            if (isinstance(data, _Node) and not data.negated and
+                    (data.connector == conn_type or len(data) == 1)):
+                self.children.extend(data.children)
+                return self
+            else:
+                # We could use perhaps additional logic here to see if some
+                # children could be used for pushdown here.
+                self.children.append(data)
+                return data
+        else:
+            obj = self._new_instance(self.children, self.connector,
+                                     self.negated)
+            self.connector = conn_type
+            self.children = [obj, data]
+            return data
+
+    def negate(self):
+        """Negate the sense of the root connector."""
+        self.negated = not self.negated
+
+
+class _Query(_Node):
+    # Connection types
+    AND = 'and'
+    OR = 'or'
+    default = AND
+
+    def __init__(self, *args, **kwargs):
+        connector = kwargs.pop('_connector', None)
+        negated = kwargs.pop('_negated', False)
+        super().__init__(children=list(args) + sorted(kwargs.items()), connector=connector, negated=negated)
+
+    def _combine(self, other, conn):
+        if not isinstance(other, Q):
+            raise TypeError(other)
+
+        if not other:
+            return copy.deepcopy(self)
+        elif not self:
+            return copy.deepcopy(other)
+
+        obj = type(self)()
+        obj.connector = conn
+        obj.add(self, conn)
+        obj.add(other, conn)
+        return obj
+
+    def __or__(self, other):
+        return self._combine(other, self.OR)
+
+    def __and__(self, other):
+        return self._combine(other, self.AND)
+
+    def __invert__(self):
+        obj = type(self)()
+        obj.add(self, self.AND)
+        obj.negate()
+        return obj
 
     def sql(self):
         """
-            sql
+            generate prepared sql
         :return:
         """
-        if self._operator == 'eq':
-            if self._not:
-                return 'not `%s`='%(self._name)+'%s'
+        childs = []
+        for child in self.children:
+            if isinstance(child, self.__class__):
+                template = 'not (%s)' if self.negated else '(%s)'
+                childs.append(template % child.sql())
             else:
-                return '`%s`=' % (self._name) + '%s'
-        elif self._operator == 'lt':
-            if self._not:
-                return 'not `%s`<' % (self._name) + '%s'
-            else:
-                return '`%s`<' % (self._name) + '%s'
-        elif self._operator == 'le':
-            if self._not:
-                return 'not `%s`<=' % (self._name) + '%s'
-            else:
-                return '`%s`<=' % (self._name) + '%s'
-        elif self._operator == 'gt':
-            if self._not:
-                return 'not `%s`>' % (self._name) + '%s'
-            else:
-                return '`%s`>' % (self._name) + '%s'
-        elif self._operator == 'ge':
-            if self._not:
-                return 'not `%s`>=' % (self._name) + '%s'
-            else:
-                return '`%s`>=' % (self._name) + '%s'
-        elif self._operator == 'in':
-            if isinstance(self._value, list) or isinstance(self._value, tuple):
-                nelmts = len(self._value)
-            else:
-                nelmts = 1
+                childs.append(Q.tpl(child[0], child[1]))
 
-            if self._not:
-                return '`%s` not in (%s)' % (self._name, ','.join(['%s' for i in range(0, nelmts)]))
-            else:
-                return '`%s` in (%s)' % (self._name, ','.join(['%s' for i in range(0, nelmts)]))
-        elif self._operator == 'startswith':
-            if self._not:
-                return '`%s` not like ' % self._name + '%s%%'
-            else:
-                return '`%s` like ' % self._name + '%s%%'
-        elif self._operator == 'endswith':
-            if self._not:
-                return '`%s` not like %%' % self._name + '%s'
-            else:
-                return '`%s` like %%' % self._name + '%s'
-        elif self._operator == 'contains':
-            if self._not:
-                return '`%s` not like %%' % self._name + '%s%%'
-            else:
-                return '`%s` like %%' % self._name + '%s%%'
-        else:
-            raise SQLError('条件格式错误：%s' % self._operator)
+        sep = ' not %s ' % self.connector if self.negated else ' %s ' % self.connector
+        return sep.join(childs)
 
     def args(self):
-        if isinstance(self._value, list) or isinstance(self._value, tuple):
-            return list(self._value)
-        else:
-            return [str(self._value)]
+        """
+            generate prepared args
+        :return:
+        """
+        childs = []
+        for child in self.children:
+            if isinstance(child, self.__class__):
+                childs.extend(child.args())
+            else:
+                if isinstance(child[1], tuple) or isinstance(child[1], list):
+                    childs.extend(child[1])
+                else:
+                    childs.append(child[1])
+
+        return childs
 
     @staticmethod
-    def parse(name):
+    def tpl(cname, cvalue):
         """
-            name format: xxx/xxx<__not>__(eq/lt/le/gt/ge/in/startswith/endswith/contains)
-        :param name:
+            generate sql template by conditon name
         :return:
-            name(str), not(boolean), operator(str)
         """
+        # operation compare definition
+        OP_CMP = {
+            'eq': '`%s`=%s',
+            'lt': '`%s`<%s',
+            'le': '`%s`<=%s',
+            'gt': '`%s`>%s',
+            'ge': '`%s`>=%s',
+            'ne': '`%s`!=%s'
+        }
+
+        # operation in definition
+        OP_IN = {
+            'in': '`%s` in (%s)'
+        }
+
+        # operation like definition
+        OP_LIKE = {
+            'startswith': '`%s` like \'%s%%\'',
+            'endswith': '`%s` like \'%%%s\'',
+            'contains': '`%s` like \'%%%s%%\''
+        }
+
         # parse name
-        items = name.split('__')
+        items = cname.split('__')
         nitems = len(items)
 
         # check parse results
-        if nitems == 0 or nitems > 3:
-            raise SQLError('条件格式错误：%s' % name)
+        if nitems == 0 or nitems > 2:
+            raise SQLError('条件格式错误：%s' % cname)
 
         # parse condition
         if nitems == 1:
-            return items[0], False, 'eq'
+            name = items[0]
+            return '%s=%s' % (name, '%s')
         elif nitems == 2:
-            if items[1] not in _Cond.OPERATORS:
-                raise SQLError('条件格式错误：%s' % name)
-            return items[0], False, items[1]
-        elif nitems == 3:
-            if items[2] not in _Cond.OPERATORS or items[1] !='not':
-                raise SQLError('条件格式错误：%s' % name)
-            return items[0], True, items[2]
+            name, op = items[0], items[1]
+
+            if op in list(OP_CMP.keys()):
+                return OP_CMP[op] % (name , '%s')
+            elif op in list(OP_IN.keys()):
+                # elements of in condition
+                nelmts = len(cvalue) if isinstance(cvalue, list) or isinstance(cvalue, tuple) else 1
+                return OP_IN[op] % (name, ','.join(['%s' for i in range(0, nelmts)]))
+            elif op in list(OP_LIKE.keys()):
+                return OP_LIKE[op] % (name, '%s')
+            else:
+                raise SQLError('条件格式错误：%s' % cname)
+
         else:
-            SQLError('条件格式错误：%s' % name)
+            raise SQLError('条件格式错误：%s' % cname)
 
-
-class _Query:
-    def __init__(self, **kwargs):
-        pass
-
-    def __and__(self, other):
-        pass
-
-    def __or__(self, other):
-        pass
-
-    def sql(self):
-        pass
-
-    def args(self):
-        pass
+Q = _Query
 
 
 class _Select:
@@ -148,9 +242,9 @@ class _Select:
         select sql
     """
     def __init__(self):
-        self._tables = None
+        self._table = None
         self._columns = None
-        self._wheres = None
+        self._where = None
         self._orderby = None
         self._order = None
         self._groupby = None
@@ -165,26 +259,22 @@ class _Select:
         self._columns = cols
         return self
 
-    def tables(self, *tbls):
+    def table(self, tbl):
         """
 
         :param tbls:
         :return:
         """
-        self._tables = tbls
+        self._table = tbl
         return self
 
-    def where(self, **conds):
+    def where(self, *args, **kwargs):
         """
 
         :param conds:
         :return:
         """
-        if self._wheres is None:
-            self._wheres = []
-
-        if len(conds) > 0:
-            self._wheres.append(conds)
+        self._where = Q(*args, **kwargs)
         return self
 
     def orderby(self, *cols):
@@ -242,29 +332,25 @@ class _Select:
         # select clause
         if self._columns is None:
             raise SQLError('查询语句没有指定列')
-        s = s + 'select ' + '`' + '`,`'.join(self._columns) + '` '
+        s = s + 'select ' + '`' + '`,`'.join(self._columns) + '`'
 
         # from clause
-        if self._tables is None:
+        if self._table is None:
             raise SQLError('查询语句没有指定表')
-        s = s + 'from ' + '`' + '`,`'.join(self._tables) + '` '
+        s = s + ' from ' + '`' + self._table + '`'
 
         # where clause
-        if self._wheres is not None:
-            wheres = []
-            for where in self._wheres:
-                wheres.append('`'+ '`=%s and `'.join(where.keys()) + '`=%s ')
-
-            if len(wheres) > 0:
-                s = s + 'where ' + 'or '.join(wheres)
+        whereclause = self._where.sql()
+        if whereclause:
+            s = s + ' where ' + whereclause
 
         # group by clause
         if self._groupby is not None:
-            s = s + 'group by ' + '`' + '`, `'.join(self._groupby) + '` '
+            s = s + ' group by ' + '`' + '`, `'.join(self._groupby) + '` '
 
         # order by clause
         if self._orderby is not None:
-            s = s + 'order by ' +'`' + '`, `'.join(self._orderby) + '` '
+            s = s + ' order by ' +'`' + '`, `'.join(self._orderby) + '` '
 
         # order clause
         if self._order is not None:
@@ -281,10 +367,7 @@ class _Select:
 
         :return:
         """
-        vals = []
-        for where in self._wheres:
-            vals.extend(where.values())
-        return tuple(vals)
+        return self._where.args()
 
 
 select = _Select
@@ -388,7 +471,7 @@ class _Update:
     def __init__(self):
         self._table = None
         self._cvals = None
-        self._wheres = None
+        self._where = None
 
     def set(self, **cvals):
         """
@@ -408,18 +491,13 @@ class _Update:
         self._table = tbl
         return self
 
-    def where(self, **conds):
+    def where(self, *args, **kwargs):
         """
 
         :param conds:
         :return:
         """
-        if self._wheres is None:
-            self._wheres = []
-
-        if len(conds) > 0:
-            self._wheres.append(conds)
-
+        self._where = Q(*args, **kwargs)
         return self
 
     def sql(self):
@@ -441,13 +519,9 @@ class _Update:
         s = s + 'set `' + '`=%s, `'.join(self._cvals.keys()) + '`=%s '
 
         # where clause
-        if self._wheres is not None:
-            wheres = []
-            for where in self._wheres:
-               wheres.append('`'+ '`=%s and `'.join(where.keys()) + '`=%s ')
-
-            if len(wheres) > 0:
-                s = s + 'where ' + 'or '.join(wheres)
+        whereclause = self._where.sql()
+        if whereclause:
+            s = s + 'where ' + whereclause
 
         return s
 
@@ -462,8 +536,7 @@ class _Update:
         vals.extend(self._cvals.values())
 
         # where args
-        for where in self._wheres:
-            vals.extend(where.values())
+        vals.extend(self._where.args())
 
         return tuple(vals)
 
@@ -477,7 +550,7 @@ class _Delete:
     """
     def __init__(self):
         self._table = None
-        self._wheres = None
+        self._where = None
 
     def table(self, tbl):
         """
@@ -488,18 +561,13 @@ class _Delete:
         self._table = tbl
         return self
 
-    def where(self, **conds):
+    def where(self, *args, **kwargs):
         """
 
         :param conds:
         :return:
         """
-        if self._wheres is None:
-            self._wheres = []
-
-        if len(conds) > 0:
-            self._wheres.append(conds)
-
+        self._where = Q(*args, **kwargs)
         return self
 
     def sql(self):
@@ -516,13 +584,9 @@ class _Delete:
         s = s + 'delete from ' + '`' + self._table + '` '
 
         # where clause
-        if self._wheres is not None:
-            wheres = []
-            for where in self._wheres:
-               wheres.append('`'+ '`=%s, and `'.join(where.keys()) + '`=%s ')
-
-            if len(wheres) > 0:
-                s = s + 'where ' + 'or '.join(wheres)
+        whereclause = self._where.sql()
+        if whereclause:
+            s = s + 'where ' + whereclause
 
         return s
 
@@ -531,13 +595,7 @@ class _Delete:
 
         :return:
         """
-        vals = []
-
-        # where args
-        for where in self._wheres:
-            vals.extend(where.values())
-
-        return tuple(vals)
+        return self._where.args()
 
 
 delete = _Delete
@@ -563,7 +621,7 @@ util = _Util
 
 
 if __name__ == '__main__':
-    s = select().columns('a', 'b').tables('tb1', 'tb2').where(a=1, b='x').where(a='c').orderby('a').desc()
+    s = select().columns('a', 'b').table('tb1').where(a=1, b='x').orderby('a').desc()
     print(s.sql())
     print(s.args())
 
@@ -571,11 +629,11 @@ if __name__ == '__main__':
     print(s.sql())
     print(s.args())
 
-    s = update().table('tb1').set(a=1, b='b').where(c=0).where(c=1)
+    s = update().table('tb1').set(a=1, b='b').where(c=0)
     print(s.sql())
     print(s.args())
 
-    s = delete().table('tb1').where(a=1, b=2).where(a=3, b=4)
+    s = delete().table('tb1').where(a=1, b=2)
     print(s.sql())
     print(s.args())
 
