@@ -17,7 +17,7 @@ class OrderDao(dao.Dao):
         :return:
         """
         # select query
-        q = sqlhelper.select().columns(*models.TradeOrder.fields).tables('tb_trade_order').where(**conds)
+        q = sqlhelper.select().columns(*models.TradeOrder.fields).table('tb_trade_order').where(**conds)
 
         # execute query
         results = self.select(q.sql(), q.args())
@@ -25,6 +25,20 @@ class OrderDao(dao.Dao):
             return models.TradeOrder(**results[0])
 
         return None
+
+    def get_orders(self, **conds):
+        """
+            get trade order by id
+        :param id:
+        :return:
+        """
+        # select query
+        q = sqlhelper.select().columns(*models.TradeOrder.fields).table('tb_trade_order').where(**conds)
+
+        # execute query
+        results = self.select(q.sql(), q.args())
+
+        return results
 
     def add_order(self, account, stock, tcode, otype, ptype, oprice, ocount, operator, action):
         """

@@ -15,8 +15,13 @@ class ListHandler(handler.Handler):
         # get arguments
         form = forms.trade.ListForm(**self.arguments)
 
+        # list conditions
+        conds = {
+            'status__in': form.status.split(',')
+        }
+
         # get trade records
-        results = beans.trade.list_trade(**form)
+        results = beans.trade.get_trades(**conds)
 
         # success
         self.write(protocol.success(data=results))

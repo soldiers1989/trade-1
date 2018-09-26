@@ -7,16 +7,6 @@ from .. import suite, models
 
 
 class TradeDao(dao.Dao):
-    def get_trade_by_status(self, status):
-        """
-            get trade records by status
-        :param status: str, status split by ','
-        :return:
-            list
-        """
-        pass
-
-
     def get_trade(self, **conds):
         """
             get trade record by conditions
@@ -24,7 +14,7 @@ class TradeDao(dao.Dao):
             None, or first matched trade object
         """
         # select query
-        q = sqlhelper.select().columns(*models.UserTrade.fields).tables('tb_user_trade').where(**conds)
+        q = sqlhelper.select().columns(*models.UserTrade.fields).table('tb_user_trade').where(**conds)
 
         # execute query
         results = self.select(q.sql(), q.args())
@@ -32,6 +22,20 @@ class TradeDao(dao.Dao):
             return models.UserTrade(**results[0])
 
         return None
+
+    def get_trades(self, **conds):
+        """
+            get trade record by conditions
+        :return:
+            None, or first matched trade object
+        """
+        # select query
+        q = sqlhelper.select().columns(*models.UserTrade.fields).table('tb_user_trade').where(**conds)
+
+        # execute query
+        results = self.select(q.sql(), q.args())
+
+        return results
 
     def use_counpon(self, couponid):
         """
@@ -157,7 +161,7 @@ class TradeDao(dao.Dao):
         :return:
         """
         # select query
-        q = sqlhelper.select().columns(*models.TradeLever.fields).tables('tb_trade_lever').where(trade_id=tradeid)
+        q = sqlhelper.select().columns(*models.TradeLever.fields).table('tb_trade_lever').where(trade_id=tradeid)
 
         # execute query
         results = self.select(q.sql(), q.args())

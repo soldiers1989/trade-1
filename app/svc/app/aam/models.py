@@ -104,7 +104,7 @@ class UserTrade(model.Model):
     etime = field.IntegerField(null=True) # end time
 
 
-class TradeOrder:
+class TradeOrder(model.Model):
     id = field.IntegerField()
     account_id = field.IntegerField()
     stock_id = field.StringField(max_length=8)
@@ -119,7 +119,7 @@ class TradeOrder:
     dprice = field.DecimalField(digits=10, decimals=2, null=True)
     dtime = field.IntegerField(null=True)
     dcode = field.StringField(max_length=16, null=True)
-    status = field.StringField(max_length=16)
+    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
     slog = field.StringField(null=True)
     callback = field.StringField(null=True)
     ctime = field.IntegerField()

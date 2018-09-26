@@ -13,7 +13,7 @@ class StockDao(dao.Dao):
         :return:
         """
         # select query
-        q = sqlhelper.select().columns(*models.Stock.fields).tables('tb_stock').where(**conds)
+        q = sqlhelper.select().columns(*models.Stock.fields).table('tb_stock').where(**conds)
 
         # execute query
         results = self.select(q.sql(), q.args())
@@ -28,7 +28,7 @@ class StockDao(dao.Dao):
         :return:
         """
         # select query
-        q = sqlhelper.select().columns(*models.Stock.fields).tables('tb_stock').where(**conds)
+        q = sqlhelper.select().columns(*models.Stock.fields).table('tb_stock').where(**conds)
 
         # execute query
         results = self.select(q.sql(), q.args())

@@ -14,7 +14,7 @@ class UserDao(dao.Dao):
         :return:
         """
         # select query object
-        q = sqlhelper.select().columns(*models.User.fields).tables('tb_user').where(**conds)
+        q = sqlhelper.select().columns(*models.User.fields).table('tb_user').where(**conds)
 
         # excute query
         results = self.select(q.sql(), q.args())
@@ -65,7 +65,7 @@ class UserDao(dao.Dao):
         :return:
         """
         # select query object
-        q = sqlhelper.select().columns(*models.UserBank.fields).tables('tb_user_bank').where(**conds)
+        q = sqlhelper.select().columns(*models.UserBank.fields).table('tb_user_bank').where(**conds)
 
         banks = []
         # excute query

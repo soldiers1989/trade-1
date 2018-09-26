@@ -15,7 +15,7 @@ class CouponDao(dao.Dao):
         :return:
         """
         # select query
-        q = sqlhelper.select().columns(*models.UserCoupon.fields).tables('tb_user_coupon').where(**conds)
+        q = sqlhelper.select().columns(*models.UserCoupon.fields).table('tb_user_coupon').where(**conds)
 
 
         # execute query

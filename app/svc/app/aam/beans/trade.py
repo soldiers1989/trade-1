@@ -7,7 +7,7 @@ from tlib import rand
 from .. import suite, daos, error, lock, trade, mysql, forms
 
 
-def list_trade(**conds):
+def get_trades(**conds):
     """
         get trade records
     :param conds:
@@ -20,7 +20,7 @@ def list_trade(**conds):
     dao = daos.trade.TradeDao(db)
 
     # get records
-    results = dao.list_trade(**conds)
+    results = dao.get_trades(**conds)
 
     return results
 
@@ -47,7 +47,6 @@ def user_buy(form):
         stockDao = daos.stock.StockDao(db)
         leverDao = daos.lever.LeverDao(db)
         couponDao = daos.coupon.CouponDao(db)
-        accountDao = daos.account.AccountDao(db)
 
         ## check arguments ##
         # check user
@@ -85,9 +84,6 @@ def user_buy(form):
 
         # check capital
         capital = form.price * form.count
-        account = accountDao.select_one()
-        if account is None or account.lmoney < capital:
-            raise error.account_money_not_enough
 
         # check lever money limit
         if capital > lever.mmax or capital< lever.mmin:

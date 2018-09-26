@@ -15,7 +15,7 @@ class UserDao(dao.Dao):
         :return:
         """
         # select query
-        q = sqlhelper.select().columns(*models.User.fields).tables('tb_user').where(**conds)
+        q = sqlhelper.select().columns(*models.User.fields).table('tb_user').where(**conds)
 
         # execute query
         results = self.select(q.sql(), q.args())

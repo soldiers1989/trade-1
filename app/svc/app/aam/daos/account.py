@@ -14,7 +14,7 @@ class AccountDao(dao.Dao):
         :return:
         """
         # select query
-        q = sqlhelper.select().columns(*models.TradeAccount.fields).tables('tb_trade_account').where(disable=False).orderby('lmoney').desc()
+        q = sqlhelper.select().columns(*models.TradeAccount.fields).table('tb_trade_account').where(disable=False).orderby('lmoney').desc()
 
         # execute query
         results = self.select(q.sql(), q.args())

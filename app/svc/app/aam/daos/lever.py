@@ -15,7 +15,7 @@ class LeverDao(dao.Dao):
         :return:
         """
         # select query
-        q = sqlhelper.select().columns(*models.Lever.fields).tables('tb_lever').where(**conds)
+        q = sqlhelper.select().columns(*models.Lever.fields).table('tb_lever').where(**conds)
 
 
         # execute query

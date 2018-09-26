@@ -6,7 +6,7 @@ from .. import suite
 
 
 class ListForm(form.Form):
-    status = field.StringField(null=True)
+    status = field.StringField()
 
 
 class UserBuy(form.Form):

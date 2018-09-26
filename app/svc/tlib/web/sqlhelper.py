@@ -621,7 +621,7 @@ util = _Util
 
 
 if __name__ == '__main__':
-    s = select().columns('a', 'b').table('tb1').where(a=1, b='x').orderby('a').desc()
+    s = select().columns('a', 'b').table('tb1').where(Q(a__lt=1)&(Q(b__ge=2)|Q(b__in=('x','y')))).orderby('a').desc()
     print(s.sql())
     print(s.args())
 
