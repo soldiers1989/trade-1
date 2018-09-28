@@ -83,6 +83,13 @@ class DBMysql:
         # execute sql
         return self._cursor.execute(sql, args)
 
+    def lastrowid(self):
+        """
+            get last insert primary key id
+        :return:
+        """
+        return self._cursor.lastrowid
+
     def close(self):
         """
             close connection to database

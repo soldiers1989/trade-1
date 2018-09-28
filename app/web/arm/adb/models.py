@@ -589,13 +589,15 @@ class TradeLever(models.Model):
 # tb_trade_order
 class TradeOrder(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE, null=True, verbose_name='证券账户')
-    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票代码')
+    account = models.CharField(max_length=16, verbose_name='证券账户')
+    scode = models.CharField(max_length=16, verbose_name='证券代码')
+    sname = models.CharField(max_length=16, verbose_name='证券名称')
     tcode = models.CharField(max_length=16, verbose_name='交易编号')
     otype = models.CharField(max_length=16, verbose_name='委托类型')
     optype = models.CharField(max_length=16, verbose_name='报价类型')
     ocount = models.IntegerField(verbose_name='委托数量')
     oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='委托价格')
+    odate = models.DateField(verbose_name='委托日期')
     otime = models.BigIntegerField(verbose_name='委托时间')
     ocode = models.CharField(max_length=16, null=True, verbose_name='委托代码')
     dcount = models.IntegerField(null=True, verbose_name='成交数量')
@@ -613,13 +615,10 @@ class TradeOrder(models.Model):
 
     def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['account'], items['stock'] = self.account_id, self.stock_id
         return items
 
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['account'] = items['account'].account if items['account'] else None
-        items['stock'] = items['stock'].name if items['stock'] else None
         items['otype'] = enum.all['order']['type'][items['otype']] if items['otype'] else None
         items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
         items['_status'] = enum.all['order']['status'][items['status']] if items['status'] else None

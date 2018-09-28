@@ -5,6 +5,7 @@ import tornado.web
 import tornado.ioloop, logging
 
 from . import config, urls
+from tlib import chttp
 
 # application settings
 settings = {
@@ -13,11 +14,22 @@ settings = {
     'debug': config.DEBUG,
 }
 
+# aysnc http client
+asynchttp = chttp.CHttp()
+
+# setup running environments
+def _setup():
+    # init logging
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+
+    # init chttp
+    asynchttp.start()
+
 
 # start aam service
 def start(port):
-    # init logging
-    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+    # setup
+    _setup()
 
     # log start message
     logging.info('start aam service on port %d' % port)

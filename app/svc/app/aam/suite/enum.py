@@ -33,7 +33,6 @@ class _OType:
     """
     buy = _Pair('buy', '买入')
     sell = _Pair('sell', '卖出')
-    close = _Pair('close', '平仓')
 
 otype = _OType
 

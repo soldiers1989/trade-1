@@ -10,9 +10,9 @@ class _LockException(Exception):
         Exception.__init__(self, '用户正在操作，请稍后重试')
 
 
-class _UserLock:
-    def __init__(self, userid):
-        self._key = 'lock_' + str(userid)
+class _Lock:
+    def __init__(self, type, id):
+        self._key = 'lock_%s_%s' % (type, str(id))
 
     def __enter__(self):
         """
@@ -40,4 +40,13 @@ def user(userid):
     :param userid:
     :return:
     """
-    return _UserLock(userid)
+    return _Lock('user', userid)
+
+
+def order(orderid):
+    """
+        create order lock object
+    :param orderid:
+    :return:
+    """
+    return _Lock('order', orderid)

@@ -78,7 +78,7 @@ class Dao:
         :param args:
         :return:
         """
-        self._db.execute(sql, args)
+        return self._db.execute(sql, args)
 
     def commit(self):
         """
@@ -103,8 +103,7 @@ class Dao:
         :param args:
         :return:
         """
-        n = self._db.execute(sql, args)
-        return n
+        return self._db.execute(sql, args)
 
     def update(self, sql, args=None):
         """
@@ -113,8 +112,7 @@ class Dao:
         :param args:
         :return:
         """
-        n = self._db.execute(sql, args)
-        return n
+        return self._db.execute(sql, args)
 
     def insert_and_commit(self, sql, args=None):
         """

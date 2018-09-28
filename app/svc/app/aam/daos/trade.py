@@ -118,7 +118,7 @@ class TradeDao(dao.Dao):
         # execute insert
         self.execute(sql, (tradeid, item, nmoney, amoney, detail, int(time.time())))
 
-    def add_trade(self, userid, stockid, couponid, code, ptype, price, count, margin):
+    def add_trade(self, userid, stockid, couponid, code, ptype, price, count, margin, slog):
         """
             add user trade order
         :param userid:
@@ -132,13 +132,13 @@ class TradeDao(dao.Dao):
         """
         # insert query
         sql = '''
-                insert into tb_user_trade(user_id, stock_id, coupon_id, code, optype, oprice, ocount, margin, status, ctime, utime, obtime)
-                values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                insert into tb_user_trade(user_id, stock_id, coupon_id, code, optype, oprice, ocount, margin, status, slog, ctime, utime, obtime)
+                values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             '''
 
         timenow = int(time.time())
         # execute insert
-        self.execute(sql, (userid, stockid, couponid, code, ptype, price, count, margin, suite.enum.trade.tobuy.code, timenow, timenow, timenow))
+        self.execute(sql, (userid, stockid, couponid, code, ptype, price, count, margin, suite.enum.trade.tobuy.code, slog, timenow, timenow, timenow))
 
     def add_lever(self, tradeid, lever, wline, sline, ofmin, ofrate, dfrate, psrate, mmin, mmax):
         """

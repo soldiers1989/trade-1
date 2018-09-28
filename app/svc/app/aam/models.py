@@ -106,8 +106,9 @@ class UserTrade(model.Model):
 
 class TradeOrder(model.Model):
     id = field.IntegerField()
-    account_id = field.IntegerField()
-    stock_id = field.StringField(max_length=8)
+    account = field.StringField()
+    sname = field.StringField(max_length=16)
+    scode = field.StringField(max_length=16)
     tcode = field.StringField()
     otype = field.StringField(max_length=16)
     optype = field.StringField(max_length=16)

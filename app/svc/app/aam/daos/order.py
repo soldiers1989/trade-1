@@ -1,7 +1,7 @@
 """
     order dao
 """
-import time
+import time, datetime
 
 from tlib.web import dao
 
@@ -40,7 +40,7 @@ class OrderDao(dao.Dao):
 
         return results
 
-    def add_order(self, account, stock, tcode, otype, ptype, oprice, ocount, operator, action):
+    def add_order(self, account, scode, sname, tcode, otype, optype, oprice, ocount, otime, odate, callback, slog):
         """
             add new trade order
         :param trade:
@@ -54,17 +54,12 @@ class OrderDao(dao.Dao):
         """
         # insert query
         sql = '''
-                insert into tb_trade_order(account_id, stock_id, tcode, otype, ptype, oprice, ocount, otime, status, slog, ctime, utime)
-                values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                insert into tb_trade_order(account, scode, sname, tcode, otype, optype, oprice, ocount, otime, odate, status, slog, callback, ctime, utime)
+                values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             '''
 
-        #prepare status & status log
-        otime = int(time.time())
-        logobj = [suite.status.format(operator, action, '', suite.enum.order.notsend.name, otime)]
-        slog = suite.status.dumps(logobj)
-
         # execute insert
-        self.execute(sql, (account, stock, tcode, otype, ptype, oprice, ocount, otime, suite.enum.order.notsend.code, slog, otime, otime))
+        return self.execute(sql, (account, scode, sname, tcode, otype, optype, oprice, ocount, otime,  odate, suite.enum.order.notsend.code, slog, callback, otime, otime))
 
     def update_order(self, orderid, **cvals):
         """
@@ -77,4 +72,4 @@ class OrderDao(dao.Dao):
         q = sqlhelper.update().table('tb_trade_order').set(**cvals).where(id=orderid)
 
         # execute sql
-        self.execute(q.sql(), q.args())
+        return self.execute(q.sql(), q.args())

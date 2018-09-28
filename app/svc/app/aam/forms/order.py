@@ -5,29 +5,53 @@ from tlib.web import form, field
 from .. import suite
 
 
-class ListForm(form.Form):
+class List(form.Form):
     status = field.StringField()
+    date = field.DateField()
 
 
-class BuyForm(form.Form):
-    pass
+class Order(form.Form):
+    account = field.StringField()
+    tcode = field.StringField()
+    scode = field.StringField()
+    sname = field.StringField()
+    optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
+    ocount = field.IntegerField()
+    oprice = field.DecimalField(digits=10, decimals=2)
+    callback = field.StringField(null=True)
+    operator = field.StringField(default=suite.enum.operator.sys.code)
 
 
-class SellForm(form.Form):
-    pass
+class Dealt(form.Form):
+    id = field.IntegerField()
+    dcount = field.IntegerField()
+    dprice = field.DecimalField(digits=10, decimals=2)
+    dcode = field.StringField(null=True)
+    operator = field.StringField(default=suite.enum.operator.sys.code)
 
 
-class CancelForm(form.Form):
-    pass
+Buy = Order
+Sell = Order
+Bought = Dealt
+Sold = Dealt
 
 
-class BoughtForm(form.Form):
-    pass
+class Cancel(form.Form):
+    id = field.IntegerField()
+    operator = field.StringField(default=suite.enum.operator.sys.code)
 
 
-class SoldForm(form.Form):
-    pass
+class Canceled(form.Form):
+    id = field.IntegerField()
+    operator = field.StringField(default=suite.enum.operator.sys.code)
 
 
-class CanceledForm(form.Form):
-    pass
+class Notify(form.Form):
+    id = field.IntegerField()
+    dcount = field.IntegerField()
+    dprice = field.DecimalField(digits=10, decimals=2)
+    dcode = field.StringField(null=True)
+    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
+    operator = field.StringField(default=suite.enum.operator.sys.code)
+
+

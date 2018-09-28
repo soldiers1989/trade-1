@@ -60,9 +60,9 @@ def user_buy(form):
         stock = stockDao.get(id=form.stock)
         if stock is None:
             raise error.stock_not_exist
-        if stock.status == suite.enum.stock.closed:
+        if stock.status == suite.enum.stock.closed.code:
             raise error.stock_is_closed
-        if stock.status == suite.enum.stock.delisted:
+        if stock.status == suite.enum.stock.delisted.code:
             raise error.stock_is_delisted
         if stock.limit == suite.enum.risk.nobuy or stock.limit == suite.enum.risk.nodelay:
             raise error.stock_buy_limited
@@ -118,6 +118,19 @@ def user_buy(form):
         if before_money < cost:
             raise error.user_money_not_enough
 
+        # prepare status log
+        logs = []
+        time_now = int(time.time())
+        logs.append(suite.status.trade.format(suite.enum.operator.user.code,
+                                              suite.enum.oaction.buy.code,
+                                              form.ptype,
+                                              str(form.price),
+                                              form.count,
+                                              '',
+                                              suite.enum.trade.tobuy.code,
+                                              time_now))
+        slog = suite.status.trade.dumps(logs)
+
         ## add new trade record ##
         with tradeDao.transaction():
             # use user coupon
@@ -132,7 +145,7 @@ def user_buy(form):
 
             # add trade order record
             code = rand.uuid()
-            tradeDao.add_trade(form.user, form.stock, form.coupon, code, form.ptype, form.price, form.count, margin)
+            tradeDao.add_trade(form.user, form.stock, form.coupon, code, form.ptype, form.price, form.count, margin, slog)
             tradeobj = tradeDao.get_trade(code=code)
 
             # add trade margin record
@@ -179,10 +192,10 @@ def user_sell(form):
         if stock is None:
             raise error.stock_not_exist
 
-        if stock.status == suite.enum.stock.closed:
+        if stock.status == suite.enum.stock.closed.code:
             raise error.stock_is_closed
 
-        if stock.status == suite.enum.stock.delisted:
+        if stock.status == suite.enum.stock.delisted.code:
             raise error.stock_is_delisted
 
         # check free count /hold count #
@@ -255,9 +268,9 @@ def user_close(form):
         stock = stockDao.get(id=tradeobj.stock_id)
         if stock is None:
             raise error.stock_not_exist
-        if stock.status == suite.enum.stock.closed:
+        if stock.status == suite.enum.stock.closed.code:
             raise error.stock_is_closed
-        if stock.status == suite.enum.stock.delisted:
+        if stock.status == suite.enum.stock.delisted.code:
             raise error.stock_is_delisted
 
         # check free count /hold count #
@@ -327,7 +340,6 @@ def user_cancel(form):
         if userobj is None:
             raise error.invalid_parameters
 
-        next_status = None
         # check trade status #
         if tradeobj.status in [suite.enum.trade.tobuy.code]:
             next_status = suite.enum.trade.canceled.code
@@ -1065,34 +1077,39 @@ def trade_notify(form):
     tradeDao = daos.trade.TradeDao(db)
 
     # get trade object
-    tradeobj = tradeDao.get_trade(code=form.code)
+    tradeobj = tradeDao.get_trade(code=form.tcode)
 
     # order data
-    user, trade,  = tradeobj.user_id, tradeobj.id
+    user, trade,  tstatus = tradeobj.user_id, tradeobj.id, tradeobj.status
     otype, dcount, dprice, status = form.otype, form.dcount, form.dprice, form.status
 
     # process trade operation by lock user
-    with lock.user(user):
-        if status in [suite.enum.order.tdeal, suite.enum.order.pdeal, suite.enum.order.pcanceled]:
-            # total dealt / part dealt
-            if otype in [suite.enum.otype.buy]:
-                return sys_bought(forms.trade.SysBought(user=user, trade=trade, count=dcount, price=dprice))
-            elif otype in [suite.enum.otype.sell, suite.enum.otype.close]:
-                return sys_sold(forms.trade.SysBought(user=user, trade=trade, count=dcount, price=dprice))
+    if status in [suite.enum.order.tdeal.code, suite.enum.order.pdeal.code, suite.enum.order.pcanceled.code]:
+        # total dealt / part dealt
+        if otype in [suite.enum.otype.buy.code]:
+            return sys_bought(forms.trade.SysBought(user=user, trade=trade, count=dcount, price=dprice))
+        elif otype in [suite.enum.otype.sell.code]:
+            if tstatus in [suite.enum.trade.tosell.code, suite.enum.trade.selling.code, suite.enum.trade.cancelsell.code, suite.enum.trade.sellcanceling.code]:
+                return sys_sold(forms.trade.SysSold(user=user, trade=trade, count=dcount, price=dprice))
+            elif tstatus in [suite.enum.trade.toclose.code, suite.enum.trade.closing.code, suite.enum.trade.cancelclose.code, suite.enum.trade.closecanceling.code]:
+                return sys_close(forms.trade.SysClosed(user=user, trade=trade, count=dcount, price=dprice))
             else:
-                raise error.invalid_parameters
-        elif status in [suite.enum.order.tcanceled]:
-            # total canceled
-            if otype in [suite.enum.otype.buy, suite.enum.otype.sell, suite.enum.otype.close]:
-                return sys_canceled(forms.trade.SysCanceled(user=user, trade=trade))
-            else:
-                raise error.invalid_parameters
-        elif status in [suite.enum.order.expired]:
-            # expired
-            if otype in [suite.enum.otype.buy, suite.enum.otype.sell, suite.enum.otype.close]:
-                return sys_canceled(forms.trade.SysCanceled(user=user, trade=trade), expired=True)
-            else:
-                raise error.invalid_parameters
+                raise error.trade_order_notify_denied
+
         else:
             raise error.invalid_parameters
+    elif status in [suite.enum.order.tcanceled.code]:
+        # total canceled
+        if otype in [suite.enum.otype.buy.code, suite.enum.otype.sell.code]:
+            return sys_canceled(forms.trade.SysCanceled(user=user, trade=trade))
+        else:
+            raise error.invalid_parameters
+    elif status in [suite.enum.order.expired]:
+        # expired
+        if otype in [suite.enum.otype.buy.code, suite.enum.otype.sell.code]:
+            return sys_canceled(forms.trade.SysCanceled(user=user, trade=trade), expired=True)
+        else:
+            raise error.invalid_parameters
+    else:
+        raise error.invalid_parameters
 

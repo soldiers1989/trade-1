@@ -36,9 +36,9 @@ def list(request):
             words = params['words']
             if words:
                 if words.isdigit():
-                    q = Q(account__account=words) | Q(stock_id=words) | Q(ocode=words) | Q(trade_id=words)
+                    q = Q(account=words) | Q(scode=words) | Q(ocode=words) | Q(trade_id=words)
                 else:
-                    q = Q(stock__name__contains=words) | Q(account__name__contains=words)
+                    q = Q(sname__contains=words)
 
             ## get total count ##
             total = models.TradeOrder.objects.filter(q, **filters).count()
