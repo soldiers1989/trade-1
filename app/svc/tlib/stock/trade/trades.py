@@ -2,7 +2,7 @@
     trade service
 """
 import threading
-from . import protocol
+from . import account, protocol, error
 
 
 class Trades:
@@ -16,26 +16,23 @@ class Trades:
         # lock for accounts
         self._lock = threading.RLock()
 
-    def add(self, aid, account):
+    def add(self, aid:str, **kwargs):
         """
-            add account
-        :param aid:
-        :param account:
+            add a new trade account by specified channel with an unique account @aid
+        :param aid: str, unique account id
+        :param channel: str, trade channel name
+        :param kwargs: dict, account init parameters
         :return:
+            json, add result
         """
-        resp = None
+        with self._lock:
+            acnt = self._accounts.get(aid)
+            if acnt is not None:
+                raise error.TradeError('account with id: %s has exists.' % aid)
 
-        self._lock.acquire()
-        acnt = self._accounts.get(aid)
-        self._accounts[aid] = account
-        self._lock.release()
+            self._accounts[aid] = account.create(**kwargs)
 
-        if acnt is not None:
-            resp = protocol.success('account has already exist, replaced.')
-        else:
-            resp = protocol.success('account has added')
-
-        return resp
+            return protocol.success('account has added')
 
     def delete(self, aid):
         """
@@ -43,46 +40,42 @@ class Trades:
         :param id:
         :return:
         """
-        resp = None
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            # logout first
-            account.logout()
-            # remove from account list
-            del self._accounts[aid]
-            # response
-            resp = protocol.success('account has deleted.', data={'id':aid})
-        else:
-            resp = protocol.success('account is not exist.', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                # logout first
+                account.logout()
+                # remove from account list
+                del self._accounts[aid]
+                # response
+                resp = protocol.success('account has deleted.', data={'id':aid})
+            else:
+                resp = protocol.success('account is not exist.', data={'id':aid})
 
-        return resp
+            return resp
 
     def clear(self):
         """
             clear all account
         :return:
         """
-        resp, data = None, []
-        self._lock.acquire()
+        with self._lock:
+            resp, data = None, []
 
-        for id, account in self._accounts.items():
-            # logout first
-            res = account.logout()
-            code, msg = res.get('status'), res.get('msg')
-            # add data
-            data.append({'id':id, 'code':code, 'msg':msg})
+            for id, account in self._accounts.items():
+                # logout first
+                res = account.logout()
+                code, msg = res.get('status'), res.get('msg')
+                # add data
+                data.append({'id':id, 'code':code, 'msg':msg})
 
-        # make response
-        resp = protocol.success(data=data)
+            # make response
+            resp = protocol.success(data=data)
 
-        # empty accounts
-        self._accounts = {}
+            # empty accounts
+            self._accounts = {}
 
-        self._lock.release()
-
-        return resp
+            return resp
 
     def status(self, aid = None):
         """
@@ -90,27 +83,24 @@ class Trades:
         :param aid:
         :return:
         """
-        resp = None
-        self._lock.acquire()
-        if aid is not None:
-            account = self._accounts.get(aid)
-            if account is not None:
-                data = {'id':aid}
-                data.update(account.status())
-                resp = protocol.success(data=data)
+        with self._lock:
+            if aid is not None:
+                account = self._accounts.get(aid)
+                if account is not None:
+                    data = {'id':aid}
+                    data.update(account.status())
+                    resp = protocol.success(data=data)
+                else:
+                    resp = protocol.failed('account is not exist', data={'id':aid})
             else:
-                resp = protocol.failed('account is not exist', data={'id':aid})
-        else:
-            stats = []
-            for id, account in self._accounts.items():
-                data = account.status()
-                data['id'] = aid
-                stats.append(data)
-            resp = protocol.success(data=stats)
+                stats = []
+                for id, account in self._accounts.items():
+                    data = account.status()
+                    data['id'] = aid
+                    stats.append(data)
+                resp = protocol.success(data=stats)
 
-        self._lock.release()
-
-        return resp
+            return resp
 
     def login(self, aid = None):
         """
@@ -118,37 +108,35 @@ class Trades:
         :param aid:
         :return:
         """
-        resp = None
-        self._lock.acquire()
-        if aid is not None:
-            # login account
-            account = self._accounts.get(aid)
-            if account is not None:
-                res = account.login()
-                code, msg = res.get('status'), res.get('msg')
-                if code == 0:
-                    resp = protocol.success(data={'id':aid, 'code':code, msg:msg})
+        with self._lock:
+            if aid is not None:
+                # login account
+                account = self._accounts.get(aid)
+                if account is not None:
+                    res = account.login()
+                    code, msg = res.get('status'), res.get('msg')
+                    if code == 0:
+                        resp = protocol.success(data={'id':aid, 'code':code, msg:msg})
+                    else:
+                        resp = protocol.failed(data={'id': aid, 'code': code, msg: msg})
                 else:
-                    resp = protocol.failed(data={'id': aid, 'code': code, msg: msg})
+                    resp = protocol.failed(data={'id':aid, 'code':-1, 'msg':'account not exist'})
             else:
-                resp = protocol.failed(data={'id':aid, 'code':-1, 'msg':'account not exist'})
-        else:
-            succeed, data = True, []
-            # login all account
-            for id, account in self._accounts.items():
-                res = account.login()
-                code, msg = res.get('status'), res.get('msg')
-                if code != 0:
-                    succeed = False
-                data.append({'id': id, 'code': code, 'msg': msg})
+                succeed, data = True, []
+                # login all account
+                for id, account in self._accounts.items():
+                    res = account.login()
+                    code, msg = res.get('status'), res.get('msg')
+                    if code != 0:
+                        succeed = False
+                    data.append({'id': id, 'code': code, 'msg': msg})
 
-            if succeed:
-                resp = protocol.success(data = data)
-            else:
-                resp = protocol.failed(data = data)
-        self._lock.release()
+                if succeed:
+                    resp = protocol.success(data = data)
+                else:
+                    resp = protocol.failed(data = data)
 
-        return resp
+            return resp
 
     def logout(self, aid = None):
         """
@@ -156,38 +144,36 @@ class Trades:
         :param aid:
         :return:
         """
-        resp = None
-        self._lock.acquire()
-        if aid is not None:
-            # account logout
-            account = self._accounts.get(aid)
-            if account is not None:
-                res = account.logout()
-                code, msg = res.get('status'), res.get('msg')
-                if code == 0:
-                    resp = protocol.success(data={'id':aid, 'code':code, 'msg':msg})
+        with self._lock:
+            if aid is not None:
+                # account logout
+                account = self._accounts.get(aid)
+                if account is not None:
+                    res = account.logout()
+                    code, msg = res.get('status'), res.get('msg')
+                    if code == 0:
+                        resp = protocol.success(data={'id':aid, 'code':code, 'msg':msg})
+                    else:
+                        resp = protocol.failed(data={'id': aid, 'code': code, 'msg': msg})
                 else:
-                    resp = protocol.failed(data={'id': aid, 'code': code, 'msg': msg})
+                    resp = protocol.failed(data={'id':aid, 'code':-1, 'msg':'account not exist'})
             else:
-                resp = protocol.failed(data={'id':aid, 'code':-1, 'msg':'account not exist'})
-        else:
-            # all account logout
-            succeed, data = True, []
-            # login all account
-            for id, account in self._accounts.items():
-                res = account.logout()
-                code, msg = res.get('status'), res.get('msg')
-                if code != 0:
-                    succeed = False
-                data.append({'id': id, 'login': True, 'msg': msg})
+                # all account logout
+                succeed, data = True, []
+                # login all account
+                for id, account in self._accounts.items():
+                    res = account.logout()
+                    code, msg = res.get('status'), res.get('msg')
+                    if code != 0:
+                        succeed = False
+                    data.append({'id': id, 'login': True, 'msg': msg})
 
-            if succeed:
-                resp = protocol.success(data = data)
-            else:
-                resp = protocol.failed(data = data)
-        self._lock.release()
+                if succeed:
+                    resp = protocol.success(data = data)
+                else:
+                    resp = protocol.failed(data = data)
 
-        return resp
+            return resp
 
     def query_dqzc(self, aid):
         """
@@ -195,17 +181,13 @@ class Trades:
         :param aid: in, account
         :return:
         """
-        resp = None
-
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_dqzc()
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
-
-        return resp
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_dqzc()
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
+            return resp
 
     def query_dqcc(self, aid):
         """
@@ -213,15 +195,14 @@ class Trades:
         :param aid: in, account
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_dqcc()
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_dqcc()
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def query_drwt(self, aid):
         """
@@ -229,15 +210,14 @@ class Trades:
         :param aid: in, account id
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_drwt()
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_drwt()
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def query_drcj(self, aid):
         """
@@ -245,15 +225,14 @@ class Trades:
         :param aid: in, account id
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_drcj()
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_drcj()
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def query_kcwt(self, aid):
         """
@@ -261,15 +240,14 @@ class Trades:
         :param aid: in, account id
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_kcwt()
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_kcwt()
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def query_gdxx(self, aid):
         """
@@ -278,15 +256,14 @@ class Trades:
         :return:
             (True, [gddm list]) or (False, error message)
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_gdxx()
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_gdxx()
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def query_lswt(self, aid, sdate, edate):
         """
@@ -296,15 +273,14 @@ class Trades:
         :param edate: str, in, format: yyyymmdd
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_lswt(sdate, edate)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_lswt(sdate, edate)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def query_lscj(self, aid, sdate, edate):
         """
@@ -314,15 +290,14 @@ class Trades:
         :param edate: str, in, format: yyyymmdd
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_lscj(sdate, edate)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_lscj(sdate, edate)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
 
     def query_jgd(self, aid, sdate, edate):
@@ -333,15 +308,14 @@ class Trades:
         :param edate: str, in, format: yyyymmdd
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_jgd(sdate, edate)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_jgd(sdate, edate)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def query_gphq(self, aid, code):
         """
@@ -350,15 +324,14 @@ class Trades:
         :param code: str, in, stock code
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.query_gphq(code)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query_gphq(code)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def order_xjmr(self, aid, gddm, zqdm, price, count):
         """
@@ -370,15 +343,14 @@ class Trades:
         :param count:
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.order_xjmr(gddm, zqdm, price, count)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.order_xjmr(gddm, zqdm, price, count)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def order_xjmc(self, aid, gddm, zqdm, price, count):
         """
@@ -390,15 +362,14 @@ class Trades:
         :param count:
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.order_xjmc(gddm, zqdm, price, count)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.order_xjmc(gddm, zqdm, price, count)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def order_sjmr(self, aid, gddm, zqdm, price, count):
         """
@@ -410,15 +381,14 @@ class Trades:
         :param count:
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.order_sjmr(gddm, zqdm, price, count)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.order_sjmr(gddm, zqdm, price, count)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def order_sjmc(self, aid, gddm, zqdm, price, count):
         """
@@ -430,15 +400,14 @@ class Trades:
         :param count:
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.order_sjmc(gddm, zqdm, price, count)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.order_sjmc(gddm, zqdm, price, count)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
-        return resp
+            return resp
 
     def cancel_order(self, aid, seid, orderno):
         """
@@ -448,13 +417,12 @@ class Trades:
         :param orderno:
         :return:
         """
-        self._lock.acquire()
-        account = self._accounts.get(aid)
-        if account is not None:
-            resp = account.cancel_order(seid, orderno)
-        else:
-            resp = protocol.failed('account not exist', data={'id':aid})
-        self._lock.release()
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.cancel_order(seid, orderno)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
 
         return resp
 

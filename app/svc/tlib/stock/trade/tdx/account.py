@@ -1,12 +1,12 @@
 """
     securities account for trade
 """
-from .. import account
+from .. import account, error
 from . import trader, protocol
 
 
 class Account(account.Account):
-    def __init__(self, laccount, lpwd, taccount, tpwd, dept, version, agentservers, tradeservers):
+    def __init__(self, **kwargs):
         """
             init account
         :param laccount: str, 登录账户，一般为资金账户或者客户好
@@ -18,8 +18,18 @@ class Account(account.Account):
         :param agentservers: array, 代理服务器地址列表, [(id, host, port), (id, host, port), ...]
         :param tradeservers: array, 券商交易服务器地址列表, [(id, ip, port), (id, ip, port), ...]
         """
+        # get args
+        acnt, pwd = kwargs.get('account'), kwargs.get('pwd')
+        laccount, lpwd, taccount, tpwd = kwargs.get('laccount', acnt), kwargs.get('lpwd', pwd), kwargs.get('taccount', acnt), kwargs.get('tpwd', pwd)
+        dept, version, agents, servers = kwargs.get('dept'), kwargs.get('version'), kwargs.get('agents'), kwargs.get('servers')
+
+        # check args
+        if laccount is None or lpwd is None or taccount is None or tpwd is None or dept is None or version is None or agents is None or servers is None:
+            raise error.TradeError('missing account parameters')
+
+        # init account & traders
         self._account = trader.Account(laccount, lpwd, taccount, tpwd, dept, version)
-        self._traders = trader.Traders(self._account, agentservers, tradeservers)
+        self._traders = trader.Traders(self._account, agents, servers)
 
     def login(self):
         """
@@ -245,3 +255,7 @@ class Account(account.Account):
             return self._traders.cancel(seid, orderno)
         except Exception as e:
             return protocol.failed(str(e))
+
+
+# register channel
+account.register('tdx', Account)

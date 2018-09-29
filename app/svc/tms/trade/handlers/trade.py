@@ -1,5 +1,5 @@
-from tlib.stock import trade
-from .. import access, handler, trader, protocol, alias
+import json
+from .. import access, handler, trader, protocol, alias, forms
 
 
 class AddAccount(handler.Handler):
@@ -8,36 +8,14 @@ class AddAccount(handler.Handler):
     """
     @access.exptproc
     @access.needtoken
-    def get(self):
+    def post(self):
         """
             add new account
         :return:
         """
-        try:
-            laccount, lpwd, taccount, tpwd,   = self.get_argument('laccount'), self.get_argument('lpwd'), self.get_argument('taccount'), self.get_argument('tpwd')
-            dept, version = self.get_argument('dept'), self.get_argument('version')
-            sagents, strades = self.get_argument('agents'), self.get_argument('trades')
-
-            agentservers = []
-            for a0 in sagents.split('|'):
-                agents = []
-                for a1 in a0.split(','):
-                    agents.append(a1.strip())
-                agentservers.append(agents)
-
-            tradeservers = []
-            for t0 in strades.split('|'):
-                trades = []
-                for t1 in t0.split(','):
-                    trades.append(t1.strip())
-                tradeservers.append(trades)
-
-            acount = trade.tdx.account.Account(laccount, lpwd, taccount, tpwd, dept, version, agentservers, tradeservers)
-
-            resp = trader.default.add(laccount, acount)
-            self.write(resp)
-        except Exception as e:
-            self.write(protocol.failed(msg=str(e)))
+        account = json.loads(self.request.body.decode())
+        trader.default.add(account['id'], **account)
+        self.write(protocol.success())
 
 
 class DelAccount(handler.Handler):
@@ -46,17 +24,14 @@ class DelAccount(handler.Handler):
     """
     @access.exptproc
     @access.needtoken
-    def get(self):
+    def post(self):
         """
             delete account
         :return:
         """
-        try:
-            aid = self.get_argument('account', None)
-            resp = trader.default.delete(aid)
-            self.write(resp)
-        except Exception as e:
-            self.write(protocol.failed(msg=str(e)))
+        form = forms.account.Delete(**self.arguments)
+        resp = trader.default.delete(form.aid)
+        self.write(resp)
 
 
 class ClearAccount(handler.Handler):
@@ -65,16 +40,13 @@ class ClearAccount(handler.Handler):
     """
     @access.exptproc
     @access.needtoken
-    def get(self):
+    def post(self):
         """
             clear all account
         :return:
         """
-        try:
-            resp = trader.default.clear()
-            self.write(resp)
-        except Exception as e:
-            self.write(protocol.failed(msg=str(e)))
+        resp = trader.default.clear()
+        self.write(resp)
 
 
 class LoginAccount(handler.Handler):

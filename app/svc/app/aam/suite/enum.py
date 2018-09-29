@@ -23,6 +23,7 @@ class _OAction:
     close = _Pair('close', '平仓')
     cancel = _Pair('cancel', '撤销')
     drop = _Pair('drop', '弃单')
+    notify = _Pair('notify', '回报')
 
 oaction = _OAction
 

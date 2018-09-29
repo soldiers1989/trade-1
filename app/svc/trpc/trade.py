@@ -247,46 +247,18 @@ def _make_token(params):
     return token.generate(params, _PRIVATE_KEY)
 
 
-def add_account(laccount, lpwd, taccount, tpwd, dept, version, agentservers, tradeservers):
+def add_account(acnt:dict):
     """
         添加股票账户
-    :param laccount:
-    :param lpwd:
-    :param taccount:
-    :param tpwd:
-    :param dept:
-    :param version:
-    :param agentservers:
-    :param tradeservers:
     :return:
     """
     url = _BaseUrl+"/account/add"
 
-    agentlst = []
-    for agents in agentservers:
-        agents = [str(agents[0]), str(agents[1]), str(agents[2])]
-        agentlst.append((',').join(agents))
-    sagentservers = '|'.join(agentlst)
-
-    tradeslst = []
-    for trades in tradeservers:
-        trades = [str(trades[0]), str(trades[1]), str(trades[2])]
-        tradeslst.append((',').join(trades))
-    stradeservers = '|'.join(tradeslst)
-
     params = {
-        'laccount': laccount,
-        'lpwd': lpwd,
-        'taccount': taccount,
-        'tpwd': tpwd,
-        'dept': dept,
-        'version': version,
-        'agents': sagentservers,
-        'trades': stradeservers,
     }
     params = _make_token(params)
 
-    resp = requests.get(url, params=params).json()
+    resp = requests.post(url, params=params, json=acnt).json()
 
     if resp.get('status') != 0:
         raise TradeApiError(resp.get('msg'))

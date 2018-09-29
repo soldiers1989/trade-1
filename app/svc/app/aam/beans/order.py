@@ -47,10 +47,10 @@ def get_orders(**conds):
     return results
 
 
-def buy(form: forms.order.Buy):
+def place(form: forms.order.Order):
     """
-        buy order
-    :param form:
+        place order
+    :param form: obj, order
     :return:
     """
     # connect database
@@ -61,44 +61,12 @@ def buy(form: forms.order.Buy):
 
     # prepare status log
     odate, otime = datetime.date.today(), int(time.time())
-    logobj = [suite.status.order.format(form.operator, suite.enum.oaction.buy.code, form.optype, str(form.oprice), form.ocount, '', suite.enum.order.notsend.name, otime)]
+    logobj = [suite.status.order.format(form.operator, form.otype, form.optype, str(form.oprice), form.ocount, '', suite.enum.order.notsend.code, otime)]
     slog = suite.status.order.dumps(logobj)
 
     with dao.transaction():
         # add buy order
-        nrows = dao.add_order(form.account, form.scode, form.sname, form.tcode, suite.enum.otype.buy.code, form.optype, form.oprice, form.ocount, otime, odate, form.callback, slog)
-        if nrows != 1:
-            raise error.trade_order_add_failed
-
-        # last add record id
-        id = db.lastrowid()
-
-        # get record
-        order = dao.get_order(id=id)
-
-        return order
-
-
-def sell(form: forms.order.Sell):
-    """
-        sell order
-    :param form:
-    :return:
-    """
-    # connect database
-    db = mysql.get()
-
-    # init dao object
-    dao = daos.order.OrderDao(db)
-
-    # prepare status log
-    odate, otime = datetime.date.today(), int(time.time())
-    logobj = [suite.status.order.format(form.operator, suite.enum.oaction.sell.code, form.ptype, str(form.oprice), form.ocount, '', suite.enum.order.notsend.name, otime)]
-    slog = suite.status.order.dumps(logobj)
-
-    with dao.transaction():
-        # add buy order
-        nrows = dao.add_order(form.account, form.scode, form.sname, form.tcode, suite.enum.otype.sell.code, form.optype, form.oprice, form.ocount, otime, odate, form.callback, slog)
+        nrows = dao.add_order(form.account, form.scode, form.sname, form.tcode, form.otype, form.optype, form.oprice, form.ocount, otime, odate, form.callback, slog)
         if nrows != 1:
             raise error.trade_order_add_failed
 
@@ -144,14 +112,8 @@ def cancel(form: forms.order.Cancel):
         # prepare status log
         logs = suite.status.trade.loads(order.slog)
         time_now = int(time.time())
-        logs.append(suite.status.order.format(form.operator,
-                                              suite.enum.oaction.cancel.code,
-                                              order.optype,
-                                              str(order.oprice),
-                                              order.ocount,
-                                              order.status,
-                                              nextstatus,
-                                              time_now))
+        logs.append(suite.status.order.format(form.operator, suite.enum.oaction.cancel.code, order.optype, str(order.oprice),
+                                              order.ocount, order.status, nextstatus, time_now))
         slog = suite.status.trade.dumps(logs)
 
         # update data
@@ -169,36 +131,50 @@ def cancel(form: forms.order.Cancel):
             return order
 
 
-def bought(form: forms.order.Bought):
-    """
-       order has been bought
-    :param form:
-    :return:
-    """
-    pass
-
-
-def sold(form: forms.order.Sold):
-    """
-        order has been sold
-    :param form:
-    :return:
-    """
-    pass
-
-
-def canceled(form: forms.order.Canceled):
-    """
-        order has been canceled
-    :param form:
-    :return:
-    """
-    pass
-
-
 def notify(form: forms.order.Notify):
     """
         order result notify
     :param form:
     :return:
     """
+    # check form data
+    if form.status in [suite.enum.order.notsend.code, suite.enum.order.tocancel.code]:
+        raise error.trade_order_notify_denied
+
+    # connect database
+    db = mysql.get()
+
+    # init dao object
+    dao = daos.order.OrderDao(db)
+
+    # lock order first
+    with lock.order(form.id):
+        # get order
+        order = dao.get_order(id = form.id)
+        if order is None:
+            raise error.invalid_parameters
+
+        # prepare status log
+        logs = suite.status.trade.loads(order.slog)
+        time_now = int(time.time())
+        logs.append(suite.status.order.format(form.operator, suite.enum.oaction.notify.code, order.optype, str(order.oprice), order.ocount,order.status, form.status, time_now))
+        slog = suite.status.trade.dumps(logs)
+
+        # update data
+        with dao.transaction():
+            # update order
+            if form.status in [suite.enum.order.tosend.code, suite.enum.order.sending.code, suite.enum.order.sent.code, suite.enum.order.canceling.code,
+                               suite.enum.order.tcanceled.code, suite.enum.order.fcanceled.code, suite.enum.order.dropped.code, suite.enum.order.expired.code]:
+                dao.update_order(form.id, status=form.status, slog=slog)
+            elif form.status in [suite.enum.order.pcanceled.code, suite.enum.order.pdeal.code, suite.enum.order.tdeal.code]:
+                dao.update_order(form.id, dcode=form.dcode, dcount=form.dcount, dprice=form.dprice, dtime=time_now, utime=time_now, status=form.status, slog=slog)
+            else:
+                raise error.trade_order_notify_denied
+
+            # get new record
+            order = dao.get_order(id=form.id)
+
+            # callback
+            service.asynchttp.post(order.callback, params=order, callback=_Callback())
+
+            return order

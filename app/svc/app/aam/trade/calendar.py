@@ -1,5 +1,10 @@
 import time, datetime
 
+# debug flag
+DEBUG = True
+
+
+#holiday
 HOLIDAYS = [
     "2018-09-24", "2018-10-01", "2018-10-02", "2018-10-03", "2018-10-04", "2018-10-05",
 ]
@@ -11,6 +16,9 @@ def is_trading_day(tm = time.time()):
     :param tm:
     :return:
     """
+    if DEBUG:
+        return True
+
     # date time
     dt = datetime.datetime.fromtimestamp(tm)
 
@@ -31,6 +39,9 @@ def is_auction_time(tm = time.time()):
     :param tm:
     :return:
     """
+    if DEBUG:
+        return True
+
     # check trading day
     if not is_trading_day(tm):
         return False
@@ -51,6 +62,9 @@ def is_trading_time(tm = time.time()):
     :param tm:
     :return:
     """
+    if DEBUG:
+        return True
+
     # check trading day
     if not is_trading_day(tm):
         return False
@@ -71,6 +85,9 @@ def is_clearing_time(tm = time.time()):
     :param tm:
     :return:
     """
+    if DEBUG:
+        return False
+
     # check trading day
     if not is_trading_day(tm):
         return False

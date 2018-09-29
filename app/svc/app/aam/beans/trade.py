@@ -226,7 +226,7 @@ def user_sell(form):
             # update free count #
             tradeDao.update_trade(tradeobj.id, optype=form.ptype, oprice=form.price, ocount=tradeobj.fcount, fcount=0,
                                   status=suite.enum.trade.tosell.code, slog=slog,
-                                  utime=time_now, ostime=time_now)
+                                  utime=time_now)
 
             # get new tradeobj
             tradeobj = tradeDao.get_trade(id=form.trade)
@@ -517,7 +517,7 @@ def sys_sell(form):
         # add new order #
         with tradeDao.transaction():
             # update free count #
-            tradeDao.update_trade(tradeobj.id, status=suite.enum.trade.buying.code, slog=slog, utime=time_now)
+            tradeDao.update_trade(tradeobj.id, status=suite.enum.trade.selling.code, slog=slog, utime=time_now)
 
             # get new tradeobj
             tradeobj = tradeDao.get_trade(id=form.trade)
@@ -1097,19 +1097,12 @@ def trade_notify(form):
                 raise error.trade_order_notify_denied
 
         else:
-            raise error.invalid_parameters
+            return tradeobj
     elif status in [suite.enum.order.tcanceled.code]:
         # total canceled
-        if otype in [suite.enum.otype.buy.code, suite.enum.otype.sell.code]:
-            return sys_canceled(forms.trade.SysCanceled(user=user, trade=trade))
-        else:
-            raise error.invalid_parameters
+        return sys_canceled(forms.trade.SysCanceled(user=user, trade=trade))
     elif status in [suite.enum.order.expired]:
-        # expired
-        if otype in [suite.enum.otype.buy.code, suite.enum.otype.sell.code]:
-            return sys_canceled(forms.trade.SysCanceled(user=user, trade=trade), expired=True)
-        else:
-            raise error.invalid_parameters
+        return sys_canceled(forms.trade.SysCanceled(user=user, trade=trade), expired=True)
     else:
-        raise error.invalid_parameters
+        return tradeobj
 

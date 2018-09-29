@@ -1,12 +1,10 @@
 """
     securities account base class for trade
 """
+from . import error
 
 
 class Account:
-    def __init__(self):
-        pass
-
     def login(self):
         """
             账户登录
@@ -160,3 +158,34 @@ class Account:
         :return:
         """
         pass
+
+
+# exist channels
+_channels = {}
+
+
+def register(name: str, acountcls):
+    """
+        register an trade channcel
+    :param name:
+    :param acountcls:
+    :return:
+    """
+    _channels[name] = acountcls
+
+
+def create(**kwargs):
+    """
+        create a trade channel account object
+    :param kwargs:
+    :return:
+    """
+    channel = kwargs.get('channel')
+    if channel is None:
+        raise error.TradeError('missing channel.')
+
+    cls = _channels.get(channel)
+    if cls is None:
+        raise error.TradeError('channel %s is not exist.' % channel)
+
+    return cls(**kwargs)

@@ -1,7 +1,7 @@
 """
     order management
 """
-from .. import access, handler, forms, protocol, info, beans
+from .. import access, handler, forms, protocol, info, beans, suite
 
 
 class ListHandler(handler.Handler):
@@ -33,14 +33,14 @@ class BuyHandler(handler.Handler):
     @access.needtoken
     def post(self):
         """
-            get trade records
+            order by
         :return:
         """
         # get arguments
-        form = forms.order.Buy(**self.arguments)
+        form = forms.order.Order(otype=suite.enum.otype.buy.code, **self.arguments)
 
         # get trade records
-        order = beans.order.buy(form)
+        order = beans.order.place(form)
 
         # success
         self.write(protocol.success(data=order))
@@ -51,14 +51,14 @@ class SellHandler(handler.Handler):
     @access.needtoken
     def post(self):
         """
-            get trade records
+            order sell
         :return:
         """
         # get arguments
-        form = forms.order.Sell(**self.arguments)
+        form = forms.order.Order(otype=suite.enum.otype.sell.code, **self.arguments)
 
         # get trade records
-        order = beans.order.sell(form)
+        order = beans.order.place(form)
 
         # success
         self.write(protocol.success(data=order))
@@ -69,7 +69,7 @@ class CancelHandler(handler.Handler):
     @access.needtoken
     def post(self):
         """
-            get trade records
+            order cancel
         :return:
         """
         # get arguments
@@ -77,6 +77,24 @@ class CancelHandler(handler.Handler):
 
         # get trade records
         order = beans.order.cancel(form)
+
+        # success
+        self.write(protocol.success(data=order))
+
+
+class NotifyHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+            order notify
+        :return:
+        """
+        # get arguments
+        form = forms.order.Notify(**self.arguments)
+
+        # get trade records
+        order = beans.order.notify(form)
 
         # success
         self.write(protocol.success(data=order))

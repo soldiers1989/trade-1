@@ -18,22 +18,31 @@ HEADERS = [
 ]
 
 
-# agents for trade
-AGENTS = [
-    ('agent1', '172.16.21.137', 81),
-    ('agent2', '172.16.21.135', 80)
-]
-
-# servers for trade #
-# 中信建投
-S_ZXJT = [
-    ('szxjt1', '117.40.3.6', 7708),
-    ('szxjt2', '202.130.235.187', 7708)
-]
-
 # accounts for trade #
 ACCOUNTS = [
-    # (login-account, login-password, trade-account, trade-password, department, version, agent servers, trade servers)
-    # ('29633865', '456789', '29633865', '456789', '0', '7.16', AGENTS, S_ZXJT) # 中信建投
+    {
+        'id': 'polly1',
+        'channel': 'tdx',
+        'laccount': '29633865',
+        'lpwd': '456789',
+        'taccount': '29633865',
+        'tpwd': '456789',
+        'dept': '0',
+        'version': '7.16',
+        'agents': [('agent1', '172.16.21.137', 81),  ('agent2', '172.16.21.135', 80)],
+        'servers': [('szxjt1', '117.40.3.6', 7708), ('szxjt2', '202.130.235.187', 7708)]
+    },
+    #
+    # {
+    #     'id': 'polly1',
+    #     'channel': 'tdx',
+    #     'account': '29633865',
+    #     'pwd': '456789',
+    #     'dept': '0',
+    #     'version': '7.16',
+    #     'agents': [('agent1', '172.16.21.137', 81), ('agent2', '172.16.21.135', 80)],
+    #     'servers': [('szxjt1', '117.40.3.6', 7708), ('szxjt2', '202.130.235.187', 7708)]
+    # }
 ]
+
 

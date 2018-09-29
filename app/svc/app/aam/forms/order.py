@@ -11,6 +11,7 @@ class List(form.Form):
 
 
 class Order(form.Form):
+    otype = field.EnumField(choices=suite.enum.values(suite.enum.otype))
     account = field.StringField()
     tcode = field.StringField()
     scode = field.StringField()
@@ -22,36 +23,15 @@ class Order(form.Form):
     operator = field.StringField(default=suite.enum.operator.sys.code)
 
 
-class Dealt(form.Form):
-    id = field.IntegerField()
-    dcount = field.IntegerField()
-    dprice = field.DecimalField(digits=10, decimals=2)
-    dcode = field.StringField(null=True)
-    operator = field.StringField(default=suite.enum.operator.sys.code)
-
-
-Buy = Order
-Sell = Order
-Bought = Dealt
-Sold = Dealt
-
-
 class Cancel(form.Form):
-    id = field.IntegerField()
-    operator = field.StringField(default=suite.enum.operator.sys.code)
-
-
-class Canceled(form.Form):
     id = field.IntegerField()
     operator = field.StringField(default=suite.enum.operator.sys.code)
 
 
 class Notify(form.Form):
     id = field.IntegerField()
-    dcount = field.IntegerField()
-    dprice = field.DecimalField(digits=10, decimals=2)
+    dcount = field.IntegerField(null=True)
+    dprice = field.DecimalField(digits=10, decimals=2, null=True)
     dcode = field.StringField(null=True)
-    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
+    status = field.EnumField(choices=suite.enum.values(suite.enum.order), null=True)
     operator = field.StringField(default=suite.enum.operator.sys.code)
-
-

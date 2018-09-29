@@ -2,23 +2,15 @@ from tlib.stock import trade
 from . import config
 
 
-def _create():
-    """
-        trader for trade service
-    """
-    # create trades
-    trades = trade.trades.Trades()
-
-    # add trade account
-    for acnt in config.ACCOUNTS:
-        # create account
-        acount = trade.tdx.account.Account(*acnt)
-
-        # add account
-        id = acnt[0]
-        trades.add(id, acount)
-
-    return trades
-
 # trader default instance
-default = _create()
+default = trade.trades.Trades()
+
+
+def setup():
+    """
+        setup default trader
+    :return:
+    """
+    # add trade account
+    for account in config.ACCOUNTS:
+        default.add(account['id'], **account)

@@ -503,9 +503,7 @@ class UserTrade(models.Model):
     slog = models.TextField(null=True, verbose_name='状态变更')
     ctime = models.BigIntegerField(verbose_name='创建时间')  # create time
     utime = models.BigIntegerField(verbose_name='更新时间')  # update time
-    obtime = models.BigIntegerField(null=True, verbose_name='委买时间')
     btime = models.BigIntegerField(null=True, verbose_name='买入时间')
-    ostime = models.BigIntegerField(null=True, verbose_name='委卖时间')
     stime = models.BigIntegerField(null=True, verbose_name='卖出时间')
     etime = models.BigIntegerField(null=True, verbose_name='结束时间')
 
