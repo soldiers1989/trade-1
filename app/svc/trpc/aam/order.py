@@ -1,10 +1,21 @@
 """
-    remote rpc for send short message
+    aam order rpc
 """
-from . import rpc
+
+import requests
+
+from .. import rpc
 
 
-class SmsRpc(rpc.Rpc):
+class AamOrderRpcError(Exception):
+    """
+        crond api error
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
+
+class OrderRpc(rpc.Rpc):
     def __init__(self, baseurl:str, key:str, safety:bool):
         """
             init rpc
@@ -13,12 +24,3 @@ class SmsRpc(rpc.Rpc):
         :param safety: bool, enable safety key verification with True
         """
         super().__init__(baseurl, key, safety)
-
-    def send(self, phone, msg):
-        """
-            send msg to phone
-        :param phone:
-        :param msg:
-        :return:
-        """
-        pass

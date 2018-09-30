@@ -1,65 +1,84 @@
 """
     stock api
 """
-from . import config, token, error
 import requests
 
+from .. import rpc
 
-def list():
+
+class AamStockRpcError(Exception):
     """
-        list all stocks
-    :return:
+        crond api error
     """
-    url = config.BaseUrl+"/stock/list"
-
-    params = {
-    }
-    params = token.make(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise error.AamApiError(resp.get('msg'))
-
-    return resp.get('data')
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
 
 
-def get(id):
-    """
-        get stock by @id
-    :param id:
-    :return:
-    """
-    url = config.BaseUrl+"/stock/get"
+class StockRpc(rpc.Rpc):
+    def __init__(self, baseurl:str, key:str, safety:bool):
+        """
+            init rpc
+        :param baseurl: str, base url for remote http service
+        :param key: str, private key for safety verification or None
+        :param safety: bool, enable safety key verification with True
+        """
+        super().__init__(baseurl, key, safety)
 
-    params = {
-        'id': id
-    }
-    params = token.make(params)
+    def list(self):
+        """
+            list all stocks
+        :return:
+        """
+        url = self.baseurl+"/stock/list"
 
-    resp = requests.get(url, params=params).json()
+        params = {
+        }
+        params = self.make_toekn(params)
 
-    if resp.get('status') != 0:
-        raise error.AamApiError(resp.get('msg'))
+        resp = requests.get(url, params=params).json()
 
-    return resp.get('data')
+        if resp.get('status') != 0:
+            raise AamStockRpcError(resp.get('msg'))
+
+        return resp.get('data')
 
 
-def add(stocks):
-    """
-        add new stocks
-    :param stocks: list, stock list
-    :return:
-    """
-    url = config.BaseUrl+"/stock/add"
+    def get(self, id):
+        """
+            get stock by @id
+        :param id:
+        :return:
+        """
+        url = self.baseurl+"/stock/get"
 
-    params = {
-    }
-    params = token.make(params)
+        params = {
+            'id': id
+        }
+        params = self.make_toekn(params)
 
-    resp = requests.post(url, params=params, json=stocks).json()
+        resp = requests.get(url, params=params).json()
 
-    if resp.get('status') != 0:
-        raise error.AamApiError(resp.get('msg'))
+        if resp.get('status') != 0:
+            raise AamStockRpcError(resp.get('msg'))
 
-    return resp.get('data')
+        return resp.get('data')
+
+
+    def add(self, stocks):
+        """
+            add new stocks
+        :param stocks: list, stock list
+        :return:
+        """
+        url = self.baseurl+"/stock/add"
+
+        params = {
+        }
+        params = self.make_toekn(params)
+
+        resp = requests.post(url, params=params, json=stocks).json()
+
+        if resp.get('status') != 0:
+            raise AamStockRpcError(resp.get('msg'))
+
+        return resp.get('data')

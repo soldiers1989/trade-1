@@ -3,15 +3,7 @@
 """
 import requests
 from decimal import Decimal
-from  tlib import token
-
-# base url for remote quote service
-_BaseUrl = "http://localhost:10002"
-
-# token for access remote trade service
-_ENABLE_KEY = True
-_PRIVATE_KEY = "abc"
-
+from . import rpc
 
 # quote api error
 class QuoteApiError(Exception):
@@ -62,53 +54,50 @@ class _Level5(dict):
         super().__init__(self, **kwargs)
 
 
-def _make_token(params):
-    """
-        add token to params
-    :param params:
-    :return:
-    """
-    if not _ENABLE_KEY:
-        return params
+class QuoteRpc(rpc.Rpc):
+    def __init__(self, baseurl:str, key:str, safety:bool):
+        """
+            init rpc
+        :param baseurl: str, base url for remote http service
+        :param key: str, private key for safety verification or None
+        :param safety: bool, enable safety key verification with True
+        """
+        super().__init__(baseurl, key, safety)
 
-    return token.generate(params, _PRIVATE_KEY)
+    def get_quote(self, code):
+        """
+            get current quote summary of stock by @code
+        :param code:
+        :return:
+        """
+        url = self.baseurl+"/quote"
+    
+        params = {
+            'code': code
+        }
+        params = self.make_token(params)
+    
+        resp = requests.get(url, params=params).json()
+        if resp.get('status') != 0:
+            raise QuoteApiError(resp.get('msg'))
+    
+        return _Quote(**resp.get('data').get('quote'))
 
-
-def get_quote(code):
-    """
-        get current quote summary of stock by @code
-    :param code:
-    :return:
-    """
-    url = _BaseUrl+"/quote"
-
-    params = {
-        'code': code
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-    if resp.get('status') != 0:
-        raise QuoteApiError(resp.get('msg'))
-
-    return _Quote(**resp.get('data').get('quote'))
-
-
-def get_level5(code):
-    """
-        get current level 5 quote of stock by @code
-    :param code: str, stock code
-    :return:
-    """
-    url = _BaseUrl+"/quote"
-
-    params = {
-        'code': code
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-    if resp.get('status') != 0:
-        raise QuoteApiError(resp.get('msg'))
-
-    return _Level5(**resp.get('data').get('quote'))
+    def get_level5(self, code):
+        """
+            get current level 5 quote of stock by @code
+        :param code: str, stock code
+        :return:
+        """
+        url = self.baseurl+"/quote"
+    
+        params = {
+            'code': code
+        }
+        params = self.make_token(params)
+    
+        resp = requests.get(url, params=params).json()
+        if resp.get('status') != 0:
+            raise QuoteApiError(resp.get('msg'))
+    
+        return _Level5(**resp.get('data').get('quote'))

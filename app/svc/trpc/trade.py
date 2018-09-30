@@ -5,12 +5,8 @@ import requests, datetime
 from decimal import Decimal
 from tlib import token
 
-# base url for remote trade service
-_BaseUrl = "http://localhost:10003"
+from . import rpc
 
-# token for access remote trade service
-_ENABLE_KEY = True
-_PRIVATE_KEY = "abc"
 
 # quote api error
 class TradeApiError(Exception):
@@ -235,549 +231,527 @@ class _Wtcd:
         super().__init__(self, **kwargs)
 
 
-def _make_token(params):
-    """
-        add token to params
-    :param params:
-    :return:
-    """
-    if not _ENABLE_KEY:
-        return params
-
-    return token.generate(params, _PRIVATE_KEY)
-
-
-def add_account(acnt:dict):
-    """
-        添加股票账户
-    :return:
-    """
-    url = _BaseUrl+"/account/add"
-
-    params = {
-    }
-    params = _make_token(params)
-
-    resp = requests.post(url, params=params, json=acnt).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-
-def delete_account(account):
-    """
-        删除股票账户
-    :param account:
-    :return:
-    """
-    url = _BaseUrl+"/account/add"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-
-def clear_account():
-    """
-        清除所有股票账户
-    :return:
-    """
-    url = _BaseUrl+"/account/clear"
-
-    params = {
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-
-def login_account(account):
-    """
-        股票账户登录
-    :param account:
-    :return:
-    """
-    url = _BaseUrl+"/account/login"
-
-    params = {
-        'account': account
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-
-def logout_account(account):
-    """
-        股票账户登出
-    :param account:
-    :return:
-    """
-    url = _BaseUrl+"/account/logout"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-
-def status_account(account):
-    """
-        股票账户交易通道状态
-    :param account:
-    :return:
-        通道状态信息
-    """
-    url = _BaseUrl+"/account/status"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-
-def query_gdxx(account):
-    """
-        查询股票账户股东信息
-    :param account:
-    :return:
-        股东信息列表
-    """
-    url = _BaseUrl+"/query/gdxx"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    lstgdxx = []
-    for gdxx in resp.data:
-        lstgdxx.append(_Gdxx(**gdxx))
-
-    return lstgdxx
-
-
-def query_dqzc(account):
-    """
-        查询股票账户当前资产信息
-    :param account:
-    :return:
-        当前资产信息
-    """
-    url = _BaseUrl+"/query/dqzc"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    return _Dqcc(**resp.data[0])
-
-
-def query_dqcc(account):
-    """
-        查询股票账户当前持仓列表
-    :param account:
-    :return:
-        持仓列表
-    """
-    url = _BaseUrl+"/query/dqcc"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    lstdqcc = []
-    for dqcc in resp.data:
-        lstdqcc.append(_Dqcc(**dqcc))
-
-    return lstdqcc
-
-
-def query_drwt(account):
-    """
-        查询股票账户当日委托列表
-    :param account:
-    :return:
-        委托列表
-    """
-    url = _BaseUrl+"/query/drwt"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Dqcc(**item))
-
-    return items
-
-
-def query_drcj(account):
-    """
-        查询股票账户当日成交列表
-    :param account:
-    :return:
-        成交列表
-    """
-    url = _BaseUrl+"/query/drcj"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Drcj(**item))
-
-    return items
-
-
-def query_kcwt(account):
-    """
-        查询股票账户当日可撤委托列表
-    :param account:
-    :return:
-        委托列表
-    """
-    url = _BaseUrl+"/query/kcwt"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Kcwt(**item))
-
-    return items
-
-
-def query_lswt(account):
-    """
-        查询股票账户历史委托列表
-    :param account:
-    :return:
-        委托列表
-    """
-    url = _BaseUrl+"/query/lswt"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Lswt(**item))
-
-    return items
-
-
-def query_lscj(account):
-    """
-        查询股票账户历史成交列表
-    :param account:
-    :return:
-        成交列表
-    """
-    url = _BaseUrl+"/query/lscj"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Lscj(**item))
-
-    return items
-
-
-def query_jgd(account):
-    """
-        查询股票账户历史交割单信息
-    :param account:
-    :return:
-        交割单信息列表
-    """
-    url = _BaseUrl+"/query/jgd"
-
-    params = {
-        'account': account,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Jgd(**item))
-
-    return items
-
-
-def query_gphq(account, code):
-    """
-        查询股票实时行情
-    :param account:
-    :return:
-        行情
-    """
-    url = _BaseUrl+"/query/gphq"
-
-    params = {
-        'account': account,
-        'code': code,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Gphq(**item))
-
-    return items
-
-
-def order_xjmr(account, gddm, code, price, count):
-    """
-        限价买入
-    :param account:
-    :param gddm:
-    :param code:
-    :param price:
-    :param count:
-    :return:
-        委托编号
-    """
-    url = _BaseUrl+"/order/xjmr"
-
-    params = {
-        'account': account,
-        'gddm': gddm,
-        'code': code,
-        'price': price,
-        'count': count,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Xjmr(**item))
-
-    return items
-
-
-def order_xjmc(account, gddm, code, price, count):
-    """
-        限价卖出
-    :param account:
-    :param gddm:
-    :param code:
-    :param price:
-    :param count:
-    :return:
-        委托编号
-    """
-    url = _BaseUrl+"/order/xjmc"
-
-    params = {
-        'account': account,
-        'gddm': gddm,
-        'code': code,
-        'price': price,
-        'count': count,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Xjmc(**item))
-
-    return items
-
-
-def order_sjmr(account, gddm, code, price, count):
-    """
-        市价买入
-    :param account:
-    :param gddm:
-    :param code:
-    :param price:
-    :param count:
-    :return:
-        委托编号
-    """
-    url = _BaseUrl+"/order/sjmr"
-
-    params = {
-        'account': account,
-        'gddm': gddm,
-        'code': code,
-        'price': price,
-        'count': count,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Sjmr(**item))
-
-    return items
-
-
-def order_sjmc(account, gddm, code, price, count):
-    """
-        市价卖出
-    :param account:
-    :param gddm:
-    :param code:
-    :param price:
-    :param count:
-    :return:
-        委托编号
-    """
-    url = _BaseUrl+"/order/sjmc"
-
-    params = {
-        'account': account,
-        'gddm': gddm,
-        'code': code,
-        'price': price,
-        'count': count,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Sjmc(**item))
-
-    return items
-
-
-def order_cancel(account, seid, orderno):
-    """
-        限价买入
-    :param account:
-    :param gddm:
-    :param code:
-    :param price:
-    :param count:
-    :return:
-        委托编号
-    """
-    url = _BaseUrl+"/order/cancel"
-
-    params = {
-        'account': account,
-        'seid': seid,
-        'orderno': orderno,
-    }
-    params = _make_token(params)
-
-    resp = requests.get(url, params=params).json()
-
-    if resp.get('status') != 0:
-        raise TradeApiError(resp.get('msg'))
-
-    items = []
-    for item in resp.data:
-        items.append(_Wtcd(**item))
-
-    return items
+class TradeRpc(rpc.Rpc):
+    def __init__(self, baseurl:str, key:str, safety:bool):
+        """
+            init rpc
+        :param baseurl: str, base url for remote http service
+        :param key: str, private key for safety verification or None
+        :param safety: bool, enable safety key verification with True
+        """
+        super().__init__(baseurl, key, safety)
+
+    def add_account(self, acnt:dict):
+        """
+            添加股票账户
+        :return:
+        """
+        url = self.baseurl+"/account/add"
+
+        params = {
+        }
+        params = self.make_token(params)
+
+        resp = requests.post(url, params=params, json=acnt).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+    def delete_account(self, account):
+        """
+            删除股票账户
+        :param account:
+        :return:
+        """
+        url = self.baseurl+"/account/add"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+    def clear_account(self):
+        """
+            清除所有股票账户
+        :return:
+        """
+        url = self.baseurl+"/account/clear"
+
+        params = {
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+    def login_account(self, account):
+        """
+            股票账户登录
+        :param account:
+        :return:
+        """
+        url = self.baseurl+"/account/login"
+
+        params = {
+            'account': account
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+    def logout_account(self, account):
+        """
+            股票账户登出
+        :param account:
+        :return:
+        """
+        url = self.baseurl+"/account/logout"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+    def status_account(self, account):
+        """
+            股票账户交易通道状态
+        :param account:
+        :return:
+            通道状态信息
+        """
+        url = self.baseurl+"/account/status"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+    def query_gdxx(self, account):
+        """
+            查询股票账户股东信息
+        :param account:
+        :return:
+            股东信息列表
+        """
+        url = self.baseurl+"/query/gdxx"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        lstgdxx = []
+        for gdxx in resp.data:
+            lstgdxx.append(_Gdxx(**gdxx))
+
+        return lstgdxx
+
+    def query_dqzc(self, account):
+        """
+            查询股票账户当前资产信息
+        :param account:
+        :return:
+            当前资产信息
+        """
+        url = self.baseurl+"/query/dqzc"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        return _Dqcc(**resp.data[0])
+
+    def query_dqcc(self, account):
+        """
+            查询股票账户当前持仓列表
+        :param account:
+        :return:
+            持仓列表
+        """
+        url = self.baseurl+"/query/dqcc"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        lstdqcc = []
+        for dqcc in resp.data:
+            lstdqcc.append(_Dqcc(**dqcc))
+
+        return lstdqcc
+
+    def query_drwt(self, account):
+        """
+            查询股票账户当日委托列表
+        :param account:
+        :return:
+            委托列表
+        """
+        url = self.baseurl+"/query/drwt"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Dqcc(**item))
+
+        return items
+
+    def query_drcj(self, account):
+        """
+            查询股票账户当日成交列表
+        :param account:
+        :return:
+            成交列表
+        """
+        url = self.baseurl+"/query/drcj"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Drcj(**item))
+
+        return items
+
+    def query_kcwt(self, account):
+        """
+            查询股票账户当日可撤委托列表
+        :param account:
+        :return:
+            委托列表
+        """
+        url = self.baseurl+"/query/kcwt"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Kcwt(**item))
+
+        return items
+
+    def query_lswt(self, account):
+        """
+            查询股票账户历史委托列表
+        :param account:
+        :return:
+            委托列表
+        """
+        url = self.baseurl+"/query/lswt"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Lswt(**item))
+
+        return items
+
+    def query_lscj(self, account):
+        """
+            查询股票账户历史成交列表
+        :param account:
+        :return:
+            成交列表
+        """
+        url = self.baseurl+"/query/lscj"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Lscj(**item))
+
+        return items
+
+    def query_jgd(self, account):
+        """
+            查询股票账户历史交割单信息
+        :param account:
+        :return:
+            交割单信息列表
+        """
+        url = self.baseurl+"/query/jgd"
+
+        params = {
+            'account': account,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Jgd(**item))
+
+        return items
+
+    def query_gphq(self, account, code):
+        """
+            查询股票实时行情
+        :param account:
+        :return:
+            行情
+        """
+        url = self.baseurl+"/query/gphq"
+
+        params = {
+            'account': account,
+            'code': code,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Gphq(**item))
+
+        return items
+
+    def order_xjmr(self, account, gddm, code, price, count):
+        """
+            限价买入
+        :param account:
+        :param gddm:
+        :param code:
+        :param price:
+        :param count:
+        :return:
+            委托编号
+        """
+        url = self.baseurl+"/order/xjmr"
+
+        params = {
+            'account': account,
+            'gddm': gddm,
+            'code': code,
+            'price': price,
+            'count': count,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Xjmr(**item))
+
+        return items
+
+    def order_xjmc(self, account, gddm, code, price, count):
+        """
+            限价卖出
+        :param account:
+        :param gddm:
+        :param code:
+        :param price:
+        :param count:
+        :return:
+            委托编号
+        """
+        url = self.baseurl+"/order/xjmc"
+
+        params = {
+            'account': account,
+            'gddm': gddm,
+            'code': code,
+            'price': price,
+            'count': count,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Xjmc(**item))
+
+        return items
+
+    def order_sjmr(self, account, gddm, code, price, count):
+        """
+            市价买入
+        :param account:
+        :param gddm:
+        :param code:
+        :param price:
+        :param count:
+        :return:
+            委托编号
+        """
+        url = self.baseurl+"/order/sjmr"
+
+        params = {
+            'account': account,
+            'gddm': gddm,
+            'code': code,
+            'price': price,
+            'count': count,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Sjmr(**item))
+
+        return items
+
+    def order_sjmc(self, account, gddm, code, price, count):
+        """
+            市价卖出
+        :param account:
+        :param gddm:
+        :param code:
+        :param price:
+        :param count:
+        :return:
+            委托编号
+        """
+        url = self.baseurl+"/order/sjmc"
+
+        params = {
+            'account': account,
+            'gddm': gddm,
+            'code': code,
+            'price': price,
+            'count': count,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Sjmc(**item))
+
+        return items
+
+    def order_cancel(self, account, seid, orderno):
+        """
+            限价买入
+        :param account:
+        :param gddm:
+        :param code:
+        :param price:
+        :param count:
+        :return:
+            委托编号
+        """
+        url = self.baseurl+"/order/cancel"
+
+        params = {
+            'account': account,
+            'seid': seid,
+            'orderno': orderno,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Wtcd(**item))
+
+        return items

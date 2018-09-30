@@ -17,7 +17,7 @@ COOKIE_SECRET = 'abc'
 COOKIE_TIMEOUT = 30*24*3600
 
 # callback url for remote task
-CALLBACK_URL = "http://localhost:9000/remote/callback?id=%s&seq=%s"
+CALLBACK_URL = "http://localhost:10001/remote/callback?id=%s&seq=%s"
 
 # public headers for response
 HEADERS = [

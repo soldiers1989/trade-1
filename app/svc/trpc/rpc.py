@@ -1,10 +1,10 @@
 """
-    remote rpc for send short message
+    rpc base class
 """
-from . import rpc
+from tlib import token
 
 
-class SmsRpc(rpc.Rpc):
+class Rpc:
     def __init__(self, baseurl:str, key:str, safety:bool):
         """
             init rpc
@@ -12,13 +12,17 @@ class SmsRpc(rpc.Rpc):
         :param key: str, private key for safety verification or None
         :param safety: bool, enable safety key verification with True
         """
-        super().__init__(baseurl, key, safety)
+        self.baseurl = baseurl
+        self.key = key
+        self.safety = safety
 
-    def send(self, phone, msg):
+    def make_token(self, params):
         """
-            send msg to phone
-        :param phone:
-        :param msg:
+            add token to params
+        :param params:
         :return:
         """
-        pass
+        if not self.safety:
+            return params
+
+        return token.generate(params, self.key)

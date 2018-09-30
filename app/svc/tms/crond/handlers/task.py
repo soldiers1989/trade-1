@@ -10,7 +10,8 @@ class Add(handler.Handler):
         :return:
         """
         # get task id
-        id, name, cond, url = self.get_argument('id'), self.get_argument('name'), self.get_argument('cond'), self.get_argument('url')
+        id, name, cond, url, method = self.get_argument('id'), self.get_argument('name'), self.get_argument('cond'), self.get_argument('url'), self.get_argument('method')
+        exclusive, maxkeep = self.get_argument('exclusive', True), self.get_argument('maxkeep', 20)
 
         # check task existence
         if remote.taskmanager.exist(id):
@@ -18,7 +19,34 @@ class Add(handler.Handler):
             return
 
         # add new task
-        remote.taskmanager.add(id, name, cond, url)
+        remote.taskmanager.add(id, name, cond, url, method, exclusive=exclusive, maxkeep=maxkeep)
+
+        # response
+        self.write(protocol.success())
+
+
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        # get task id
+        id, name, cond, url, method, data = self.get_argument('id'), self.get_argument('name'), self.get_argument('cond'), self.get_argument('url'), self.get_argument('method'), self.get_argument('data', None)
+        exclusive, maxkeep = self.get_argument('exclusive', True), self.get_argument('maxkeep', 20)
+
+        # check task existence
+        if remote.taskmanager.exist(id):
+            self.write(protocol.failed(msg='task with id %s has exist.' % (str(id))))
+            return
+
+        # get data from body
+        body = self.request.body.decode() if self.request.body is not None else None
+
+        # add new task
+        if data == 'json':
+            remote.taskmanager.add(id, name, cond, url, method, exclusive=exclusive, maxkeep=maxkeep, json=body)
+        elif data == 'data':
+            remote.taskmanager.add(id, name, cond, url, method, exclusive=exclusive, maxkeep=maxkeep, data=body)
+        else:
+            raise error.post_data_not_support
 
         # response
         self.write(protocol.success())

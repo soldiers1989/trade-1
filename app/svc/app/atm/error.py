@@ -30,3 +30,6 @@ invalid_parameters = ProcessError(-1100, '非法的访问参数')
 
 server_exception = ProcessError(-1200, '服务器处理异常')
 invalid_access = ProcessError(-1201, '未授权的非法访问')
+
+task_has_exist = ProcessError(-1202, '任务已存在')
+task_has_not_exist = ProcessError(-1202, '任务不存在')

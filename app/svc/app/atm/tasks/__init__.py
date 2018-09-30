@@ -1,4 +1,4 @@
 """
     all tasks
 """
-from . import stock
+from . import stock, trade

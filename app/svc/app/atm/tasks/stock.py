@@ -3,16 +3,39 @@
 """
 import logging
 from xpinyin import Pinyin
-
-from .. import task
 from tlib.stock.detail import cninfo, sina
-from trpc import aam
+
+from .. import task, rpc
 
 
-class SyncAll(task.Task):
+class SyncAllService(task.Task):
     """
         sync stock from remote source: sina/cninfo/...etc
+        config format:
+        {
+            rpc: {
+                stock: {
+                    baseurl: <baseurl>
+                    key: <key>
+                    safety: <True|False>
+                }
+            }
+        }
     """
+    def __init__(self, *args, **kwargs):
+        """
+            init
+        :param args:
+        :param kwargs:
+        """
+        # get config
+        config = kwargs.get('config')['rpc']['stock']
+
+        # init remote rpc
+        self._remote = rpc.AamStockRpc(config['baseurl'], config.get('key'), config.get('safety', False))
+
+        super().__init__(*args, **kwargs)
+
     def execute(self):
         """
             sync stock
@@ -20,7 +43,7 @@ class SyncAll(task.Task):
         """
         # get local stock list
         localstocks = {}
-        stocks = aam.stock.list()
+        stocks = self._remote.list()
         for stock in stocks:
             localstocks[stock['id']] = stock['id']
 
@@ -52,7 +75,7 @@ class SyncAll(task.Task):
             })
 
         # add new stocks
-        resp = aam.stock.add(tidystocks)
+        resp = self._remote.add(tidystocks)
 
         # add/failed count
         added, failed = len(resp.get('added')), len(resp.get('failed'))

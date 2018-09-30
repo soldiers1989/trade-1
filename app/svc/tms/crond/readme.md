@@ -1,6 +1,11 @@
 # 模块说明
     后端定时任务服务管理和执行模块
-   
+
+# 依赖模块
+* requests
+* logging
+* tornado
+* tlib
     
 # 接口说明
 * 接口协议

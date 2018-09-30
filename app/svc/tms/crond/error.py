@@ -31,3 +31,6 @@ invalid_parameters = ProcessError(-1100, '非法的访问参数')
 server_exception = ProcessError(-1200, '服务器处理异常')
 invalid_access = ProcessError(-1201, '未授权的非法访问')
 
+method_not_support = ProcessError(-1202, 'Http远程请求方式不支持')
+post_data_duplicate = ProcessError(-1203, 'Http任务Post数据重复')
+post_data_not_support = ProcessError(1204, 'Http任务Post数据类型不支持')
