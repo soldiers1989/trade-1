@@ -6,7 +6,9 @@ from .. import suite
 
 
 class ListForm(form.Form):
-    status = field.StringField()
+    status = field.StringField(null=True)
+    stime = field.DateTimeField(null=True)
+    etime = field.DateTimeField(null=True)
 
 
 class UserBuy(form.Form):

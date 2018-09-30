@@ -6,8 +6,10 @@ from .. import suite
 
 
 class List(form.Form):
-    status = field.StringField()
-    date = field.DateField()
+    status = field.StringField(null=True)
+    date = field.DateField(null=True)
+    sdate = field.DateField(null=True)
+    edate = field.DateField(null=True)
 
 
 class Order(form.Form):

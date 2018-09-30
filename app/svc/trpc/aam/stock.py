@@ -33,7 +33,7 @@ class StockRpc(rpc.Rpc):
 
         params = {
         }
-        params = self.make_toekn(params)
+        params = self.make_token(params)
 
         resp = requests.get(url, params=params).json()
 
@@ -54,7 +54,7 @@ class StockRpc(rpc.Rpc):
         params = {
             'id': id
         }
-        params = self.make_toekn(params)
+        params = self.make_token(params)
 
         resp = requests.get(url, params=params).json()
 
@@ -74,7 +74,7 @@ class StockRpc(rpc.Rpc):
 
         params = {
         }
-        params = self.make_toekn(params)
+        params = self.make_token(params)
 
         resp = requests.post(url, params=params, json=stocks).json()
 

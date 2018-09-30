@@ -16,9 +16,14 @@ class ListHandler(handler.Handler):
         form = forms.trade.ListForm(**self.arguments)
 
         # list conditions
-        conds = {
-            'status__in': form.status.split(',')
-        }
+        conds = {}
+
+        if form.status is not None:
+            conds['status__in'] = form.status.split(',')
+        if form.stime is not None:
+            conds['ctime__ge'] = int(form.stime.timestamp())
+        if form.etime is not None:
+            conds['ctime__le'] = int(form.etime.timestamp())
 
         # get trade records
         results = beans.trade.get_trades(**conds)

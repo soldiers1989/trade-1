@@ -16,10 +16,16 @@ class ListHandler(handler.Handler):
         form = forms.order.List(**self.arguments)
 
         # list conditions
-        conds = {
-            'status__in': form.status.split(','),
-            'odate': form.date
-        }
+        conds = {}
+
+        if form.status is not None:
+            conds['status__in'] = form.status.split(',')
+        if form.date is not None:
+            conds['odate'] = form.date
+        if form.sdate is not None:
+            conds['odate__ge'] = form.sdate
+        if form.edate is not None:
+            conds['odate__le'] = form.edate
 
         # get trade records
         results = beans.order.get_orders(**conds)
