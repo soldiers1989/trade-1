@@ -133,7 +133,8 @@ class UserTrade(model.Model):
     user_id = field.IntegerField()
     stock_id = field.StringField(max_length=8)
     coupon_id = field.IntegerField(null=True)
-    account_id = field.IntegerField(null=True)
+    account = field.StringField(null=True, max_lenght=16)
+    type = field.StringField(max_length=16)
     code = field.StringField(max_length=16)
     optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
     oprice = field.DecimalField(digits=10, decimals=2)
@@ -155,9 +156,7 @@ class UserTrade(model.Model):
     slog = field.StringField(null=True)
     ctime = field.IntegerField()  # create time
     utime = field.IntegerField()  # update time
-    obtime = field.IntegerField(null=True)  # order buy time
     btime = field.IntegerField(null=True)  # bought time
-    ostime = field.IntegerField(null=True)  # order sell time
     stime = field.IntegerField(null=True)  # sold time
     etime = field.IntegerField(null=True) # end time
 

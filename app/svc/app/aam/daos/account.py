@@ -8,17 +8,20 @@ from tlib.web import sqlhelper
 
 
 class AccountDao(dao.Dao):
-    def select_one(self):
+    """
+        account relate dao
+    """
+    def list(self, **conds):
         """
-            get a usable account for trade
+            get account list by @conds
+        :param conds: dict, select conditions
         :return:
+            list
         """
         # select query
-        q = sqlhelper.select().columns(*models.TradeAccount.fields).table('tb_trade_account').where(disable=False).orderby('lmoney').desc()
+        q = sqlhelper.select().columns(*models.TradeAccount.fields).table('tb_trade_account').where(**conds)
 
         # execute query
         results = self.select(q.sql(), q.args())
-        if len(results) > 0:
-            return models.TradeAccount(**results[0])
 
-        return None
+        return results

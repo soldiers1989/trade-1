@@ -59,6 +59,7 @@ class Stock(model.Model):
 
 class TradeAccount(model.Model):
     id = field.IntegerField()
+    type = field.StringField(max_length=16)
     account = field.StringField(max_length=16)
     name = field.StringField(max_length=16)
     lmoney = field.DecimalField(digits=10, decimals=2)
@@ -76,6 +77,7 @@ class UserTrade(model.Model):
     stock_id = field.StringField(max_length=8)
     coupon_id = field.IntegerField(null=True)
     account = field.StringField(null=True, max_lenght=16)
+    type = field.StringField(max_length=16)
     code = field.StringField(max_length=16)
     optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
     oprice = field.DecimalField(digits=10, decimals=2)

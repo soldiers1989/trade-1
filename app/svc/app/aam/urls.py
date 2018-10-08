@@ -33,4 +33,7 @@ handlers = [
     (r"/order/sell", handlers.order.SellHandler),
     (r"/order/cancel", handlers.order.CancelHandler),
     (r"/order/notify", handlers.order.NotifyHandler),
+
+    (r"/account/list", handlers.account.ListHandler),
+    (r"/account/select", handlers.account.SelectHandler),
 ]

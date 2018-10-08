@@ -61,7 +61,7 @@ class Task(threading.Thread):
         self._callback = _Callback(kwargs.get('callback'))
 
         # init super thread
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
     def cname(self):
         """
@@ -156,7 +156,7 @@ class _Manager(threading.Thread):
 
         super().__init__(*args, **kwargs)
 
-    def take(self, task:Task, started=False):
+    def take(self, id, task:Task, started=False):
         """
             take a new task for managing
         :param id: str, task unique id
@@ -216,6 +216,7 @@ class _Manager(threading.Thread):
             stop manager
         :return:
         """
+        pass
 
     def run(self):
         """

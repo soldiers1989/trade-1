@@ -4,7 +4,7 @@
 import tornado.web
 import tornado.ioloop, logging
 
-from . import config, urls
+from . import config, urls, task
 
 # application settings
 settings = {
@@ -13,11 +13,19 @@ settings = {
     'debug': config.DEBUG,
 }
 
+# setup service
+def _setup():
+    # init logging
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+
+    # init task manager
+    task.manager.start()
+
 
 # start atm service
 def start(port):
-    # init logging
-    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+    # setup environment
+    _setup()
 
     # log start message
     logging.info('start atm service on port %d' % port)

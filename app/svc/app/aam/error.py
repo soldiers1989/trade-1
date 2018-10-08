@@ -56,6 +56,7 @@ stock_delay_limited = ProcessError(-1303, '股票已禁延')
 stock_count_error = ProcessError(-1304, '股票数量需为100整数倍')
 stock_price_error = ProcessError(-1304, '股票申报价格超出范围')
 
+account_not_usable = ProcessError(-1305, '无可用股票账户')
 account_money_not_enough = ProcessError(-1305, '股票交易账户余额不足')
 stock_count_not_enough = ProcessError(-1305, '股票可用数量不足')
 stock_count_not_match = ProcessError(-1305, '股票持仓和可用数量不一致')

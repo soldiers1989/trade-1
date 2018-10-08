@@ -48,6 +48,16 @@ class _PType:
 ptype = _PType
 
 
+class _TType:
+    """
+        user trade order type
+    """
+    normal = _Pair('normal', '普通')
+    mock = _Pair('mock', '模拟')
+
+ttype = _TType # trade order type
+atype = _TType # account channel type
+
 class _Order:
     """
         order status

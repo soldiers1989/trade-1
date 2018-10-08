@@ -1,1 +1,1 @@
-from . import admin, order, stock, trade
+from . import admin, order, stock, trade, account

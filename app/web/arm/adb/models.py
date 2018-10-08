@@ -93,6 +93,7 @@ class RoleModule(models.Model):
 # tb_trade_account
 class TradeAccount(models.Model):
     id = models.AutoField(primary_key=True)
+    type = models.CharField(max_length=16)
     account = models.CharField(max_length=16, unique=True)
     name = models.CharField(max_length=16)
     lmoney = models.DecimalField(max_digits=10, decimal_places=2)
@@ -481,8 +482,9 @@ class UserTrade(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='用户')
     stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票')
     coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True, verbose_name='优惠券')
-    account = models.CharField(null=True, max_length=16, verbose_name='交易账户')
+    type = models.CharField(max_length=16, verbose_name='订单类型')
     code = models.CharField(max_length=16, unique=True, verbose_name='订单代码')
+    account = models.CharField(null=True, max_length=16, verbose_name='交易账户')
     optype = models.CharField(max_length=16, verbose_name='买入类型')
     oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入报价')
     ocount = models.IntegerField(verbose_name='买入数量')

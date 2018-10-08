@@ -18,14 +18,14 @@ class StartHandler(handler.Handler):
         if self.request.body is None:
             raise error.missing_parameters
 
-        # get callback url
-        form = forms.task.Task(**self.arguments)
-
         # get config from post json data
         config = json.loads(self.request.body.decode())
 
+        # get callback url
+        callback = config.get('callback')
+
         # manage task
-        task.manager.take(tasks.trade.TradeService.cname(), tasks.trade.TradeService(callback=form.callback, config=config))
+        task.manager.take(tasks.trade.TradeService.__name__, tasks.trade.TradeService(callback=callback, config=config))
 
         self.write(protocol.success())
 
@@ -44,6 +44,6 @@ class StopHandler(handler.Handler):
         :return:
         """
         # manage task
-        task.manager.free(tasks.trade.TradeService.cname())
+        task.manager.free(tasks.trade.TradeService.__name__)
 
         self.write(protocol.success())
