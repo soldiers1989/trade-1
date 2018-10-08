@@ -156,11 +156,12 @@ class TradeRpc(rpc.Rpc):
 
         return resp.get('data')
 
-    def sys_buy(self, user:int, trade:int):
+    def sys_buy(self, user:int, trade:int, account:str):
         """
             sys buy
         :param user: int, user id
         :param trade: int, trade id
+        :param account: str, trade account
         :return:
         """
         url = self.baseurl+"/trade/sys/buy"
@@ -168,6 +169,7 @@ class TradeRpc(rpc.Rpc):
         params = {
             'user': user,
             'trade': trade,
+            'account': account
         }
         params = self.make_token(params)
 

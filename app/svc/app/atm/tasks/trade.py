@@ -47,6 +47,7 @@ class TradeService(task.Task):
         self._trade = rpc.AamTradeRpc(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
         self._order = rpc.AamOrderRpc(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
         self._account = rpc.AamAccountRpc(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
+        self._stock = rpc.AamStockRpc(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
 
         # init super
         super().__init__(*args, **kwargs)
@@ -97,13 +98,19 @@ class TradeService(task.Task):
         if trade['status'] == 'tobuy':
             # select a new account
             account = self._account.select(type=trade['type'], stock=trade['stock_id'], optype=trade['optype'], oprice=trade['oprice'], ocount=trade['ocount'])
-
+            # get stock name
+            stockname = self._stock.get(trade['stock_id'])['name']
+            # update trade status
+            self._trade.sys_buy(trade['user_id'], trade['id'], account['account'])
             # add new buy trade order
-            self._order.buy(account['account'], trade['tcode'], )
-        elif trade['status'] == 'tosell':
-            pass
-        elif trade['status'] == 'toclose':
-            pass
+            self._order.buy(account['account'], trade['tcode'], trade['stock_id'], stockname, trade['optype'], trade['ocount'], trade['oprice'], self._trade_notify_url, 'robot')
+        elif trade['status'] in ['tosell', 'toclose']:
+            # get stock name
+            stockname = self._stock.get(trade['stock_id'])['name']
+            # update trade status
+            self._trade.sys_sell(trade['user_id'], trade['id'])
+            # add new buy trade order
+            self._order.buy(trade['account'], trade['tcode'], trade['stock_id'], stockname, trade['optype'], trade['ocount'], trade['oprice'], self._trade_notify_url, 'robot')
         elif trade['status'] == 'cancelbuy':
             pass
         elif trade['status'] == 'cancelsell':

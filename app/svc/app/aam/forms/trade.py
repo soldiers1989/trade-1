@@ -43,6 +43,7 @@ class UserCancel(form.Form):
 class SysBuy(form.Form):
     user = field.IntegerField()
     trade = field.IntegerField()
+    account = field.StringField()
 
 
 class SysSell(form.Form):

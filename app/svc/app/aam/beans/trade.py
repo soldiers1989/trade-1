@@ -398,7 +398,7 @@ def user_cancel(form):
             return tradeobj
 
 
-def sys_buy(form):
+def sys_buy(form: forms.trade.SysBuy):
     """
         process system buy
     :param form: obj, forms.trade.SysBuy
@@ -454,7 +454,7 @@ def sys_buy(form):
         # add new order #
         with tradeDao.transaction():
             # update free count #
-            tradeDao.update_trade(tradeobj.id, status=suite.enum.trade.buying.code, slog=slog, utime=time_now)
+            tradeDao.update_trade(tradeobj.id, account=form.account, status=suite.enum.trade.buying.code, slog=slog, utime=time_now)
 
             # get new tradeobj
             tradeobj = tradeDao.get_trade(id=form.trade)
