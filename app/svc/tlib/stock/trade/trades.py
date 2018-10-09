@@ -1,7 +1,7 @@
 """
     trade service
 """
-import threading
+import threading, decimal
 from . import account, protocol, error
 
 
@@ -175,6 +175,83 @@ class Trades:
 
             return resp
 
+    def quote(self, aid:str, zqdm:str):
+        """
+            get current quote of stock by @code
+        :param aid: str, account id
+        :param zqdm: str, stock code
+        :return:
+            dict
+        """
+        return self.query_gphq(aid, zqdm)
+
+    def query(self, aid:str, type:str, sdate:str=None, edate:str=None):
+        """
+            query account data by specified type
+        :param aid: str, account id
+        :param type: str, data type: dqzc/dqcc/drwt/drcj/kcwt/gdxx/lswt/lscj/jgd
+        :return:
+            list/dict
+        """
+        if type == 'dqzc':
+            return self.query_dqzc(aid)
+        elif type == 'dqcc':
+            return self.query_dqcc(aid)
+        elif type == 'drwt':
+            return self.query_drwt(aid)
+        elif type == 'drcj':
+            return self.query_drcj(aid)
+        elif type == 'kcwt':
+            return self.query_kcwt(aid)
+        elif type == 'gdxx':
+            return self.query_gdxx(aid)
+        elif type == 'lswt':
+            return self.query_lswt(aid, sdate, edate)
+        elif type == 'lscj':
+            return self.query_lscj(aid, sdate, edate)
+        elif type == 'jgd':
+            return self.query_jgd(aid, sdate, edate)
+        else:
+            return protocol.failed('query type %s not support'%type, data={'aid':aid})
+
+    def place(self, aid:str, otype:str, ptype:str, code:str, price:str|decimal.Decimal, count:str|int):
+        """
+            委托订单
+        :param aid: account id
+        :param otype: order type: buy/sell
+        :param ptype: price type: xj/sj
+        :param code: stock code
+        :param price: order price
+        :param count: order count
+        :return:
+        """
+        if otype == 'buy':
+            if ptype == 'xj':
+                return self.order_xjmr(aid, code, price, count)
+            elif ptype == 'sj':
+                return self.order_sjmr(aid, code, price, count)
+            else:
+                return protocol.failed('place price type %s not support' % otype, data={'aid': aid})
+        elif otype == 'sell':
+            if ptype == 'xj':
+                return self.order_xjmc(aid, code, price, count)
+            elif ptype == 'sj':
+                return self.order_sjmc(aid, code, price, count)
+            else:
+                return protocol.failed('place price type %s not support' % otype, data={'aid': aid})
+        else:
+            return protocol.failed('place order type %s not support'%otype, data={'aid':aid})
+
+    def cancel(self, aid, zqdm, orderno):
+        """
+            委托撤单
+        :param aid: str, account id
+        :param zqdm: str, stock code
+        :param orderno: str, order number
+        :return:
+        """
+        return self.cancel_order(aid, zqdm, orderno)
+
     def query_dqzc(self, aid):
         """
             当前资产查询
@@ -333,11 +410,10 @@ class Trades:
 
             return resp
 
-    def order_xjmr(self, aid, gddm, zqdm, price, count):
+    def order_xjmr(self, aid, zqdm, price, count):
         """
             限价买入
         :param aid:
-        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -346,17 +422,16 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.order_xjmr(gddm, zqdm, price, count)
+                resp = account.order_xjmr(zqdm, price, count)
             else:
                 resp = protocol.failed('account not exist', data={'id':aid})
 
             return resp
 
-    def order_xjmc(self, aid, gddm, zqdm, price, count):
+    def order_xjmc(self, aid, zqdm, price, count):
         """
             限价卖出
         :param aid:
-        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -365,17 +440,16 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.order_xjmc(gddm, zqdm, price, count)
+                resp = account.order_xjmc(zqdm, price, count)
             else:
                 resp = protocol.failed('account not exist', data={'id':aid})
 
             return resp
 
-    def order_sjmr(self, aid, gddm, zqdm, price, count):
+    def order_sjmr(self, aid, zqdm, price, count):
         """
             市价买入
         :param aid:
-        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -384,18 +458,17 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.order_sjmr(gddm, zqdm, price, count)
+                resp = account.order_sjmr(zqdm, price, count)
             else:
                 resp = protocol.failed('account not exist', data={'id':aid})
 
             return resp
 
-    def order_sjmc(self, aid, gddm, zqdm, price, count):
+    def order_sjmc(self, aid, zqdm, price, count):
         """
             市价卖出
         :param aid:
         :param zqdm:
-        :param gddm:
         :param price:
         :param count:
         :return:
@@ -403,27 +476,25 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.order_sjmc(gddm, zqdm, price, count)
+                resp = account.order_sjmc(zqdm, price, count)
             else:
                 resp = protocol.failed('account not exist', data={'id':aid})
 
             return resp
 
-    def cancel_order(self, aid, seid, orderno):
+    def cancel_order(self, aid, zqdm, orderno):
         """
             委托撤单
-        :param aid:
-        :param seid: 0 - shenzhen， 1 - shanghai, useless
-        :param orderno:
+        :param aid: str, account id
+        :param zqdm: str, stock code
+        :param orderno: str, order number
         :return:
         """
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.cancel_order(seid, orderno)
+                resp = account.cancel_order(zqdm, orderno)
             else:
                 resp = protocol.failed('account not exist', data={'id':aid})
 
         return resp
-
-

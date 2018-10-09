@@ -10,7 +10,7 @@ from tlib.web import sqlhelper
 
 
 class OrderDao(dao.Dao):
-    def get_order(self, **conds):
+    def get(self, **conds):
         """
             get trade order by id
         :param id:
@@ -26,7 +26,7 @@ class OrderDao(dao.Dao):
 
         return None
 
-    def get_orders(self, **conds):
+    def list(self, **conds):
         """
             get trade order by id
         :param id:
@@ -40,7 +40,7 @@ class OrderDao(dao.Dao):
 
         return results
 
-    def add_order(self, account, scode, sname, tcode, otype, optype, oprice, ocount, otime, odate, callback, slog):
+    def add(self, account, scode, sname, tcode, otype, optype, oprice, ocount, otime, odate, callback, slog):
         """
             add new trade order
         :param trade:
@@ -61,7 +61,7 @@ class OrderDao(dao.Dao):
         # execute insert
         return self.execute(sql, (account, scode, sname, tcode, otype, optype, oprice, ocount, otime,  odate, suite.enum.order.notsend.code, slog, callback, otime, otime))
 
-    def update_order(self, orderid, **cvals):
+    def update(self, orderid, **cvals):
         """
             update order
         :param orderid:

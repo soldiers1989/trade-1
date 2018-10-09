@@ -115,6 +115,12 @@ class _Query(_Node):
     def __init__(self, *args, **kwargs):
         connector = kwargs.pop('_connector', None)
         negated = kwargs.pop('_negated', False)
+
+        # process in clause
+        for k, v in kwargs.items():
+            if k.endswith('__in') and isinstance(v, str):
+                kwargs[k] = v.split(',')
+
         super().__init__(children=list(args) + sorted(kwargs.items()), connector=connector, negated=negated)
 
     def _combine(self, other, conn):
@@ -223,8 +229,14 @@ class _Query(_Node):
             if op in list(OP_CMP.keys()):
                 return OP_CMP[op] % (name , '%s')
             elif op in list(OP_IN.keys()):
+                if isinstance(cvalue, str):
+                    cvalue = cvalue.split(',')
+                elif not isinstance(cvalue, list) and not isinstance(cvalue, tuple):
+                    raise SQLError('条件格式错误: %s' % cname)
+                else:
+                    pass
                 # elements of in condition
-                nelmts = len(cvalue) if isinstance(cvalue, list) or isinstance(cvalue, tuple) else 1
+                nelmts = len(cvalue)
                 return OP_IN[op] % (name, ','.join(['%s' for i in range(0, nelmts)]))
             elif op in list(OP_LIKE.keys()):
                 return OP_LIKE[op] % (name, '%s')

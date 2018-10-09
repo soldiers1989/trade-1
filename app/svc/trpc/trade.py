@@ -3,7 +3,6 @@
 """
 import requests, datetime
 from decimal import Decimal
-from tlib import token
 
 from . import rpc
 
@@ -165,7 +164,7 @@ class _Jgd(dict):
 
 
 # 股票行情查询
-class _Gphq:
+class _Gphq(dict):
     def __init__(self, **kwargs):
         self.zqdm = kwargs.get("zqdm")
         self.zqmc = kwargs.get("zqmc")
@@ -197,38 +196,61 @@ class _Gphq:
 
 
 # 限价买入
-class _Xjmr:
+class _Xjmr(dict):
     def __init__(self, **kwargs):
         self.wtbh = kwargs.get('wtbh')
         super().__init__(self, **kwargs)
 
 
 # 限价卖出
-class _Xjmc:
+class _Xjmc(dict):
     def __init__(self, **kwargs):
         self.wtbh = kwargs.get('wtbh')
         super().__init__(self, **kwargs)
 
 
 # 市价买入
-class _Sjmr:
+class _Sjmr(dict):
     def __init__(self, **kwargs):
         self.wtbh = kwargs.get('wtbh')
         super().__init__(self, **kwargs)
 
 
 # 市价卖出
-class _Sjmc:
+class _Sjmc(dict):
     def __init__(self, **kwargs):
         self.wtbh = kwargs.get('wtbh')
         super().__init__(self, **kwargs)
 
 
 # 委托撤单
-class _Wtcd:
+class _Wtcd(dict):
     def __init__(self, **kwargs):
         self.fhxx = kwargs.get('fhxx')
         super().__init__(self, **kwargs)
+
+_query_cls = {
+    'dqzc': _Dqzc,
+    'dqcc': _Dqcc,
+    'drwt': _Drwt,
+    'drcj': _Drcj,
+    'kcwt': _Kcwt,
+    'gdxx': _Gdxx,
+    'lswt':_Lswt,
+    'lscj':_Lscj,
+    'jgd':_Jgd
+}
+
+_order_cls = {
+    'buy': {
+        'xj': _Xjmr,
+        'sj': _Sjmr
+    },
+    'sell': {
+        'xj': _Xjmc,
+        'sj': _Sjmc
+    }
+}
 
 
 class TradeRpc(rpc.Rpc):
@@ -346,6 +368,128 @@ class TradeRpc(rpc.Rpc):
         if resp.get('status') != 0:
             raise TradeApiError(resp.get('msg'))
 
+    def quote(self, account, zqdm):
+        """
+            查询股票实时行情
+        :param account:
+        :return:
+            行情
+        """
+        url = self.baseurl+"/quote"
+
+        params = {
+            'account': account,
+            'zqdm': zqdm,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Gphq(**item))
+
+        return items
+
+    def query(self, account, type, sdate=None, edate=None):
+        """
+            查询当前或者历史信息
+        :param account:
+        :param type: str, 查询类别，dqzc/dqcc/drwt/drcj/kcwt/gdxx/lswt/lscj/jgd
+        :param sdate: str, 开始日期，yyyymmdd
+        :param edate: str, 结束日期, yyyymmdd
+        :return:
+            dict/list
+        """
+        url = self.baseurl+"/query"
+
+        params = {
+            'account': account,
+            'type': type
+        }
+        if sdate is not None:
+            params['sdate'] = sdate
+        if edate is not None:
+            params['edate'] = edate
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_query_cls[type](**item))
+
+        return items
+
+    def place(self, account, otype, ptype, zqdm, price, count):
+        """
+            委托下单
+        :param account:
+        :param otype:
+        :param ptype:
+        :param zqdm:
+        :param price:
+        :param count:
+        :return:
+            委托编号
+        """
+        url = self.baseurl+"/place"
+
+        params = {
+            'account': account,
+            'otype': otype,
+            'ptype': ptype,
+            'zqdm': zqdm,
+            'price': price,
+            'count': count,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Xjmc(**item))
+
+        return items
+
+    def cancel(self, account, zqdm, orderno):
+        """
+            委托撤单
+        :param account:
+        :param zqdm:
+        :param orderno:
+        :return:
+        """
+        url = self.baseurl+"/cancel"
+
+        params = {
+            'account': account,
+            'zqdm': zqdm,
+            'orderno': orderno,
+        }
+        params = self.make_token(params)
+
+        resp = requests.get(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise TradeApiError(resp.get('msg'))
+
+        items = []
+        for item in resp.data:
+            items.append(_Wtcd(**item))
+
+        return items
+
     def query_gdxx(self, account):
         """
             查询股票账户股东信息
@@ -438,7 +582,7 @@ class TradeRpc(rpc.Rpc):
 
         items = []
         for item in resp.data:
-            items.append(_Dqcc(**item))
+            items.append(_Drwt(**item))
 
         return items
 
@@ -567,7 +711,7 @@ class TradeRpc(rpc.Rpc):
 
         return items
 
-    def query_gphq(self, account, code):
+    def query_gphq(self, account, zqdm):
         """
             查询股票实时行情
         :param account:
@@ -578,7 +722,7 @@ class TradeRpc(rpc.Rpc):
 
         params = {
             'account': account,
-            'code': code,
+            'zqdm': zqdm,
         }
         params = self.make_token(params)
 
@@ -593,12 +737,11 @@ class TradeRpc(rpc.Rpc):
 
         return items
 
-    def order_xjmr(self, account, gddm, code, price, count):
+    def order_xjmr(self, account, zqdm, price, count):
         """
             限价买入
         :param account:
-        :param gddm:
-        :param code:
+        :param zqdm:
         :param price:
         :param count:
         :return:
@@ -608,8 +751,7 @@ class TradeRpc(rpc.Rpc):
 
         params = {
             'account': account,
-            'gddm': gddm,
-            'code': code,
+            'zqdm': zqdm,
             'price': price,
             'count': count,
         }
@@ -626,12 +768,11 @@ class TradeRpc(rpc.Rpc):
 
         return items
 
-    def order_xjmc(self, account, gddm, code, price, count):
+    def order_xjmc(self, account, zqdm, price, count):
         """
             限价卖出
         :param account:
-        :param gddm:
-        :param code:
+        :param zqdm:
         :param price:
         :param count:
         :return:
@@ -641,8 +782,7 @@ class TradeRpc(rpc.Rpc):
 
         params = {
             'account': account,
-            'gddm': gddm,
-            'code': code,
+            'zqdm': zqdm,
             'price': price,
             'count': count,
         }
@@ -659,12 +799,11 @@ class TradeRpc(rpc.Rpc):
 
         return items
 
-    def order_sjmr(self, account, gddm, code, price, count):
+    def order_sjmr(self, account, zqdm, price, count):
         """
             市价买入
         :param account:
-        :param gddm:
-        :param code:
+        :param zqdm:
         :param price:
         :param count:
         :return:
@@ -674,8 +813,7 @@ class TradeRpc(rpc.Rpc):
 
         params = {
             'account': account,
-            'gddm': gddm,
-            'code': code,
+            'zqdm': zqdm,
             'price': price,
             'count': count,
         }
@@ -692,12 +830,11 @@ class TradeRpc(rpc.Rpc):
 
         return items
 
-    def order_sjmc(self, account, gddm, code, price, count):
+    def order_sjmc(self, account, zqdm, price, count):
         """
             市价卖出
         :param account:
-        :param gddm:
-        :param code:
+        :param zqdm:
         :param price:
         :param count:
         :return:
@@ -707,8 +844,7 @@ class TradeRpc(rpc.Rpc):
 
         params = {
             'account': account,
-            'gddm': gddm,
-            'code': code,
+            'zqdm': zqdm,
             'price': price,
             'count': count,
         }
@@ -725,22 +861,19 @@ class TradeRpc(rpc.Rpc):
 
         return items
 
-    def order_cancel(self, account, seid, orderno):
+    def order_cancel(self, account, zqdm, orderno):
         """
-            限价买入
+            委托撤单
         :param account:
-        :param gddm:
-        :param code:
-        :param price:
-        :param count:
+        :param zqdm:
+        :param orderno:
         :return:
-            委托编号
         """
         url = self.baseurl+"/order/cancel"
 
         params = {
             'account': account,
-            'seid': seid,
+            'zqdm': zqdm,
             'orderno': orderno,
         }
         params = self.make_token(params)

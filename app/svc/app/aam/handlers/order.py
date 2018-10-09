@@ -1,7 +1,7 @@
 """
     order management
 """
-from .. import access, handler, forms, protocol, info, beans, suite
+from .. import access, handler, forms, protocol, beans, suite, mysql
 
 
 class ListHandler(handler.Handler):
@@ -12,23 +12,11 @@ class ListHandler(handler.Handler):
             get trade records
         :return:
         """
-        # get arguments
-        form = forms.order.List(**self.arguments)
-
         # list conditions
-        conds = {}
-
-        if form.status is not None:
-            conds['status__in'] = form.status.split(',')
-        if form.date is not None:
-            conds['odate'] = form.date
-        if form.sdate is not None:
-            conds['odate__ge'] = form.sdate
-        if form.edate is not None:
-            conds['odate__le'] = form.edate
+        conds = self.cleaned_arguments
 
         # get trade records
-        results = beans.order.get_orders(**conds)
+        results = beans.order.list(**conds)
 
         # success
         self.write(protocol.success(data=results))
@@ -104,3 +92,22 @@ class NotifyHandler(handler.Handler):
 
         # success
         self.write(protocol.success(data=order))
+
+
+class UpdateHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+            order notify
+        :return:
+        """
+        # get arguments
+        form = forms.order.Update(**self.arguments)
+
+        # get trade records
+        order = beans.order.update(form)
+
+        # success
+        self.write(protocol.success(data=order))
+

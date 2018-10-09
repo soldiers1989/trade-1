@@ -3,20 +3,21 @@
 """
 import requests, time
 from .. import config
-from . import protocol
+from . import protocol, util
 
 
 class Account:
     """
         securities trade account
     """
-    def __init__(self, laccount, lpwd, taccount, tpwd, dept, version):
+    def __init__(self, laccount, lpwd, taccount, tpwd, dept, version, gddm):
         self.laccount = laccount
         self.lpwd = lpwd
         self.taccount = taccount
         self.tpwd = tpwd
         self.dept = dept
         self.version = version
+        self.gddm = gddm
 
     def status(self):
         ret = {
@@ -25,7 +26,8 @@ class Account:
             'taccount': self.taccount,
             'tpwd': self.tpwd,
             'detp': self.dept,
-            'version': self.version
+            'version': self.version,
+            'gddm': self.gddm
         }
         return ret
 
@@ -316,10 +318,10 @@ class Trader:
         # return response result
         return resp
 
-    def quote(self, code):
+    def quote(self, zqdm):
         """
             query current quote of code
-        :param code:
+        :param zqdm:
         :return:
         """
         # make request url
@@ -328,7 +330,7 @@ class Trader:
         # request parameters
         params = {
             "account":self._account.laccount,
-            "code" : code
+            "code" : zqdm
         }
 
         # request remote service
@@ -337,12 +339,11 @@ class Trader:
         # return response result
         return resp
 
-    def order(self, otype, ptype, gddm, zqdm, price, count):
+    def order(self, otype, ptype, zqdm, price, count):
         """
             send an order
         :param otype:
         :param ptype:
-        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -351,13 +352,21 @@ class Trader:
         # make request url
         url = self._baseurl + "/send/order"
 
+        # get gddm
+        seid = util.getse(zqdm)
+        if seid is None:
+            return protocol.failed('invalid securities code: %s'%zqdm)
+        gddm = self._account['gddm'].get(seid)
+        if gddm is None:
+            return protocol.failed('invalid securities code: %s' % zqdm)
+
         # request parameters
         params = {
             "account":self._account.laccount,
             "otype" : otype,
             "ptype" : ptype,
             "zqdm" : zqdm,
-            "gddm" : gddm,
+            "gddm" : self._account['gddm'][util.getse(zqdm)],
             "price" : price,
             "count" : count
         }
@@ -507,15 +516,15 @@ class Traders:
         # no more trader can be used
         return Exception("no trader usable for account")
 
-    def quote(self, code):
+    def quote(self, zqdm):
         """
             query current quote of code
-        :param code:
+        :param zqdm:
         :return:
         """
         while self._trader is not None:
             try:
-                return self._trader.quote(code)
+                return self._trader.quote(zqdm)
             except Exception as e:
                 # disable current trader
                 self._trader.disable(str(e))
@@ -525,12 +534,11 @@ class Traders:
         # no more trader can be used
         raise Exception("no trader usable for account")
 
-    def order(self, otype, ptype, gddm, zqdm, price, count):
+    def order(self, otype, ptype, zqdm, price, count):
         """
             send an order
         :param otype:
         :param ptype:
-        :param gddm:
         :param zqdm:
         :param price:
         :param count:
@@ -538,7 +546,7 @@ class Traders:
         """
         while self._trader is not None:
             try:
-                return self._trader.order(otype, ptype, gddm, zqdm, price, count)
+                return self._trader.order(otype, ptype, zqdm, price, count)
             except Exception as e:
                 # disable current trader
                 self._trader.disable(str(e))

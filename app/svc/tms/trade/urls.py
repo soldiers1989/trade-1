@@ -10,6 +10,11 @@ handlers = [
 
     (r"/account/status", handlers.trade.StatusAccount),
 
+    (r"/quote", handlers.trade.Quote),
+    (r"/query", handlers.trade.Query),
+    (r"/place", handlers.trade.Place),
+    (r"/cancel", handlers.trade.Cancel),
+
     (r"/query/gdxx", handlers.trade.QueryGdxx),
     (r"/query/dqzc", handlers.trade.QueryDqzc),
     (r"/query/dqcc", handlers.trade.QueryDqcc),

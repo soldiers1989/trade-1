@@ -7,7 +7,7 @@ from .. import suite, models
 
 
 class TradeDao(dao.Dao):
-    def get_trade(self, **conds):
+    def get(self, **conds):
         """
             get trade record by conditions
         :return:
@@ -23,7 +23,7 @@ class TradeDao(dao.Dao):
 
         return None
 
-    def get_trades(self, **conds):
+    def list(self, **conds):
         """
             get trade record by conditions
         :return:

@@ -24,11 +24,10 @@ class OrderRpc(rpc.Rpc):
         """
         super().__init__(baseurl, key, safety)
 
-    def list(self, status:str=None, date:str=None, sdate:str=None, edate:str=None):
+    def list(self, **conds):
         """
-            list order by status&date
-        :param status: str, order status filter
-        :param date: str, format YYYY-mm-dd
+            filter order records by @conds
+        :param conds: dict, sql filters
         :return:
             list
         """
@@ -36,16 +35,7 @@ class OrderRpc(rpc.Rpc):
         url = self.baseurl+"/order/list"
 
         # parameters
-        params = {}
-        if status is not None:
-            params['status'] = status
-        if date is not None:
-            params['date'] = date
-        if sdate is not None:
-            params['sdate'] = sdate
-        if edate is not None:
-            params['edate'] = edate
-
+        params = conds.copy()
         params = self.make_token(params)
 
         resp = requests.get(url, params=params).json()
@@ -149,7 +139,7 @@ class OrderRpc(rpc.Rpc):
 
         return resp.get('data')
 
-    def notify(self, id:str, dcount:int, dprice:decimal.Decimal, dcode:str, status:str, operator:str):
+    def notify(self, id:str, status:str, operator:str, dcount:int=None, dprice:decimal.Decimal|str=None, dcode:str=None):
         """
             order notify
         :param id:
@@ -164,12 +154,45 @@ class OrderRpc(rpc.Rpc):
 
         params = {
             'id': id,
-            'dcount': dcount,
-            'dprice': dprice,
-            'dcode': dcode,
             'status': status,
             'operator': operator
         }
+        if dcount is not None:
+            params['dcount'] = dcount
+        if dprice is not None:
+            params['dprice'] = str(dprice)
+        if dcode is not None:
+            params['dcode'] = dcode
+
+        params = self.make_token(params)
+
+        resp = requests.post(url, params=params).json()
+
+        if resp.get('status') != 0:
+            raise AamOrderRpcError(resp.get('msg'))
+
+        return resp.get('data')
+
+    def update(self, id:str, status:str, operator:str, ocode:str=None):
+        """
+            update order
+        :param id:
+        :param status:
+        :param operator:
+        :param ocode:
+        :return:
+            dict
+        """
+        url = self.baseurl+"/order/update"
+
+        params = {
+            'id': id,
+            'status': status,
+            'operator': operator
+        }
+        if ocode is not None:
+            params['ocode'] = ocode
+
         params = self.make_token(params)
 
         resp = requests.post(url, params=params).json()

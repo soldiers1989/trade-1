@@ -12,21 +12,11 @@ class ListHandler(handler.Handler):
             get trade records
         :return:
         """
-        # get arguments
-        form = forms.trade.ListForm(**self.arguments)
-
         # list conditions
-        conds = {}
-
-        if form.status is not None:
-            conds['status__in'] = form.status.split(',')
-        if form.stime is not None:
-            conds['ctime__ge'] = int(form.stime.timestamp())
-        if form.etime is not None:
-            conds['ctime__le'] = int(form.etime.timestamp())
+        conds = self.cleaned_arguments
 
         # get trade records
-        results = beans.trade.get_trades(**conds)
+        results = beans.trade.list(**conds)
 
         # success
         self.write(protocol.success(data=results))

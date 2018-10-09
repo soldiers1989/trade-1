@@ -35,5 +35,12 @@ class Notify(form.Form):
     dcount = field.IntegerField(null=True)
     dprice = field.DecimalField(digits=10, decimals=2, null=True)
     dcode = field.StringField(null=True)
-    status = field.EnumField(choices=suite.enum.values(suite.enum.order), null=True)
+    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
+    operator = field.StringField(default=suite.enum.operator.sys.code)
+
+
+class Update(form.Form):
+    id = field.IntegerField()
+    ocode = field.StringField(null=True)
+    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
     operator = field.StringField(default=suite.enum.operator.sys.code)

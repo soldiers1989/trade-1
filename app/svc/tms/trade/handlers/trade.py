@@ -104,6 +104,73 @@ class StatusAccount(handler.Handler):
         self.write(resp)
 
 
+class Quote(handler.Handler):
+    """
+        query current stock quote
+    """
+
+    @access.exptproc
+    @access.needtoken
+    def get(self):
+        """
+            get
+        :return:
+        """
+        aid, zqdm = self.get_argument('account'), self.get_argument('zqdm')
+        resp = trader.default.quote(aid, zqdm)
+        self.write(protocol.upgrade(resp, alias.gphq))
+
+
+class Query(handler.Handler):
+    """
+        query current or history data
+    """
+    @access.exptproc
+    @access.needtoken
+    def get(self):
+        """
+            get quote
+        :return:
+        """
+        aid, type, sdate, edate = self.get_argument('account'), self.get_argument('type'), self.get_argument('sdate', None), self.get_argument('edate', None)
+        resp = trader.default.query(aid, type, sdate, edate)
+        self.write(resp)
+
+
+class Place(handler.Handler):
+    """
+        place order
+    """
+
+    @access.exptproc
+    @access.needtoken
+    def get(self):
+        """
+            get
+        :return:
+        """
+        aid, otype, ptype, zqdm, price, count = self.get_argument('account'), self.get_argument('otype'), self.get_argument('ptype'), self.get_argument('zqdm'), self.get_argument('price'), self.get_argument('count')
+        resp = trader.default.place(aid, otype, ptype, zqdm, price, count)
+        self.write(protocol.upgrade(resp, alias.xjmr))
+
+
+class Cancel(handler.Handler):
+    """
+        cancel order
+    """
+
+    @access.exptproc
+    @access.needtoken
+    def get(self):
+        """
+            get
+        :return:
+        """
+        aid, zqdm, orderno = self.get_argument('account'), self.get_argument('zqdm'), self.get_argument('orderno')
+        resp = trader.default.cancel_order(aid, zqdm, orderno)
+        self.write(protocol.upgrade(resp, alias.wtcd))
+
+
 class QueryGdxx(handler.Handler):
     """
         query gdxx
@@ -269,8 +336,8 @@ class QueryGphq(handler.Handler):
             get
         :return:
         """
-        aid, code = self.get_argument('account'), self.get_argument('code')
-        resp = trader.default.query_gphq(aid, code)
+        aid, zqdm = self.get_argument('account'), self.get_argument('zqdm')
+        resp = trader.default.query_gphq(aid, zqdm)
         self.write(protocol.upgrade(resp, alias.gphq))
 
 
@@ -286,8 +353,8 @@ class OrderXjmr(handler.Handler):
             get
         :return:
         """
-        aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
-        resp = trader.default.order_xjmr(aid, gddm, code, price, count)
+        aid, zqdm, price, count = self.get_argument('account'), self.get_argument('zqdm'), self.get_argument('price'), self.get_argument('count')
+        resp = trader.default.order_xjmr(aid, zqdm, price, count)
         self.write(protocol.upgrade(resp, alias.xjmr))
 
 
@@ -303,8 +370,8 @@ class OrderXjmc(handler.Handler):
             get
         :return:
         """
-        aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
-        resp = trader.default.order_xjmc(aid, gddm, code, price, count)
+        aid, zqdm, price, count = self.get_argument('account'), self.get_argument('zqdm'), self.get_argument('price'), self.get_argument('count')
+        resp = trader.default.order_xjmc(aid, zqdm, price, count)
         self.write(protocol.upgrade(resp, alias.xjmc))
 
 
@@ -320,8 +387,8 @@ class OrderSjmr(handler.Handler):
             get
         :return:
         """
-        aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
-        resp = trader.default.order_sjmr(aid, gddm, code, price, count)
+        aid, zqdm, price, count = self.get_argument('account'), self.get_argument('zqdm'), self.get_argument('price'), self.get_argument('count')
+        resp = trader.default.order_sjmr(aid, zqdm, price, count)
         self.write(protocol.upgrade(resp, alias.sjmr))
 
 
@@ -337,8 +404,8 @@ class OrderSjmc(handler.Handler):
             get
         :return:
         """
-        aid, gddm, code, price, count = self.get_argument('account'), self.get_argument('gddm'), self.get_argument('code'), self.get_argument('price'), self.get_argument('count')
-        resp = trader.default.order_sjmc(aid, gddm, code, price, count)
+        aid, zqdm, price, count = self.get_argument('account'), self.get_argument('zqdm'), self.get_argument('price'), self.get_argument('count')
+        resp = trader.default.order_sjmc(aid, zqdm, price, count)
         self.write(protocol.upgrade(resp, alias.sjmc))
 
 
@@ -354,6 +421,6 @@ class OrderCancel(handler.Handler):
             get
         :return:
         """
-        aid, seid, orderno = self.get_argument('account'), self.get_argument('seid'), self.get_argument('orderno')
-        resp = trader.default.cancel_order(aid, seid, orderno)
+        aid, zqdm, orderno = self.get_argument('account'), self.get_argument('zqdm'), self.get_argument('orderno')
+        resp = trader.default.cancel_order(aid, zqdm, orderno)
         self.write(protocol.upgrade(resp, alias.wtcd))

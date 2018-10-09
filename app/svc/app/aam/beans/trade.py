@@ -7,7 +7,7 @@ from tlib import rand
 from .. import suite, daos, error, lock, trade, mysql, forms
 
 
-def get_trades(**conds):
+def list(**conds):
     """
         get trade records
     :param conds:
@@ -20,7 +20,7 @@ def get_trades(**conds):
     dao = daos.trade.TradeDao(db)
 
     # get records
-    results = dao.get_trades(**conds)
+    results = dao.list(**conds)
 
     return results
 
@@ -146,7 +146,7 @@ def user_buy(form):
             # add trade order record
             code = rand.uuid()
             tradeDao.add_trade(form.user, form.stock, form.coupon, code, form.ptype, form.price, form.count, margin, slog)
-            tradeobj = tradeDao.get_trade(code=code)
+            tradeobj = tradeDao.get(code=code)
 
             # add trade margin record
             tradeDao.add_margin(tradeobj.id, margin, suite.tpl.trademargin.init.item, suite.tpl.trademargin.init.detail%(str(margin),))
@@ -179,7 +179,7 @@ def user_sell(form):
         stockDao = daos.stock.StockDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -229,7 +229,7 @@ def user_sell(form):
                                   utime=time_now)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -256,7 +256,7 @@ def user_close(form):
         stockDao = daos.stock.StockDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -304,7 +304,7 @@ def user_close(form):
                                   utime=time_now, stime=time_now)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -331,7 +331,7 @@ def user_cancel(form):
         userDao = daos.user.UserDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -392,7 +392,7 @@ def user_cancel(form):
                 tradeDao.update_money(tradeobj.user_id, lmoney)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -415,7 +415,7 @@ def sys_buy(form: forms.trade.SysBuy):
         stockDao = daos.stock.StockDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -457,7 +457,7 @@ def sys_buy(form: forms.trade.SysBuy):
             tradeDao.update_trade(tradeobj.id, account=form.account, status=suite.enum.trade.buying.code, slog=slog, utime=time_now)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -480,7 +480,7 @@ def sys_sell(form):
         stockDao = daos.stock.StockDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -520,7 +520,7 @@ def sys_sell(form):
             tradeDao.update_trade(tradeobj.id, status=suite.enum.trade.selling.code, slog=slog, utime=time_now)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -546,7 +546,7 @@ def sys_close(form):
         tradeDao = daos.trade.TradeDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or tradeobj.user_id != form.user:
             raise error.invalid_parameters
 
@@ -573,7 +573,7 @@ def sys_close(form):
             tradeDao.update_trade(tradeobj.id,  status=suite.enum.trade.closing.code, slog=slog, utime=time_now)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -599,7 +599,7 @@ def sys_cancel(form):
         tradeDao = daos.trade.TradeDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -633,7 +633,7 @@ def sys_cancel(form):
             tradeDao.update_trade(tradeobj.id, status=next_status, slog=slog, utime=time_now)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -655,7 +655,7 @@ def sys_bought(form):
         tradeDao = daos.trade.TradeDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -697,7 +697,7 @@ def sys_bought(form):
                                   utime=time_now, btime=time_now)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -720,7 +720,7 @@ def sys_sold(form):
         userDao = daos.user.UserDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -802,7 +802,7 @@ def sys_sold(form):
                 tradeDao.update_money(userobj.id, lmoney)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -825,7 +825,7 @@ def sys_closed(form):
         userDao = daos.user.UserDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -908,7 +908,7 @@ def sys_closed(form):
                 tradeDao.update_money(userobj.id, lmoney)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -931,7 +931,7 @@ def sys_canceled(form, expired = False):
         userDao = daos.user.UserDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -990,7 +990,7 @@ def sys_canceled(form, expired = False):
                 tradeDao.update_money(tradeobj.user_id, lmoney)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -1013,7 +1013,7 @@ def sys_dropped(form):
         userDao = daos.user.UserDao(db)
 
         # check trade object #
-        tradeobj = tradeDao.get_trade(id=form.trade)
+        tradeobj = tradeDao.get(id=form.trade)
         if tradeobj is None or form.user != tradeobj.user_id:
             raise error.invalid_parameters
 
@@ -1057,7 +1057,7 @@ def sys_dropped(form):
             tradeDao.update_money(tradeobj.user_id, lmoney)
 
             # get new tradeobj
-            tradeobj = tradeDao.get_trade(id=form.trade)
+            tradeobj = tradeDao.get(id=form.trade)
 
             # success #
             return tradeobj
@@ -1077,7 +1077,7 @@ def trade_notify(form):
     tradeDao = daos.trade.TradeDao(db)
 
     # get trade object
-    tradeobj = tradeDao.get_trade(code=form.tcode)
+    tradeobj = tradeDao.get(code=form.tcode)
 
     # order data
     user, trade,  tstatus = tradeobj.user_id, tradeobj.id, tradeobj.status

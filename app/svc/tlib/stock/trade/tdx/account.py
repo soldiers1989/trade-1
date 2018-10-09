@@ -2,7 +2,7 @@
     securities account for trade
 """
 from .. import account, error
-from . import trader, protocol
+from . import trader, protocol, util
 
 
 class Account(account.Account):
@@ -21,14 +21,14 @@ class Account(account.Account):
         # get args
         acnt, pwd = kwargs.get('account'), kwargs.get('pwd')
         laccount, lpwd, taccount, tpwd = kwargs.get('laccount', acnt), kwargs.get('lpwd', pwd), kwargs.get('taccount', acnt), kwargs.get('tpwd', pwd)
-        dept, version, agents, servers = kwargs.get('dept'), kwargs.get('version'), kwargs.get('agents'), kwargs.get('servers')
+        dept, version, gddm, agents, servers = kwargs.get('dept'), kwargs.get('version'), kwargs.get('gddm'), kwargs.get('agents'), kwargs.get('servers')
 
         # check args
-        if laccount is None or lpwd is None or taccount is None or tpwd is None or dept is None or version is None or agents is None or servers is None:
+        if laccount is None or lpwd is None or taccount is None or tpwd is None or dept is None or version is None or gddm is None or agents is None or servers is None:
             raise error.TradeError('missing account parameters')
 
         # init account & traders
-        self._account = trader.Account(laccount, lpwd, taccount, tpwd, dept, version)
+        self._account = trader.Account(laccount, lpwd, taccount, tpwd, dept, version, gddm)
         self._traders = trader.Traders(self._account, agents, servers)
 
     def login(self):
@@ -171,22 +171,21 @@ class Account(account.Account):
         except Exception as e:
             return protocol.failed(str(e))
 
-    def query_gphq(self, code):
+    def query_gphq(self, zqdm):
         """
             查询股票行情
-        :param code: str, in, stock code
+        :param zqdm: str, in, stock code
         :return:
         """
         try:
             # send query
-            return self._traders.quote(code)
+            return self._traders.quote(zqdm)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_xjmr(self, gddm, zqdm, price, count):
+    def order_xjmr(self, zqdm, price, count):
         """
             限价买入
-        :param gddm: str, in, 股东代码
         :param zqdm: str, in, 证券代码
         :param price: float, in, 委托价格
         :param count: int, in, 委托数量，100整数倍
@@ -194,14 +193,13 @@ class Account(account.Account):
         """
         try:
             # send order to remote
-            return self._traders.order(protocol.query.buy, protocol.query.xj, gddm, zqdm, price, count)
+            return self._traders.order(protocol.query.buy, protocol.query.xj, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_xjmc(self, gddm, zqdm, price, count):
+    def order_xjmc(self, zqdm, price, count):
         """
             限价卖出
-        :param gddm: str, in, 股东代码
         :param zqdm: str, in, 证券代码
         :param price: float, in, 委托价格
         :param count: int, in, 委托数量，100整数倍
@@ -209,14 +207,13 @@ class Account(account.Account):
         """
         try:
             # send order to remote
-            return self._traders.order(protocol.query.sell, protocol.query.xj, gddm, zqdm, price, count)
+            return self._traders.order(protocol.query.sell, protocol.query.xj, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_sjmr(self, gddm, zqdm, price, count):
+    def order_sjmr(self, zqdm, price, count):
         """
             市价买入
-        :param gddm: str, in, 股东代码
         :param zqdm: str, in, 证券代码
         :param price: float, in, 委托价格
         :param count: int, in, 委托数量，100整数倍
@@ -224,14 +221,13 @@ class Account(account.Account):
         """
         try:
             # send order to remote
-            return self._traders.order(protocol.query.buy, protocol.query.sj, gddm, zqdm, price, count)
+            return self._traders.order(protocol.query.buy, protocol.query.sj, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_sjmc(self, gddm, zqdm, price, count):
+    def order_sjmc(self, zqdm, price, count):
         """
             市价卖出
-        :param gddm: str, in, 股东代码
         :param zqdm: str, in, 证券代码
         :param price: float, in, 委托价格
         :param count: int, in, 委托数量，100整数倍
@@ -239,18 +235,23 @@ class Account(account.Account):
         """
         try:
             # send order to remote
-            return self._traders.order(protocol.query.sell, protocol.query.sj, gddm, zqdm, price, count)
+            return self._traders.order(protocol.query.sell, protocol.query.sj, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def cancel_order(self, seid, orderno):
+    def cancel_order(self, zqdm, orderno):
         """
             委托撤单
-        :param seid: 0 - shenzhen， 1 - shanghai, useless
+        :param zqdm: str, in 证券代码
         :param orderno: str, in, 委托编号
         :return:
         """
         try:
+            # get se id
+            seid = util.getse(zqdm)
+            if seid is None:
+                return protocol.failed('error securities code')
+
             # cancel order
             return self._traders.cancel(seid, orderno)
         except Exception as e:

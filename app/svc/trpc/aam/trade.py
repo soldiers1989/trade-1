@@ -24,25 +24,15 @@ class TradeRpc(rpc.Rpc):
         """
         super().__init__(baseurl, key, safety)
 
-    def list(self, status:str=None, stime:str=None, etime:str=None):
+    def list(self, **conds):
         """
-            list order by status&date
-        :param status: str, order status filter
-        :param stime: str, format YYYY-mm-dd HH:MM:SS
-        :param etime: str, format YYYY-mm-dd HH:MM:SS
+            filter trade records by @conds
+        :param conds: dict, sql filter conditions
         :return:
-            list
         """
         url = self.baseurl+"/trade/list"
 
-        params = {}
-        if status is not None:
-            params['status'] = status
-        if stime is not None:
-            params['stime'] = stime
-        if etime is not None:
-            params['etime'] = etime
-
+        params = conds.copy()
         params = self.make_token(params)
 
         resp = requests.get(url, params=params).json()

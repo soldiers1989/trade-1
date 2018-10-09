@@ -24,4 +24,3 @@ def getse(code):
             return se
 
     return None
-
