@@ -1,4 +1,4 @@
-from . import alias, field, query, status
+from . import alias, field, const, status
 
 
 def success(msg = 'success', data = None):

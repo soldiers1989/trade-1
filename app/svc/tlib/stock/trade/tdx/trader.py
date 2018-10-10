@@ -356,7 +356,7 @@ class Trader:
         seid = util.getse(zqdm)
         if seid is None:
             return protocol.failed('invalid securities code: %s'%zqdm)
-        gddm = self._account['gddm'].get(seid)
+        gddm = self._account.gddm.get(seid)
         if gddm is None:
             return protocol.failed('invalid securities code: %s' % zqdm)
 
@@ -366,7 +366,7 @@ class Trader:
             "otype" : otype,
             "ptype" : ptype,
             "zqdm" : zqdm,
-            "gddm" : self._account['gddm'][util.getse(zqdm)],
+            "gddm" : gddm,
             "price" : price,
             "count" : count
         }
@@ -554,7 +554,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        return Exception("no trader usable for account")
+        raise Exception("no trader usable for account")
 
     def cancel(self, seid, orderno):
         """

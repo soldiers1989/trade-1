@@ -139,7 +139,7 @@ class OrderRpc(rpc.Rpc):
 
         return resp.get('data')
 
-    def notify(self, id:str, status:str, operator:str, dcount:int=None, dprice:decimal.Decimal|str=None, dcode:str=None):
+    def notify(self, id:str, status:str, operator:str, dcount:int=None, dprice:decimal.Decimal=None, dcode:str=None):
         """
             order notify
         :param id:

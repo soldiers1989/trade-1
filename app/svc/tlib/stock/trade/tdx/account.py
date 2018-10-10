@@ -65,117 +65,12 @@ class Account(account.Account):
         except Exception as e:
             return protocol.failed(str(e))
 
-    def query_gdxx(self):
+    def quote(self, zqdm):
         """
-            股东信息查询
+            查询股票实时行情
+        :param zqdm: str, stock code
         :return:
-        """
-        try:
-            # send query
-            return self._traders.queryc(protocol.query.gdxx)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_dqzc(self):
-        """
-            当前资产查询
-        :return: tuple
-            (True, Data) or (False, Message)
-        """
-        try:
-            # send query
-            return self._traders.queryc(protocol.query.dqzc)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_dqcc(self):
-        """
-            当前持仓查询
-        :return:
-        """
-        try:
-            # send query
-            return self._traders.queryc(protocol.query.dqcc)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_drwt(self):
-        """
-            当日委托查询
-        :return:
-        """
-        try:
-            # send query
-            return self._traders.queryc(protocol.query.drwt)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_drcj(self):
-        """
-            当日成交查询
-        :return:
-        """
-        try:
-            # send query
-            return self._traders.queryc(protocol.query.drcj)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_kcwt(self):
-        """
-            可撤委托查询
-        :return:
-        """
-        try:
-            # send query
-            return self._traders.queryc(protocol.query.kcwt)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_lswt(self, sdate, edate):
-        """
-            查询历史委托
-           :param sdate: str, in, format: yyyymmdd
-        :param edate: str, in, format: yyyymmdd
-        :return:
-        """
-        try:
-            # send query
-            return self._traders.queryh(protocol.query.lswt, sdate, edate)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_lscj(self, sdate, edate):
-        """
-            查询历史成交
-        :param sdate: str, in, format: yyyymmdd
-        :param edate: str, in, format: yyyymmdd
-        :return:
-        """
-        try:
-            # send query
-            return self._traders.queryh(protocol.query.lscj, sdate, edate)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_jgd(self, sdate, edate):
-        """
-            查询交割单
-        :param sdate: str, in, format: yyyymmdd
-        :param edate: str, in, format: yyyymmdd
-        :return:
-        """
-        try:
-            # send query
-            return self._traders.queryh(protocol.query.jgd, sdate, edate)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def query_gphq(self, zqdm):
-        """
-            查询股票行情
-        :param zqdm: str, in, stock code
-        :return:
+            dict
         """
         try:
             # send query
@@ -183,80 +78,67 @@ class Account(account.Account):
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_xjmr(self, zqdm, price, count):
+    def query(self, type, sdate=None, edate=None):
         """
-            限价买入
-        :param zqdm: str, in, 证券代码
-        :param price: float, in, 委托价格
-        :param count: int, in, 委托数量，100整数倍
+            查询账户当前或者历史数据
+        :param type: str, data type: dqzc/dqcc/drwt/drcj/kcwt/gdxx/lswt/lscj/jgd
+        :param sdate: str, in, format: yyyymmdd
+        :param edate: str, in, format: yyyymmdd
         :return:
+            list/dict
         """
         try:
-            # send order to remote
-            return self._traders.order(protocol.query.buy, protocol.query.xj, zqdm, price, count)
+            # send query
+            if type in protocol.const.query['current'].keys():
+                return self._traders.queryc(protocol.const.query['current'][type])
+            elif type in protocol.const.query['history'].keys():
+                return self._traders.queryh(protocol.const.query['history'][type], sdate, edate)
+            else:
+                return protocol.failed('非法查询类型:%s'%type)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_xjmc(self, zqdm, price, count):
+
+    def place(self, otype, ptype, zqdm, price, count):
         """
-            限价卖出
-        :param zqdm: str, in, 证券代码
-        :param price: float, in, 委托价格
-        :param count: int, in, 委托数量，100整数倍
+            委托下单
+        :param otype: order type: buy/sell
+        :param ptype: price type: xj/sj
+        :param zqdm: stock code
+        :param price: order price
+        :param count: order count
         :return:
         """
         try:
+            # check order type
+            if otype not in protocol.const.otype.keys():
+                return protocol.failed('非法的委托方向: %s'%otype)
+            # check price type
+            if ptype not in protocol.const.ptype.keys():
+                return protocol.failed(('非常的报价类型: %s'%ptype))
+
             # send order to remote
-            return self._traders.order(protocol.query.sell, protocol.query.xj, zqdm, price, count)
+            return self._traders.order(protocol.const.otype[otype], protocol.const.ptype[ptype], zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
-    def order_sjmr(self, zqdm, price, count):
-        """
-            市价买入
-        :param zqdm: str, in, 证券代码
-        :param price: float, in, 委托价格
-        :param count: int, in, 委托数量，100整数倍
-        :return:
-        """
-        try:
-            # send order to remote
-            return self._traders.order(protocol.query.buy, protocol.query.sj, zqdm, price, count)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def order_sjmc(self, zqdm, price, count):
-        """
-            市价卖出
-        :param zqdm: str, in, 证券代码
-        :param price: float, in, 委托价格
-        :param count: int, in, 委托数量，100整数倍
-        :return:
-        """
-        try:
-            # send order to remote
-            return self._traders.order(protocol.query.sell, protocol.query.sj, zqdm, price, count)
-        except Exception as e:
-            return protocol.failed(str(e))
-
-    def cancel_order(self, zqdm, orderno):
+    def cancel(self, zqdm, orderno):
         """
             委托撤单
-        :param zqdm: str, in 证券代码
-        :param orderno: str, in, 委托编号
+        :param zqdm: str, stock code
+        :param orderno: str, order number
         :return:
         """
         try:
             # get se id
             seid = util.getse(zqdm)
             if seid is None:
-                return protocol.failed('error securities code')
+                return protocol.failed('非法的证券代码: %s'%zqdm)
 
             # cancel order
             return self._traders.cancel(seid, orderno)
         except Exception as e:
             return protocol.failed(str(e))
-
 
 # register channel
 account.register('tdx', Account)

@@ -12,6 +12,41 @@ _Dealt =  {
     "废单": "dropped"
 }
 
+
+class _Repr:
+    def __init__(self, **filters):
+        """
+            init a represent object
+        :param filters: dict, filter key->rename
+        """
+        self._filters = filters
+
+    def format(self, obj):
+        """
+            use
+        :param obj:
+        :return:
+        """
+        if not isinstance(obj, dict):
+            return str(obj)
+
+        items = ['']
+        for k, v in self._filters.items():
+            items.append("%s: %s" % (str(v), str(obj.get(k))))
+        return "\n\t".join(items) + '\n'
+
+_repr_account = _Repr(id='ID', account='账户代码', name='账户名称', lmoney='账户余额')
+
+_repr_trade = _Repr(id='ID', code='订单代码', user_id='用户ID', stock_id='股票代码', optype='价格类型', oprice='订单价格', ocount='订单数量',
+                    hprice='持仓价格', hcount='持仓数量',bprice='买入价格', bcount='买入数量', sprice='卖出价格', scount='卖出数量', status='订单状态')
+
+_repr_order = _Repr(id='ID', scode='股票代码', sname='股票名称', tcode='交易代码', otype='委托方向', optype='价格类型',
+                    oprice='委托价格', ocount='委托数量', ocode='委托编号', dprice='成交价格', dcount='成交数量', status='委托状态')
+
+_repr_drwt = _Repr(wtrq='委托日期', wtsj='委托时间', gddm='股东代码', zqdm='证券代码', zqmc='证券名称', mmbz='买卖标志', wtjg='委托价格', wtsl='委托数量',
+                   wtbh='委托编号', cjsl='成交数量', cjjg='成交价格', cjje='成交金额', cdsl='撤单数量', cdbz='撤单标志', ztsm='状态说明')
+
+
 class TradeService(task.Task):
     """
         trade service class
@@ -70,11 +105,10 @@ class TradeService(task.Task):
             try:
                 # schedule trade tasks
                 self._schedule()
-
-                # wait for next scheduling
-                time.sleep(self._interval)
             except Exception as e:
                 logging.error(str(e))
+            # wait for next scheduling
+            time.sleep(self._interval)
 
     def _schedule(self):
         """
@@ -93,12 +127,14 @@ class TradeService(task.Task):
             process user trades
         :return:
         """
+        logging.info('start process trades')
         # get trades to process
         trades = self._trade.list(status__in='tobuy,tosell,toclose,cancelbuy,cancelsell,cancelclose')
 
         # process each trade
         for trade in trades:
             self._process_trade(trade)
+        logging.info('end process trades')
 
     def _process_trade(self, trade):
         """
@@ -107,36 +143,43 @@ class TradeService(task.Task):
         :return:
         """
         try:
-            logging.info('start process trade: %s', trade)
+            logging.info('start process trade: %s', _repr_trade.format(trade))
             if trade['status'] == 'tobuy':
                 # select a new account
                 account = self._account.select(type=trade['type'], stock=trade['stock_id'], optype=trade['optype'], oprice=trade['oprice'], ocount=trade['ocount'])
+                logging.info('select account: %s', _repr_account.format(account))
                 # get stock name
                 stockname = self._stock.get(trade['stock_id'])['name']
                 # update trade status
-                self._trade.sys_buy(trade['user_id'], trade['id'], account['account'])
+                resp = self._trade.sys_buy(trade['user_id'], trade['id'], account['account'])
+                logging.info('sys buy: %s', _repr_trade.format(resp))
                 # add new buy trade order
-                self._order.buy(account['account'], trade['tcode'], trade['stock_id'], stockname, trade['optype'], trade['ocount'], trade['oprice'], self._trade_notify_url, 'sys')
+                resp = self._order.buy(account['account'], trade['tcode'], trade['stock_id'], stockname, trade['optype'], trade['ocount'], trade['oprice'], self._trade_notify_url, 'sys')
+                logging.info('order buy: %s', _repr_order.format(resp))
             elif trade['status'] in ['tosell', 'toclose']:
                 # get stock name
                 stockname = self._stock.get(trade['stock_id'])['name']
                 # update trade status
-                self._trade.sys_sell(trade['user_id'], trade['id'])
+                resp = self._trade.sys_sell(trade['user_id'], trade['id'])
+                logging.info('sys sell: %s', _repr_trade.format(resp))
                 # add new buy trade order
-                self._order.sell(trade['account'], trade['tcode'], trade['stock_id'], stockname, trade['optype'], trade['ocount'], trade['oprice'], self._trade_notify_url, 'sys')
-            elif trade['status'] in ['cancelbuy', 'cancelsell, cancelclose']:
+                resp = self._order.sell(trade['account'], trade['tcode'], trade['stock_id'], stockname, trade['optype'], trade['ocount'], trade['oprice'], self._trade_notify_url, 'sys')
+                logging.info('order sell: %s', _repr_order.format(resp))
+            elif trade['status'] in ['cancelbuy', 'cancelsell', 'cancelclose']:
                 # update trade status
-                self._trade.sys_cancel(trade['user_id'], trade['id'])
+                resp = self._trade.sys_cancel(trade['user_id'], trade['id'])
+                logging.info('sys cancel: %s', _repr_trade.format(resp))
                 # get relate orders
                 orders = self._order.list(status__in='notsend,tosend,sending,sent')
                 # cancel order
                 for order in orders:
-                    self._order.cancel(order['id'], 'sys')
+                    resp = self._order.cancel(order['id'], 'sys')
+                    logging.info('order cancel: %s', _repr_order.format(resp))
             else:
                 pass
             logging.info('end process trade: %s', trade)
         except Exception as e:
-            logging.info('exception process trade: %s', trade)
+            logging.info('exception process trade, error: %s', str(e))
 
     def _process_orders(self):
         """
@@ -163,25 +206,25 @@ class TradeService(task.Task):
             if order['status'] == 'notsend':
                 # update order status
                 resp = self._order.notify(order['id'], 'tosend', 'sys')
-                logging.info('update order: %s', resp)
+                logging.info('update order: %s', _repr_order.format(resp))
                 # place order
-                resp = self._trader.place(order['account'], order['otype'], order['optype'], order['scode'], order['oprice'], order['ocount'])
+                resp = self._trader.place_order(order['account'], order['otype'], order['optype'], order['scode'], order['oprice'], order['ocount'])
                 logging.info('place order: %s', resp)
                 # update order code
                 resp = self._order.update(order['id'], 'sent', 'sys', ocode=resp[0].wtbh)
-                logging.info('update order: %s', resp)
+                logging.info('update order: %s', _repr_order.format(resp))
             elif order['status'] == 'tocancel':
                 # update order status
                 resp = self._order.notify(order['id'], 'canceling', 'sys')
-                logging.info('update order: %s', resp)
+                logging.info('update order: %s', _repr_order.format(resp))
                 # cancel order
-                resp = self._trader.cancel(order['account'], order['scode'], order['ocode'])
+                resp = self._trader.cancel_order(order['account'], order['scode'], order['ocode'])
                 logging.info('cancel order: %s', resp)
             else:
                 pass
             logging.info('end process order: %s', order)
         except Exception as e:
-            logging.info('exception process order: %s', order)
+            logging.info('exception process order, error: %s', str(e))
 
     def _process_dealts(self):
         """
@@ -202,7 +245,7 @@ class TradeService(task.Task):
         remoteorders = {}
         for account in accounts:
             try:
-                orders = self._trader.query_drwt(account)
+                orders = self._trader.query_account(account, 'drwt')
                 remoteorders[account] = orders
             except Exception as e:
                 logging.error('query drwt from account %s failed, error: %s' % (account, str(e)))
@@ -220,8 +263,8 @@ class TradeService(task.Task):
                     try:
                         status = self._dealt.get(lorder['ztsm'])
                         if status is not None:
-                            resp = self._order.notify(order['id'], status, 'sys', lorder.cjsl, lorder.cjjg)
-                            logging.info('notify dealt order: %s', resp)
+                            resp = self._order.notify(lorder['id'], status, 'sys', lorder.cjsl, lorder.cjjg)
+                            logging.info('notify dealt order: %s', _repr_order.format(resp))
                     except Exception as e:
                         logging.info('notify dealt order failed, error: %s', str(e))
                     break

@@ -21,7 +21,7 @@ HEADERS = [
 # accounts for trade #
 ACCOUNTS = [
     {
-        'id': 'polly1',
+        'id': '29633865',
         'channel': 'tdx',
         'laccount': '29633865',
         'lpwd': '456789',
@@ -29,6 +29,10 @@ ACCOUNTS = [
         'tpwd': '456789',
         'dept': '0',
         'version': '7.16',
+        "gddm": {
+            "0": "0161323426",
+            "1": "A493512281"
+        },
         'agents': [('agent1', '172.16.21.137', 81),  ('agent2', '172.16.21.135', 80)],
         'servers': [('szxjt1', '117.40.3.6', 7708), ('szxjt2', '202.130.235.187', 7708)]
     },

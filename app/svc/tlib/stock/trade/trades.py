@@ -1,7 +1,7 @@
 """
     trade service
 """
-import threading, decimal
+import threading
 from . import account, protocol, error
 
 
@@ -28,7 +28,7 @@ class Trades:
         with self._lock:
             acnt = self._accounts.get(aid)
             if acnt is not None:
-                raise error.TradeError('account with id: %s has exists.' % aid)
+                return protocol.failed('account with id: %s has exists.' % aid)
 
             self._accounts[aid] = account.create(**kwargs)
 
@@ -74,31 +74,6 @@ class Trades:
 
             # empty accounts
             self._accounts = {}
-
-            return resp
-
-    def status(self, aid = None):
-        """
-            get account status
-        :param aid:
-        :return:
-        """
-        with self._lock:
-            if aid is not None:
-                account = self._accounts.get(aid)
-                if account is not None:
-                    data = {'id':aid}
-                    data.update(account.status())
-                    resp = protocol.success(data=data)
-                else:
-                    resp = protocol.failed('account is not exist', data={'id':aid})
-            else:
-                stats = []
-                for id, account in self._accounts.items():
-                    data = account.status()
-                    data['id'] = aid
-                    stats.append(data)
-                resp = protocol.success(data=stats)
 
             return resp
 
@@ -175,7 +150,32 @@ class Trades:
 
             return resp
 
-    def quote(self, aid:str, zqdm:str):
+    def status(self, aid = None):
+        """
+            get account status
+        :param aid:
+        :return:
+        """
+        with self._lock:
+            if aid is not None:
+                account = self._accounts.get(aid)
+                if account is not None:
+                    data = {'id':aid}
+                    data.update(account.status())
+                    resp = protocol.success(data=data)
+                else:
+                    resp = protocol.failed('account is not exist', data={'id':aid})
+            else:
+                stats = []
+                for id, account in self._accounts.items():
+                    data = account.status()
+                    data['id'] = aid
+                    stats.append(data)
+                resp = protocol.success(data=stats)
+
+            return resp
+
+    def quote(self, aid, zqdm):
         """
             get current quote of stock by @code
         :param aid: str, account id
@@ -183,64 +183,50 @@ class Trades:
         :return:
             dict
         """
-        return self.query_gphq(aid, zqdm)
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.quote(zqdm)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
+            return resp
 
-    def query(self, aid:str, type:str, sdate:str=None, edate:str=None):
+    def query(self, aid, type, sdate=None, edate=None):
         """
             query account data by specified type
         :param aid: str, account id
         :param type: str, data type: dqzc/dqcc/drwt/drcj/kcwt/gdxx/lswt/lscj/jgd
+        :param sdate: str, in, format: yyyymmdd
+        :param edate: str, in, format: yyyymmdd
         :return:
             list/dict
         """
-        if type == 'dqzc':
-            return self.query_dqzc(aid)
-        elif type == 'dqcc':
-            return self.query_dqcc(aid)
-        elif type == 'drwt':
-            return self.query_drwt(aid)
-        elif type == 'drcj':
-            return self.query_drcj(aid)
-        elif type == 'kcwt':
-            return self.query_kcwt(aid)
-        elif type == 'gdxx':
-            return self.query_gdxx(aid)
-        elif type == 'lswt':
-            return self.query_lswt(aid, sdate, edate)
-        elif type == 'lscj':
-            return self.query_lscj(aid, sdate, edate)
-        elif type == 'jgd':
-            return self.query_jgd(aid, sdate, edate)
-        else:
-            return protocol.failed('query type %s not support'%type, data={'aid':aid})
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.query(type, sdate, edate)
+            else:
+                resp = protocol.failed('account not exist', data={'id':aid})
+            return resp
 
-    def place(self, aid:str, otype:str, ptype:str, code:str, price:str|decimal.Decimal, count:str|int):
+    def place(self, aid, otype, ptype, zqdm, price, count):
         """
             委托订单
         :param aid: account id
         :param otype: order type: buy/sell
         :param ptype: price type: xj/sj
-        :param code: stock code
+        :param zqdm: stock code
         :param price: order price
         :param count: order count
         :return:
         """
-        if otype == 'buy':
-            if ptype == 'xj':
-                return self.order_xjmr(aid, code, price, count)
-            elif ptype == 'sj':
-                return self.order_sjmr(aid, code, price, count)
+        with self._lock:
+            account = self._accounts.get(aid)
+            if account is not None:
+                resp = account.place(otype, ptype, zqdm, price, count)
             else:
-                return protocol.failed('place price type %s not support' % otype, data={'aid': aid})
-        elif otype == 'sell':
-            if ptype == 'xj':
-                return self.order_xjmc(aid, code, price, count)
-            elif ptype == 'sj':
-                return self.order_sjmc(aid, code, price, count)
-            else:
-                return protocol.failed('place price type %s not support' % otype, data={'aid': aid})
-        else:
-            return protocol.failed('place order type %s not support'%otype, data={'aid':aid})
+                resp = protocol.failed('account not exist', data={'id':aid})
+            return resp
 
     def cancel(self, aid, zqdm, orderno):
         """
@@ -250,251 +236,10 @@ class Trades:
         :param orderno: str, order number
         :return:
         """
-        return self.cancel_order(aid, zqdm, orderno)
-
-    def query_dqzc(self, aid):
-        """
-            当前资产查询
-        :param aid: in, account
-        :return:
-        """
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.query_dqzc()
+                resp = account.cancel(zqdm, orderno)
             else:
                 resp = protocol.failed('account not exist', data={'id':aid})
             return resp
-
-    def query_dqcc(self, aid):
-        """
-            当前持仓查询
-        :param aid: in, account
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_dqcc()
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def query_drwt(self, aid):
-        """
-            当日委托查询
-        :param aid: in, account id
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_drwt()
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def query_drcj(self, aid):
-        """
-            当日成交查询
-        :param aid: in, account id
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_drcj()
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def query_kcwt(self, aid):
-        """
-            可撤委托查询
-        :param aid: in, account id
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_kcwt()
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def query_gdxx(self, aid):
-        """
-            股东信息查询
-        :param aid: in, account
-        :return:
-            (True, [gddm list]) or (False, error message)
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_gdxx()
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def query_lswt(self, aid, sdate, edate):
-        """
-            查询历史委托
-        :param aid:
-        :param sdate: str, in, format: yyyymmdd
-        :param edate: str, in, format: yyyymmdd
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_lswt(sdate, edate)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def query_lscj(self, aid, sdate, edate):
-        """
-            查询历史成交
-        :param aid:
-        :param sdate: str, in, format: yyyymmdd
-        :param edate: str, in, format: yyyymmdd
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_lscj(sdate, edate)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-
-    def query_jgd(self, aid, sdate, edate):
-        """
-            查询交割单
-        :param aid:
-        :param sdate: str, in, format: yyyymmdd
-        :param edate: str, in, format: yyyymmdd
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_jgd(sdate, edate)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def query_gphq(self, aid, code):
-        """
-            查询股票行情
-        :param aid: str, in, user account
-        :param code: str, in, stock code
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.query_gphq(code)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def order_xjmr(self, aid, zqdm, price, count):
-        """
-            限价买入
-        :param aid:
-        :param zqdm:
-        :param price:
-        :param count:
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.order_xjmr(zqdm, price, count)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def order_xjmc(self, aid, zqdm, price, count):
-        """
-            限价卖出
-        :param aid:
-        :param zqdm:
-        :param price:
-        :param count:
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.order_xjmc(zqdm, price, count)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def order_sjmr(self, aid, zqdm, price, count):
-        """
-            市价买入
-        :param aid:
-        :param zqdm:
-        :param price:
-        :param count:
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.order_sjmr(zqdm, price, count)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def order_sjmc(self, aid, zqdm, price, count):
-        """
-            市价卖出
-        :param aid:
-        :param zqdm:
-        :param price:
-        :param count:
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.order_sjmc(zqdm, price, count)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-            return resp
-
-    def cancel_order(self, aid, zqdm, orderno):
-        """
-            委托撤单
-        :param aid: str, account id
-        :param zqdm: str, stock code
-        :param orderno: str, order number
-        :return:
-        """
-        with self._lock:
-            account = self._accounts.get(aid)
-            if account is not None:
-                resp = account.cancel_order(zqdm, orderno)
-            else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-
-        return resp
