@@ -1,9 +1,10 @@
 """
     remote trade agent service wraper
 """
-import requests, time
-from .. import config
-from . import protocol, util
+import requests
+import time
+
+from . import protocol, util, status, config, alias, const
 
 
 class Account:
@@ -267,7 +268,7 @@ class Trader:
             resp = requests.get(url, params, timeout=config.TIMEOUT).json()
 
             # login if error is not login
-            if resp['status'] == protocol.status.ERROR_ACCOUNT_NOT_EXIST:
+            if resp['status'] == status.ERROR_ACCOUNT_NOT_EXIST:
                 self.login()
             else:
                 return resp
@@ -318,6 +319,25 @@ class Trader:
         # return response result
         return resp
 
+    def query(self, type, sdate, edate):
+        """
+            query current or history information of account
+        :param type:
+        :param sdate:
+        :param edate:
+        :return:
+        """
+        # send query
+        if type in const.query['current'].keys():
+            resp = self.queryc(const.query['current'][type])
+        elif type in const.query['history'].keys():
+            resp = self.queryh(const.query['history'][type], sdate, edate)
+        else:
+            resp = protocol.failed('非法查询类型:%s' % type)
+
+        # return response result
+        return protocol.upgrade(resp, alias.query.get(type))
+
     def quote(self, zqdm):
         """
             query current quote of code
@@ -337,11 +357,11 @@ class Trader:
         resp = self.request(url, params)
 
         # return response result
-        return resp
+        return protocol.upgrade(resp, alias.gphq)
 
-    def order(self, otype, ptype, zqdm, price, count):
+    def place(self, otype, ptype, zqdm, price, count):
         """
-            send an order
+            place an order
         :param otype:
         :param ptype:
         :param zqdm:
@@ -351,6 +371,17 @@ class Trader:
         """
         # make request url
         url = self._baseurl + "/send/order"
+
+        # check order type
+        if otype not in const.otype.keys():
+            return protocol.failed('非法的委托方向: %s' % otype)
+        # check price type
+        if ptype not in const.ptype.keys():
+            return protocol.failed(('非常的报价类型: %s' % ptype))
+
+        # translate order&price type
+        otype = const.otype[otype]
+        ptype = const.ptype[ptype]
 
         # get gddm
         seid = util.getse(zqdm)
@@ -375,17 +406,22 @@ class Trader:
         resp = self.request(url, params)
 
         # return response result
-        return resp
+        return protocol.upgrade(resp, alias.wtxd)
 
-    def cancel(self, seid, orderno):
+    def cancel(self, zqdm, orderno):
         """
             cancel an order
-        :param seid:
+        :param zqdm:
         :param orderno:
         :return:
         """
         # make request url
         url = self._baseurl + "/cancel/order"
+
+        # get se id
+        seid = util.getse(zqdm)
+        if seid is None:
+            return protocol.failed('非法的证券代码: %s' % zqdm)
 
         # request parameters
         params = {
@@ -398,7 +434,7 @@ class Trader:
         resp = self.request(url, params)
 
         # return response result
-        return resp
+        return protocol.upgrade(resp, alias.wtcd)
 
     def echo(self):
         """
@@ -477,36 +513,17 @@ class Traders:
         # no more trader can be used
         raise Exception("no trader usable for account")
 
-
-    def queryc(self, type):
-        """
-            query current information of account
-        :param type:
-        :return:
-        """
-        while self._trader is not None:
-            try:
-                return self._trader.queryc(type)
-            except Exception as e:
-                # disable current trader
-                self._trader.disable(str(e))
-                # pick a new trader
-                self._trader = self.pickone()
-
-        # no more trader can be used
-        raise Exception("no trader usable for account")
-
-    def queryh(self, type, startdate, enddate):
+    def query(self, type, sdate, edate):
         """
             query history information of account
         :param type:
-        :param startdate:
-        :param enddate:
+        :param sdate:
+        :param edate:
         :return:
         """
         while self._trader is not None:
             try:
-                return self._trader.queryh(type, startdate, enddate)
+                return self._trader.query(type, sdate, edate)
             except Exception as e:
                 # disable current trader
                 self._trader.disable(str(e))
@@ -534,7 +551,7 @@ class Traders:
         # no more trader can be used
         raise Exception("no trader usable for account")
 
-    def order(self, otype, ptype, zqdm, price, count):
+    def place(self, otype, ptype, zqdm, price, count):
         """
             send an order
         :param otype:
@@ -546,7 +563,7 @@ class Traders:
         """
         while self._trader is not None:
             try:
-                return self._trader.order(otype, ptype, zqdm, price, count)
+                return self._trader.place(otype, ptype, zqdm, price, count)
             except Exception as e:
                 # disable current trader
                 self._trader.disable(str(e))
@@ -556,16 +573,16 @@ class Traders:
         # no more trader can be used
         raise Exception("no trader usable for account")
 
-    def cancel(self, seid, orderno):
+    def cancel(self, zqdm, orderno):
         """
             cancel an order
-        :param seid:
+        :param zqdm:
         :param orderno:
         :return:
         """
         while self._trader is not None:
             try:
-                return self._trader.cancel(seid, orderno)
+                return self._trader.cancel(zqdm, orderno)
             except Exception as e:
                 # disable current trader
                 self._trader.disable(str(e))

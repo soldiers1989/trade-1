@@ -1,8 +1,8 @@
 """
     securities account for trade
 """
+from . import trader, protocol, util, const
 from .. import account, error
-from . import trader, protocol, util
 
 
 class Account(account.Account):
@@ -88,16 +88,9 @@ class Account(account.Account):
             list/dict
         """
         try:
-            # send query
-            if type in protocol.const.query['current'].keys():
-                return self._traders.queryc(protocol.const.query['current'][type])
-            elif type in protocol.const.query['history'].keys():
-                return self._traders.queryh(protocol.const.query['history'][type], sdate, edate)
-            else:
-                return protocol.failed('非法查询类型:%s'%type)
+            return self._traders.query(type, sdate, edate)
         except Exception as e:
             return protocol.failed(str(e))
-
 
     def place(self, otype, ptype, zqdm, price, count):
         """
@@ -110,15 +103,7 @@ class Account(account.Account):
         :return:
         """
         try:
-            # check order type
-            if otype not in protocol.const.otype.keys():
-                return protocol.failed('非法的委托方向: %s'%otype)
-            # check price type
-            if ptype not in protocol.const.ptype.keys():
-                return protocol.failed(('非常的报价类型: %s'%ptype))
-
-            # send order to remote
-            return self._traders.order(protocol.const.otype[otype], protocol.const.ptype[ptype], zqdm, price, count)
+            return self._traders.place(otype, ptype, zqdm, price, count)
         except Exception as e:
             return protocol.failed(str(e))
 
@@ -130,13 +115,8 @@ class Account(account.Account):
         :return:
         """
         try:
-            # get se id
-            seid = util.getse(zqdm)
-            if seid is None:
-                return protocol.failed('非法的证券代码: %s'%zqdm)
-
             # cancel order
-            return self._traders.cancel(seid, orderno)
+            return self._traders.cancel(zqdm, orderno)
         except Exception as e:
             return protocol.failed(str(e))
 

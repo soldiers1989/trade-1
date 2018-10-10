@@ -2,7 +2,7 @@
     trade service
 """
 import threading
-from . import account, protocol, error
+from . import account, protocol
 
 
 class Trades:

@@ -1,5 +1,5 @@
 import json
-from .. import access, handler, trader, protocol, alias, error
+from .. import access, handler, trader, error
 
 
 class AddAccount(handler.Handler):
@@ -147,7 +147,7 @@ class Place(handler.Handler):
         """
         aid, otype, ptype, zqdm, price, count = self.get_argument('account'), self.get_argument('otype'), self.get_argument('ptype'), self.get_argument('zqdm'), self.get_argument('price'), self.get_argument('count')
         resp = trader.default.place(aid, otype, ptype, zqdm, price, count)
-        self.write(protocol.upgrade(resp, alias.xjmr))
+        self.write(resp)
 
 
 class Cancel(handler.Handler):
@@ -163,4 +163,4 @@ class Cancel(handler.Handler):
         """
         aid, zqdm, orderno = self.get_argument('account'), self.get_argument('zqdm'), self.get_argument('orderno')
         resp = trader.default.cancel(aid, zqdm, orderno)
-        self.write(protocol.upgrade(resp, alias.wtcd))
+        self.write(resp)

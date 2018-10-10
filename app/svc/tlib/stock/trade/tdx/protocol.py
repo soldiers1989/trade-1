@@ -1,4 +1,6 @@
-from . import alias, field, const, status
+"""
+    response protocol
+"""
 
 
 def success(msg = 'success', data = None):
@@ -43,6 +45,10 @@ def upgrade(resp, ialias):
     # response
     status, msg, data = resp['status'], resp['msg'], resp['data']
 
+    # only upgrade response when success
+    if status != 0 or ialias is None:
+        return resp
+
     # translate data with alias
     columns = {}
     for i in range(0, len(data[0])):
@@ -61,10 +67,8 @@ def upgrade(resp, ialias):
     resp = {
         'status': status,
         'msg': msg,
-        'data': {
-            'new': ndata,
-            'old': data
-        }
+        'data': ndata,
+        'extra': data
     }
 
     return resp
