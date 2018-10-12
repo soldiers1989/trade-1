@@ -16,7 +16,6 @@ class QueryStatus(handler.Handler):
         self.write(protocol.success(data=data))
 
 
-
 class QueryCurrent(handler.Handler):
     """
         handler for query current quote of stock

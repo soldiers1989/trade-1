@@ -1,7 +1,13 @@
 """
     quote service
 """
-import time, threading, logging, decimal
+import time, threading, logging, decimal, random
+from trpc import quote
+
+
+class QuoteServiceError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
 
 
 class Callback:
@@ -49,9 +55,9 @@ class Symbol:
         self._subscribers = {}
 
         # subscribe lower target price
-        self.lprice = decimal.Decimal('0.000')
+        self.lprice = decimal.Decimal('1000.000')
         # subscribe upper target price
-        self.uprice = decimal.Decimal('10000.000')
+        self.uprice = decimal.Decimal('0.000')
 
     def add_subscriber(self, subscriber: Subscriber):
         """
@@ -85,9 +91,8 @@ class Symbol:
         :param price: decimal, current symbol price
         :return:
         """
-        for subscriber in self._subscribers:
+        for subscriber in self._subscribers.values():
             subscriber.callback.on_tick(self.code, price)
-
 
     def update_price(self):
         """
@@ -100,9 +105,6 @@ class Symbol:
 
             if subscriber.price < self.lprice:
                 self.lprice = subscriber.price
-
-
-
 
 
 class QuoteService(threading.Thread):
@@ -127,7 +129,7 @@ class QuoteService(threading.Thread):
         self._nextid = 0
 
         # init thread
-        super().__init__(self)
+        super().__init__()
 
     def subscribe(self, symbol, price, callback):
         """
@@ -146,6 +148,8 @@ class QuoteService(threading.Thread):
             # add subscriber to relate symbol subscriber list
             if self._symbols.get(symbol) is None:
                 self._symbols[symbol] = Symbol(symbol)
+
+            price = decimal.Decimal(price).quantize(decimal.Decimal('0.000'))
             self._symbols[symbol].add_subscriber(Subscriber(id, symbol, price, callback))
 
             # return subscriber's id
@@ -165,7 +169,7 @@ class QuoteService(threading.Thread):
     def query(self, symbols)->list:
         """
             query current quote of symbols
-        :param symbols: list, symbol code list
+        :param symbols: list, list of symbol object
         :return:
             dict - symbol->price
         """
@@ -185,16 +189,17 @@ class QuoteService(threading.Thread):
                     quotes = self.query(self._symbols.values())
 
                     # notify subscribers
-                    for symbol, price in quotes:
+                    for symbol, price in quotes.items():
                         symbolobj = self._symbols.get(symbol)
                         if symbolobj is not None:
                             symbolobj.notify_subscriber(price)
 
                     logging.info('quote service loop finished')
-                # sleep for while
-                time.sleep(self._interval)
             except Exception as e:
                 logging.error('quote service loop failed, error: %s'%str(e))
+
+            # sleep for while
+            time.sleep(self._interval)
 
 
 class MockQuoteService(QuoteService):
@@ -203,15 +208,154 @@ class MockQuoteService(QuoteService):
             mock quote
         :param kwargs:
         """
-        self._probability = kwargs.get('probability', 0.1)
+        # hit probability with the symbol's target price range
+        self._probability = int(100*(kwargs.get('probability', 0.1)))
+        # volatility beside the targe price
+        self._volatility = kwargs.get('volatility', 0.01)
+
+        # init super
+        super().__init__(**kwargs)
 
     def query(self, symbols):
-        pass
+        """
+            get current quote of symbols, price probability:
+            ----(1-probability)/2-----|--------probability--------|-----(1-probability)/2-----
+            --less than target price--|--equal with target price--|--large than target price--
+        :param symbols: list,
+        :return:
+            dict
+        """
+        quotes = {}
+        for symbol in symbols:
+            if self.hittarget():
+                quotes[symbol.code] = self.random_ine_price(symbol.lprice, symbol.uprice)
+            else:
+                quotes[symbol.code] = self.random_out_price(symbol.lprice, symbol.uprice)
+        return quotes
+
+    def hittarget(self):
+        """
+            hit symbol's target price
+        :return:
+        """
+        return random.randint(0, 100) < self._probability
+
+    def random_ine_price(self, lprice, uprice):
+        """
+            generate a random lprice<=price<=uprice
+        :param lprice: decimal, lower price
+        :param uprice: decimal, upper price
+        :return:
+            decimal
+        """
+        a, b = int(1000*lprice), int(1000*uprice)
+        price = random.randint(a, b) / 1000
+        return decimal.Decimal(price).quantize(decimal.Decimal('0.000'))
+
+    def random_out_price(self, lprice, uprice):
+        """
+            generate a random price>=uprice or price<=lprice, limit by volatility
+        :param lprice: decimal, lower price
+        :param uprice: decimal, upper price
+        :return:
+            price
+        """
+        if random.randint(0, 99) < 50:
+            a, b = int(1000 * lprice * decimal.Decimal(1-self._volatility)), int(1000 * lprice)
+        else:
+            a, b = int(1000 * uprice), int(1000 * uprice * decimal.Decimal(1+self._volatility))
+
+        price = random.randint(a, b) / 1000
+
+        return decimal.Decimal(price).quantize(decimal.Decimal('0.000'))
 
 
 class SimuQuoteService(QuoteService):
     def __init__(self, **kwargs):
-        pass
+        """
+            init simulation quote service with remote address
+        :param kwargs:
+        """
+        baseurl, key, safety = kwargs.get('baseurl'), kwargs.get('key'), kwargs.get('safety')
+        if baseurl is None:
+            raise QuoteServiceError('未知的远程行情服务地址')
+        if safety is None:
+            safety = False
+        else:
+            if key is None:
+                raise QuoteServiceError('未知的远程行情服务key')
+
+        self._quoterpc = quote.QuoteRpc(baseurl, key, safety)
+
+        # init super
+        super().__init__(**kwargs)
 
     def query(self, symbols):
-        pass
+        """
+            query symbol price from real quote api
+        :param symbols: list
+        :return:
+            dict
+        """
+        quotes = {}
+        for symbol in symbols:
+            try:
+                quotes[symbol.code] = self._quoterpc.get_quote(symbol.code)['dqj']
+            except Exception as e:
+                logging.error('query quote of symbol: %s failed, error: %s'%(symbol.code, str(e)))
+
+        return quotes
+
+
+def create(**kwargs):
+    """
+        create a quote service object
+    :param kwargs: dict,
+    :return:
+    """
+    # get quote service mode
+    mode = kwargs.get('mode', 'mock')
+    if mode not in ['mock', 'simu']:
+        raise QuoteServiceError('未知的行情服务模式: %s' % str(mode))
+
+    # create new quote service object
+    if mode == 'mock':
+        return MockQuoteService(**kwargs)
+    else:
+        return SimuQuoteService(**kwargs)
+
+
+class _DemoObserver:
+    """
+        demo observer of quote service
+    """
+    def on_tick(self, symbol, price):
+        """
+            snapshot tick data
+        :param symbol: str, symbol code
+        :param price: decimal, current price of symbol
+        :return:
+        """
+        print('%s, %s' % (symbol, str(price)))
+
+
+if __name__ == '__main__':
+    import sys
+
+    if len(sys.argv) == 1:
+        #qs = SimuQuoteService(baseurl='http://localhost:10002', key='abc', safety=False, interval=2)
+        qs = MockQuoteService(interval=2)
+    else:
+        if sys.argv[1] == 'mock':
+            qs = MockQuoteService(interval=2)
+        else:
+            qs = SimuQuoteService('http://localhost:10002', key='abc', safety=False, interval=2)
+
+    qs.start()
+
+    do = _DemoObserver()
+    qs.subscribe('000100', 2.50, do)
+    qs.subscribe('000100', 2.70, do)
+
+    while True:
+        time.sleep(1)
