@@ -4,6 +4,10 @@
 import datetime, random, decimal
 from . import quote
 
+# date/time format
+DATE_FORMT = '%Y-%m-%d'
+TIME_FORMT = '%H:%M:%S'
+
 
 # dealt probability
 DEALT_EFFICIENCY = 0.1
@@ -41,7 +45,7 @@ class TradeServiceError(Exception):
 
 
 class TradeOrder(quote.Callback):
-    def __init__(self, symbol, otype, ptype, oprice, ocount, ocode):
+    def __init__(self, symbol, otype, ptype, oprice, ocount, ocode, account):
         """
             init a trade order
         :param symbol: str, symbol code
@@ -56,20 +60,24 @@ class TradeOrder(quote.Callback):
         if ptype not in [Ptype.xj, Ptype.sj]:
             raise TradeServiceError('未知的报价类型: %s' % ptype)
 
-        self._symbol = symbol
-        self._otype = otype
-        self._ptype = ptype
-        self._oprice = oprice
-        self._ocount = ocount
-        self._ocode = ocode
+        self.symbol = symbol
+        self.odate = datetime.datetime.today().strftime(DATE_FORMT)
+        self.otime = datetime.datetime.today().strftime(TIME_FORMT)
+        self.otype = otype
+        self.ptype = ptype
+        self.oprice = oprice
+        self.ocount = ocount
+        self.ocode = ocode
 
-        self._dprice = None
-        self._dcount = 0
-        self._dcode = None
-        self._ddate = None
-        self._dtime = None
+        self.dprice = None
+        self.dcount = 0
+        self.dcode = None
+        self.ddate = None
+        self.dtime = None
 
-        self._status = Status.sent
+        self.status = Status.sent
+
+        self.account = account # relate account
 
     def deal(self, price):
         """
@@ -77,60 +85,65 @@ class TradeOrder(quote.Callback):
         :param price: decimal, current price
         :return:
         """
-        if self._ptype == Ptype.xj:
-            if (self._otype == Otype.buy and price < self._oprice) or (self._otype == Otype.sell and price > self._oprice):
-                self.random_dealt(self._oprice)
-        else: # market price
-            self.random_dealt(price)
+        # make deal
+        self.dealt(price)
 
         # partially dealt or total dealt
-        if self._dcount is not None:
-            if self._dcode is None:
-                self._dcode = str(random.randint(0, 1000000))
-            if self._ddate is None:
-                self._ddate = datetime.datetime.today().strftime('%Y-%m-%d')
-            if self._dtime is None:
-                self._dtime = datetime.datetime.today().strftime('%H:%M:%S')
+        if self.dcount is not None:
+            if self.dcode is None:
+                self.dcode = str(random.randint(0, 1000000))
+            if self.ddate is None:
+                self.ddate = datetime.datetime.today().strftime('%Y-%m-%d')
+            if self.dtime is None:
+                self.dtime = datetime.datetime.today().strftime('%H:%M:%S')
 
-            if self._dcount < self._ocount:
-                self._status = Status.pdeal
+            if self.dcount < self.ocount:
+                self.status = Status.pdeal
             else:
-                self._status = Status.tdeal
+                self.status = Status.tdeal
+                # notify account with dealt message
+                self.account.dealt(self.symbol, self.otype, self.dprice, self.dcount)
 
     def cancel(self):
         """
             cancel order randomly
         :return:
         """
-        if self._dcount is None:
-            self._status = Status.tcanceled
-        elif self._dcount < self._ocount:
-            self._status = Status.pcanceled
-        else:
-            self._status = Status.tdeal
+        if self.status in [Status.tcanceled, Status.pcanceled, Status.tdeal]:
+            return
 
-    def random_dealt(self, ptype, price):
+        if self.dcount is None:
+            self.status = Status.tcanceled
+            # notify account with canceled message
+            self.account.canceled(self.symbol, self.otype, self.oprice, self.ocount)
+        elif self.dcount < self.ocount:
+            self.status = Status.pcanceled
+            # notify account with dealt message
+            self.account.dealt(self.symbol, self.otype, self.dprice, self.dcount)
+        else:
+            pass
+
+    def dealt(self, price):
         """
             make random dealt count increasingly by dealt efficient
-        :param ptype: str, price type
         :param price: decimal, dealt price
         :return:
         """
-        if self._dcount is None:
-            self._dcount = 0
+        if self.ptype == Ptype.xj:
+            if (self.otype == Otype.buy and price > self.oprice) or (self.otype == Otype.sell and price < self.oprice):
+                return
+            else:
+                price = self.oprice
 
-        dcount = int(random.randint(0, 1)*(self._ocount-self._dcount)*DEALT_EFFICIENCY)
+        # random deal count
+        dcount = int(random.randint(0, 1)*(self.ocount-self.dcount)*DEALT_EFFICIENCY)
+        dcount = self.ocount-self.dcount if dcount > self.ocount-self.dcount else dcount
 
-        if ptype == Ptype.xj:
-            self._dcount = self._dcount + dcount
-            if self._dcount > self._ocount:
-                self._dcount = self._ocount
-        else:
-            if self._dcount + dcount > self._ocount:
-                dcount = self._ocount-self._dcount
+        # compute deal price
+        self.dprice = (self.dcount * self.dprice + dcount * price) / (self.dcount + dcount)
 
-            self._dprice = (self._dcount*self._dprice + dcount*price)/(self._dcount + dcount)
-            self._dcount = self._dcount + dcount
+        # add deal count
+        self.dcount = self.dcount + dcount
 
     def on_tick(self, symbol, price):
         """
@@ -139,15 +152,61 @@ class TradeOrder(quote.Callback):
         :param price: decimal, current price of symbol
         :return:
         """
+        # check status
+        if self.status in [Status.tcanceled, Status.pcanceled, Status.tdeal]:
+            return False
+
         # make deal by price
         self.deal(price)
 
-        # check status
-        if self._status in [Status.tcanceled, Status.pcanceled, Status.tdeal]:
-            return False
-
         # unsubscribe quote
         return True
+
+    def detail(self):
+        """
+            get order detail
+        :return:
+            dict
+        """
+        return {
+            'wtrq': self.odate,
+            'wtsj': self.otime,
+            'gddm': '',
+            'zqdm': self.symbol,
+            'zqmc': '',
+            'mmbz': '',
+            'wtjg': self.oprice,
+            'wtsl': self.ocount,
+            'wtbh': self.ocode,
+            'cjsl': self.dcount,
+            'cjjg': self.dprice,
+            'cjje': '0.000' if self.dcount is None else self.dcount*self.dprice,
+            'cjrq': self.ddate,
+            'cjsj': self.dtime,
+            'cdsl': '',
+            'cdbz': '',
+            'ztsm': self.status
+        }
+
+
+class SymbolPosition:
+    def __init__(self, symbol, total=0, usable=0, price=decimal.Decimal('0.000')):
+        self.symbol = symbol # 证券代码
+        self.total = total # 持仓量
+        self.usable = usable # 可用量
+        self.price = price # 当前价格
+
+    @property
+    def market_value(self):
+        return self.total*self.price
+
+    def detail(self):
+        return {
+            'zqdm': self.symbol,
+            'zqmc': '',
+            'zqsl': self.total,
+            'kmsl': self.usable
+        }
 
 
 class TradeAccount:
@@ -160,10 +219,77 @@ class TradeAccount:
         """
         self._account = account
         self._pwd = pwd
-        self._money = money
+        self._total_money = money
+        self._usable_money = money
 
-        self._orders = {}
+        self._holds = {} # 当前持仓, symbol code->account position
+        self._orders = {} # 委托记录, date->{ocode->[trade orders]}
+
+        self._login = False
+
         self._next_order_code = 0
+
+    def login(self, pwd):
+        """
+            login with password
+        :param pwd: str, account password
+        :return:
+        """
+        if pwd != self._pwd:
+            raise TradeServiceError('account %s login failed, invalid password' % self._account)
+        self._login = True
+
+    def logout(self):
+        """
+            logout
+        :return:
+        """
+        self._login = False
+
+    def transfer(self, money):
+        """
+            transfer money in/out from trade account
+        :param money: decimal, money to transfer, >0 means money into account, < means money outoff account
+        :return:
+            decimal, left money
+        """
+        self._total_money += money
+        self._usable_money += money
+
+    def query(self, type, sdate=None, edate=None):
+        """
+            query account information
+        :param type: str, data type: dqzc/dqcc/drwt/lswt/...
+        :param sdate: date, start date
+        :param edate: date, end date
+        :return:
+        """
+        results = []
+
+        if type == 'dqzc':
+            results.append({
+                'zzc': self._total_money + sum([position.market_value for position in self._holds.values()]),
+                'zjye': self._total_money,
+                'kyzj': self._usable_money,
+                'kqzj': self._usable_money
+            })
+        elif type == 'dqcc':
+            for position in self._holds.values():
+                results.append(position.detail())
+        elif type == 'drwt':
+            today = datetime.date.today()
+            if self._orders.get(today) is not None:
+                for order in self._orders[today].values():
+                    results.append(order.detail())
+        elif type == 'lswt':
+            for date, orders in self._orders.items():
+                if date >= sdate and date <= edate:
+                    for order in orders.values():
+                        results.append(order.detail())
+        else:
+            raise TradeServiceError('查询类别 %s 不支持' % type)
+
+        return results
 
     def place(self, symbol, otype, ptype, oprice, ocount):
         """
@@ -176,10 +302,41 @@ class TradeAccount:
         :return:
             str, order code
         """
+        self.check_login()
+
+        # cost of order
+        cost = ocount * oprice
+
+        if otype == Otype.buy:
+            # check left money
+            if self._usable_money < cost:
+                raise TradeServiceError('可用余额不足')
+            # change usable money
+            self._usable_money -= cost
+
+            # create position record
+            if self._holds.get(symbol) is None:
+                self._holds[symbol] = SymbolPosition(symbol)
+        else:
+            # check left position
+            position = self._holds.get(symbol)
+            if position is None or position.usable < ocount:
+                raise TradeServiceError('可用证券不足')
+
+            # freeze hold
+            position.usable -= ocount
+
+        # create new order id
         ocode = str(self._next_order_code)
         self._next_order_code += 1
 
-        self._orders[ocode] = TradeOrder(symbol, otype, ptype, oprice, ocount, ocode)
+        # add today's order if not exist
+        today = datetime.date.today()
+        if self._orders.get(today) is None:
+            self._orders[today] = {}
+
+        # add new order
+        self._orders[today][ocode] = TradeOrder(symbol, otype, ptype, oprice, ocount, ocode, self)
 
         return ocode
 
@@ -189,22 +346,112 @@ class TradeAccount:
         :param ocode: str, order code
         :return:
         """
-        order = self._orders.get(ocode)
-        if order is not None:
-            order.cancel()
+        self.check_login()
 
+        today = datetime.date.today()
+        orders = self._orders.get(today)
+        if orders is None or orders.get(ocode) is None:
+            raise TradeServiceError('委托订单 %s 不存在' % ocode)
 
+        # cancel order
+        orders[ocode].cancel()
+
+    def dealt(self, symbol, otype, price, count):
+        """
+            symbol dealt notify
+        :param symbol:
+        :param otype:
+        :param price:
+        :param count:
+        :return:
+        """
+        # dealt order money
+        money = count * price
+
+        if otype == Otype.buy:
+            # decrease account money
+            self._total_money -= money
+
+            # increase account position
+            self._holds[symbol].total += count
+        else:
+            # increase account money
+            self._total_money += money
+            self._usable_money += money
+
+            # decrease account position
+            self._holds[symbol].total -= count
+
+    def canceled(self, symbol, otype, oprice, ocount):
+        """
+            symbol order totally canceled notify
+        :param symbol:
+        :param otype:
+        :param oprice:
+        :param ocount:
+        :return:
+        """
+        # canceled order money
+        money = ocount * oprice
+
+        if otype == Otype.buy:
+            # free money
+            self._usable_money += money
+        else:
+            # free position
+            self._holds[symbol].usable += ocount
+
+    def clear(self):
+        """
+            clear orders of account
+        :return:
+        """
+        self._orders = {}
+
+    def check_login(self):
+        """
+            check if account has login
+        :return:
+        """
+        if not self._login:
+            raise TradeServiceError('账户 %s 未登录' % self._account)
 
 
 class TradeService:
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         """
             init trading service
         """
         # registered accounts
         self._accounts = {}
+
         # init quote service
+        self._quotesvc = None
+
+        # running flag
+        self._running = False
+
+    def start(self, **kwargs):
+        """
+            start trade service
+        :return:
+        """
+        if self._quotesvc is not None:
+            self.stop()
+
         self._quotesvc = quote.create(**kwargs)
+        self._quotesvc.start()
+        self._running = True
+
+    def stop(self):
+        """
+            stop trade service
+        :return:
+        """
+        if self._quotesvc is not None:
+            self._quotesvc.stop()
+            self._quotesvc = None
+        self._running = False
 
     def register(self, **kwargs):
         """
@@ -212,7 +459,12 @@ class TradeService:
         :param kwargs: dict, account information
         :return:
         """
-        pass
+        account, pwd, money = kwargs.get('account'), kwargs.get('pwd'), kwargs.get('money')
+        if account is None or pwd is None or money is None:
+            raise TradeServiceError('register account failed, error: missing parameters')
+
+        if self._accounts.get(account) is None:
+            self._accounts[account] = TradeAccount(account, pwd, money)
 
     def login(self, account, pwd):
         """
@@ -221,28 +473,46 @@ class TradeService:
         :param pwd:
         :return:
         """
-        pass
+        accountobj = self._accounts.get(account)
+        if accountobj is None:
+            raise TradeServiceError('account %s not exist' % account)
+
+        accountobj.login(pwd)
 
     def logout(self, account):
         """
             trade account logout
         :return:
         """
-        pass
+        accountobj = self._accounts.get(account)
+        if accountobj is None:
+            raise TradeServiceError('account %s not exist' % account)
+        accountobj.logout()
 
     def transfer(self, account, money):
         """
             transfer money in/out from trade account
         :return:
         """
-        pass
+        self.check_running()
+        accountobj = self._accounts.get(account)
+        if accountobj is None:
+            raise TradeServiceError('account %s not exist' % account)
+        return accountobj.transfer(money)
 
-    def query(self, account, type):
+    def query(self, account, type, sdate=None, edate=None):
         """
             query account information
+        :param account:
+        :param type:
+        :param sdate:
+        :param edate:
         :return:
         """
-        pass
+        accountobj = self._accounts.get(account)
+        if accountobj is None:
+            raise TradeServiceError('account %s not exist' % account)
+        return accountobj.query(type, sdate, edate)
 
     def place(self, account, symbol, otype, ptype, oprice, ocount):
         """
@@ -256,9 +526,14 @@ class TradeService:
         :return:
             str, order number
         """
+        self.check_running()
         accountobj = self._accounts.get(account)
         if accountobj is None:
             raise TradeServiceError('未登录的账户: %s' % account)
+
+        # check price type
+        if ptype == Ptype.sj:
+            oprice = self._quotesvc.query([symbol])[0]['dqj']
 
         accountobj.place(symbol, otype, ptype, oprice, ocount)
 
@@ -269,36 +544,30 @@ class TradeService:
         :param ocode: str, order code
         :return:
         """
+        self.check_running()
         accountobj = self._accounts.get(account)
         if accountobj is None:
             raise TradeServiceError('未登录的账户: %s' % account)
 
         accountobj.cancel(ocode)
 
-    def list(self):
-        """
-            list all account information including orders
-        :return:
-        """
-        pass
-
-    def clear(self):
+    def clear(self, account):
         """
             clear orders of account
         :return:
         """
-        pass
+        accountobj = self._accounts.get(account)
+        if accountobj is None:
+            raise TradeServiceError('未登录的账户: %s' % account)
 
-    def dealt(self):
+        accountobj.clear()
+
+    def check_running(self):
         """
-            make dealt of an order
+            check if trade service is running
         :return:
         """
-        pass
+        if not self._running:
+            raise TradeServiceError('交易服务未启动')
 
-    def canceled(self):
-        """
-            make canceled of an order
-        :return:
-        """
-        pass
+default = TradeService()

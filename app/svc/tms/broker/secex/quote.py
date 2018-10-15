@@ -131,6 +131,24 @@ class QuoteService(threading.Thread):
         # init thread
         super().__init__()
 
+    def start(self):
+        """
+
+        :return:
+        """
+        super().start()
+
+    def stop(self):
+        """
+            stop quote service
+        :return:
+        """
+        if not self.is_alive():
+            return
+
+        self._stopped = True
+        self.join()
+
     def subscribe(self, symbol, price, callback):
         """
             subscribe an symbol quote with callback object

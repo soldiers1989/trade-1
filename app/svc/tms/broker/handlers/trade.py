@@ -1,4 +1,39 @@
-from .. import handler, access, protocol, error
+import json
+from .. import handler, access, protocol, error, secex
+
+
+class StartHandler(handler.Handler):
+    """
+        start trade service
+    """
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+
+        :return:
+        """
+        if self.request.body is None:
+            raise error.missing_parameters
+
+        # get config from post json data
+        config = json.loads(self.request.body.decode())
+
+        secex.trade.default.start(**config)
+
+
+class StopHandler(handler.Handler):
+    """
+        start trade service
+    """
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+
+        :return:
+        """
+        pass
 
 
 class RegisterHandler(handler.Handler):
@@ -27,6 +62,17 @@ class LoginHandler(handler.Handler):
 
 
 class LogoutHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+
+        :return:
+        """
+        pass
+
+
+class TransferHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
@@ -70,40 +116,7 @@ class CancelHandler(handler.Handler):
         pass
 
 
-class ListHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        """
-
-        :return:
-        """
-        pass
-
-
 class ClearHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        """
-
-        :return:
-        """
-        pass
-
-
-class DealtHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        """
-
-        :return:
-        """
-        pass
-
-
-class CanceledHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):

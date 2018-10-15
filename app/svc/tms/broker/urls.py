@@ -1,16 +1,17 @@
 from . import handlers
 
 handlers = [
-    (r"/task/add", handlers.task.Add),
-    (r"/task/del", handlers.task.Delete),
-    (r"/task/clear", handlers.task.Clear),
+    (r"/trade/start", handlers.trade.StartHandler),
+    (r"/trade/stop", handlers.trade.StopHandler),
 
-    (r"/task/enable", handlers.task.Enable),
-    (r"/task/disable", handlers.task.Disable),
-    (r"/task/execute", handlers.task.Execute),
-    (
-        r"/task/callback", handlers.task.Callback),
+    (r"/trade/register", handlers.trade.RegisterHandler),
+    (r"/trade/login", handlers.trade.LoginHandler),
+    (r"/trade/logout", handlers.trade.LogoutHandler),
 
-    (r"/task/status", handlers.task.Status),
-    (r"/task/detail", handlers.task.Detail),
+    (r"/trade/transfer", handlers.trade.TransferHandler),
+    (r"/trade/query", handlers.trade.QueryHandler),
+    (r"/trade/place", handlers.trade.PlaceHandler),
+    (r"/trade/cancel", handlers.trade.CancelHandler),
+
+    (r"/trade/clear", handlers.trade.ClearHandler),
 ]
