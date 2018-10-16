@@ -78,7 +78,7 @@ class QuoteRpc(rpc.Rpc):
         params = self.make_token(params)
     
         resp = requests.get(url, params=params).json()
-        if resp.get('status') != 0:
+        if resp.get('status') != 0 or resp.get('data') is None or resp.get('data').get('quote') is None:
             raise QuoteApiError(resp.get('msg'))
     
         return _Quote(**resp.get('data').get('quote'))
@@ -97,7 +97,7 @@ class QuoteRpc(rpc.Rpc):
         params = self.make_token(params)
     
         resp = requests.get(url, params=params).json()
-        if resp.get('status') != 0:
+        if resp.get('status') != 0 or resp.get('data') is None or resp.get('data').get('quote') is None:
             raise QuoteApiError(resp.get('msg'))
     
         return _Level5(**resp.get('data').get('quote'))

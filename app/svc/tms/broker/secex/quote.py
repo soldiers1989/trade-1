@@ -116,7 +116,7 @@ class QuoteService(threading.Thread):
             init
         """
         # quote tick interval
-        self._interval = kwargs.get('interval', 5)
+        self._interval = kwargs.get('interval', 3)
 
         # subscribe index by symbols
         self._symbols = {}
@@ -318,9 +318,13 @@ class SimuQuoteService(QuoteService):
         quotes = {}
         for symbol in symbols:
             try:
-                quotes[symbol.code] = self._quoterpc.get_quote(symbol.code)['dqj']
+                scode = symbol
+                if isinstance(symbol, Symbol):
+                    scode = symbol.code
+
+                quotes[scode] = decimal.Decimal(self._quoterpc.get_quote(scode)['dqj']).quantize(decimal.Decimal('0.000'))
             except Exception as e:
-                logging.error('query quote of symbol: %s failed, error: %s'%(symbol.code, str(e)))
+                logging.error('query quote of symbol: %s failed, error: %s' % (scode, str(e)))
 
         return quotes
 

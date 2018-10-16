@@ -3,6 +3,7 @@ from . import handlers
 handlers = [
     (r"/trade/start", handlers.trade.StartHandler),
     (r"/trade/stop", handlers.trade.StopHandler),
+    (r"/trade/status", handlers.trade.StatusHandler),
 
     (r"/trade/register", handlers.trade.RegisterHandler),
     (r"/trade/login", handlers.trade.LoginHandler),

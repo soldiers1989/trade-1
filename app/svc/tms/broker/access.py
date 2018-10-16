@@ -2,7 +2,7 @@
     access protection
 """
 import logging, tornado.web
-from . import error, config
+from . import error, config, protocol
 from tlib import token
 
 
@@ -32,6 +32,6 @@ def exptproc(handler_func):
             self.write(e.data)
             logging.error(str(e))
         except Exception as e:
-            self.write(error.server_exception.data)
+            self.write(protocol.failed(msg=str(e)))
             logging.error(str(e))
     return wrapper

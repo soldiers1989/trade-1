@@ -18,8 +18,10 @@ class StartHandler(handler.Handler):
 
         # get config from post json data
         config = json.loads(self.request.body.decode())
-
+        # start trade service
         secex.trade.default.start(**config)
+
+        self.write(protocol.success())
 
 
 class StopHandler(handler.Handler):
@@ -33,7 +35,23 @@ class StopHandler(handler.Handler):
 
         :return:
         """
-        pass
+        secex.trade.default.stop()
+        self.write(protocol.success())
+
+
+class StatusHandler(handler.Handler):
+    """
+        get trade service status
+    """
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+
+        :return:
+        """
+        result = secex.trade.default.status()
+        self.write(protocol.success(data=result))
 
 
 class RegisterHandler(handler.Handler):
@@ -47,7 +65,12 @@ class RegisterHandler(handler.Handler):
 
         :return:
         """
-        pass
+        # get config from post json data
+        config = json.loads(self.request.body.decode())
+        # start trade service
+        result = secex.trade.default.register(**config)
+
+        self.write(protocol.success(data=result))
 
 
 class LoginHandler(handler.Handler):
@@ -58,7 +81,9 @@ class LoginHandler(handler.Handler):
 
         :return:
         """
-        pass
+        account, pwd = self.get_argument('account'), self.get_argument('pwd')
+        result = secex.trade.default.login(account, pwd)
+        self.write(protocol.success(data=result))
 
 
 class LogoutHandler(handler.Handler):
@@ -69,7 +94,9 @@ class LogoutHandler(handler.Handler):
 
         :return:
         """
-        pass
+        account = self.get_argument('account')
+        result = secex.trade.default.logout(account)
+        self.write(protocol.success(data=result))
 
 
 class TransferHandler(handler.Handler):
@@ -80,7 +107,9 @@ class TransferHandler(handler.Handler):
 
         :return:
         """
-        pass
+        account, money = self.get_argument('account'), self.get_argument('money')
+        result = secex.trade.default.transfer(account, money)
+        self.write(protocol.success(data=result))
 
 
 class QueryHandler(handler.Handler):
@@ -91,7 +120,9 @@ class QueryHandler(handler.Handler):
 
         :return:
         """
-        pass
+        account, type, sdate, edate = self.get_argument('account'), self.get_argument('type'), self.get_argument('sdate', None), self.get_argument('edate', None)
+        result = secex.trade.default.query(account, type, sdate, edate)
+        self.write(protocol.success(data=result))
 
 
 class PlaceHandler(handler.Handler):
@@ -102,7 +133,9 @@ class PlaceHandler(handler.Handler):
 
         :return:
         """
-        pass
+        account, symbol, otype, ptype, oprice, ocount  = self.get_argument('account'), self.get_argument('symbol'), self.get_argument('otype'), self.get_argument('ptype'), self.get_argument('oprice'), self.get_argument('ocount')
+        result = secex.trade.default.place(account, symbol, otype, ptype, oprice, ocount)
+        self.write(protocol.success(data=result))
 
 
 class CancelHandler(handler.Handler):
@@ -113,7 +146,9 @@ class CancelHandler(handler.Handler):
 
         :return:
         """
-        pass
+        account, ocode = self.get_argument('account'), self.get_argument('ocode')
+        result = secex.trade.default.cancel(account, ocode)
+        self.write(protocol.success(data=result))
 
 
 class ClearHandler(handler.Handler):
@@ -121,7 +156,8 @@ class ClearHandler(handler.Handler):
     @access.needtoken
     def post(self):
         """
-
         :return:
         """
-        pass
+        account = self.get_argument('account', None)
+        result = secex.trade.default.clear(account)
+        self.write(protocol.success(data=result))
