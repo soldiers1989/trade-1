@@ -77,10 +77,12 @@ class TradeOrder(quote.Callback):
 
         self.status = Status.sent
 
-        self.account = account # relate account
-
+        # cleared flag for order
+        self.cleared = False
+        # relate account
+        self.account = account
         # subscribe quote service
-        self.subid = self.account.quotesvc.subscribe(self.symbol, self.oprice, self)
+        self.account.quotesvc.subscribe(self.symbol, self.oprice, self)
 
     def deal(self, price):
         """
@@ -123,20 +125,22 @@ class TradeOrder(quote.Callback):
             update order status
         :return:
         """
-        if self.dcount is not None:
-            if self.dcode is None:
-                self.dcode = str(random.randint(0, 1000000))
-            if self.ddate is None:
-                self.ddate = datetime.datetime.today().strftime('%Y-%m-%d')
-            if self.dtime is None:
-                self.dtime = datetime.datetime.today().strftime('%H:%M:%S')
+        if self.dcount is None or self.dcount == 0:
+            return
 
-            if 0 < self.dcount < self.ocount:
-                self.status = Status.pdeal
-            else:
-                self.status = Status.tdeal
-                # notify account with dealt message
-                self.dealt()
+        if self.dcode is None:
+            self.dcode = str(random.randint(0, 1000000))
+        if self.ddate is None:
+            self.ddate = datetime.datetime.today().strftime('%Y-%m-%d')
+        if self.dtime is None:
+            self.dtime = datetime.datetime.today().strftime('%H:%M:%S')
+
+        if 0 < self.dcount < self.ocount:
+            self.status = Status.pdeal
+        else:
+            self.status = Status.tdeal
+            # notify account with dealt message
+            self.dealt()
 
     def cancel(self):
         """
@@ -165,9 +169,6 @@ class TradeOrder(quote.Callback):
         # notify account with dealt message
         self.account.dealt(self.symbol, self.otype, self.dprice, self.dcount)
 
-        # unsubscribe quote service
-        self.account.quotesvc.unsubscribe(self.subid)
-
     def canceled(self):
         """
             order canceled
@@ -175,9 +176,6 @@ class TradeOrder(quote.Callback):
         """
         # notify account with canceled message
         self.account.canceled(self.symbol, self.otype, self.oprice, self.ocount)
-
-        # unsubscribe quote service
-        self.account.quotesvc.unsubscribe(self.subid)
 
     def clear(self):
         """
@@ -192,6 +190,8 @@ class TradeOrder(quote.Callback):
         else:
             pass
 
+        self.cleared = True
+
         return self.detail()
 
     def on_tick(self, symbol, price):
@@ -202,7 +202,7 @@ class TradeOrder(quote.Callback):
         :return:
         """
         # check status
-        if self.status in [Status.tcanceled, Status.pcanceled, Status.tdeal]:
+        if self.cleared or self.status in [Status.expired, Status.dropped, Status.tcanceled, Status.pcanceled, Status.tdeal]:
             return False
 
         # make deal by price
@@ -230,6 +230,8 @@ class TradeOrder(quote.Callback):
             dict
         """
         return {
+            'wtfx': self.otype,
+            'jglx': self.ptype,
             'wtrq': self.odate,
             'wtsj': self.otime,
             'gddm': '',
@@ -246,30 +248,94 @@ class TradeOrder(quote.Callback):
             'cjsj': self.dtime,
             'cdsl': '',
             'cdbz': '',
-            'ztsm': self.status
+            'ztsm': self.status,
+            'cleared': self.cleared
         }
 
 
-class SymbolPosition:
-    def __init__(self, symbol, total=0, usable=0, price=decimal.Decimal('0.000')):
+class SymbolPosition(quote.Callback):
+    def __init__(self, symbol, quotesvc):
+        """
+            init symbol position object
+        :param symbol: str, symbol code
+        :param quotesvc: obj, quote service object
+        """
         self.symbol = symbol # 证券代码
-        self.total = total # 持仓量
-        self.usable = usable # 可用量
-        self.price = price # 当前价格
+        self.total = 0 # 持仓量
+        self.usable = 0 # 可用量
+        self.price_average = decimal.Decimal('0.000') # 持仓均价
+        self.price_current = decimal.Decimal('0.000') # 当前价格
+
+        self._quotesvc = quotesvc
 
     @property
     def market_value(self):
-        return self.total*self.price
+        quotes = self._quotesvc.query([self.symbol])
+        price = quotes.get(self.symbol)
+        if price is not None:
+            self.price_current = price
+
+        return self.total*self.price_current
+
+    @property
+    def cost_value(self):
+        return self.total*self.price_average
+
+    def sell(self, count):
+        """
+            sell
+        :param count:
+        :return:
+        """
+        if self.usable < count:
+            raise TradeServiceError('可用证券不足')
+
+        # freeze hold
+        self.usable -= count
+
+    def revoke(self, count):
+        """
+            revoke sell
+        :param count:
+        :return:
+        """
+        self.usable += count
+
+    def sold(self, count):
+        """
+            new sold
+        :param price:
+        :param count:
+        :return:
+        """
+        self.total -= count
+
+    def bought(self, price, count):
+        """
+            new bought
+        :param price:
+        :param count:
+        :return:
+        """
+        cost = price*count + self.cost_value
+        self.total += count
+        self.price_average = cost/self.total
 
     def clear(self):
+        """
+            clear
+        :return:
+        """
         self.usable = self.total
 
     def detail(self):
         return {
-            'zqdm': self.symbol,
-            'zqmc': '',
-            'zqsl': self.total,
-            'kmsl': self.usable
+            'zqdm': self.symbol, # 证券代码
+            'zqmc': '', # 证券名称
+            'zqsl': self.total, # 证券数量
+            'kmsl': self.usable, # 可卖数量
+            'cccb': self.cost_value, # 持仓成本
+            'ccsz': self.market_value # 持仓市值
         }
 
 
@@ -407,15 +473,15 @@ class TradeAccount:
 
             # create position record
             if self._holds.get(symbol) is None:
-                self._holds[symbol] = SymbolPosition(symbol)
+                self._holds[symbol] = SymbolPosition(symbol, self.quotesvc)
         else:
             # check left position
             position = self._holds.get(symbol)
-            if position is None or position.usable < ocount:
-                raise TradeServiceError('可用证券不足')
+            if position is None:
+                raise TradeServiceError('没有证券%s的持仓' % symbol)
 
             # freeze hold
-            position.usable -= ocount
+            position.sell(ocount)
 
         # create new order id
         ocode = str(self._next_order_code)
@@ -469,14 +535,14 @@ class TradeAccount:
             self._total_money -= money
 
             # increase account position
-            self._holds[symbol].total += count
+            self._holds[symbol].bought(price, count)
         else:
             # increase account money
             self._total_money += money
             self._usable_money += money
 
             # decrease account position
-            self._holds[symbol].total -= count
+            self._holds[symbol].sold(count)
 
     def canceled(self, symbol, otype, oprice, ocount):
         """
@@ -495,7 +561,7 @@ class TradeAccount:
             self._usable_money += money
         else:
             # free position
-            self._holds[symbol].usable += ocount
+            self._holds[symbol].revoke(ocount)
 
     def clear(self):
         """
@@ -508,10 +574,18 @@ class TradeAccount:
         for order in orders.values():
             order.clear()
 
-        # account clear
+        # money clear
         self._usable_money = self._total_money
+
+        # position clear
+        clearedids = []
         for position in self._holds.values():
             position.clear()
+            if position.total == 0:
+                clearedids.append(position.symbol)
+
+        for symbol in clearedids:
+            del self._holds[symbol]
 
         return self.status()
 
@@ -556,11 +630,15 @@ class TradeService:
             start trade service
         :return:
         """
+        if self._running:
+            return
+
         if self._quotesvc is not None:
             self.stop()
 
         self._quotesvc = quote.create(**kwargs)
         self._quotesvc.start()
+
         self._running = True
 
     def stop(self):
@@ -568,10 +646,15 @@ class TradeService:
             stop trade service
         :return:
         """
+        if not self._running:
+            return
+
         if self._quotesvc is not None:
             self._quotesvc.stop()
             self._quotesvc = None
+
         self._running = False
+        self.clear()
 
     def status(self):
         """

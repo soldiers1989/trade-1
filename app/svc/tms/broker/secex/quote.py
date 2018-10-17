@@ -52,7 +52,7 @@ class Symbol:
         :param code: str, symbol code
         """
         self.code = code
-        self._subscribers = {}
+        self._subscribers = {} # id->subscriber
 
         # subscribe lower target price
         self.lprice = decimal.Decimal('1000.000')
@@ -91,8 +91,13 @@ class Symbol:
         :param price: decimal, current symbol price
         :return:
         """
+        unsubs = []
         for subscriber in self._subscribers.values():
-            subscriber.callback.on_tick(self.code, price)
+            if not subscriber.callback.on_tick(self.code, price):
+                unsubs.append(subscriber.id)
+
+        for id in unsubs:
+            del self._subscribers[id]
 
     def update_price(self):
         """

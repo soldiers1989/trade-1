@@ -77,17 +77,14 @@ class Server:
         :param failure:
         :return:
         """
-        self._lock.acquire()
+        with self._lock:
+            self._failed += 1
+            self._cfailed += 1
 
-        self._failed += 1
-        self._cfailed += 1
+            if(self._cfailed > self._maxfailed):
+                self._disabled = True
 
-        if(self._cfailed > self._maxfailed):
-            self._disabled = True
-
-        self._failure = failure
-
-        self._lock.release()
+            self._failure = failure
 
     def addsucceed(self, timeused):
         """
@@ -95,15 +92,12 @@ class Server:
         :param timeused:
         :return:
         """
-        self._lock.acquire()
-
-        self._succeed += 1
-        self._cfailed = 0
-        self._timeused += timeused
-        self._disabled = False
-        self._failure = None
-
-        self._lock.release()
+        with self._lock:
+            self._succeed += 1
+            self._cfailed = 0
+            self._timeused += timeused
+            self._disabled = False
+            self._failure = None
 
     def status(self):
         # average time for succeed request
@@ -125,6 +119,16 @@ class Server:
     @property
     def disabled(self):
         return self._disabled
+
+    def reable(self):
+        """
+            reable server
+        :return:
+        """
+        with self._lock:
+            self._cfailed = 0
+            self._disabled = False
+            self._failure = None
 
     def __str__(self):
         return str(self.status())
@@ -162,7 +166,6 @@ class Servers:
             results.append(resp)
         return results
 
-
     def get(self, path, headers, retry):
         """
             get a host by round robin rules
@@ -175,7 +178,8 @@ class Servers:
         while retry > 0:
             try:
                 if server is None:
-                    raise error.NoneServerError('none server can be used')
+                    self.reable()
+                    raise error.ServerError('none server can be used')
 
                 return server.get(path, headers)
             except error.ServerError as e:
@@ -211,6 +215,14 @@ class Servers:
             if not server.disabled:
                 return server
         return None
+
+    def reable(self):
+        """
+            reset
+        :return:
+        """
+        for server in self._servers:
+            server.reable()
 
     def __str__(self):
         return str(self.status())
