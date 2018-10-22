@@ -16,18 +16,14 @@ class DBMysql:
         # database object
         self._conn = None
 
-        # cursor object
-        self._cursor = None
-
     def connect(self):
         """
             connect to database
         :param config:
         :return:
         """
-        if self._conn is None or self._cursor is None:
+        if self._conn is None:
             self._conn = pymysql.connect(**self._cfg, cursorclass = pymysql.cursors.DictCursor)
-            self._cursor = self._conn.cursor()
 
     def begin(self):
         """
@@ -62,11 +58,14 @@ class DBMysql:
         # connect to database
         self.connect()
 
+        # create cursor
+        cursor = self._conn.cursor()
+
         # execute select query
-        self._cursor.execute(sql, args)
+        cursor.execute(sql, args)
 
         # fetch all results
-        results = self._cursor.fetchall()
+        results = cursor.fetchall()
 
         return results
 
@@ -80,25 +79,26 @@ class DBMysql:
         # connect to database
         self.connect()
 
-        # execute sql
-        return self._cursor.execute(sql, args)
+        # create cursor
+        cursor = self._conn.cursor()
 
-    def lastrowid(self):
+        # execute sql
+        results = cursor.execute(sql, args)
+
+        return results
+
+    def last_row_id(self):
         """
             get last insert primary key id
         :return:
         """
-        return self._cursor.lastrowid
+        return self._conn.insert_id()
 
     def close(self):
         """
             close connection to database
         :return:
         """
-        if self._cursor is not None:
-            self._cursor.close()
-            self._cursor = None
-
         if self._conn is not None:
             self._conn.close()
             self._conn = None

@@ -1,9 +1,8 @@
-from tlib.stock import trade
-from . import config
+from . import config, broker
 
 
 # trader default instance
-default = trade.trades.Trades()
+default = broker.trades.Trades()
 
 
 def setup():

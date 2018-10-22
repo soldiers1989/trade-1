@@ -49,7 +49,6 @@ class Dao:
         """
         return _Transaction(self)
 
-
     def begin_transaction(self):
         """
             begin transaction
@@ -135,3 +134,10 @@ class Dao:
         n = self._db.execute(sql, args)
         self._db.commit()
         return n
+
+    def last_row_id(self):
+        """
+            get last insert row id
+        :return:
+        """
+        return self._db.last_row_id()

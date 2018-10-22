@@ -70,7 +70,7 @@ class QuoteRpc(rpc.Rpc):
         :param code:
         :return:
         """
-        url = self.baseurl+"/quote"
+        url = self.baseurl+"/quote/current"
     
         params = {
             'code': code
@@ -83,13 +83,15 @@ class QuoteRpc(rpc.Rpc):
     
         return _Quote(**resp.get('data').get('quote'))
 
+    get_current = get_quote
+
     def get_level5(self, code):
         """
             get current level 5 quote of stock by @code
         :param code: str, stock code
         :return:
         """
-        url = self.baseurl+"/quote"
+        url = self.baseurl+"/quote/level5"
     
         params = {
             'code': code
