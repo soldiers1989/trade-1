@@ -6,10 +6,10 @@
 
 
 class Fetcher:
-    def __init__(self):
-        pass
-
-    def fetch(self):
+    """
+        fetch base class
+    """
+    def fetch(self, *args, **kwargs):
         pass
 
     @staticmethod

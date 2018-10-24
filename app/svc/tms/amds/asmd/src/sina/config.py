@@ -25,5 +25,8 @@ class _VipStock:
         'timeout': (2, 15) # timeout for requests in seconds, (connect timeout, read timeout)
     }
 
+    # next page request interval, in seconds
+    page_interval = 1
+
 vip = _VipStock
 

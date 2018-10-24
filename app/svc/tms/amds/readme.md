@@ -1,6 +1,14 @@
 # 模块说明
     金融市场数据服务，financial market data service
-    
+
+# 依赖模块
+* requests
+* lxml
+* json
+* websocket
+* pandas
+
+
 # 接口说明
 * 接口通讯采用http协议，无状态请求/响应模式
 * 请求为GET方式
