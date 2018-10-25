@@ -1,1 +1,1 @@
-from . import shse, sina, szse
+from . import stock

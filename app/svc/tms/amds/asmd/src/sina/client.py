@@ -4,5 +4,8 @@
 from ... import net
 from . import config
 
-# vip client for access host: vip.stock.finance.sina.com.cn
-vip = net.http.Client(config.vip.baseurls, **config.vip.client)
+# client for access host: vip.stock.finance.sina.com.cn
+vsf = net.http.Client(config.vsf.baseurls, **config.vsf.client)
+
+# client for access host: hq.sina.cn
+hqjs = net.http.Client(config.hqjs.baseurls, **config.hqjs.client)

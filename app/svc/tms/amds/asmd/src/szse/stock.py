@@ -4,9 +4,8 @@
 import io, pandas, random
 
 from . import client
-from ... import fetch
 
-class _List(fetch.Fetcher):
+class _List:
     """
         获取所有股票列表，页面地址：http://www.szse.cn/market/stock/list/index.html，原始数据格式：
         '公司代码', '公司简称', '公司全称', '英文名称', '注册地址', 'A股代码', 'A股简称', 'A股上市日期', 'A股总股本', 'A股流通股本',
@@ -41,9 +40,9 @@ class _List(fetch.Fetcher):
 
         return result
 
-    def fetch(self):
+    def get(self):
         """
-            fetch stock list
+            get stock list
         :return:
         """
         results = []

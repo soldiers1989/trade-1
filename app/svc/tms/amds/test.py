@@ -36,5 +36,8 @@ def test_ws():
 
 
 if __name__ == "__main__":
-    from tms.amds import asmd
-    asmd.stock.get_ticks('000001', '2018-10-24')
+    #test_ws()
+    from tms.amds.asmd import src
+    #print(src.stock.get_quote(zqdm='000001,000725'))
+    results = src.stock.get_ticks(zqdm='000001', date='2018-10-24')
+    print(results)

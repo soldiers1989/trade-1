@@ -1,6 +1,7 @@
 """
     util functions
 """
+import random
 
 
 def valid(code):
@@ -38,14 +39,48 @@ def getse(code):
         if code in codes[se]:
             return se
 
-    return None
+    raise ValueError('code not valid, must be start with: %s' % (','.join(codes['sh'])+','+','.join(codes['sz'])))
 
 
-def addse(code):
+def addse(codes):
     """
         add securities exchange flag before stock code, like: 000001->sz000001, 600301->sh600301
     :param code: str, stock code
     :return:
         stock code with exchange flag
     """
-    return getse(code)+code
+    if isinstance(codes, str):
+        return getse(codes)+codes
+    elif isinstance(codes, list) or isinstance(codes, tuple):
+        ncodes = []
+        for code in codes:
+            ncodes.append(getse(code)+code)
+        return ncodes
+    else:
+        raise TypeError('code must be str/list/tuple.')
+
+
+def json(text):
+    """
+    解析非标准JSON的Javascript字符串，等同于json.loads(JSON str)
+    :param expr:非标准JSON的Javascript字符串
+    :return:Python字典
+    """
+    obj = eval(text, type('Dummy', (dict,), dict(__getitem__=lambda s, n: n))())
+    return obj
+
+
+def strbasen(num, b):
+    """
+        return string of num(oct number) with base by (b) string
+    :return: str
+    """
+    return ((num == 0) and "0") or (strbasen(num // b, b).lstrip("0") + "0123456789abcdefghijklmnopqrstuvwxyz"[num % b])
+
+
+def randnum():
+    """
+        generate random number
+    :return:
+    """
+    return strbasen(round(random.random() * 60466176), 36)

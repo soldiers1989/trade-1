@@ -4,9 +4,8 @@
 import io, pandas
 
 from . import client
-from ... import fetch
 
-class _List(fetch.Fetcher):
+class _List:
     """
         获取所有股票列表，页面地址：http://www.sse.com.cn/assortment/stock/list/share/，原始数据格式：
 
@@ -46,9 +45,9 @@ class _List(fetch.Fetcher):
 
         return result
 
-    def fetch(self):
+    def get(self):
         """
-            fetch stock list
+            get stock list
         :return:
         """
         results = []

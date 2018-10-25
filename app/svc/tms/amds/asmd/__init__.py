@@ -1,1 +1,3 @@
-from . import stock
+from . import api
+
+stock = api.stock.StockApi()
