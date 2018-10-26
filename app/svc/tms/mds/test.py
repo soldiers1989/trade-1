@@ -37,7 +37,7 @@ def test_ws():
 
 if __name__ == "__main__":
     #test_ws()
-    from tms.amds.asmd import src
+    from tms.mds.smd import src
     #print(src.stock.get_quote(zqdm='000001,000725'))
     #results = src.stock.get_ticks(zqdm='000001', date='2018-10-24')
     results = src.stock.get_kdata(zqdm='000001', type='5')
