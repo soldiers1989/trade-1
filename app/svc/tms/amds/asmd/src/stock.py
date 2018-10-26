@@ -2,7 +2,7 @@
     stock market data
 """
 import logging
-from . import shse, sina, szse
+from . import shse, szse, sina, ifeng
 from . import error
 
 
@@ -79,14 +79,28 @@ def get_ticks(**kwargs):
     raise error.ASMDSrcError('get stock ticks failed, all data source has been tried.')
 
 
-def get_kdata(zqdm, **kwargs):
+def get_kdata(**kwargs):
     """
         获取指定股票的K线数据
-    :param zqdm:
     :param kwargs:
     :return:
     """
-    pass
+    # source group
+    source_groups = {
+        'ifeng': [ifeng.stock.kdata] # 凤凰
+    }
+
+    # fetch data from group
+    for name, group in source_groups.items():
+        try:
+            results = []
+            for source in group:
+                results.extend(source.get(**kwargs))
+            return results
+        except Exception as e:
+            logging.error('get stock kdata from %s failed, error: %s' % (name, str(e)))
+
+    raise error.ASMDSrcError('get stock kdata failed, all data source has been tried.')
 
 
 def sub_quote(zqdm, callback):
