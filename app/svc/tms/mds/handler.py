@@ -31,3 +31,11 @@ class Handler(tornado.web.RequestHandler):
         for arg in self.request.arguments.keys():
             args[arg] = self.get_argument(arg)
         return args
+
+    @property
+    def cleaned_arguments(self):
+        args = {}
+        for arg in self.request.arguments.keys():
+            if not arg.startswith('_'):
+                args[arg] = self.get_argument(arg)
+        return args

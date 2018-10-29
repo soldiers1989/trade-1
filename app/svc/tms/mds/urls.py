@@ -1,6 +1,10 @@
 from . import handlers
 
 handlers = [
-    (r"/status", handlers.quote.QueryStatus),
-    (r"/stock/list", handlers.quote.QueryLevel5),
+    (r"/stock/list", handlers.stock.List),
+    (r"/stock/quotes", handlers.stock.Quotes),
+    (r"/stock/quote", handlers.stock.Quote),
+    (r"/stock/ticks", handlers.stock.Ticks),
+    (r"/stock/kdata", handlers.stock.KData),
 ]
+

@@ -8,7 +8,7 @@ from . import client, config
 from .. import util
 
 
-class _Quote:
+class _Quotes:
     """
         获取指定或者所有股票当前行情
         所有股票：
@@ -25,7 +25,7 @@ class _Quote:
             归一化格式：
             [
                 {
-                    code: 股票代码, name: 股票名称,
+                    zqdm: 股票代码, zqmc: 股票名称,
                     dqj: 当前价格, mrj1: 买一价, mcj: 卖一价
                     zsj: 昨收价, jkj: 今开价, zgj: 最高价, zdj: 最低价,
                     cjl: 成交量, cje: 成交额, zde: 涨跌额, zdf: 涨跌幅, hsl: 换手率,
@@ -33,18 +33,9 @@ class _Quote:
                     tm: tick时间
                 }
             ]
-        单只股票：
-
     """
-    def __init__(self, vsf=client.vsf, hqjs=client.hqjs, pinterval=config.vsf.page_interval):
-        """
-            init fetch stock list object
-        :param vsf: obj, http client object
-        :param hqjs: obj, http client object
-        """
-        self._vsf = vsf
-        self._hqjs = hqjs
-        self._pinterval = pinterval
+    def __init__(self):
+        pass
 
     def get(self, **kwargs):
         """
@@ -52,13 +43,9 @@ class _Quote:
         :param kwargs:
         :return:
         """
-        zqdm = kwargs.get('zqdm')
-        if zqdm is None:
-            return self._getall()
-        else:
-            return self._get(zqdm)
+        return self._get()
 
-    def _parseall(self, record):
+    def _parse(self, record):
         """
             parse one record
         :param record:
@@ -66,7 +53,7 @@ class _Quote:
         """
         # alias for source to target
         alias = {
-            'code': 'code', 'name': 'name',
+            'zqdm': 'code', 'zqmc': 'name',
             'dqj': 'trade', 'mrj1': 'buy', 'mcj1': 'sell',
             'zsj': 'settlement', 'jkj': 'open', 'zgj': 'high', 'zdj': 'low',
             'cjl': 'volume', 'cje': 'amount',
@@ -82,7 +69,7 @@ class _Quote:
 
         return result
 
-    def _getall(self):
+    def _get(self):
         """
             get stock all stock quotes
         :return:
@@ -99,7 +86,7 @@ class _Quote:
             path = pathtpl % page
 
             # request page data
-            resp = self._vsf.get(path)
+            resp = client.vsf.get(path)
 
             # translate to json object
             records = util.json(resp.text)
@@ -108,15 +95,57 @@ class _Quote:
 
             # parse records
             for record in records:
-                results.append(self._parseall(record))
+                results.append(self._parse(record))
 
             # fetch next page
             page = page + 1
 
             # sleep for a while
-            time.sleep(self._pinterval)
+            time.sleep(config.vsf.page_interval)
 
         return results
+
+quotes = _Quotes()
+
+
+class _Quote:
+    """
+        获取指定股票当前行情，多个股票用','分割
+        -页面地址：
+                http://hq.sinajs.cn/rn=y92ka7&list=sz000001,sz000725
+        -数据来源格式：
+                var hq_str_sz000001="平安银行,11.200,11.180,10.640,11.240,10.620,10.630,10.640,139470933,1514557705.160,7600,10.630,342418,10.620,646300,10.610,1718900,10.600,102100,10.590,29200,10.640,393900,10.650,2700,10.660,8900,10.670,126100,10.680,2018-10-29,14:18:54,00";
+                var hq_str_sz000725="京东方Ａ,2.800,2.790,2.770,2.820,2.760,2.770,2.780,239219203,666810556.350,2900500,2.770,9358300,2.760,7909100,2.750,3179900,2.740,2813800,2.730,4382000,2.780,5471369,2.790,10453300,2.800,12796992,2.810,11890500,2.820,2018-10-29,14:18:54,00";
+
+        -返回数据格式：
+            [
+                 {
+                    "zqdm":证券代码,
+                    "jkj": 今开价, "zsj": 昨收价, "dqj": 当前价, "zgj": 最高价, "zdj": 最低价,
+                    "cjl": 成交量, "cje": 成交额,
+                    "mrl1": 买一量, "mrj1": ，买一价, "mrl2": 12, "mrj2": 13, "mrl3": 14, "mrj3": 15, "mrl4": 16, "mrj4": 17, "mrl5": 18, "mrj5": 19,
+                    "mcl1": 卖一量, "mcj1": 卖一价, "mcl2": 22, "mcj2": 23, "mcl3": 24, "mcj3": 25, "mcl4": 26, "mcj4": 27, "mcl5": 28, "mcj5": 29,
+                    "date": 日期, "time": 时间
+                }
+            ]
+    """
+    def __init__(self):
+        """
+            init fetch stock list object
+        """
+        pass
+
+    def get(self, **kwargs):
+        """
+
+        :param kwargs:
+        :return:
+        """
+        zqdm = kwargs.get('zqdm')
+        if zqdm is None:
+            raise ValueError('missing parameter zqdm')
+
+        return self._get(zqdm)
 
     def _tidy(self, quote):
         """
@@ -191,7 +220,6 @@ class _Quote:
 
         return results
 
-
     def _get(self, zqdm):
         """
             get one stock quotes
@@ -205,7 +233,7 @@ class _Quote:
         path = "/rn=" + randnum + "&list=" + ','.join(util.addse(zqdm.split(',')))
 
         # request data
-        resp = self._hqjs.get(path)
+        resp = client.hqjs.get(path)
 
         # parse data
         return self._parse(resp.text)

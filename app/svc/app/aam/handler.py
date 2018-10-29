@@ -47,4 +47,3 @@ class Handler(tornado.web.RequestHandler):
             if not arg.startswith('_'):
                 args[arg] = self.get_argument(arg)
         return args
-
