@@ -36,6 +36,18 @@ ACCOUNTS = [
         'agents': [('agent1', '172.16.21.137', 81),  ('agent2', '172.16.21.135', 80)],
         'servers': [('szxjt1', '117.40.3.6', 7708), ('szxjt2', '202.130.235.187', 7708)]
     },
+    {
+        'id': '1000001',
+        'channel': 'mock',
+        'account': '1000001',
+        'pwd': '123456',
+        'money': '1000000',
+        'server': {
+            'baseurl': 'http://localhost:10007',
+            'token': 'abc',
+            'safety': False
+        }
+    }
     #
     # {
     #     'id': 'polly1',

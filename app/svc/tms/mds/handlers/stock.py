@@ -21,26 +21,6 @@ class List(handler.Handler):
         self.write(protocol.success(data=results))
 
 
-class Quotes(handler.Handler):
-    """
-        get all stock quotes
-    """
-    @access.exptproc
-    @access.needtoken
-    def get(self):
-        """
-            get quote
-        :return:
-        """
-        # get arguments
-        args = self.cleaned_arguments
-
-        # get quotes
-        results = smd.api.stock.get_quotes(**args)
-
-        self.write(protocol.success(data=results))
-
-
 class Quote(handler.Handler):
     """
         get current stock quote
@@ -81,7 +61,7 @@ class Ticks(handler.Handler):
         self.write(protocol.success(data=results))
 
 
-class KData(handler.Handler):
+class KLine(handler.Handler):
     """
         get kline-data
     """
@@ -96,6 +76,6 @@ class KData(handler.Handler):
         args = self.cleaned_arguments
 
         # get kline-data
-        results = smd.api.stock.get_kdata(**args)
+        results = smd.api.stock.get_kline(**args)
 
         self.write(protocol.success(data=results))

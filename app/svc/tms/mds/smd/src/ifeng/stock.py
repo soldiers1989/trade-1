@@ -97,7 +97,7 @@ class _Quote:
             # quote items
             items = quotes[stock]
 
-            qte = {'zqdm': code}
+            qte = {'zqdm': code, 'source': 'ifeng'}
 
             # stock quote
             for k in alias:
@@ -138,7 +138,7 @@ class _Quote:
 quote = _Quote()
 
 
-class _KData:
+class _KLine:
     def __init__(self):
         pass
 
@@ -212,4 +212,4 @@ class _KData:
 
         return results
 
-kdata = _KData()
+kline = _KLine()

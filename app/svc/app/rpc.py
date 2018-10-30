@@ -1,0 +1,475 @@
+"""
+    remote process communication api
+"""
+import requests
+from tlib import token
+
+
+# rpc access error
+class RpcError(Exception):
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+
+
+class Rpc:
+    """
+        remote rpc base class
+    """
+    def __init__(self, baseurl:str, key:str, safety:bool):
+        """
+            init rpc
+        :param baseurl: str, base url for remote http service
+        :param key: str, private key for safety verification or None
+        :param safety: bool, enable safety key verification with True
+        """
+        self.baseurl = baseurl
+        self.key = key
+        self.safety = safety
+
+    def _token(self, params):
+        """
+            add token to params
+        :param params:
+        :return:
+        """
+        if not self.safety:
+            return params
+
+        params = {} if params is None else params
+
+        return token.generate(params, self.key)
+
+    def get(self, path, params=None, **kwargs):
+        """
+            get method
+        :param path:
+        :param params:
+        :return:
+        """
+        # remote url path
+        url = self.baseurl + path
+
+        # params with token
+        params = self._token(params)
+
+        # request remote service
+        resp = requests.get(url, params=params, **kwargs).json()
+
+        if resp.get('status') != 0:
+            raise RpcError(resp.get('msg'))
+
+        return resp.get('data')
+
+    def post(self, path, params=None, data=None, json=None, **kwargs):
+        """
+            post method
+        :param path:
+        :param params:
+        :param data:
+        :param json:
+        :return:
+        """
+        # remote url path
+        url = self.baseurl + path
+
+        # params with token
+        params = self._token(params)
+
+        # request remote service
+        resp = requests.post(url, params=params, data=data, json=json, **kwargs).json()
+
+        if resp.get('status') != 0:
+            raise RpcError(resp.get('msg'))
+
+        return resp.get('data')
+
+
+class Aam(Rpc):
+    """
+        aam service rpc
+    """
+
+    def account_list(self, **params):
+        """
+            list account by @conds
+        :param conds: dict, account filter conditions
+        :return:
+            list
+        """
+        # remote path
+        path = '/account/list'
+
+        # access service
+        return self.get(path, params=params)
+
+    def account_select(self, **params):
+        """
+            select a account by @conds
+        :param conds: dict, account select conditions
+        :return:
+            account
+        """
+        # remote path
+        path = '/account/select'
+
+        # access service
+        return self.get(path, params=params)
+
+    def order_list(self, **params):
+        """
+            filter order records by @conds
+        :param conds: dict, sql filters
+        :return:
+            list
+        """
+        # remote path
+        path = '/order/list'
+
+        # access service
+        return self.get(path, params=params)
+
+    def order_buy(self, **params):
+        """
+            order buy
+        :param account:
+        :param tcode:
+        :param scode:
+        :param sname:
+        :param optype:
+        :param ocount:
+        :param oprice:
+        :param callback:
+        :param operator:
+        :return:
+        """
+        # remote path
+        path = '/order/buy'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_sell(self, **params):
+        """
+            order sell
+        :param account:
+        :param tcode:
+        :param scode:
+        :param sname:
+        :param optype:
+        :param ocount:
+        :param oprice:
+        :param callback:
+        :param operator:
+        :return:
+        """
+        # remote path
+        path = '/order/sell'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_cancel(self, **params):
+        """
+            order cancel
+        :param id:
+        :param operator:
+        :return:
+        """
+        # remote path
+        path = '/order/cancel'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_notify(self, **params):
+        """
+            order notify
+        :param id:
+        :param dcount:
+        :param dprice:
+        :param dcode:
+        :param status:
+        :param operator:
+        :return:
+        """
+        # remote path
+        path = '/order/notify'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_update(self, **params):
+        """
+            update order
+        :param id:
+        :param status:
+        :param operator:
+        :param ocode:
+        :return:
+            dict
+        """
+        # remote path
+        path = '/order/update'
+
+        # access service
+        return self.post(path, params=params)
+
+    def stock_list(self, **params):
+        """
+            list all stocks
+        :return:
+        """
+        # remote path
+        path = '/stock/list'
+
+        # access service
+        return self.get(path, params=params)
+
+    def stock_get(self, **params):
+        """
+            get stock by @id
+        :param id:
+        :return:
+        """
+        # remote path
+        path = '/stock/get'
+
+        # access service
+        return self.get(path, params=params)
+
+    def stock_add(self, stocks):
+        """
+            add new stocks
+        :param stocks: list, stock list
+        :return:
+        """
+        # remote path
+        path = '/stock/add'
+
+        # access service
+        return self.post(path, json=stocks)
+
+
+    def trade_list(self, **params):
+        """
+            filter trade records by @conds
+        :param conds: dict, sql filter conditions
+        :return:
+        """
+        # remote path
+        path = '/trade/list'
+
+        # access service
+        return self.get(path, params=params)
+
+    def trade_user_buy(self, **params):
+        """
+            user buy
+        :param user: int, user id
+        :param lever: int, lever id
+        :param stock: str, stock code
+        :param ptype: str, price type: xj or sj
+        :param price: decimal, buy price
+        :param count: int, buy count
+        :return:
+        """
+        # remote path
+        path = '/trade/user/buy'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_user_sell(self, **params):
+        """
+            user sell
+        :param user: int, user id
+        :param trade: int, trade id
+        :param ptype: str, sell price type: xj or sj
+        :param price: decimal, sell price
+        :return:
+        """
+        # remote path
+        path = '/trade/user/sell'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_user_close(self, **params):
+        """
+            user sell
+        :param user: int, user id
+        :param trade: int, trade id
+        :param ptype: str, sell price type: xj or sj
+        :param price: decimal, sell price
+        :return:
+        """
+        # remote path
+        path = '/trade/user/close'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_user_cancel(self, **params):
+        """
+            user cancel
+        :param user: int, user id
+        :param trade: int, trade id
+        :return:
+        """
+        # remote path
+        path = '/trade/user/cancel'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_buy(self, **params):
+        """
+            sys buy
+        :param user: int, user id
+        :param trade: int, trade id
+        :param account: str, trade account
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/buy'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_sell(self, **params):
+        """
+            sys sell
+        :param user: int, user id
+        :param trade: int, trade id
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/sell'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_close(self, **params):
+        """
+            sys close
+        :param user: int, user id
+        :param trade: int, trade id
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/close'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_cancel(self, **params):
+        """
+            sys cancel
+        :param user: int, user id
+        :param trade: int, trade id
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/cancel'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_bought(self, **params):
+        """
+            sys bought
+        :param user: int, user id
+        :param trade: int, trade id
+        :param price: decimal, stock price
+        :param count: int, stock count
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/bought'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_sold(self, **params):
+        """
+            sys sold
+        :param user: int, user id
+        :param trade: int, trade id
+        :param price: decimal, stock price
+        :param count: int, stock count
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/sold'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_closed(self, **params):
+        """
+            sys closed
+        :param user: int, user id
+        :param trade: int, trade id
+        :param price: decimal, stock price
+        :param count: int, stock count
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/closed'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_canceled(self, **params):
+        """
+            sys canceled
+        :param user: int, user id
+        :param trade: int, trade id
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/canceled'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_dropped(self, **params):
+        """
+            sys dropped
+        :param user: int, user id
+        :param trade: int, trade id
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/dropped'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_sys_expired(self, **params):
+        """
+            sys expired
+        :param user: int, user id
+        :param trade: int, trade id
+        :return:
+        """
+        # remote path
+        path = '/trade/sys/expired'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_notify(self, **params):
+        """
+            notify trade result
+        :param code: str, trade code
+        :param dprice: decimal, stock price
+        :param dcount: int, stock count
+        :param dcode: str, deal code
+        :return:
+        """
+        # remote path
+        path = '/trade/notify'
+
+        # access service
+        return self.post(path, params=params)

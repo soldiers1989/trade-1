@@ -6,10 +6,9 @@ from .. import src
 
 # alias name
 get_list = src.stock.get_list
-get_quotes = src.stock.get_quotes
 get_quote = src.stock.get_quote
 get_ticks = src.stock.get_ticks
-get_kdata = src.stock.get_kdata
+get_kline = src.stock.get_kline
 
 
 def get(self, type, callback=None, format=None, **kwargs):

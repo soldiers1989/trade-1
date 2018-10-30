@@ -18,7 +18,7 @@ def start(port):
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
 
     # log start message
-    logging.info('start quote service on port %d' % port)
+    logging.info('start market data service on port %d' % port)
 
     app = tornado.web.Application(urls.handlers, **settings)
     app.listen(port)

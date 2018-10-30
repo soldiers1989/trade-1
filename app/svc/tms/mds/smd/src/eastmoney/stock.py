@@ -148,7 +148,7 @@ class _Quote:
         # stock code
         code = items[1]
 
-        qte = {'zqdm':code}
+        qte = {'zqdm':code, 'source': 'eastmoney'}
         # stock quote
         for k in alias:
             qte[k] = items[alias[k]]

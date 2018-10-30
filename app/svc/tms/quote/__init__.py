@@ -1,1 +1,1 @@
-from tms.quote import service
+from . import service

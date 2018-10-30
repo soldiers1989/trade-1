@@ -1,1 +1,1 @@
-from tms.trade import service
+from . import service

@@ -42,7 +42,7 @@ def get_list(**kwargs):
         raise error.ASMDSrcError('get stock list failed, all data source has been tried.')
 
 
-def get_quotes(**kwargs):
+def _get_quotes(**kwargs):
     """
         获取所有股票的当前行情
     :return:
@@ -73,9 +73,13 @@ def get_quotes(**kwargs):
 
 def get_quote(**kwargs):
     """
-        获取指定股票的当前行情
+        获取所有或指定股票的当前行情
     :return:
     """
+    # want get all stock's quote
+    if kwargs.get('zqdm') is None:
+        return _get_quotes(**kwargs)
+
     # data sources
     sources = {
         'sina': sina.stock.quote, # 新浪
@@ -132,7 +136,7 @@ def get_ticks(**kwargs):
         raise error.ASMDSrcError('get stock ticks failed, all data source has been tried.')
 
 
-def get_kdata(**kwargs):
+def get_kline(**kwargs):
     """
         获取指定股票的K线数据
     :param kwargs:
@@ -140,7 +144,7 @@ def get_kdata(**kwargs):
     """
     # data sources
     sources = {
-        'ifeng': ifeng.stock.kdata, # 凤凰
+        'ifeng': ifeng.stock.kline, # 凤凰
     }
 
     # get specified source

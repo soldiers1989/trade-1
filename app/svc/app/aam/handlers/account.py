@@ -28,7 +28,7 @@ class ListHandler(handler.Handler):
 class SelectHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
-    def post(self):
+    def get(self):
         """
             add new trade request
         :return:

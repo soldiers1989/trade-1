@@ -66,7 +66,7 @@ class RegisterHandler(handler.Handler):
         :return:
         """
         # get config from post json data
-        config = json.loads(self.request.body.decode())
+        config = self.cleaned_arguments
         # start trade service
         result = secex.trade.default.register(**config)
 

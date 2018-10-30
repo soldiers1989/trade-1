@@ -27,7 +27,7 @@ class DelAccount(handler.Handler):
     """
     @access.exptproc
     @access.needtoken
-    def post(self):
+    def get(self):
         """
             delete account
         :return:
@@ -43,7 +43,7 @@ class ClearAccount(handler.Handler):
     """
     @access.exptproc
     @access.needtoken
-    def post(self):
+    def get(self):
         """
             clear all account
         :return:

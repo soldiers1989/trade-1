@@ -199,7 +199,7 @@ class _Quote:
             # stock code
             code = items[0].split('=')[0][-6:]
 
-            qte = {'zqdm': code}
+            qte = {'zqdm': code, 'source': 'sina'}
             # stock quote
             for k in alias:
                 qte[k] = items[alias[k]]
@@ -297,6 +297,9 @@ class _Ticks:
 
         # parse pages data
         pages = util.json(resp.text)
+
+        if not isinstance(pages, dict) or pages.get('detailPages') is None:
+            raise ValueError('get page count failed, response: %s' % str(resp.text))
 
         return len(pages['detailPages'])
 

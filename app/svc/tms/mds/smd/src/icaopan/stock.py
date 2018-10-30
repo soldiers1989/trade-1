@@ -131,7 +131,7 @@ class _Quote:
         # stock code
         code = items['stockCode']
 
-        qte = {'zqdm': code}
+        qte = {'zqdm': code, 'source': 'icaopan'}
         # stock quote
         for k in alias:
             qte[k] = items[alias[k]]
@@ -163,7 +163,7 @@ class _Quote:
             # request data
             resp = client.md.get(path)
             # parse data
-            results.append(self._parse(resp.text))
+            results.append(self._parse(resp.json()))
 
         return results
 
