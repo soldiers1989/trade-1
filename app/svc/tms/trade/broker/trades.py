@@ -2,7 +2,7 @@
     trade service
 """
 import threading
-from . import account, protocol
+from . import account, error
 
 
 class Trades:
@@ -28,11 +28,11 @@ class Trades:
         with self._lock:
             acnt = self._accounts.get(aid)
             if acnt is not None:
-                return protocol.failed('account with id: %s has exists.' % aid)
+                raise error.TradeError('account with id: %s has exists.' % aid)
 
             self._accounts[aid] = account.create(**kwargs)
 
-            return protocol.success('account has added')
+            return {'id': aid}
 
     def delete(self, aid):
         """
@@ -43,16 +43,12 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                # logout first
-                account.logout()
                 # remove from account list
                 del self._accounts[aid]
-                # response
-                resp = protocol.success('account has deleted.', data={'id':aid})
+                # logout first
+                return account.logout()
             else:
-                resp = protocol.success('account is not exist.', data={'id':aid})
-
-            return resp
+                raise error.TradeError('account %s is not exist' % (aid))
 
     def clear(self):
         """
@@ -60,22 +56,19 @@ class Trades:
         :return:
         """
         with self._lock:
-            resp, data = None, []
-
+            results = []
             for id, account in self._accounts.items():
-                # logout first
-                res = account.logout()
-                code, msg = res.get('status'), res.get('msg')
-                # add data
-                data.append({'id':id, 'code':code, 'msg':msg})
-
-            # make response
-            resp = protocol.success(data=data)
+                # logout
+                try:
+                    result = account.logout()
+                    results.append({'id': id, 'result': result})
+                except Exception as e:
+                    results.append({'id': id, 'result': str(e)})
 
             # empty accounts
             self._accounts = {}
 
-            return resp
+            return results
 
     def login(self, aid = None):
         """
@@ -88,30 +81,19 @@ class Trades:
                 # login account
                 account = self._accounts.get(aid)
                 if account is not None:
-                    res = account.login()
-                    code, msg = res.get('status'), res.get('msg')
-                    if code == 0:
-                        resp = protocol.success(data={'id':aid, 'code':code, msg:msg})
-                    else:
-                        resp = protocol.failed(data={'id': aid, 'code': code, msg: msg})
+                    return account.login()
                 else:
-                    resp = protocol.failed(data={'id':aid, 'code':-1, 'msg':'account not exist'})
+                    raise error.TradeError('account not exist')
             else:
-                succeed, data = True, []
+                results = []
                 # login all account
                 for id, account in self._accounts.items():
-                    res = account.login()
-                    code, msg = res.get('status'), res.get('msg')
-                    if code != 0:
-                        succeed = False
-                    data.append({'id': id, 'code': code, 'msg': msg})
-
-                if succeed:
-                    resp = protocol.success(data = data)
-                else:
-                    resp = protocol.failed(data = data)
-
-            return resp
+                    try:
+                        result = account.login()
+                        results.append({'id': id, 'result': result})
+                    except Exception as e:
+                        results.append({'id': id, 'result': str(e)})
+                return results
 
     def logout(self, aid = None):
         """
@@ -124,31 +106,19 @@ class Trades:
                 # account logout
                 account = self._accounts.get(aid)
                 if account is not None:
-                    res = account.logout()
-                    code, msg = res.get('status'), res.get('msg')
-                    if code == 0:
-                        resp = protocol.success(data={'id':aid, 'code':code, 'msg':msg})
-                    else:
-                        resp = protocol.failed(data={'id': aid, 'code': code, 'msg': msg})
+                    return account.logout()
                 else:
-                    resp = protocol.failed(data={'id':aid, 'code':-1, 'msg':'account not exist'})
+                    raise error.TradeError('account not exist')
             else:
+                results = []
                 # all account logout
-                succeed, data = True, []
-                # login all account
                 for id, account in self._accounts.items():
-                    res = account.logout()
-                    code, msg = res.get('status'), res.get('msg')
-                    if code != 0:
-                        succeed = False
-                    data.append({'id': id, 'login': True, 'msg': msg})
-
-                if succeed:
-                    resp = protocol.success(data = data)
-                else:
-                    resp = protocol.failed(data = data)
-
-            return resp
+                    try:
+                        result = account.logout()
+                        results.append({'id': id, 'result': result})
+                    except Exception as e:
+                        results.append({'id': id, 'result': str(e)})
+                return results
 
     def status(self, aid = None):
         """
@@ -160,20 +130,15 @@ class Trades:
             if aid is not None:
                 account = self._accounts.get(aid)
                 if account is not None:
-                    data = {'id':aid}
-                    data.update(account.status())
-                    resp = protocol.success(data=data)
+                    return account.status()
                 else:
-                    resp = protocol.failed('account is not exist', data={'id':aid})
+                    raise error.TradeError('account is not exist')
             else:
-                stats = []
+                results = []
                 for id, account in self._accounts.items():
-                    data = account.status()
-                    data['id'] = aid
-                    stats.append(data)
-                resp = protocol.success(data=stats)
+                    results.append(account.status())
 
-            return resp
+                return results
 
     def quote(self, aid, zqdm):
         """
@@ -186,10 +151,9 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.quote(zqdm)
+                return account.quote(zqdm)
             else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-            return resp
+                raise error.TradeError('account not exist')
 
     def query(self, aid, type, sdate=None, edate=None):
         """
@@ -204,10 +168,9 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.query(type, sdate, edate)
+                return account.query(type, sdate, edate)
             else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-            return resp
+                raise error.TradeError('account not exist')
 
     def place(self, aid, otype, ptype, zqdm, price, count):
         """
@@ -223,10 +186,9 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.place(otype, ptype, zqdm, price, count)
+                return account.place(otype, ptype, zqdm, price, count)
             else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-            return resp
+                raise error.TradeError('account not exist')
 
     def cancel(self, aid, zqdm, orderno):
         """
@@ -239,7 +201,6 @@ class Trades:
         with self._lock:
             account = self._accounts.get(aid)
             if account is not None:
-                resp = account.cancel(zqdm, orderno)
+                return account.cancel(zqdm, orderno)
             else:
-                resp = protocol.failed('account not exist', data={'id':aid})
-            return resp
+                raise error.TradeError('account not exist')

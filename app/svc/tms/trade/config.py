@@ -37,13 +37,12 @@ ACCOUNTS = [
         'servers': [('szxjt1', '117.40.3.6', 7708), ('szxjt2', '202.130.235.187', 7708)]
     },
     {
-        'id': '1000001',
+        'id': '10000001',
         'channel': 'mock',
-        'account': '1000001',
+        'account': '10000001',
         'pwd': '123456',
-        'money': '1000000',
         'server': {
-            'baseurl': 'http://localhost:10007',
+            'baseurl': 'http://localhost:10006',
             'token': 'abc',
             'safety': False
         }

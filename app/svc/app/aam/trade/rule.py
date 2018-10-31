@@ -1,9 +1,9 @@
 """
     trade relate utility
 """
-import trpc
 import time
 from . import calendar
+from tms.mds import smd
 
 
 class _PType:
@@ -93,8 +93,8 @@ def valid_user_buy_price(code, price):
     :param price: float, order price
     :return:
     """
-    q = trpc.quote.get_quote(code)
-    if price < q.dtj or price > q.ztj:
+    q = smd.api.stock.get_quote(zqdm=code)[0]
+    if price < q['dtj'] or price > q['ztj']:
         return False
 
     return True
@@ -107,8 +107,8 @@ def valid_user_sell_price(code, price):
     :param price:
     :return:
     """
-    q = trpc.quote.get_quote(code)
-    if price < q.dtj or price > q.ztj:
+    q = smd.api.stock.get_quote(zqdm=code)[0]
+    if price < q['dtj'] or price > q['ztj']:
         return False
 
     return True
@@ -121,8 +121,8 @@ def valid_user_close_price(code, price):
     :param price:
     :return:
     """
-    q = trpc.quote.get_quote(code)
-    if price < q.dtj or price > q.ztj:
+    q = smd.api.stock.get_quote(zqdm=code)[0]
+    if price < q['dtj'] or price > q['ztj']:
         return False
 
     return True
@@ -208,8 +208,8 @@ def valid_sys_close_price(code, price):
     :param price:
     :return:
     """
-    q = trpc.quote.get_quote(code)
-    if price < q.dtj or price > q.ztj:
+    q = smd.api.stock.get_quote(zqdm=code)[0]
+    if price < q['dtj'] or price > q['ztj']:
         return False
 
     return True

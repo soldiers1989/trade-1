@@ -1,5 +1,5 @@
 import json
-from .. import handler, access, tasks, protocol, forms, error, task
+from .. import handler, access, tasks, protocol, error, task
 
 
 class StartHandler(handler.Handler):

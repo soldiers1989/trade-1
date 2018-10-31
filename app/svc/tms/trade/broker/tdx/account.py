@@ -1,7 +1,7 @@
 """
     securities account for trade
 """
-from . import trader, protocol, util, const
+from . import trader, protocol
 from .. import account, error
 
 
@@ -31,16 +31,24 @@ class Account(account.Account):
         self._account = trader.Account(laccount, lpwd, taccount, tpwd, dept, version, gddm)
         self._traders = trader.Traders(self._account, agents, servers)
 
+    def _decode(self, resp):
+        """
+            decode protocol
+        :param resp:
+        :return:
+        """
+        if resp.get('status') != 0:
+            raise error.TradeError(resp.get('msg'))
+
+        return resp.get('data')
+
     def login(self):
         """
             账户登录
         :return: dict
             {'status': status, 'msg': msg, 'data':{}}
         """
-        try:
-            return self._traders.login()
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._decode(self._traders.login())
 
     def logout(self):
         """
@@ -48,22 +56,16 @@ class Account(account.Account):
         :return:
             (True|False, result message string)
         """
-        try:
-            return self._traders.logout()
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._decode(self._traders.logout())
 
     def status(self):
         """
             get account status
         :return:
         """
-        try:
-            data = self._account.status()
-            data['traders'] = self._traders.status()
-            return protocol.success(data=data)
-        except Exception as e:
-            return protocol.failed(str(e))
+        data = self._account.status()
+        data['traders'] = self._traders.status()
+        return data
 
     def quote(self, zqdm):
         """
@@ -72,11 +74,8 @@ class Account(account.Account):
         :return:
             dict
         """
-        try:
-            # send query
-            return self._traders.quote(zqdm)
-        except Exception as e:
-            return protocol.failed(str(e))
+        # send query
+        return self._decode(self._traders.quote(zqdm))
 
     def query(self, type, sdate=None, edate=None):
         """
@@ -87,10 +86,7 @@ class Account(account.Account):
         :return:
             list/dict
         """
-        try:
-            return self._traders.query(type, sdate, edate)
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._decode(self._traders.query(type, sdate, edate))
 
     def place(self, otype, ptype, zqdm, price, count):
         """
@@ -102,10 +98,7 @@ class Account(account.Account):
         :param count: order count
         :return:
         """
-        try:
-            return self._traders.place(otype, ptype, zqdm, price, count)
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._decode(self._traders.place(otype, ptype, zqdm, price, count))
 
     def cancel(self, zqdm, orderno):
         """
@@ -114,11 +107,8 @@ class Account(account.Account):
         :param orderno: str, order number
         :return:
         """
-        try:
-            # cancel order
-            return self._traders.cancel(zqdm, orderno)
-        except Exception as e:
-            return protocol.failed(str(e))
+        # cancel order
+        return self._decode(self._traders.cancel(zqdm, orderno))
 
 # register channel
 account.register('tdx', Account)

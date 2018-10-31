@@ -1,11 +1,10 @@
 """
     stock relate tasks
 """
-import logging
+import logging, tms, app
 from xpinyin import Pinyin
-from tlib.stock.detail import cninfo, sina
 
-from .. import task, rpc
+from .. import task
 
 
 class SyncAllService(task.Task):
@@ -14,7 +13,12 @@ class SyncAllService(task.Task):
         config format:
         {
             rpc: {
-                stock: {
+                aam: {
+                    baseurl: <baseurl>
+                    key: <key>
+                    safety: <True|False>
+                },
+                mds: {
                     baseurl: <baseurl>
                     key: <key>
                     safety: <True|False>
@@ -29,10 +33,11 @@ class SyncAllService(task.Task):
         :param kwargs:
         """
         # get config
-        config = kwargs.get('config')['rpc']['stock']
+        config = kwargs.get('config')['rpc']
 
         # init remote rpc
-        self._remote = rpc.AamStockRpc(config['baseurl'], config.get('key'), config.get('safety', False))
+        self._aam = app.rpc.Aam(config['aam']['baseurl'], config['aam'].get('key'), config['aam'].get('safety', False))
+        self._mds = tms.rpc.Mds(config['mds']['baseurl'], config['mds'].get('key'), config['mds'].get('safety', False))
 
         super().__init__(*args, **kwargs)
 
@@ -43,7 +48,7 @@ class SyncAllService(task.Task):
         """
         # get local stock list
         localstocks = {}
-        stocks = self._remote.list()
+        stocks = self._aam.stock_list()
         for stock in stocks:
             localstocks[stock['id']] = stock['id']
 
@@ -51,9 +56,9 @@ class SyncAllService(task.Task):
         newstocks = []
 
         # get remote stocks from
-        remotestocks = self._fetch()
+        remotestocks = self._mds.stock_list()
         for stock in remotestocks:
-            if localstocks.get(stock['code']) is None:
+            if localstocks.get(stock['zqdm']) is None:
                 newstocks.append(stock)
 
         # pinyin translater
@@ -62,7 +67,7 @@ class SyncAllService(task.Task):
         tidystocks = []
         # tidy new stocks
         for stock in newstocks:
-            id, name = stock['code'], stock['name']
+            id, name = stock['zqdm'], stock['zqmc']
             jianpin = py.get_initials(name, u'').lower()
             quanpin = py.get_pinyin(name, u'')
             tidystocks.append({
@@ -75,37 +80,9 @@ class SyncAllService(task.Task):
             })
 
         # add new stocks
-        resp = self._remote.add(tidystocks)
+        resp = self._aam.stock_add(tidystocks)
 
         # add/failed count
         added, failed = len(resp.get('added')), len(resp.get('failed'))
 
         return 'local:%d, remote:%d, added:%d, failed:%d' % (len(localstocks), len(remotestocks), added, failed)
-
-
-    def _fetch(self):
-        """
-            fetch stocks from source sites
-        :return:
-        """
-        # none-repeated stocks fetched
-        stocks = {}
-
-        # sync from sina
-        try:
-            sinas = sina.list.fetch()
-            for stock in sinas:
-                stocks[stock['code']] = stock
-        except Exception as e:
-            logging.error('sync stocks from sina error: %s' % str(e))
-
-        # sync from cninfo
-        try:
-            cninfos = cninfo.list.fetch()
-            for stock in cninfos:
-                stocks[stock['code']] = stock
-        except Exception as e:
-            logging.error('sync stocks from sina error: %s' % str(e))
-
-        # all stocks fetched
-        return list(stocks.values())

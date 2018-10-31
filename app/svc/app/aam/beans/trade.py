@@ -145,7 +145,7 @@ def user_buy(form):
 
             # add trade order record
             code = rand.uuid()
-            tradeDao.add_trade(form.user, form.stock, form.coupon, code, form.ptype, form.price, form.count, margin, slog)
+            tradeDao.add_trade(form.user, form.stock, form.coupon, form.type, code, form.ptype, form.price, form.count, margin, slog)
             tradeobj = tradeDao.get(code=code)
 
             # add trade margin record

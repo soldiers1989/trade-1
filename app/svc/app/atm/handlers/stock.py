@@ -26,6 +26,6 @@ class SyncAllHandler(handler.Handler):
         config = json.loads(self.request.body.decode())
 
         # start a new sync task
-        task.manager.take(tasks.stock.SyncAllService.cname(), tasks.stock.SyncAllService(callback=form.callback, config=config))
+        task.manager.take(tasks.stock.SyncAllService.__name__, tasks.stock.SyncAllService(callback=form.callback, config=config))
 
         self.write(protocol.success())

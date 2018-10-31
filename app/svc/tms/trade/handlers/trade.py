@@ -1,5 +1,5 @@
 import json
-from .. import access, handler, trader, error
+from .. import access, handler, trader, error, protocol
 
 
 class AddAccount(handler.Handler):
@@ -18,7 +18,7 @@ class AddAccount(handler.Handler):
 
         account = json.loads(self.request.body.decode())
         resp = trader.default.add(account['id'], **account)
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class DelAccount(handler.Handler):
@@ -34,7 +34,7 @@ class DelAccount(handler.Handler):
         """
         account = self.get_argument('account')
         resp = trader.default.delete(account)
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class ClearAccount(handler.Handler):
@@ -49,7 +49,7 @@ class ClearAccount(handler.Handler):
         :return:
         """
         resp = trader.default.clear()
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class LoginAccount(handler.Handler):
@@ -65,7 +65,7 @@ class LoginAccount(handler.Handler):
         """
         aid = self.get_argument('account', None)
         resp = trader.default.login(aid)
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class LogoutAccount(handler.Handler):
@@ -81,7 +81,7 @@ class LogoutAccount(handler.Handler):
         """
         aid = self.get_argument('account', None)
         resp = trader.default.logout(aid)
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class StatusAccount(handler.Handler):
@@ -98,7 +98,7 @@ class StatusAccount(handler.Handler):
         """
         aid = self.get_argument('account', None)
         resp = trader.default.status(aid)
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class Quote(handler.Handler):
@@ -115,7 +115,7 @@ class Quote(handler.Handler):
         """
         aid, zqdm = self.get_argument('account'), self.get_argument('zqdm')
         resp = trader.default.quote(aid, zqdm)
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class Query(handler.Handler):
@@ -131,7 +131,7 @@ class Query(handler.Handler):
         """
         aid, type, sdate, edate = self.get_argument('account'), self.get_argument('type'), self.get_argument('sdate', None), self.get_argument('edate', None)
         resp = trader.default.query(aid, type, sdate, edate)
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class Place(handler.Handler):
@@ -147,7 +147,7 @@ class Place(handler.Handler):
         """
         aid, otype, ptype, zqdm, price, count = self.get_argument('account'), self.get_argument('otype'), self.get_argument('ptype'), self.get_argument('zqdm'), self.get_argument('price'), self.get_argument('count')
         resp = trader.default.place(aid, otype, ptype, zqdm, price, count)
-        self.write(resp)
+        self.write(protocol.success(data=resp))
 
 
 class Cancel(handler.Handler):
@@ -163,4 +163,4 @@ class Cancel(handler.Handler):
         """
         aid, zqdm, orderno = self.get_argument('account'), self.get_argument('zqdm'), self.get_argument('orderno')
         resp = trader.default.cancel(aid, zqdm, orderno)
-        self.write(resp)
+        self.write(protocol.success(data=resp))

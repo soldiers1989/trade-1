@@ -13,11 +13,8 @@ class StartHandler(handler.Handler):
 
         :return:
         """
-        if self.request.body is None:
-            raise error.missing_parameters
-
-        # get config from post json data
-        config = json.loads(self.request.body.decode())
+        # get config
+        config = self.cleaned_arguments
         # start trade service
         secex.trade.default.start(**config)
 

@@ -531,7 +531,7 @@ class Traders:
                 self._trader = self.pickone()
 
         # no more trader can be used
-        return Exception("no trader usable for account")
+        raise Exception("no trader usable for account")
 
     def quote(self, zqdm):
         """

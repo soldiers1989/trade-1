@@ -1,16 +1,8 @@
 """
     robot trade service for user trade order
 """
-import time, logging
-from .. import task, rpc
-
-_Dealt =  {
-    "已成": "tdeal",
-    "已撤": "tcanceled",
-    "部撤": "pcanceled",
-    "撤废": "fcanceled",
-    "废单": "dropped"
-}
+import time, logging, tms, app
+from .. import task
 
 
 class _Repr:
@@ -54,7 +46,7 @@ class TradeService(task.Task):
         {
             interval: <schedule interval>,
             rpc: {
-                trader: {
+                trade: {
                     baseurl: <baseurl>
                     key: <key>
                     safety: <True|False>
@@ -83,15 +75,10 @@ class TradeService(task.Task):
         self._interval = config.get('interval', 5)
         # trade notify url
         self._trade_notify_url = config['notify']['trade']
-        # final status for dealt recognition
-        self._dealt = config.get('dealt', _Dealt)
 
         # init trader rpc
-        self._trader = rpc.TradeRpc(config['rpc']['trader']['baseurl'], config['rpc']['trader'].get('key'), config['rpc']['trader'].get('safety', False))
-        self._trade = rpc.AamTradeRpc(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
-        self._order = rpc.AamOrderRpc(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
-        self._account = rpc.AamAccountRpc(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
-        self._stock = rpc.AamStockRpc(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
+        self._trade = tms.rpc.Trade(config['rpc']['trade']['baseurl'], config['rpc']['trade'].get('key'), config['rpc']['trade'].get('safety', False))
+        self._aam = app.rpc.Aam(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
 
         # init super
         super().__init__(*args, **kwargs)
@@ -129,7 +116,8 @@ class TradeService(task.Task):
         """
         logging.info('start process trades')
         # get trades to process
-        trades = self._trade.list(status__in='tobuy,tosell,toclose,cancelbuy,cancelsell,cancelclose')
+        trades = self._aam.trade_list(status__in='tobuy,tosell,toclose,cancelbuy,cancelsell,cancelclose')
+        logging.info('%s trades waiting to process.' % str(len(trades)))
 
         # process each trade
         for trade in trades:
@@ -146,34 +134,34 @@ class TradeService(task.Task):
             logging.info('start process trade: %s', _repr_trade.format(trade))
             if trade['status'] == 'tobuy':
                 # select a new account
-                account = self._account.select(type=trade['type'], stock=trade['stock_id'], optype=trade['optype'], oprice=trade['oprice'], ocount=trade['ocount'])
+                account = self._aam.account_select(type=trade['type'], stock=trade['stock_id'], optype=trade['optype'], oprice=trade['oprice'], ocount=trade['ocount'])
                 logging.info('select account: %s', _repr_account.format(account))
                 # get stock name
-                stockname = self._stock.get(trade['stock_id'])['name']
+                stockname = self._aam.stock_get(id=trade['stock_id'])['name']
                 # update trade status
-                resp = self._trade.sys_buy(trade['user_id'], trade['id'], account['account'])
+                resp = self._aam.trade_sys_buy(user=trade['user_id'], trade=trade['id'], account=account['account'])
                 logging.info('sys buy: %s', _repr_trade.format(resp))
                 # add new buy trade order
-                resp = self._order.buy(account['account'], trade['tcode'], trade['stock_id'], stockname, trade['optype'], trade['ocount'], trade['oprice'], self._trade_notify_url, 'sys')
+                resp = self._aam.order_buy(account=account['account'], tcode=trade['code'], scode=trade['stock_id'], sname=stockname, optype=trade['optype'], ocount=trade['ocount'], oprice=trade['oprice'], callback=self._trade_notify_url, operator='sys')
                 logging.info('order buy: %s', _repr_order.format(resp))
             elif trade['status'] in ['tosell', 'toclose']:
                 # get stock name
-                stockname = self._stock.get(trade['stock_id'])['name']
+                stockname = self._aam.stock_get(id=trade['stock_id'])['name']
                 # update trade status
-                resp = self._trade.sys_sell(trade['user_id'], trade['id'])
+                resp = self._aam.trade_sys_sell(user=trade['user_id'], trade=trade['id'])
                 logging.info('sys sell: %s', _repr_trade.format(resp))
                 # add new buy trade order
-                resp = self._order.sell(trade['account'], trade['tcode'], trade['stock_id'], stockname, trade['optype'], trade['ocount'], trade['oprice'], self._trade_notify_url, 'sys')
+                resp = self._aam.order_sell(account=trade['account'], tcode=trade['code'], scode=trade['stock_id'], sname=stockname, optype=trade['optype'], ocount=trade['ocount'], oprice=trade['oprice'], callback=self._trade_notify_url, operator='sys')
                 logging.info('order sell: %s', _repr_order.format(resp))
             elif trade['status'] in ['cancelbuy', 'cancelsell', 'cancelclose']:
                 # update trade status
-                resp = self._trade.sys_cancel(trade['user_id'], trade['id'])
+                resp = self._aam.trade_sys_cancel(user=trade['user_id'], trade=trade['id'])
                 logging.info('sys cancel: %s', _repr_trade.format(resp))
                 # get relate orders
-                orders = self._order.list(status__in='notsend,tosend,sending,sent')
+                orders = self._aam.order_list(status__in='notsend,tosend,sending,sent')
                 # cancel order
                 for order in orders:
-                    resp = self._order.cancel(order['id'], 'sys')
+                    resp = self._aam.order_cancel(id=order['id'], operator='sys')
                     logging.info('order cancel: %s', _repr_order.format(resp))
             else:
                 pass
@@ -188,7 +176,9 @@ class TradeService(task.Task):
         """
         logging.info('start process orders')
         # get orders to process
-        orders = self._order.list(status__in='notsend,tocancel')
+        orders = self._aam.order_list(status__in='notsend,tocancel')
+
+        logging.info('%s orders waiting to process.' % str(len(orders)))
 
         # process each order
         for order in orders:
@@ -205,20 +195,20 @@ class TradeService(task.Task):
             logging.info('start process order: %s', order)
             if order['status'] == 'notsend':
                 # update order status
-                resp = self._order.notify(order['id'], 'tosend', 'sys')
+                resp = self._aam.order_notify(id=order['id'], status='tosend', operator='sys')
                 logging.info('update order: %s', _repr_order.format(resp))
                 # place order
-                resp = self._trader.place_order(order['account'], order['otype'], order['optype'], order['scode'], order['oprice'], order['ocount'])
+                resp = self._trade.place(account=order['account'], otype=order['otype'], ptype=order['optype'], zqdm=order['scode'], price=order['oprice'], count=order['ocount'])
                 logging.info('place order: %s', resp)
                 # update order code
-                resp = self._order.update(order['id'], 'sent', 'sys', ocode=resp[0].wtbh)
+                resp = self._aam.order_update(id=order['id'], status='sent', operator='sys', ocode=resp['wtbh'])
                 logging.info('update order: %s', _repr_order.format(resp))
             elif order['status'] == 'tocancel':
                 # update order status
-                resp = self._order.notify(order['id'], 'canceling', 'sys')
+                resp = self._aam.order_notify(id=order['id'], status='canceling', operator='sys')
                 logging.info('update order: %s', _repr_order.format(resp))
                 # cancel order
-                resp = self._trader.cancel_order(order['account'], order['scode'], order['ocode'])
+                resp = self._trade.cancel(account=order['account'], zqdm=order['scode'], orderno=order['ocode'])
                 logging.info('cancel order: %s', resp)
             else:
                 pass
@@ -233,7 +223,9 @@ class TradeService(task.Task):
         """
         logging.info('start process dealts')
         # get local orders to process
-        localorders = self._order.list(status__in='tosend,sending,sent,canceling')
+        localorders = self._aam.order_list(status__in='tosend,sending,sent,canceling')
+
+        logging.info('%s orders waiting to dealt.' % str(len(localorders)))
 
         # get order relate accounts
         accounts = []
@@ -245,7 +237,7 @@ class TradeService(task.Task):
         remoteorders = {}
         for account in accounts:
             try:
-                orders = self._trader.query_account(account, 'drwt')
+                orders = self._trade.query(account=account, type='drwt')
                 remoteorders[account] = orders
             except Exception as e:
                 logging.error('query drwt from account %s failed, error: %s' % (account, str(e)))
@@ -259,11 +251,10 @@ class TradeService(task.Task):
 
             # check remote order status relate with local order
             for rorder in rorders:
-                if lorder['ocode'] == rorder.wtbh:
+                if lorder['ocode'] == rorder['wtbh']:
                     try:
-                        status = self._dealt.get(lorder['ztsm'])
-                        if status is not None:
-                            resp = self._order.notify(lorder['id'], status, 'sys', lorder.cjsl, lorder.cjjg)
+                        if rorder['ztsm'] in ['tdeal', 'tcanceled', 'pcanceled', 'fcanceled', 'dropped']:
+                            resp = self._aam.order_notify(id=lorder['id'], status=rorder['ztsm'], operator='sys', dcount=rorder['cjsl'], dprice=rorder['cjjg'])
                             logging.info('notify dealt order: %s', _repr_order.format(resp))
                     except Exception as e:
                         logging.info('notify dealt order failed, error: %s', str(e))

@@ -19,6 +19,7 @@ class UserBuy(form.Form):
     ptype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
     price = field.DecimalField(digits=10, decimals=2)
     count = field.IntegerField()
+    type = field.StringField(null=True, default=suite.enum.ttype.normal.code)
 
 
 class UserSell(form.Form):

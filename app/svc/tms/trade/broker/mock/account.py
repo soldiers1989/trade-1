@@ -1,7 +1,7 @@
 """
     securities account for trade
 """
-from .. import account, error, protocol
+from .. import account, error
 from .... import rpc
 
 
@@ -14,10 +14,10 @@ class Account(account.Account):
         :param money: str, 账户资金余额
         """
         # get args
-        self._account, self._pwd, self._money, self._server = kwargs.get('account'), kwargs.get('pwd'), kwargs.get('money'), kwargs.get('server')
+        self._account, self._pwd, self._server = kwargs.get('account'), kwargs.get('pwd'), kwargs.get('server')
 
         # check args
-        if self._account is None or self._pwd is None or self._money is None or self._server is None:
+        if self._account is None or self._pwd is None or self._server is None:
             raise error.TradeError('missing account parameters')
 
         baseurl, token, safety = self._server['baseurl'], self._server['token'], self._server['safety']
@@ -31,10 +31,7 @@ class Account(account.Account):
         :return: dict
             {'status': status, 'msg': msg, 'data':{}}
         """
-        try:
-            return self._rpc.login(account=self._account, pwd=self._pwd)
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._rpc.login(account=self._account, pwd=self._pwd)
 
     def logout(self):
         """
@@ -42,17 +39,19 @@ class Account(account.Account):
         :return:
             (True|False, result message string)
         """
-        try:
-            return self._rpc.logout(account=self._account)
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._rpc.logout(account=self._account)
 
     def status(self):
         """
             get account status
         :return:
         """
-        return protocol.failed(msg='status not supported')
+        data = {
+            'account': self._account,
+            'pwd': self._pwd,
+            'server': self._server,
+        }
+        return data
 
     def quote(self, zqdm):
         """
@@ -61,7 +60,7 @@ class Account(account.Account):
         :return:
             dict
         """
-        return protocol.failed(msg='quote not supported')
+        raise error.TradeError('quote not supported')
 
     def query(self, type, sdate=None, edate=None):
         """
@@ -72,10 +71,7 @@ class Account(account.Account):
         :return:
             list/dict
         """
-        try:
-            return self._rpc.query(account=self._account, type=type, sdate=sdate, edate=edate)
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._rpc.query(account=self._account, type=type, sdate=sdate, edate=edate)
 
     def place(self, otype, ptype, zqdm, price, count):
         """
@@ -87,10 +83,7 @@ class Account(account.Account):
         :param count: order count
         :return:
         """
-        try:
-            return self._rpc.place(account=self._account, symbol=zqdm, otype=otype, ptype=ptype, oprice=price, ocount=count)
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._rpc.place(account=self._account, symbol=zqdm, otype=otype, ptype=ptype, oprice=price, ocount=count)
 
     def cancel(self, zqdm, orderno):
         """
@@ -99,11 +92,7 @@ class Account(account.Account):
         :param orderno: str, order number
         :return:
         """
-        try:
-            # cancel order
-            return self._rpc.cancel(account=self._account, ocount=orderno)
-        except Exception as e:
-            return protocol.failed(str(e))
+        return self._rpc.cancel(account=self._account, ocount=orderno)
 
 # register channel
 account.register('mock', Account)
