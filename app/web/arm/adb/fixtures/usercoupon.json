@@ -4,11 +4,14 @@
     "pk": 1,
     "fields": {
       "user_id": 1,
+      "type": "cash",
       "name": "赠送",
-      "money": 10.00,
+      "value": 10.00,
+      "detail": "",
       "status": "unused",
-      "ctime": 1527261052,
-      "etime": 1527961052
+      "sdate": "2018-10-01",
+      "edate": "2018-12-01",
+      "ctime": 1527261052
     }
   },
   {
@@ -16,11 +19,14 @@
     "pk": 2,
     "fields": {
       "user_id": 1,
+      "type": "cash",
       "name": "赠送",
-      "money": 10.00,
+      "value": 10.00,
+      "detail": "",
       "status": "unused",
-      "ctime": 1527261052,
-      "etime": 1527961052
+      "sdate": "2018-10-01",
+      "edate": "2018-12-01",
+      "ctime": 1527261052
     }
   },
     {
@@ -28,11 +34,14 @@
     "pk": 3,
     "fields": {
       "user_id": 2,
+      "type": "cash",
       "name": "赠送",
-      "money": 10.00,
+      "value": 10.00,
+      "detail": "",
       "status": "unused",
-      "ctime": 1527261052,
-      "etime": 1527961052
+      "sdate": "2018-10-01",
+      "edate": "2018-12-01",
+      "ctime": 1527261052
     }
   },
     {
@@ -40,11 +49,14 @@
     "pk": 4,
     "fields": {
       "user_id": 3,
+      "type": "cash",
       "name": "赠送",
-      "money": 10.00,
+      "value": 10.00,
+      "detail": "",
       "status": "unused",
-      "ctime": 1527261052,
-      "etime": 1527961052
+      "sdate": "2018-10-01",
+      "edate": "2018-12-01",
+      "ctime": 1527261052
     }
   }
 ]

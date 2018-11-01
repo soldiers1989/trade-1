@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "name": "微信",
-      "icon": "icon-abc",
+      "icon": "icon-wx",
       "order": 1,
       "disable": 0,
       "ctime": 1527261052,
@@ -16,7 +16,7 @@
     "pk": 2,
     "fields": {
       "name": "支付宝",
-      "icon": "icon-abc",
+      "icon": "icon-zfb",
       "order": 2,
       "disable": 0,
       "ctime": 1527261052,
@@ -28,7 +28,7 @@
     "pk": 3,
     "fields": {
       "name": "连连",
-      "icon": "icon-abc",
+      "icon": "icon-ll",
       "order": 3,
       "disable": 0,
       "ctime": 1527261052,

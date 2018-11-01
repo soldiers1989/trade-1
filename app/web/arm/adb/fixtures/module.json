@@ -60,7 +60,7 @@
     "pk": 6,
     "fields": {
       "parent": 5,
-      "name": "交易订单",
+      "name": "交易委托",
       "path": "/cms/trade/order/",
       "order": 6,
       "disable": 0,

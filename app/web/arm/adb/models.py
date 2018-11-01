@@ -93,10 +93,9 @@ class RoleModule(models.Model):
 # tb_trade_account
 class TradeAccount(models.Model):
     id = models.AutoField(primary_key=True)
-    type = models.CharField(max_length=16)
     account = models.CharField(max_length=16, unique=True)
     name = models.CharField(max_length=16)
-    lmoney = models.DecimalField(max_digits=10, decimal_places=2)
+    money = models.DecimalField(max_digits=10, decimal_places=2)
     cfmin = models.DecimalField(max_digits=10, decimal_places=2)
     cfrate = models.DecimalField(max_digits=6, decimal_places=6)
     tfrate = models.DecimalField(max_digits=6, decimal_places=6)
@@ -131,82 +130,6 @@ class Lever(models.Model):
 
     class Meta:
         db_table = 'tb_lever'
-
-    def ddata(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
-# tb_quote_agent
-class QuoteAgent(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=16)
-    ip = models.CharField(max_length=16)
-    port = models.IntegerField()
-    disable = models.BooleanField(default=True)
-    htime = models.BigIntegerField()
-    ctime = models.BigIntegerField()
-
-    class Meta:
-        db_table = 'tb_quote_agent'
-
-    def ddata(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
-# tb_quote_server
-class QuoteServer(models.Model):
-    id = models.AutoField(primary_key=True)
-    agent = models.ForeignKey('QuoteAgent', on_delete=models.CASCADE)
-    name = models.CharField(max_length=16)
-    ip = models.CharField(max_length=16)
-    port = models.IntegerField()
-    disable = models.BooleanField(default=False)
-    ctime = models.BigIntegerField()
-
-    class Meta:
-        db_table = 'tb_quote_server'
-
-    def ddata(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-    def prop(self):
-        pass
-
-
-# tb_trade_agent
-class TradeAgent(models.Model):
-    id = models.AutoField(primary_key=True)
-    account = models.ForeignKey('TradeAccount', on_delete=models.CASCADE)
-    name = models.CharField(max_length=16)
-    ip = models.CharField(max_length=16)
-    port = models.IntegerField()
-    disable = models.BooleanField(default=False)
-    htime = models.BigIntegerField()
-    ctime = models.BigIntegerField()
-
-    class Meta:
-        db_table = 'tb_trade_agent'
-
-    def ddata(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        return items
-
-
-# tb_trade_server
-class TradeServer(models.Model):
-    id = models.AutoField(primary_key=True)
-    agent = models.ForeignKey('TradeAgent', on_delete=models.CASCADE)
-    name = models.CharField(max_length=16)
-    ip = models.CharField(max_length=16)
-    port = models.IntegerField()
-    disable = models.BooleanField(default=False)
-    ctime = models.BigIntegerField()
-
-    class Meta:
-        db_table = 'tb_trade_server'
 
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
@@ -288,78 +211,14 @@ class User(models.Model):
         return items
 
 
-# tb_user_stat
-class UserStat(models.Model):
-    user = models.OneToOneField('User', on_delete=models.CASCADE)
-
-    ctime = models.BigIntegerField(null=True)  # create time
-    mtime = models.BigIntegerField(null=True)  # modify time
-
-    tpay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    tdraw = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    ttradec = models.IntegerField(null=True)
-    ttradem = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-
-    dpay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    ddraw = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    dtradec = models.IntegerField(null=True)
-    dtradem = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-
-    wpay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    wdraw = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    wtradec = models.IntegerField(null=True)
-    wtradem = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-
-    mpay = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    mdraw = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    mtradec = models.IntegerField(null=True)
-    mtradem = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-
-
-    class Meta:
-        db_table = 'tb_user_stat'
-
-    def ddata(self):
-        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        del items['user']
-        return items
-
-    def properties(self):
-        props = []
-
-        items = self.ddata()
-        del items['id']
-        items['ctime'] = util.time.datetms(items['ctime'])
-        items['mtime'] = util.time.datetms(items['mtime'])
-
-        for key in items.keys():
-            props.append({'name':self.keyname(key), 'value':items[key], "group":self.keygroup(key)})
-
-        return props
-
-    def keyname(self, key):
-        key2name = {'dpay':'充值额','ddraw':'提现额','dtradec':'交易数','dtradem':'交易额',
-                    'wpay':'充值额','wdraw':'提现额','wtradec':'交易数','wtradem':'交易额',
-                    'mpay': '充值额', 'mdraw': '提现额', 'mtradec': '交易数', 'mtradem': '交易额',
-                    'tpay': '充值额', 'tdraw': '提现额', 'ttradec': '交易数', 'ttradem': '交易额',
-                    'ctime': '创建时间', 'mtime': '更新时间'}
-        return key2name[key]
-
-    def keygroup(self, key):
-        key2group = {'dpay':'昨日','ddraw':'昨日','dtradec':'昨日','dtradem':'昨日',
-                     'wpay':'上周','wdraw':'上周','wtradec':'上周','wtradem':'上周',
-                     'mpay': '上月', 'mdraw': '上月', 'mtradec': '上月', 'mtradem': '上月',
-                     'tpay': '累计', 'tdraw': '累计', 'ttradec': '累计', 'ttradem': '累计',
-                     'ctime': '统计时间', 'mtime': '统计时间'}
-        return key2group[key]
-
-
 # tb_user_coupon
 class UserCoupon(models.Model):
     id = models.AutoField(primary_key=True)
     user = models.ForeignKey('User', on_delete=models.CASCADE)
+    type = models.CharField(max_length=16) # 
     name = models.CharField(max_length=64)
-    money = models.DecimalField(max_digits=10, decimal_places=2)
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    detail = models.CharField(max_length=64)
     status = models.CharField(max_length=16, default='unused') #unused-未使用, used-已使用, deleted-已删除,  expired-已失效
     sdate = models.DateField() # start date
     edate = models.DateField()  # expire date
@@ -423,7 +282,7 @@ class UserCharge(models.Model):
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     code = models.CharField(max_length=16, unique=True)
     money = models.DecimalField(max_digits=10, decimal_places=2)  # bill money
-    status = models.CharField(max_length=16, default='paying')
+    status = models.CharField(max_length=16)
     ctime = models.BigIntegerField()  # create time
 
     class Meta:
@@ -479,35 +338,30 @@ class UserStock(models.Model):
 # tb_user_trade
 class UserTrade(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='用户')
-    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票')
-    coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True, verbose_name='优惠券')
-    type = models.CharField(max_length=16, verbose_name='订单类型')
-    code = models.CharField(max_length=16, unique=True, verbose_name='订单代码')
-    account = models.CharField(null=True, max_length=16, verbose_name='交易账户')
-    optype = models.CharField(max_length=16, verbose_name='买入类型')
-    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入报价')
-    ocount = models.IntegerField(verbose_name='买入数量')
-    hprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='持仓价格')
-    hcount = models.IntegerField(null=True, verbose_name='持仓数量') # holding count
-    fcount = models.IntegerField(null=True, verbose_name='可用数量') # free count, sell able
-    bprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='买入价格')
-    bcount = models.IntegerField(null=True, verbose_name='买入数量')
-    sprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='卖出价格')
-    scount = models.IntegerField(null=True, verbose_name='卖出数量')
+    user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='用户ID')
+    stock = models.ForeignKey('Stock', on_delete=models.CASCADE, verbose_name='股票ID')
+    coupon = models.ForeignKey('UserCoupon', on_delete=models.CASCADE, null=True, verbose_name='优惠券ID')
+    tcode = models.CharField(max_length=16, unique=True, verbose_name='交易代码')
+    optype = models.CharField(max_length=16, verbose_name='报价类型')
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='委托价格')
+    ocount = models.IntegerField(verbose_name='委托数量')
+    hprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='持仓价格')
+    hcount = models.IntegerField(verbose_name='持仓数量') # holding count
+    fcount = models.IntegerField(verbose_name='可用数量') # free count, sell able
+    bprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='买入价格')
+    bcount = models.IntegerField(verbose_name='买入数量')
+    sprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='卖出价格')
+    scount = models.IntegerField(verbose_name='卖出数量')
     margin = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='保证金')
-    ofee = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='建仓费') # open fee
-    ddays = models.IntegerField(null=True, verbose_name='天数') # delay days
-    dfee = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='延期费') # delay fee
-    tprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利') # total profit
-    sprofit = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='盈利分成') # share profit
-    status = models.CharField(max_length=16, default='tobuy', verbose_name='状态')
-    slog = models.TextField(null=True, verbose_name='状态变更')
+    ofee = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='建仓费') # open fee
+    dday = models.IntegerField(verbose_name='延期日') # delay days
+    dfee = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='延期费') # delay fee
+    tprofit = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='实际盈亏') # total profit
+    sprofit = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='盈利分成') # share profit
+    account = models.CharField(null=True, max_length=16, verbose_name='交易账户')
+    status = models.CharField(max_length=16, verbose_name='状态')
     ctime = models.BigIntegerField(verbose_name='创建时间')  # create time
-    utime = models.BigIntegerField(verbose_name='更新时间')  # update time
-    btime = models.BigIntegerField(null=True, verbose_name='买入时间')
-    stime = models.BigIntegerField(null=True, verbose_name='卖出时间')
-    etime = models.BigIntegerField(null=True, verbose_name='结束时间')
+    mtime = models.BigIntegerField(verbose_name='修改时间')  # modify time
 
     class Meta:
         db_table = 'tb_user_trade'
@@ -589,26 +443,25 @@ class TradeLever(models.Model):
 # tb_trade_order
 class TradeOrder(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
+    tcode = models.CharField(max_length=16, verbose_name='交易编号')
     account = models.CharField(max_length=16, verbose_name='证券账户')
     scode = models.CharField(max_length=16, verbose_name='证券代码')
     sname = models.CharField(max_length=16, verbose_name='证券名称')
-    tcode = models.CharField(max_length=16, verbose_name='交易编号')
+    ocode = models.CharField(max_length=16, null=True, verbose_name='委托编号')
     otype = models.CharField(max_length=16, verbose_name='委托类型')
     optype = models.CharField(max_length=16, verbose_name='报价类型')
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='委托价格')
     ocount = models.IntegerField(verbose_name='委托数量')
-    oprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='委托价格')
     odate = models.DateField(verbose_name='委托日期')
     otime = models.BigIntegerField(verbose_name='委托时间')
-    ocode = models.CharField(max_length=16, null=True, verbose_name='委托代码')
-    dcount = models.IntegerField(null=True, verbose_name='成交数量')
-    dprice = models.DecimalField(max_digits=10, decimal_places=2, null=True, verbose_name='成交价格')
+    dcode = models.CharField(max_length=16, null=True, verbose_name='成交编号')
+    dprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='成交价格')
+    dcount = models.IntegerField(verbose_name='成交数量')
+    ddate = models.DateField(null=True, verbose_name='成交日期')
     dtime = models.BigIntegerField(null=True, verbose_name='成交时间')
-    dcode = models.CharField(max_length=16, null=True, verbose_name='成交代码')
     status = models.CharField(max_length=16, verbose_name='委托状态')
-    slog = models.TextField(null=True, verbose_name='状态变更')
-    callback = models.TextField(null=True, verbose_name='回调地址')
     ctime = models.BigIntegerField(verbose_name='创建时间')
-    utime = models.BigIntegerField(verbose_name='更新时间')
+    mtime = models.BigIntegerField(verbose_name='修改时间')
 
     class Meta:
         db_table = 'tb_trade_order'
@@ -650,10 +503,10 @@ class TradeOrder(models.Model):
 # tb_trade_margin
 class TradeMargin(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='交易订单')
-    item = models.CharField(max_length=16, verbose_name='类别')
-    detail = models.CharField(max_length=64, blank=True, verbose_name='详情')
+    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='订单ID')
+    item = models.CharField(max_length=16, verbose_name='类目')
     money = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='金额')
+    detail = models.CharField(max_length=64, verbose_name='详情')
     ctime = models.BigIntegerField(verbose_name='时间')  # create time
 
     class Meta:

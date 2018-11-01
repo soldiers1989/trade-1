@@ -3,101 +3,46 @@
         "model": "adb.tradeorder",
         "pk": 1,
         "fields": {
-            "trade_id": "3",
-            "account_id": "1",
-            "stock_id": "000001",
+            "tcode": "000001",
+            "account": "10000001",
+            "scode": "000001",
+            "sname": "平安银行",
+            "ocode": "123",
             "otype": "buy",
-            "ptype": "xj",
+            "optype": "xj",
+            "oprice": 10.02,
             "ocount": 100,
-            "oprice": 3.24,
+            "odate": "2018-10-01",
             "otime": 1527262052,
-            "ocode": "o000001",
+            "dprice": 10.02,
             "dcount": 100,
-            "dprice": 3.24,
+            "ddate": "2018-10-01",
             "dtime": 1527262123,
-            "status": "tosend"
+            "status": "tdeal",
+            "ctime": 1527262123,
+            "mtime": 1527263123
         }
     },
     {
         "model": "adb.tradeorder",
         "pk": 2,
         "fields": {
-            "trade_id": "3",
-            "account_id": "1",
-            "stock_id": "000001",
-            "otype": "sell",
-            "ptype": "xj",
-            "ocount": 100,
-            "oprice": 3.24,
-            "otime": 1527263052,
-            "ocode": "o000002",
-            "dcount": 100,
-            "dprice": 3.24,
-            "dtime": 1527263123,
-            "status": "notsend"
-        }
-    },
-    {
-        "model": "adb.tradeorder",
-        "pk": 3,
-        "fields": {
-            "trade_id": "4",
-            "account_id": "1",
-            "stock_id": "000100",
+            "tcode": "000002",
+            "account": "10000001",
+            "scode": "000001",
+            "sname": "平安银行",
+            "ocode": "456",
             "otype": "buy",
-            "ptype": "sj",
+            "optype": "sj",
+            "oprice": 3.24,
             "ocount": 100,
-            "otime": 1527264052,
-            "ocode": "o000002",
-            "dcount": 100,
-            "dprice": 3.24,
-            "dtime": 1527264123,
-            "status": "tosend"
-        }
-    },
-    {
-        "model": "adb.tradeorder",
-        "pk": 4,
-        "fields": {
-            "trade_id": "4",
-            "account_id": "1",
-            "stock_id": "000100",
-            "otype": "sell",
-            "ptype": "sj",
-            "ocount": 100,
-            "otime": 1527268052,
-            "ocode": "o000002",
-            "status": "tosend"
-        }
-    },
-    {
-        "model": "adb.tradeorder",
-        "pk": 5,
-        "fields": {
-            "trade_id": "1",
-            "account_id": "2",
-            "stock_id": "000100",
-            "otype": "sell",
-            "ptype": "sj",
-            "ocount": 100,
-            "otime": 1527268052,
-            "ocode": "o000002",
-            "status": "tosend"
-        }
-    },
-    {
-        "model": "adb.tradeorder",
-        "pk": 6,
-        "fields": {
-            "trade_id": "2",
-            "account_id": "2",
-            "stock_id": "000100",
-            "otype": "sell",
-            "ptype": "sj",
-            "ocount": 100,
-            "otime": 1527268052,
-            "ocode": "o000002",
-            "status": "tosend"
+            "odate": "2018-10-01",
+            "otime": 1527263052,
+            "dprice": 0.00,
+            "dcount": 0,
+            "status": "expired",
+            "ctime": 1527262123,
+            "mtime": 1527263123
         }
     }
   ]

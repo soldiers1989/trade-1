@@ -25,7 +25,7 @@
       "mtime": 1527961052
     }
   },
-    {
+  {
     "model": "adb.payaccount",
     "pk": 3,
     "fields": {
@@ -38,7 +38,7 @@
       "mtime": 1527961052
     }
   },
-    {
+  {
     "model": "adb.payaccount",
     "pk": 4,
     "fields": {

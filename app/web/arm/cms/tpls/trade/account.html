@@ -26,7 +26,7 @@
             <input class="easyui-textbox" name="account" data-options="label:'交易账户', prompt:'输入交易账户', required:true, validType:['text', 'length[1,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="lmoney" data-options="label:'账户余额', prompt:'输入账户余额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" name="money" data-options="label:'账户余额', prompt:'输入账户余额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="cfmin" data-options="label:'最低佣金', prompt:'输入交易佣金最低金额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
@@ -63,7 +63,7 @@
             <input class="easyui-textbox" name="account" data-options="label:'交易账户', prompt:'输入交易账户', required:true, validType:['text', 'length[1,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="lmoney" data-options="label:'账户余额', prompt:'输入账户余额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" name="money" data-options="label:'账户余额', prompt:'输入账户余额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="cfmin" data-options="label:'最低佣金', prompt:'输入交易佣金最低金额（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
@@ -116,13 +116,13 @@
                         {field:'id', title:'ID', sortable:true, width:'5%'},
                         {field:'name', title:'账户名称', sortable:false, width:'10%'},
                         {field:'account', title:'交易账户', sortable:false, width:'10%'},
-                        {field:'lmoney', title:'账户余额', sortable:true, width:'10%'}, 
+                        {field:'money', title:'账户余额', sortable:true, width:'10%'},
                         {field:'cfmin', title:'最低佣金', sortable:true, width:'10%'}, 
                         {field:'cfrate', title:'佣金费率', sortable:true, width:'10%'}, 
                         {field:'tfrate', title:'印花税率', sortable:true, width:'10%'}, 
                         {field:'disable', title:'是否禁用', sortable:true, width:'5%', formatter: cube.format.boolean},
                         {field:'ctime', title:'创建时间', sortable:true, width:'15%', formatter: cube.format.datetime},
-                        {field:'utime', title:'更新时间', sortable:true, width:'15%', formatter: cube.format.datetime},
+                        {field:'mtime', title:'修改时间', sortable:true, width:'15%', formatter: cube.format.datetime},
                     ]],
 
                     loadFilter: function (resp) {

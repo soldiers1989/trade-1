@@ -30,37 +30,5 @@
             "mmin": 1000.00,
             "mmax": 50000.00
         }
-    },
-    {
-        "model": "adb.tradelever",
-        "pk": 3,
-        "fields": {
-            "trade_id": "3",
-            "lever": 5,
-            "wline": 0.95,
-            "sline": 0.90,
-            "ofmin": 15.00,
-            "ofrate": 0.005,
-            "dfrate": 0.002,
-            "psrate": 0.20,
-            "mmin": 1000.00,
-            "mmax": 50000.00
-        }
-    },
-    {
-        "model": "adb.tradelever",
-        "pk": 4,
-        "fields": {
-            "trade_id": "4",
-            "lever": 6,
-            "wline": 0.95,
-            "sline": 0.90,
-            "ofmin": 15.00,
-            "ofrate": 0.005,
-            "dfrate": 0.002,
-            "psrate": 0.20,
-            "mmin": 1000.00,
-            "mmax": 50000.00
-        }
     }
   ]

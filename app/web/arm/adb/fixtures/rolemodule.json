@@ -34,50 +34,5 @@
       "module_id": "4",
       "ctime": 1527261052
     }
-  },
-  {
-    "model": "adb.rolemodule",
-    "pk": 5,
-    "fields": {
-      "role_id": "1",
-      "module_id": "5",
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.rolemodule",
-    "pk": 6,
-    "fields": {
-      "role_id": "1",
-      "module_id": "6",
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.rolemodule",
-    "pk": 7,
-    "fields": {
-      "role_id": "1",
-      "module_id": "7",
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.rolemodule",
-    "pk": 8,
-    "fields": {
-      "role_id": "1",
-      "module_id": "8",
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.rolemodule",
-    "pk": 9,
-    "fields": {
-      "role_id": "1",
-      "module_id": "9",
-      "ctime": 1527261052
-    }
   }
 ]

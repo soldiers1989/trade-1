@@ -70,7 +70,6 @@ class _Order:
     canceling = _Pair('canceling', '正撤')
     pcanceled = _Pair('pcanceled', '部撤')
     tcanceled = _Pair('tcanceled', '已撤')
-    fcanceled = _Pair('fcanceled', '撤废')
     pdeal = _Pair('pdeal', '部成')
     tdeal = _Pair('tdeal', '已成')
     dropped = _Pair('dropped', '废单')
@@ -86,28 +85,25 @@ class _Trade:
     tobuy = _Pair('tobuy', '待买')
     buying = _Pair('buying', '正买')
     cancelbuy = _Pair('cancelbuy', '撤买')
-    buycanceling = _Pair('buycanceling', '正撤买')
+    buycanceling = _Pair('buycanceling', '买撤')
 
-    canceled = _Pair('canceled', '已撤')
-
-    hold = _Pair('hold', '持仓')
 
     tosell = _Pair('tosell', '待卖')
     selling = _Pair('selling', '正卖')
     cancelsell = _Pair('cancelsell', '撤卖')
-    sellcanceling = _Pair('sellcanceling', '正撤卖')
-
-    sold = _Pair('sold', '已卖')
+    sellcanceling = _Pair('sellcanceling', '卖撤')
 
     toclose = _Pair('toclose', '待平')
     closing = _Pair('closing', '正平')
     cancelclose = _Pair('cancelclose', '撤平')
-    closecanceling = _Pair('closecanceling', '正撤平')
+    closecanceling = _Pair('closecanceling', '平撤')
 
+    hold = _Pair('hold', '持仓')
+    sold = _Pair('sold', '已卖')
     closed = _Pair('closed', '已平')
+    canceled = _Pair('canceled', '已撤')
 
     expired = _Pair('expired', '过期')
-
     dropped = _Pair('dropped', '废单')
 
 trade = _Trade

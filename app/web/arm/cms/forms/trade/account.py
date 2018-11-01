@@ -15,7 +15,7 @@ class List(forms.Form):
 class Add(forms.Form):
     account = forms.CharField(max_length=16)
     name = forms.CharField(max_length=16)
-    lmoney = forms.DecimalField(max_digits=10, decimal_places=2)
+    money = forms.DecimalField(max_digits=10, decimal_places=2)
     cfmin = forms.DecimalField(max_digits=10, decimal_places=2)
     cfrate = forms.DecimalField(max_digits=6, decimal_places=6)
     tfrate = forms.DecimalField(max_digits=6, decimal_places=6)
@@ -26,7 +26,7 @@ class Update(forms.Form):
     id = forms.IntegerField()
     name = forms.CharField(max_length=16)
     account = forms.CharField(max_length=16)
-    lmoney = forms.DecimalField(max_digits=10, decimal_places=2)
+    money = forms.DecimalField(max_digits=10, decimal_places=2)
     cfmin = forms.DecimalField(max_digits=10, decimal_places=2)
     cfrate = forms.DecimalField(max_digits=6, decimal_places=6)
     tfrate = forms.DecimalField(max_digits=6, decimal_places=6)

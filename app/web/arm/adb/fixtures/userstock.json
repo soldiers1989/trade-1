@@ -15,10 +15,9 @@
     "pk": 2,
     "fields": {
       "user_id": 1,
-      "stock_id": "000100",
+      "stock_id": "000001",
       "deleted": false,
-      "ctime": 1527261052,
-      "dtime": 1527961052
+      "ctime": 1527261052
     }
   },
     {
@@ -36,7 +35,7 @@
     "pk": 4,
     "fields": {
       "user_id": 3,
-      "stock_id": "601318",
+      "stock_id": "000001",
       "deleted": false,
       "ctime": 1527261052
     }

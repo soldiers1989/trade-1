@@ -98,7 +98,7 @@ def add(request):
 
         item = models.TradeAccount(account=params['account'],
                                 name=params['name'],
-                                lmoney=params['lmoney'],
+                                money=params['money'],
                                 cfmin=params['cfmin'],
                                 cfrate=params['cfrate'],
                                 tfrate=params['tfrate'],
@@ -124,7 +124,7 @@ def update(request):
 
         models.TradeAccount.objects.filter(id=params['id']).update(account=params['account'],
                                                                 name=params['name'],
-                                                                lmoney=params['lmoney'],
+                                                                money=params['money'],
                                                                 cfmin=params['cfmin'],
                                                                 cfrate=params['cfrate'],
                                                                 tfrate=params['tfrate'],
