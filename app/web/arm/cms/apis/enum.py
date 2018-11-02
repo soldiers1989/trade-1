@@ -15,7 +15,7 @@ def list(request):
     params = form.cleaned_data
     c, i = params['c'], params['i']
 
-    options = []
+    options = [{'id':'', 'text':'全部'}]
     # get item data
     items = enum.all[c][i]
     for k, v in items.items():

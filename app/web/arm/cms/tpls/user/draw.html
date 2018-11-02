@@ -8,7 +8,7 @@
     </span>
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="draw_search_form">
-            <input name="status" data-options="prompt:'状态', editable:false, required:false">
+            <input name="status" data-options="prompt:'付款状态', editable:false, required:false">
             <input name="words" class="easyui-textbox">
 
             <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="draw.search.do()">查询</a>
@@ -169,7 +169,7 @@
             init: function() { //init search form
                 // init status combobox
                 this.form.find('input[name="status"]:first').combobox({
-                    data: [{v:'topay', t:'待付款'}, {v:'paid', t:'已付款'}, {v:'denied', t:'已拒绝'}],
+                    data: [{v:'', t:'全部'}, {v:'topay', t:'待付款'}, {v:'paid', t:'已付款'}, {v:'denied', t:'已拒绝'}],
                     valueField: 'v',
                     textField: 't'
                 });

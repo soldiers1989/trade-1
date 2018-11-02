@@ -8,6 +8,7 @@
     </span>
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="coupon_search_form">
+            <input name="type" data-options="prompt:'类型', editable:false, required:false">
             <input name="status" data-options="prompt:'状态', editable:false, required:false">
             <input name="words" class="easyui-textbox">
 
@@ -23,10 +24,16 @@
             <input name="user" type="text" label="用户" prompt="输入用户" style="width:100%" required>
         </div>
         <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="type" data-options="label:'类型', prompt:'选择类型', editable:false, required:true" style="width: 100%">
+                <option value="cash">现金</option>
+                <option value="discount">打折</option>
+            </select>
+        </div>
+        <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="name" data-options="label:'名称', prompt:'输入名称', required:true, validType:['text', 'length[1,32]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="money" data-options="label:'金额', prompt:'输入金额', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" name="value" data-options="label:'面值', prompt:'输入面值', required:true, validType:['number', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择状态', editable:false, required:true" style="width: 100%">
@@ -57,10 +64,16 @@
             <input name="user" type="text" class="easyui-textbox" label="用户" style="width:100%" disabled>
         </div>
         <div style="margin-bottom:10px">
+            <select class="easyui-combobox" name="type" data-options="label:'类型', prompt:'选择类型', editable:false, required:true" style="width: 100%">
+                <option value="cash">现金</option>
+                <option value="discount">打折</option>
+            </select>
+        </div>
+        <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="name" data-options="label:'名称', prompt:'输入名称', required:true, validType:['text', 'length[1,32]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="money" data-options="label:'金额', prompt:'输入金额', required:true, validType:['number', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" name="value" data-options="label:'面值', prompt:'输入面值', required:true, validType:['number', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择状态', editable:false, required:true" style="width: 100%">
@@ -109,16 +122,16 @@
                     columns: [[
                         {field:'id', title:'ID', sortable:true, width:'5%'},
                         {field:'user', title:'用户', sortable:false, width:'10%'},
+                        {field:'type', title:'类型', sortable:false, hidden:true},
+                        {field:'_type', title:'类型', sortable:false, width:'5%'},
                         {field:'name', title:'名称', sortable:true, width:'10%'},
-                        {field:'money', title:'金额', sortable:true, width:'10%'},
-                        {field:'sdate', title:'起始日', sortable:true, width:'15%'},
-                        {field:'edate', title:'截止日', sortable:true, width:'15%'},
+                        {field:'value', title:'面值', sortable:true, width:'10%'},
+                        {field:'sdate', title:'起始日', sortable:true, width:'10%'},
+                        {field:'edate', title:'截止日', sortable:true, width:'10%'},
                         {field:'ctime', title:'发放时间', sortable:true, width:'15%', formatter: cube.format.datetime},
-                        {field:'status', title:'状态', sortable:true, width:'5%', formatter: function (s) {
-                            opts = {unused:'未用', used:'已用'};
-                            return opts[s];
-                        }},
-                        {field:'utime', title:'使用时间', sortable:true, width:'15%', formatter: cube.format.datetime}
+                        {field:'status', title:'状态', sortable:true, hidden:true},
+                        {field:'_status', title:'状态', sortable:true, width:'5%'},
+                        {field:'utime', title:'使用时间', sortable:true, width:'20%', formatter: cube.format.datetime}
                     ]],
 
                     loadFilter: function (resp) {
@@ -149,9 +162,16 @@
             form: $('#coupon_search_form'),
 
             init: function() { //init search form
+                // init type combobox
+                this.form.find('input[name="type"]:first').combobox({
+                    data: [{v:'', t:'全部类型'}, {v:'cash', t:'现金'}, {v:'discount', t:'打折'}],
+                    valueField: 'v',
+                    textField: 't'
+                });
+
                 // init status combobox
                 this.form.find('input[name="status"]:first').combobox({
-                    data: [{v:'unused', t:'未用'}, {v:'used', t:'已用'}],
+                    data: [{v:'', t:'全部状态'}, {v:'unused', t:'未用'}, {v:'used', t:'已用'}, {v:'expired', t:'过期'}],
                     valueField: 'v',
                     textField: 't'
                 });
@@ -164,6 +184,7 @@
 
                 //get parameters
                 params = {
+                    type: this.form.find('input[name="type"]:first').val(),
                     status: this.form.find('input[name="status"]:first').val(),
                     words: this.form.find('input[name="words"]:first').val()
                 };

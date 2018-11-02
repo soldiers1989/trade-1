@@ -165,13 +165,13 @@
             init: function() { //init search form
                 // init status combobox
                 this.form.find('input[name="status"]:first').combobox({
-                    data: [{v:'open', t:'正常'}, {v:'close', t:'停牌'}, {v:'delisted', t:'退市'}],
+                    data: [{v:'', t:'全部'}, {v:'open', t:'正常'}, {v:'close', t:'停牌'}, {v:'delisted', t:'退市'}],
                     valueField: 'v',
                     textField: 't'
                 });
                 // init limit combobox
                 this.form.find('input[name="limit"]:first').combobox({
-                    data: [{v:'none', t:'正常'}, {v:'nobuy', t:'禁买'}, {v:'nodelay', t:'禁延'}],
+                    data: [{v:'', t:'全部'}, {v:'none', t:'正常'}, {v:'nobuy', t:'禁买'}, {v:'nodelay', t:'禁延'}],
                     valueField: 'v',
                     textField: 't'
                 });

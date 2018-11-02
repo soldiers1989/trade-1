@@ -3,18 +3,14 @@
         <table id="order_datagrid" style="height: 100%;"></table>
     </div>
     <div data-options="region:'center', split:true" style="width: 20%">
-        <div class="easyui-tabs" id="order_detail_tabs" fit="true" border="true" plain="true">
-            <div title="订单详情">
-                <div class="easyui-panel" style="height:100%;">
-                    <table id="order_trade_propertygrid"></table>
-                </div>
-            </div>
+        <div class="easyui-tabs" id="order_detail_tabs" data-options="fit:true, plain: true">
             <div title="状态变更">
-                <div class="easyui-panel" style="height:100%;">
-                    <table id="order_status_datagrid"></table>
+                <div class="easyui-panel" style="width: 100%">
+                    <table id="order_status_propertygrid"></table>
                 </div>
             </div>
         </div>
+        <div id="empty_order_detail"><p style="text-align: center;">没有选择委托记录!</p></div>
     </div>
 </div>
 
@@ -29,7 +25,7 @@
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="order_search_form">
             <input name="otype" data-options="prompt:'委托类型', editable:false, required:false" style="width: 12%;">
-            <input name="ptype" data-options="prompt:'报价类型', editable:false, required:false" style="width: 12%;">
+            <input name="optype" data-options="prompt:'报价类型', editable:false, required:false" style="width: 12%;">
             <input name="status" data-options="prompt:'交易状态', editable:false, required:false" style="width: 12%;">
             <span>日期</span>
             <input name="sdate" class="easyui-datebox" validType="date" style="width: 12%;">
@@ -55,7 +51,7 @@
             <input class="easyui-textbox" name="ocode" data-options="label:'委托编号', prompt:'输入委托编号', required:false, validType:['text', 'length[1,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:false, validType:['digits', 'min[1]']" style="width:100%">
+            <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:false, validType:['digits', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="dprice" data-options="label:'成交价格', prompt:'输入成交价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
@@ -196,7 +192,7 @@
                                     if(status == 'success'){
                                         if (resp.status){
                                             order.list.deleteSelected();
-                                            order.detail.clear();
+                                            order.detail.hide();
                                         } else {
                                             $.messager.show({title: '错误', msg: resp.msg});
                                         }
@@ -238,10 +234,14 @@
 
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
-                        {field:'stock', title:'股票名称', sortable:false},
+                        {field:'scode', title:'股票代码', sortable:false},
+                        {field:'sname', title:'股票名称', sortable:false},
                         {field:'account', title:'交易账户', sortable:true},
-                        {field:'otype', title:'委托类型', sortable:true},
-                        {field:'optype', title:'报价类型', sortable:true},
+                        {field:'otype', title:'委托类型', sortable:true, hidden:true},
+                        {field:'_otype', title:'委托类型', sortable:true},
+                        {field:'optype', title:'报价类型', sortable:true, hidden:true},
+                        {field:'_optype', title:'报价类型', sortable:true},
+
                         {field:'status', title:'委托状态', sortable:true, hidden:true},
                         {field:'_status', title:'委托状态', sortable:true}
                     ]],
@@ -266,7 +266,7 @@
                         order.edit.disable();
 
                         //clear detail
-                        order.detail.clear();
+                        order.detail.hide();
 
                         //clear selections
                         $(this).datagrid('clearSelections');
@@ -338,7 +338,7 @@
                 });
 
                 // init price type combobox
-                this.form.find('input[name="ptype"]:first').combobox({
+                this.form.find('input[name="optype"]:first').combobox({
                     url: '/api/enum?c=order&i=price',
                     valueField: 'id',
                     textField: 'text',
@@ -368,7 +368,7 @@
                 //get parameters
                 params = {
                     otype: this.form.find('input[name="otype"]:first').val(),
-                    ptype: this.form.find('input[name="ptype"]:first').val(),
+                    optype: this.form.find('input[name="optype"]:first').val(),
                     status: this.form.find('input[name="status"]:first').val(),
                     words: this.form.find('input[name="words"]:first').val(),
                     sdate: this.form.find('input[name="sdate"]:first').val(),
@@ -393,16 +393,19 @@
             //init detail
             init: function() {
                 this.tabs.init();
+                this.hide();
             },
 
             //show detail
             show: function() {
+                $('#empty_order_detail').hide();
                 this.tabs.show();
             },
 
-            //clear detail
-            clear:function() {
-                this.tabs.clear();
+            //hide detail
+            hide:function() {
+                this.tabs.hide();
+                $('#empty_order_detail').show();
             },
 
             tabs: {
@@ -424,9 +427,6 @@
 
                             switch (index) {
                                 case 0:
-                                    order.detail.trade.show(row.tcode);
-                                    break;
-                                case 1:
                                     order.detail.status.show(row.id);
                                     break;
                                 default:
@@ -439,24 +439,13 @@
                     this.inited = true;
                 },
 
-                clear: function() {
-                    tab = this.tabs.tabs('getSelected');
-                    if(tab) {
-                        idx = this.tabs.tabs('getTabIndex', tab);
-                        switch (idx) {
-                            case 0:
-                                order.detail.trade.clear();
-                                break;
-                            case 1:
-                                order.detail.status.clear();
-                                break;
-                            default:
-                                break;
-                        }
-                    }
+                hide: function() {
+                    this.tabs.hide();
                 },
 
                 show: function() {
+                    this.tabs.show();
+
                     row = order.list.getSelected();
                     if(!row)
                         return;
@@ -469,9 +458,6 @@
                     
                     switch (idx) {
                         case 0:
-                            order.detail.trade.show(row.tcode);
-                            break;
-                        case 1:
                             order.detail.status.show(row.id);
                             break;
                         default:
@@ -482,9 +468,9 @@
                 }
             },
 
-            trade: {
-                url: '/api/trade/order/trade',
-                propertygrid: $('#order_trade_propertygrid'),
+            status: {
+                url: '/api/trade/order/status',
+                propertygrid: $('#order_status_propertygrid'),
 
                 inited: false,
 
@@ -496,79 +482,12 @@
                         url: this.url,
                         method: 'get',
                         queryParams: params,
-                        
-                        showGroup: true,
-                        showHeader: true,
+                
+                        showGroup:true,
 
                         columns: [[
                             {field:'name', title:'名称', width:'50%'},
                             {field:'value', title:'取值', width:'50%'}
-                        ]],
-
-                        loadFilter: function (resp) {
-                            return resp.data;
-                        },
-
-                        onLoadSuccess: function(resp) {
-                        },
-
-                        onLoadError: function() {
-                            $.messager.show({title: '错误', msg: '请求用户统计数据失败'});
-                        }
-                    });
-
-                    this.inited=true;
-                },
-
-                clear: function() {
-                    if (this.inited){
-                        len = this.propertygrid.propertygrid('getRows').length;
-                        for (i=0; i<len; i++){
-                            this.propertygrid.propertygrid('deleteRow', 0);
-                        }
-                    }
-                },
-                
-                load: function(params) {
-                    this.propertygrid.propertygrid('load', params);
-                },
-
-                show: function(tcode) {
-                    params = {code:tcode};
-                    if(!this.inited)
-                        this.init(params);
-                    else
-                        this.load(params);
-                }
-            },
-
-            status: {
-                url: '/api/trade/order/status',
-                datagrid: $('#order_status_datagrid'),
-
-                inited: false,
-
-                init: function(params) {
-                    if (this.inited)
-                        return;
-
-                    this.datagrid.datagrid({
-                        url: this.url,
-                        method: 'get',
-                        queryParams: params,
-                
-                        striped: true,
-                        fitColumns: true,
-                        pagination: false,
-                        rownumbers: false,
-                        singleSelect: true,
-
-                        columns: [[
-                            {field:'user', title:'操作人'},
-                            {field:'action', title:'操作'},
-                            {field:'before', title:'变更前'},
-                            {field:'after', title:'变更后'},
-                            {field:'time', title:'时间', formatter: cube.format.time}
                         ]],
 
                         loadFilter: function (resp) {
@@ -585,18 +504,9 @@
 
                     this.inited=true;
                 },
-
-                clear: function() {
-                    if (this.inited){
-                        len = this.datagrid.datagrid('getRows').length;
-                        for (i=0; i<len; i++){
-                            this.datagrid.datagrid('deleteRow', 0);
-                        }
-                    }
-                },
-                
+               
                 load: function(params) {
-                    this.datagrid.datagrid('load', params);
+                    this.propertygrid.propertygrid('load', params);
                 },
 
                 show: function(orderid) {

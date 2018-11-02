@@ -4,7 +4,6 @@
         <table id="datagrid_trade" style="height: 100%;"></table>
     </div>
     <div data-options="region:'center', split:true" style="width: 25%">
-        <div id="empty_trade_detail"><p style="text-align: center;">没有选择交易记录!</p></div>
         <div class="easyui-tabs" id="tabs_trade_detail" fit="true" border="true" plain="true" style="width: 100%">
             <div title="订单详情">
                 <div class="easyui-panel" style="height:100%;">
@@ -40,6 +39,7 @@
                 </div>
             </div>
         </div>
+        <div id="empty_trade_detail"><p style="text-align: center;">没有选择交易记录!</p></div>
     </div>
 </div>
 
@@ -339,7 +339,7 @@
                         {field:'scount', title:'卖出量', sortable:true, formatter: cube.format.none},
                         {field:'margin', title:'保证金', sortable:true},
                         {field:'ofee', title:'建仓费', sortable:true},
-                        {field:'ddays', title:'天数', sortable:true, formatter: cube.format.none},
+                        {field:'dday', title:'天数', sortable:true, formatter: cube.format.none},
                         {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},
                         {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
                         {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},

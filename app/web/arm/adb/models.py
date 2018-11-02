@@ -231,6 +231,8 @@ class UserCoupon(models.Model):
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'] = items['user'].user if items['user'] else None
+        items['_type'] = enum.all['coupon']['type'][items['type']] if items['type'] else None
+        items['_status'] = enum.all['coupon']['status'][items['status']] if items['status'] else None
         return items
 
 
@@ -360,6 +362,7 @@ class UserTrade(models.Model):
     sprofit = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='盈利分成') # share profit
     account = models.CharField(null=True, max_length=16, verbose_name='交易账户')
     status = models.CharField(max_length=16, verbose_name='状态')
+    slog = models.TextField(blank=True, verbose_name='状态变更')
     ctime = models.BigIntegerField(verbose_name='创建时间')  # create time
     mtime = models.BigIntegerField(verbose_name='修改时间')  # modify time
 
@@ -370,11 +373,14 @@ class UserTrade(models.Model):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['_user'] = items['user'].user if items['user'] else None
         items['_stock'] = items['stock'].name if items['stock'] else None
-        items['_coupon'] = items['coupon'].money if items['coupon'] else None
         items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
         items['_status'] = enum.all['trade']['status'][items['status']] if items['status'] else None
+        items['_lever'] = self.tradelever.lever
 
-        items['user'], items['stock'], items['coupon'], items['lever'] = self.user_id, self.stock_id, self.coupon_id, self.tradelever.lever
+        items['user'], items['stock'], items['coupon'], items['lever'] = self.user_id, self.stock_id, self.coupon_id, self.tradelever.id
+
+        del items['slog']
+
         return items
 
     def odata(self):
@@ -460,6 +466,7 @@ class TradeOrder(models.Model):
     ddate = models.DateField(null=True, verbose_name='成交日期')
     dtime = models.BigIntegerField(null=True, verbose_name='成交时间')
     status = models.CharField(max_length=16, verbose_name='委托状态')
+    slog = models.TextField(blank=True, verbose_name='状态变更')
     ctime = models.BigIntegerField(verbose_name='创建时间')
     mtime = models.BigIntegerField(verbose_name='修改时间')
 
@@ -472,9 +479,12 @@ class TradeOrder(models.Model):
 
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
-        items['otype'] = enum.all['order']['type'][items['otype']] if items['otype'] else None
+        items['_otype'] = enum.all['order']['type'][items['otype']] if items['otype'] else None
         items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
         items['_status'] = enum.all['order']['status'][items['status']] if items['status'] else None
+
+        del items['slog']
+
         return items
 
     def pdata(self):
@@ -482,6 +492,7 @@ class TradeOrder(models.Model):
         items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
 
         # process status
+        items['otype'] = items['_otype']
         items['optype'] = items['_optype']
         items['status'] = items['_status']
         del items['_optype']

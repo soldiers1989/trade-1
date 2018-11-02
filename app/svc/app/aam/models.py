@@ -122,7 +122,6 @@ class TradeOrder(model.Model):
     dcode = field.StringField(max_length=16, null=True)
     status = field.EnumField(choices=suite.enum.values(suite.enum.order))
     slog = field.StringField(null=True)
-    callback = field.StringField(null=True)
     ctime = field.IntegerField()
     utime = field.IntegerField()
 

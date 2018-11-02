@@ -16,11 +16,13 @@ def list(request):
             ## form parameters ##
             params = form.cleaned_data
 
-            status = params['status']
+            status, type = params['status'], params['type']
             ## filters ##
             filters = {}
             if status:
                 filters['status'] = status
+            if type:
+                filters['type'] = type
 
             ## search words ##
             words = params['words']
@@ -99,8 +101,9 @@ def add(request):
         if not items.exists():
             return resp.failure(hint.ERR_FORM_DATA)
 
-        item = models.UserCoupon(name=params['name'],
-                            money=params['money'],
+        item = models.UserCoupon(type=params['type'],
+                            name=params['name'],
+                            value=params['value'],
                             status=params['status'],
                             ctime=int(time.time()),
                             sdate=params['sdate'],
@@ -123,8 +126,9 @@ def update(request):
     if form.is_valid():
         params = form.cleaned_data
 
-        models.UserCoupon.objects.filter(id=params['id']).update(name=params['name'],
-                                                            money=params['money'],
+        models.UserCoupon.objects.filter(id=params['id']).update(type=params['type'],
+                                                            name=params['name'],
+                                                            value=params['value'],
                                                             status=params['status'],
                                                             sdate=params['sdate'],
                                                             edate=params['edate'])

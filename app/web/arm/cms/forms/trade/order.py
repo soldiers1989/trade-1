@@ -12,7 +12,7 @@ class List(forms.Form):
     edate = forms.DateField(required=False)
 
     otype = forms.CharField(required=False)
-    ptype = forms.CharField(required=False)
+    optype = forms.CharField(required=False)
     status = forms.CharField(required=False)
     words = forms.CharField(required=False)
 
@@ -22,7 +22,7 @@ class Add(forms.Form):
     account = forms.IntegerField()
     stock = forms.CharField(max_length=8)
     otype = forms.CharField(max_length=16)
-    ptype = forms.CharField(max_length=16)
+    optype = forms.CharField(max_length=16)
     ocount = forms.IntegerField()
     oprice = forms.DecimalField(max_digits=10, decimal_places=2, required=False)
     otime = forms.DateTimeField()

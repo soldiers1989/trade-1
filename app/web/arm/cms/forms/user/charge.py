@@ -21,7 +21,6 @@ class Add(forms.Form):
 
 class Update(forms.Form):
     id = forms.IntegerField()
-    user = forms.IntegerField()
     money = forms.DecimalField(max_digits=10, decimal_places=2)
     status = forms.CharField(min_length=1, max_length=16)
     ctime = forms.DateTimeField()
