@@ -1,38 +1,32 @@
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
-    <div data-options="region:'west', split:true" style="width: 70%;">
+    <div data-options="region:'west', split:true" style="width: 60%;">
         <table id="user_datagrid" style="height: 100%;"></table>
     </div>
-    <div data-options="region:'center', split:true" style="width: 30%">
+    <div data-options="region:'center', split:true" style="width: 40%">
         <div class="easyui-tabs" id="user_detail_tabs" fit="true" border="true" plain="true">
-            <div title="基本信息">
-                <div class="easyui-panel" style="height:50%;">
-                    <table id="user_stat_propertygrid"></table>
-                </div>
-                <div class="easyui-panel" title="银行账户" style="height:50%;">
-                    <table id="user_banks_datagrid" style="width:100%; height: 100%"></table>
-                </div>
+            <div title="账户">
+                <table id="user_banks_datagrid" style="height: 100%"></table>
             </div>
-            <div title="用户交易">
-                <table id="user_trades_datagrid" style="width:100%; height: 100%"></table>
+            <div title="充值">
+                <table id="user_charges_datagrid" style="height:100%;"></table>
             </div>
-            <div title="充值提现">
-                <div class="easyui-panel" title="充值记录" style="width:100%;height:50%;">
-                    <table id="user_charges_datagrid" style="width:100%; height:100%;"></table>
-                </div>
-                <div class="easyui-panel" title="提现记录" style="width:100%;height:50%;">
-                    <table id="user_draws_datagrid" style="width:100%; height:100%;"></table>
-                </div>
+            <div title="提现">
+                <table id="user_draws_datagrid" style="height:100%;"></table>
             </div>
-            <div title="资金流水">
+            <div title="流水">
                 <table id="user_bills_datagrid" style="height:100%;"></table>
             </div>
             <div title="优惠券">
                 <table id="user_coupons_datagrid" style="height:100%;"></table>
             </div>
-            <div title="自选股票">
+            <div title="自选">
                 <table id="user_stocks_datagrid" style="height:100%;"></table>
             </div>
+            <div title="交易">
+                <table id="user_trades_datagrid" style="height: 100%"></table>
+            </div>
         </div>
+        <div id="empty_user_detail"><p style="text-align: center;">没有选择用户!</p></div>
     </div>
 </div>
 
@@ -52,7 +46,7 @@
 
             <input name="words" class="easyui-textbox">
 
-            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="user.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="user.search.go()">查询</a>
             <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="user.search.reset()">重置</a>
         </form>
     </span>
@@ -188,7 +182,7 @@
         search: {
             form: $('#user_search_form'),
 
-            do: function() { // do search
+            go: function() { // go search
                 //check search form
                 if(!this.form.form('validate'))
                     return;
@@ -237,20 +231,21 @@
                     
                     toolbar: '#user_toolbar',
                     columns: [[
-                        {field:'id', title:'ID', sortable:true},
-                        {field:'user', title:'用户', sortable:true},
-                        {field:'phone', title:'手机', sortable:true},
-                        {field:'userstat__tpay', title:'总充值', sortable:true, formatter: cube.format.none},
-                        {field:'userstat__tdraw', title:'总提现', sortable:true, formatter: cube.format.none},
-                        {field:'money', title:'余额', sortable:true},
-                        {field:'userstat__ttradec', title:'交易数', sortable:true, formatter: cube.format.none},
-                        {field:'userstat__ttradem', title:'交易额', sortable:true, formatter: cube.format.none},
-                        {field:'disable', title:'禁用', sortable:true, formatter: cube.format.boolean},
-                        {field:'ctime', title:'注册时间', sortable:true, formatter: cube.format.datetime},
-                        {field:'ltime', title:'最近访问', sortable:true, formatter: cube.format.datetime}
+                        {field:'id', title:'ID', sortable:true, width:'10%'},
+                        {field:'user', title:'用户', sortable:true, width:'15%'},
+                        {field:'phone', title:'手机', sortable:true, width:'15%'},
+                        {field:'money', title:'余额', sortable:true, width:'10%'},
+                        {field:'disable', title:'禁用', sortable:true, formatter: cube.format.boolean, width:'10%'},
+                        {field:'ctime', title:'注册时间', sortable:true, formatter: cube.format.datetime, width:'20%'},
+                        {field:'ltime', title:'最近访问', sortable:true, formatter: cube.format.datetime, width:'20%'}
                     ]],
 
                     loadFilter: function (resp) {
+                        if(!resp.status){
+                            $.messager.show({title:'错误', msg: resp.msg});
+                            return {total:0, rows:[]}
+                        }
+
                         return resp.data;
                     },
 
@@ -269,7 +264,7 @@
                         $.messager.show({title: '错误', msg: '请求用户列表数据失败'});
                     },
                     
-                    onSelect(index, row) {
+                    onSelect: function(index, row) {
                         //enable edit
                         user.edit.enable();
                         //show detail
@@ -301,105 +296,75 @@
                     this.tabs.tabs({
                         border: false,
 
-                        onSelect: function(title, index){
+                        onSelect: function(title, idx){
                             row = user.list.getSelected();
                             if(!row)
                                 return;
 
-                            userid = row.id;
-                            switch (index) {
-                                case 0:
-                                    user.detail.stat.show(userid);
-                                    user.detail.banks.show(userid);
-                                    break;
-                                case 1:
-                                    user.detail.trades.show(userid);
-                                    break;
-                                case 2:
-                                    user.detail.charges.show(userid);
-                                    user.detail.draws.show(userid);
-                                    break;
-                                case 3:
-                                    user.detail.bills.show(userid);
-                                    break;
-                                case 4:
-                                    user.detail.coupons.show(userid);
-                                    break; 
-                                case 5:
-                                    user.detail.stocks.show(userid);
-                                    break;                            
-                                default:
-                                    // statements_def
-                                    break;
-                            }
+                            user.detail.tabs.select(idx, row.id)
                         }
                     });
 
                     this.inited = true;
                 },
 
-                show: function() {
-                    tab = this.tabs.tabs('getSelected');
+                select: function (idx, userid) {
+                    switch (idx) {
+                        case 0:
+                            user.detail.banks.show(userid);
+                            break;
+                        case 1:
+                            user.detail.charges.show(userid);
+                            break;
+                        case 2:
+                            user.detail.draws.show(userid);
+                            break;
+                        case 3:
+                            user.detail.bills.show(userid);
+                            break;
+                        case 4:
+                            user.detail.coupons.show(userid);
+                            break;
+                        case 5:
+                            user.detail.stocks.show(userid);
+                            break;
+                        case 6:
+                            user.detail.trades.show(userid);
+                            break;
+                        default:
+                            // statements_def
+                            break;
+                    }
+                },
 
-                    if(!tab || this.tabs.tabs('getTabIndex', tab) != 0)
-                        this.tabs.tabs('select', 0);
-                    else{
-                        row = user.list.getSelected();
-                        if(!row)
-                            return;
-                        userid = row.id;
-                        user.detail.stat.show(userid);
-                        user.detail.banks.show(userid);
+                show: function() {
+                    // get selected user
+                    var row = user.list.getSelected();
+                    if(!row){
+                        this.tabs.hide();
+                        $('#empty_user_detail').show();
+                        return;
+                    } else {
+                        $('#empty_user_detail').hide();
+                        this.tabs.show();
                     }
 
-                }
-            },
+                    // current tab index
+                    idx = 0;
+                    tab = this.tabs.tabs('getSelected');
+                    if(tab) {
+                        idx = this.tabs.tabs('getTabIndex', tab);
+                    }
 
-            stat: {
-                url: '/api/user/user/stat',
-                propertygrid: $('#user_stat_propertygrid'),
+                    // change tab
+                    this.select(idx, row.id);
 
-                inited: false,
 
-                init: function(params) {
-                    this.propertygrid.propertygrid({
-                        url: this.url,
-                        method: 'post',
-                        queryParams: params,
-                        
-
-                        showGroup: true,
-
-                        columns: [[
-                            {field:'name', title:'名称', width:'50%'},
-                            {field:'value', title:'取值', width:'50%'}
-                        ]],
-
-                        loadFilter: function (resp) {
-                            return resp.data;
-                        },
-
-                        onLoadSuccess: function(resp) {
-                        },
-
-                        onLoadError: function() {
-                            $.messager.show({title: '错误', msg: '请求用户统计数据失败'});
-                        }
-                    });
-
-                    this.inited=true;
-                },
-                
-                load: function(params) {
-                    this.propertygrid.propertygrid('load', params);
                 },
 
-                show: function(userid) {
-                    params = {id:userid};
-                    if(!this.inited)
-                        this.init(params);
-                    else
-                        this.load(params);
+                clear: function () {
+                    this.tabs.hide();
+                    $('#empty_user_detail').show();
                 }
             },
 
@@ -424,16 +389,21 @@
                         singleSelect: true,
 
                         columns: [[
-                            {field:'name', title:'姓名'},
-                            {field:'idc', title:'身份证'},
-                            {field:'bank', title:'银行'},
-                            {field:'account', title:'账户'},
-                            {field:'deleted', title:'已删除', formatter: cube.format.boolean},
+                            {field:'id', title:'ID', width:'50px'},
+                            {field:'name', title:'姓名', width:'80px'},
+                            {field:'idc', title:'身份证', width:'200px'},
+                            {field:'bank', title:'银行', width:'100px'},
+                            {field:'account', title:'账户', width:'200px'},
+                            {field:'deleted', title:'删除', formatter: cube.format.boolean},
                             {field:'ctime', title:'创建时间', formatter: cube.format.datetime},
                             {field:'mtime', title:'修改时间', formatter: cube.format.datetime}
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
                             return resp.data;
                         },
 
@@ -454,80 +424,6 @@
 
                 show: function(tradeid) {
                     params = {id:tradeid};
-                    if(!this.inited)
-                        this.init(params);
-                    else
-                        this.load(params);
-                }
-            },
-
-            trades: {
-                url: '/api/user/user/trades',
-                datagrid: $('#user_trades_datagrid'),
-                
-                inited: false,
-
-                init: function(params) {
-                   this.datagrid.datagrid({
-                        url: this.url,
-                        method: 'post',
-                        queryParams: params,
-                        
-                        idField: 'id',
-                
-                        striped: true,
-                        fitColumns: true,
-                        pagination: false,
-                        rownumbers: false,
-                        singleSelect: true,
-
-                        frozenColumns: [[
-                            {field:'id', title:'ID', sortable:true},
-                            {field:'stock', title:'股票'},
-                        ]],
-                        columns: [[
-                            {field:'lever', title:'杠杆', sortable:true},
-                            {field:'statusd', title:'状态'},
-                            {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.date},
-                            {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.date},
-                            {field:'hprice', title:'持仓价', sortable:true, formatter: cube.format.none},
-                            {field:'hcount', title:'持仓量', sortable:true, formatter: cube.format.none},
-                            {field:'fcount', title:'可卖量', sortable:true, formatter: cube.format.none},
-                            {field:'oprice', title:'订单价', sortable:true},
-                            {field:'ocount', title:'订单量', sortable:true},
-                            {field:'bprice', title:'买入价', sortable:true, formatter: cube.format.none},
-                            {field:'bcount', title:'买入量', sortable:true, formatter: cube.format.none},
-                            {field:'sprice', title:'卖出价', sortable:true, formatter: cube.format.none},
-                            {field:'scount', title:'卖出量', sortable:true, formatter: cube.format.none},
-                            {field:'margin', title:'保证金', sortable:true},
-                            {field:'ofee', title:'建仓费', sortable:true},
-                            {field:'ddays', title:'天数', sortable:true, formatter: cube.format.none},
-                            {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},
-                            {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
-                            {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
-                        ]],
-
-                        loadFilter: function (resp) {
-                            return resp.data;
-                        },
-
-                        onLoadSuccess: function(resp) {
-                        },
-
-                        onLoadError: function() {
-                            $.messager.show({title: '错误', msg: '请求用户交易数据失败'});
-                        }
-                    });
-
-                   this.inited = true;
-                },
-
-                load: function(params) {
-                    this.datagrid.datagrid('load', params);
-                },
-
-                show: function(userid) {
-                    params = {id:userid};
                     if(!this.inited)
                         this.init(params);
                     else
@@ -556,14 +452,18 @@
                         singleSelect: true,
 
                         columns: [[
-                            {field:'id', title:'ID'},
-                            {field:'ctime', title:'时间', formatter: cube.format.datetime},
-                            {field:'money', title:'金额'},
-                            {field:'status', title:'状态'},
-                            {field:'code', title:'编号'},
+                            {field:'id', title:'ID', width:'10%'},
+                            {field:'ctime', title:'时间', formatter: cube.format.datetime, width:'35%'},
+                            {field:'money', title:'金额', width:'20%'},
+                            {field:'_status', title:'状态', width:'15%'},
+                            {field:'code', title:'编号', width:'20%'}
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
                             return resp.data;
                         },
 
@@ -612,18 +512,22 @@
                         singleSelect: true,
 
                         columns: [[
-                            {field:'id', title:'ID'},
-                            {field:'ctime', title:'时间', formatter: cube.format.datetime},
-                            {field:'money', title:'金额'},
-                            {field:'status', title:'状态'},
-                            {field:'name', title:'姓名'},
-                            {field:'idc', title:'身份证'},
-                            {field:'bank', title:'银行'},
-                            {field:'account', title:'账户'},
-                            {field:'code', title:'编号'},
+                            {field:'id', title:'ID', width:'50px'},
+                            {field:'ctime', title:'时间', formatter: cube.format.datetime, width:'150px'},
+                            {field:'money', title:'金额', width:'100px'},
+                            {field:'_status', title:'状态', width:'50px'},
+                            {field:'name', title:'姓名', width:'50px'},
+                            {field:'idc', title:'身份证', width:'150px'},
+                            {field:'bank', title:'银行', width:'80px'},
+                            {field:'account', title:'账户', width:'150px'},
+                            {field:'code', title:'编号', width:'80px'}
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
                             return resp.data;
                         },
 
@@ -672,16 +576,20 @@
                         singleSelect: true,
 
                         columns: [[
-                            {field:'id', title:'ID'},
-                            {field:'ctime', title:'时间', formatter: cube.format.datetime},
-                            {field:'item', title:'项目'},
-                            {field:'bmoney', title:'金额'},
-                            {field:'lmoney', title:'余额'},
-                            {field:'detail', title:'详情'},
-                            {field:'code', title:'编号'},
+                            {field:'id', title:'ID', width:'50px'},
+                            {field:'ctime', title:'时间', formatter: cube.format.datetime, width:'150px'},
+                            {field:'item', title:'项目', width:'50px'},
+                            {field:'bmoney', title:'金额', width:'80px'},
+                            {field:'lmoney', title:'余额', width:'80px'},
+                            {field:'detail', title:'详情', width:'200px'},
+                            {field:'code', title:'编号', width:'80px'}
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
                             return resp.data;
                         },
 
@@ -731,17 +639,23 @@
                         singleSelect: true,
 
                         columns: [[
-                            {field:'id', title:'ID'},
-                            {field:'name', title:'名称'},
-                            {field:'money', title:'金额'},
-                            {field:'status', title:'状态'},
-                            {field:'sdate', title:'起始日'},
-                            {field:'edate', title:'过期日'},
-                            {field:'ctime', title:'发放时间', formatter: cube.format.datetime},
-                            {field:'utime', title:'使用时间', formatter: cube.format.datetime},
+                            {field:'id', title:'ID', width:'50px'},
+                            {field:'_type', title:'类型', width:'80px'},
+                            {field:'value', title:'面值', width:'80px'},
+                            {field:'_status', title:'状态', width:'50px'},
+                            {field:'sdate', title:'起始日', width:'100px'},
+                            {field:'edate', title:'过期日', width:'100px'},
+                            {field:'name', title:'名称', width:'80px'},
+                            {field:'detail', title:'详情', width:'150px'},
+                            {field:'ctime', title:'发放时间', formatter: cube.format.datetime, width:'150px'},
+                            {field:'utime', title:'使用时间', formatter: cube.format.datetime, width:'150px'}
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
                             return resp.data;
                         },
 
@@ -790,14 +704,18 @@
                         singleSelect: true,
 
                         columns: [[
-                            {field:'id', title:'ID'},
-                            {field:'stock', title:'股票'},
-                            {field:'deleted', title:'取消自选', formatter: cube.format.boolean},
-                            {field:'ctime', title:'自选时间', formatter: cube.format.datetime},
-                            {field:'dtime', title:'取消时间', formatter: cube.format.datetime}
+                            {field:'id', title:'ID', width:'9%'},
+                            {field:'stock', title:'股票', width:'15%'},
+                            {field:'deleted', title:'已删', formatter: cube.format.boolean, width:'10%'},
+                            {field:'ctime', title:'自选时间', formatter: cube.format.datetime, width:'33%'},
+                            {field:'dtime', title:'取消时间', formatter: cube.format.datetime, width:'33%'}
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
                             return resp.data;
                         },
 
@@ -806,6 +724,84 @@
 
                         onLoadError: function() {
                             $.messager.show({title: '错误', msg: '请求用户自选股票失败'});
+                        }
+                    });
+
+                   this.inited = true;
+                },
+
+                load: function(params) {
+                    this.datagrid.datagrid('load', params);
+                },
+
+                show: function(userid) {
+                    params = {id:userid};
+                    if(!this.inited)
+                        this.init(params);
+                    else
+                        this.load(params);
+                }
+            },
+
+            trades: {
+                url: '/api/user/user/trades',
+                datagrid: $('#user_trades_datagrid'),
+
+                inited: false,
+
+                init: function(params) {
+                   this.datagrid.datagrid({
+                        url: this.url,
+                        method: 'post',
+                        queryParams: params,
+
+                        idField: 'id',
+
+                        striped: true,
+                        fitColumns: true,
+                        pagination: false,
+                        rownumbers: false,
+                        singleSelect: true,
+
+                        frozenColumns: [[
+                            {field:'id', title:'ID', sortable:true},
+                            {field:'stock', title:'股票'},
+                            {field:'_status', title:'状态'},
+                            {field:'hprice', title:'持仓价', sortable:true, formatter: cube.format.none},
+                            {field:'hcount', title:'持仓量', sortable:true, formatter: cube.format.none}
+                        ]],
+                        columns: [[
+                            {field:'fcount', title:'可卖量', sortable:true, formatter: cube.format.none},
+                            {field:'lever', title:'杠杆', sortable:true},
+                            {field:'oprice', title:'订单价', sortable:true},
+                            {field:'ocount', title:'订单量', sortable:true},
+                            {field:'bprice', title:'买入价', sortable:true, formatter: cube.format.none},
+                            {field:'bcount', title:'买入量', sortable:true, formatter: cube.format.none},
+                            {field:'sprice', title:'卖出价', sortable:true, formatter: cube.format.none},
+                            {field:'scount', title:'卖出量', sortable:true, formatter: cube.format.none},
+                            {field:'margin', title:'保证金', sortable:true},
+                            {field:'ofee', title:'建仓费', sortable:true},
+                            {field:'dday', title:'天数', sortable:true, formatter: cube.format.none},
+                            {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},
+                            {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
+                            {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
+                            {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.date},
+                            {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.date}
+                        ]],
+
+                        loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
+                            return resp.data;
+                        },
+
+                        onLoadSuccess: function(resp) {
+                        },
+
+                        onLoadError: function() {
+                            $.messager.show({title: '错误', msg: '请求用户交易数据失败'});
                         }
                     });
 
@@ -837,7 +833,7 @@
 
             //clear detail
             clear:function() {
-
+                this.tabs.clear();
             }
         },
 

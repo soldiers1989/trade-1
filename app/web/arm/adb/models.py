@@ -293,6 +293,7 @@ class UserCharge(models.Model):
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'] = items['user'].user if items['user'] else None
+        items['_status'] = enum.all['charge']['status'][items['status']] if items['status'] else None
         return items
 
 
@@ -315,6 +316,7 @@ class UserDraw(models.Model):
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'] = items['user'].user if items['user'] else None
+        items['_status'] = enum.all['draw']['status'][items['status']] if items['status'] else None
         return items
 
 

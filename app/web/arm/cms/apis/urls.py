@@ -59,7 +59,6 @@ urlpatterns = [
     path('user/user/list', user.user.list, name="api.user.user.list"),
     path('user/user/query', user.user.query, name="api.user.user.query"),
     path('user/user/has', user.user.has, name="api.user.user.has"),
-    path('user/user/stat', user.user.stat, name="api.user.user.stat"),
     path('user/user/banks', user.user.banks, name="api.user.user.banks"),
     path('user/user/trades', user.user.trades, name="api.user.user.trades"),
     path('user/user/bills', user.user.bills, name="api.user.user.bills"),

@@ -21,6 +21,24 @@ all = {
         }
     },
 
+    # charge status
+    'charge': {
+        'status': {
+            'topay': '待付款',
+            'paid': '已付款',
+            'expired': '已失效'
+        }
+    },
+
+    # draw status
+    'draw': {
+        'status': {
+            'topay': '待付款',
+            'paid': '已付款',
+            'denied': '已拒绝'
+        }
+    },
+
     # coupon type/status
     'coupon': {
         'type': {

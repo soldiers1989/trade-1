@@ -61,7 +61,7 @@
 
             <input name="words" class="easyui-textbox" style="width: 20%">
 
-            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="usertrade.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="usertrade.search.go()">查询</a>
             <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="usertrade.search.reset()">重置</a>
         </form>
     </span>
@@ -252,13 +252,13 @@
                 });
             },
 
-            do: function() { // do search
+            go: function() { // do search
                 //check search form
                 if(!this.form.form('validate'))
                     return;
                 
                 // status list
-                statuslst = []
+                statuslst = [];
 
                 // status input
                 statuss = this.form.find('input[name="status"]');
@@ -284,7 +284,7 @@
 
                 //reload datagrid
                 usertrade.list.load({});
-            },
+            }
         },
 
         //trade list
@@ -345,6 +345,10 @@
                     ]],
 
                     loadFilter: function (resp) {
+                        if(!resp.status){
+                            $.messager.show({title: '错误', msg: resp.msg});
+                            return {total:0, rows:[]}
+                        }
                         return resp.data;
                     },
 
@@ -417,12 +421,12 @@
                     this.tabs.tabs({
                         border: false,
 
-                        onSelect: function(title, index){
+                        onSelect: function(title, idx){
                             var rdata = usertrade.list.getSelected();
                             if(!rdata)
                                 return;
 
-                            usertrade.detail.tabs.selecttab(index, rdata);
+                            usertrade.detail.tabs.select(idx, rdata);
                         }
                     });
 
@@ -445,7 +449,7 @@
                     }
 
                     // change tab
-                    this.selecttab(idx, rdata);
+                    this.select(idx, rdata);
 
                     usertrade.detail.trade.tradeid = rdata.id;
                 },
@@ -457,7 +461,7 @@
                     usertrade.detail.trade.tradeid = null;
                 },
 
-                selecttab: function(idx, rdata) {
+                select: function(idx, rdata) {
                     switch (idx) {
                         case 0:
                             usertrade.detail.trade.show(rdata);
