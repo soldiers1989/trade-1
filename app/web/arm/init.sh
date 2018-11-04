@@ -26,5 +26,5 @@ python3.6 manage.py loaddata --app adb trademargin.json
 python3.6 manage.py loaddata --app adb tradeorder.json
 
 
-python3.6 manage.py loaddata --app adb payaccount.json
 python3.6 manage.py loaddata --app adb paygateway.json
+python3.6 manage.py loaddata --app adb payaccount.json
