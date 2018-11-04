@@ -163,10 +163,26 @@ def add(request):
                 trade = models.UserTrade(user_id = params['user'],
                                         stock_id = params['stock'],
                                         coupon_id = params['coupon'],
-                                        code = util.rand.uuid(),
-                                        oprice = params['oprice'],
+                                        tcode = util.rand.uuid(),
+                                        optype = 'xj',
+                                        oprice = 0.0 if params['oprice'] is None else params['oprice'],
                                         ocount = params['ocount'],
-                                        ctime=int(time.time()));
+                                        hprice = 0.0,
+                                        hcount = 0,
+                                        fcount = 0,
+                                        bprice = 0.0,
+                                        bcount = 0,
+                                        sprice = 0.0,
+                                        scount = 0,
+                                        margin = 0.0,
+                                        ofee = 0.0,
+                                        dday = 0,
+                                        dfee = 0.0,
+                                        tprofit = 0.0,
+                                        sprofit = 0.0,
+                                        status = 'tobuy',
+                                        ctime=int(time.time()),
+                                        mtime=int(time.time()))
                 trade.save()
 
                 # add lever
@@ -179,17 +195,25 @@ def add(request):
                                                dfrate = lever.dfrate,
                                                psrate = lever.psrate,
                                                mmin = lever.mmin,
-                                               mmax = lever.mmax);
+                                               mmax = lever.mmax)
                 tradelever.save()
 
                 # add trade order
-                tradeorder = models.TradeOrder(trade_id = trade.id,
-                                               otype = params['otype'],
-                                               ptype = params['ptype'],
+                tradeorder = models.TradeOrder(tcode = trade.tcode,
+                                               account = '10000001',
+                                               scode = '000001',
+                                               sname = '中国平安',
+                                               otype = 'buy',
+                                               optype = params['optype'],
                                                ocount = params['ocount'],
-                                               oprice = params['oprice'],
+                                               oprice = trade.oprice,
+                                               odate = '2018-10-02',
                                                otime = int(time.time()),
-                                               status = 'todo')
+                                               dprice = 0.0,
+                                               dcount = 0,
+                                               status = 'notsend',
+                                               ctime = int(time.time()),
+                                               mtime = int(time.time()))
                 tradeorder.save()
 
             return resp.success()

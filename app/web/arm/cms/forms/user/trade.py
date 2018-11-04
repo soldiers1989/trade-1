@@ -28,9 +28,9 @@ class Add(forms.Form):
     stock = forms.CharField()
     lever = forms.IntegerField()
     coupon = forms.IntegerField(required=False)
-    ptype = forms.CharField()
+    optype = forms.CharField()
     ocount = forms.IntegerField(min_value=100)
-    oprice = forms.DecimalField(required=False)
+    oprice = forms.DecimalField(initial=0.0, required=False)
 
 
 class Deal(forms.Form):

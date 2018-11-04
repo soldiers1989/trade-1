@@ -392,17 +392,17 @@ class UserTrade(models.Model):
         # get data items & fields
         items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
 
-        items['user'], items['stock'], items['coupon'], items['optype'], items['status'] = items['_user'], items['_stock'], items['_coupon'], items['_optype'], items['_status']
+        items['user'], items['stock'], items['optype'], items['status'] = items['_user'], items['_stock'], items['_optype'], items['_status']
 
         # add lever fields
-        fields['lever'] = '杠杆倍数'
+        #fields['lever'] = '杠杆倍数'
 
         # format time
         items['ctime'] = util.time.datetms(items['ctime'])
-        items['etime'] = util.time.datetms(items['etime'])
+        items['mtime'] = util.time.datetms(items['mtime'])
 
         # property data rows
-        rows = []
+        rows = self.tradelever.pdata()
         for k, v in items.items():
             if fields.get(k):
                 rows.append({'name':fields[k], 'value': v, 'group': '订单详情'})
@@ -495,9 +495,9 @@ class TradeOrder(models.Model):
         items['otype'] = items['_otype']
         items['optype'] = items['_optype']
         items['status'] = items['_status']
+        del items['_otype']
         del items['_optype']
         del items['_status']
-        del items['slog']
 
         # format order/deal time
         items['otime'] = util.time.datetms(items['otime'])

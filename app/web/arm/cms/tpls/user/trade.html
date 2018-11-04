@@ -5,7 +5,7 @@
     </div>
     <div data-options="region:'center', split:true" style="width: 25%">
         <div class="easyui-tabs" id="tabs_trade_detail" fit="true" border="true" plain="true" style="width: 100%">
-            <div title="订单详情">
+            <div title="详情">
                 <div class="easyui-panel" style="height:100%;">
                     <div style="margin: 6px">
                         <a href="#" id="btn_trade_buy" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('buy')">买入</a>
@@ -18,12 +18,7 @@
                     </div>
                 </div>
             </div>
-            <div title="交易杠杆">
-                <div class="easyui-panel" style="height:100%;">
-                    <table id="propertygrid_trade_lever"></table>
-                </div>
-            </div>
-            <div title="订单费用">
+            <div title="费用">
                 <div class="easyui-panel" style="height:100%;">
                     <table id="datagrid_trade_fees"></table>
                 </div>
@@ -33,7 +28,7 @@
                     <table id="datagrid_trade_margins"></table>
                 </div>
             </div>
-            <div title="交易委托">
+            <div title="委托">
                 <div class="easyui-panel" style="height:100%;">
                     <table id="propertygrid_trade_orders"></table>
                 </div>
@@ -87,7 +82,7 @@
             <input id="trade_add_coupon" name="coupon" label="优惠券" prompt="选择优惠券" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input id="trade_add_ptype" name="ptype" label="报价方式" prompt="选择报价方式" style="width:100%">
+            <input id="trade_add_ptype" name="optype" label="报价方式" prompt="选择报价方式" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'100的整数倍', required:true, validType:['stock', 'min[100]']" style="width:100%">
@@ -226,8 +221,8 @@
                     success: function(data){
                         var resp = eval('('+data+')');
                         if (resp.status){
-                            usertrade.add.dialog.dialog('close');
-                            usertrade.datagrid.datagrid('reload');
+                            usertrade.add.close();
+                            usertrade.list.reload();
                         } else {
                             $.messager.show({ title: '错误',  msg: resp.msg });
                         }
@@ -317,19 +312,21 @@
                     toolbar: '#trade_toolbar',
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
-                        {field:'code', title:'代码'},
                         {field:'user', title:'用户'},
                         {field:'stock', title:'股票'},
-                        {field:'account', title:'账户', sortable:true},
-                        {field:'_optype', title:'报价'},
+                        {field:'status', title:'状态', hidden:true},
                         {field:'_status', title:'状态'},
-                        {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.datetime},
-                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime},
-                    ]],
-                    columns: [[
-                        {field:'lever', title:'杠杆', sortable:true},
+                        {field:'account', title:'账户', sortable:true},
+                        {field:'tcode', title:'状态', hidden:true},
+                        {field:'optype', title:'报价', hidden:true},
+                        {field:'_optype', title:'报价'},
+                        {field:'lever', title:'杠杆', hidden:true},
+                        {field:'_lever', title:'杠杆', sortable:true},
                         {field:'oprice', title:'订单价', sortable:true},
                         {field:'ocount', title:'订单量', sortable:true},
+
+                    ]],
+                    columns: [[
                         {field:'hprice', title:'持仓价', sortable:true, formatter: cube.format.none},
                         {field:'hcount', title:'持仓量', sortable:true, formatter: cube.format.none},
                         {field:'fcount', title:'可卖量', sortable:true, formatter: cube.format.none},
@@ -343,6 +340,8 @@
                         {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},
                         {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
                         {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
+                        {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.datetime},
+                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime},
                     ]],
 
                     loadFilter: function (resp) {
@@ -360,7 +359,7 @@
                         $.messager.show({title: '错误', msg: '请求用户交易数据失败'});
                     },
                     
-                    onSelect(index, row) {
+                    onSelect: function(index, row) {
                         // show detail
                         usertrade.detail.show();
                     }
@@ -464,15 +463,12 @@
                             usertrade.detail.trade.show(rdata);
                             break;
                         case 1:
-                            usertrade.detail.lever.show(rdata);
-                            break;
-                        case 2:
                             usertrade.detail.fees.show(rdata);
                             break;
-                        case 3:
+                        case 2:
                             usertrade.detail.margins.show(rdata);
                             break;
-                        case 4:
+                        case 3:
                             usertrade.detail.orders.show(rdata);
                             break;
                         default:
@@ -532,6 +528,10 @@
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return;
+                            }
                             return resp.data;
                         },
 
@@ -599,67 +599,6 @@
                 }
             },
 
-
-            //trade lever
-            lever: {
-                url: '/api/user/trade/lever',
-                propertygrid: $('#propertygrid_trade_lever'),
-
-                inited: false,
-
-                init: function(rdata) {
-                    if (this.inited)
-                        return;
-
-                    this.propertygrid.propertygrid({
-                        url: this.url,
-                        method: 'get',
-                        queryParams: {id: rdata.id},
-                        
-                        showGroup: true,
-                        showHeader: true,
-
-                        columns: [[
-                            {field:'name', title:'名称', width:'50%'},
-                            {field:'value', title:'取值', width:'50%'}
-                        ]],
-
-                        loadFilter: function (resp) {
-                            return resp.data;
-                        },
-
-                        onLoadSuccess: function(resp) {
-                        },
-
-                        onLoadError: function() {
-                            $.messager.show({title: '错误', msg: '请求交易杠杆数据失败'});
-                        }
-                    });
-
-                    this.inited=true;
-                },
-
-                clear: function() {
-                    if (this.inited){
-                        len = this.propertygrid.propertygrid('getRows').length;
-                        for (i=0; i<len; i++){
-                            this.propertygrid.propertygrid('deleteRow', 0);
-                        }
-                    }
-                },
-                
-                load: function(rdata) {
-                    this.propertygrid.propertygrid('load', {id: rdata.id});
-                },
-
-                show: function(rdata) {
-                    if(!this.inited)
-                        this.init(rdata);
-                    else
-                        this.load(rdata);
-                }
-            },
-
             //trade fees
             fees: {
                 url: '/api/user/trade/fees',
@@ -689,10 +628,15 @@
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
                             return resp.data;
                         },
 
                         onLoadSuccess: function(resp) {
+
                         },
 
                         onLoadError: function() {
@@ -752,10 +696,15 @@
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
                             return resp.data;
                         },
 
                         onLoadSuccess: function(resp) {
+
                         },
 
                         onLoadError: function() {
@@ -801,7 +750,7 @@
                     this.propertygrid.propertygrid({
                         url: this.url,
                         method: 'get',
-                        queryParams: {code: rdata.code},
+                        queryParams: {code: rdata.tcode},
                         
                         showGroup: true,
                         showHeader: true,
@@ -812,10 +761,16 @@
                         ]],
 
                         loadFilter: function (resp) {
+                            if (!resp.status){
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                                return {total:0, rows:[]};
+                            }
+
                             return resp.data;
                         },
 
                         onLoadSuccess: function(resp) {
+
                         },
 
                         onLoadError: function() {
@@ -836,7 +791,7 @@
                 },
 
                 load: function(rdata) {
-                    this.propertygrid.propertygrid('load', {code: rdata.code});
+                    this.propertygrid.propertygrid('load', {code: rdata.tcode});
                 },
 
                 show: function(rdata) {
