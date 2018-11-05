@@ -76,6 +76,7 @@ urlpatterns = [
     path('user/trade/orders', user.trade.orders, name="api.user.trade.orders"),
     path('user/trade/lever', user.trade.lever, name="api.user.trade.lever"),
     path('user/trade/deal', user.trade.deal, name="api.user.trade.deal"),
+    path('user/trade/status', user.trade.status, name="api.user.trade.status"),
 
     path('user/coupon/list', user.coupon.list, name="api.user.coupon.list"),
     path('user/coupon/add', user.coupon.add, name="api.user.coupon.add"),

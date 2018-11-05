@@ -1,7 +1,7 @@
 """
     api for cms
 """
-import time, datetime, util
+import time, datetime, json, util
 from django.db import transaction
 from django.db.models import Q
 from adb import models
@@ -117,11 +117,17 @@ def get(request):
 
     # data for want
     if type=='d':
-        data = trade.ddata()
+        rows = trade.ddata()
     elif type=='p':
-        data = trade.pdata()
+        rows = trade.pdata()
     else:
-        data = trade.odata()
+        rows = trade.odata()
+
+    data = {
+        'status': trade.status,
+        'total': len(rows),
+        'rows': rows
+    }
 
     # want formatted data
     return resp.success(data=data)
@@ -385,3 +391,43 @@ def deal(request):
         return resp.success(data=data)
     else:
         return resp.failure(str(form.errors))
+
+
+@auth.catch_exception
+@auth.need_login
+def status(request):
+    """
+        get order
+    :param request:
+    :return:
+    """
+    if request.method != 'GET':
+        return resp.failure(msg='method not support')
+
+    id = request.GET['id']
+
+    # get order detail
+    item = models.UserTrade.objects.get(id=id)
+    if not item:
+        return resp.failure(hint.ERR_FORM_DATA)
+
+    # logs
+    logs = []
+    if item.slog:
+        logs = json.loads(item.slog)
+
+    # rows
+    rows = []
+    for log in logs:
+        group = util.time.datetms(log['time'])
+        del log['time']
+        for k, v in log.items():
+            rows.append({'name':k, 'value':v, 'group':group})
+
+    ## response data ##
+    data = {
+        'total': len(rows),
+        'rows': rows
+    }
+
+    return resp.success(data=data)

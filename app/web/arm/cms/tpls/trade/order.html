@@ -4,7 +4,7 @@
     </div>
     <div data-options="region:'center', split:true" style="width: 20%">
         <div class="easyui-tabs" id="order_detail_tabs" data-options="fit:true, plain: true">
-            <div title="状态变更">
+            <div title="状态">
                 <div class="easyui-panel" style="width: 100%">
                     <table id="order_status_propertygrid"></table>
                 </div>
@@ -189,7 +189,7 @@
                         fn: function(r){
                             if (r){
                                 $.post(url, {id: row.id}, function(resp, status){
-                                    if(status == 'success'){
+                                    if(status === 'success'){
                                         if (resp.status){
                                             order.list.deleteSelected();
                                             order.detail.hide();

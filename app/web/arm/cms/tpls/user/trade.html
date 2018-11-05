@@ -33,6 +33,11 @@
                     <table id="propertygrid_trade_orders"></table>
                 </div>
             </div>
+            <div title="状态">
+                <div class="easyui-panel" style="height:100%;">
+                    <table id="propertygrid_trade_status"></table>
+                </div>
+            </div>
         </div>
         <div id="empty_trade_detail"><p style="text-align: center;">没有选择交易记录!</p></div>
     </div>
@@ -179,12 +184,13 @@
                     textField: 'text',
                     data: [{id:'sj', text:'市价'},{id:'xj', text:'限价'}],
                     onChange: function(newv, oldv){
-                        if (newv == 'sj'){
-                            $('#trade_add_oprice').textbox('clear');
-                            $('#trade_add_oprice').textbox('disable');
+                        tb = $('#trade_add_oprice');
+                        if (newv === 'sj'){
+                            tb.textbox('clear');
+                            tb.textbox('disable');
                         } else {
-                            $('#trade_add_oprice').textbox('clear');
-                            $('#trade_add_oprice').textbox('enable');
+                            tb.textbox('clear');
+                            tb.textbox('enable');
                         }
                     }
                 });
@@ -228,7 +234,7 @@
                         }
                     }
                 });
-            },
+            }
         },
 
         //trade search
@@ -426,7 +432,7 @@
                             if(!rdata)
                                 return;
 
-                            usertrade.detail.tabs.select(idx, rdata);
+                            usertrade.detail.tabs.select(idx, rdata.id, rdata.tcode);
                         }
                     });
 
@@ -449,31 +455,30 @@
                     }
 
                     // change tab
-                    this.select(idx, rdata);
-
-                    usertrade.detail.trade.tradeid = rdata.id;
+                    this.select(idx, rdata.id, rdata.tcode);
                 },
 
                 clear: function() {
                     $('#tabs_trade_detail').hide();
                     $('#empty_trade_detail').show();
-
-                    usertrade.detail.trade.tradeid = null;
                 },
 
-                select: function(idx, rdata) {
+                select: function(idx, tid, tcode) {
                     switch (idx) {
                         case 0:
-                            usertrade.detail.trade.show(rdata);
+                            usertrade.detail.trade.show(tid);
                             break;
                         case 1:
-                            usertrade.detail.fees.show(rdata);
+                            usertrade.detail.fees.show(tid);
                             break;
                         case 2:
-                            usertrade.detail.margins.show(rdata);
+                            usertrade.detail.margins.show(tid);
                             break;
                         case 3:
-                            usertrade.detail.orders.show(rdata);
+                            usertrade.detail.orders.show(tcode);
+                            break;
+                        case 4:
+                            usertrade.detail.status.show(tid);
                             break;
                         default:
                             break;
@@ -487,27 +492,24 @@
                 propertygrid: $('#propertygrid_trade_detail'),
 
                 inited: false,
-                tradeid: null,
-  
-                show: function(rdata) {
+
+                show: function(tradeid) {
                     if(!this.inited)
-                        this.init(rdata);
+                        this.init(tradeid);
                     else
-                        this.load(rdata);
-
-                    this.resetActions(rdata);
+                        this.load(tradeid);
                 },
 
-                load: function(rdata) {
-                    this.propertygrid.propertygrid('load', {id: rdata.id, _t: 'p'});
+                load: function(tradeid) {
+                    this.propertygrid.propertygrid('load', {id: tradeid, _t: 'p'});
                 },
 
-                init: function(rdata) {
+                init: function(tradeid) {
                     if (this.inited)
                         return;
 
                     //init property grid
-                    this.initPropertyGrid(rdata);
+                    this.initPropertyGrid(tradeid);
 
                     this.inited = true;
                 },
@@ -516,12 +518,12 @@
                     this.clearPropertyGrid();
                 },
 
-                initPropertyGrid: function(rdata) {
+                initPropertyGrid: function(tradeid) {
                     // init trade detail property grid
                     this.propertygrid.propertygrid({
                         url: this.url,
                         method: 'get',
-                        queryParams: {id: rdata.id, _t: 'p'},
+                        queryParams: {id: tradeid, _t: 'p'},
                         
                         showGroup: true,
                         showHeader: true,
@@ -540,6 +542,7 @@
                         },
 
                         onLoadSuccess: function(resp) {
+                            usertrade.detail.trade.resetActions(resp.status);
                         },
 
                         onLoadError: function() {
@@ -557,26 +560,26 @@
                     }
                 },
 
-                resetActions: function(rdata) {
-                    if (['tobuy'].includes(rdata.status)){
+                resetActions: function(status) {
+                    if (['tobuy'].includes(status)){
                         $('#btn_trade_buy').linkbutton('enable');
                     } else {
                         $('#btn_trade_buy').linkbutton('disable');
                     }
 
-                    if (['tosell'].includes(rdata.status)){
+                    if (['tosell'].includes(status)){
                         $('#btn_trade_sell').linkbutton('enable');
                     } else {
                         $('#btn_trade_sell').linkbutton('disable');
                     }
 
-                    if (['toclose'].includes(rdata.status)){
+                    if (['toclose'].includes(status)){
                         $('#btn_trade_close').linkbutton('enable');
                     } else {
                         $('#btn_trade_close').linkbutton('disable');
                     }
 
-                    if (['tobuy', 'tosell', 'toclose'].includes(rdata.status)){
+                    if (['tobuy', 'tosell', 'toclose'].includes(status)){
                         $('#btn_trade_cancel').linkbutton('enable');
                     } else {
                         $('#btn_trade_cancel').linkbutton('disable');
@@ -584,15 +587,15 @@
                 },
 
                 doActions: function(action) {
-                    if(this.tradeid == null){
+                    var row = usertrade.list.getSelected();
+                    if(!row)
                         return;
-                    }
 
                     var url = '/api/user/trade/deal';
-                    $.post(url, {id: this.tradeid, act: action}, function(resp, status){
-                        if(status == 'success'){
+                    $.post(url, {id: row.id, act: action}, function(resp, status){
+                        if(status === 'success'){
                             if (resp.status){
-                                alert('success');
+                                $.messager.show({title: '成功', msg: resp.msg});
                             } else {
                                 $.messager.show({title: '错误', msg: resp.msg});
                             }
@@ -610,11 +613,11 @@
 
                 inited: false,
 
-                init: function(rdata) {
+                init: function(tradeid) {
                     this.datagrid.datagrid({
                         url: this.url,
                         method: 'get',
-                        queryParams: {id: rdata.id},
+                        queryParams: {id: tradeid},
                         
                         idField: 'id',
                 
@@ -625,9 +628,9 @@
                         singleSelect: true,
 
                         columns: [[
-                            {field:'item', title:'类目', width:'16%'},
-                            {field:'nmoney', title:'应收', width:'22%'},
-                            {field:'amoney', title:'实收', width:'22%'},
+                            {field:'item', title:'类目', width:'15%'},
+                            {field:'nmoney', title:'应收', width:'20%'},
+                            {field:'amoney', title:'实收', width:'20%'},
                             {field:'ctime', title:'时间', formatter: cube.format.datetime}
                         ]],
 
@@ -660,15 +663,15 @@
                     }
                 },
                 
-                load: function(rdata) {
-                    this.datagrid.datagrid('load', {id: rdata.id});
+                load: function(tradeid) {
+                    this.datagrid.datagrid('load', {id: tradeid});
                 },
 
-                show: function(rdata) {
+                show: function(tradeid) {
                     if(!this.inited)
-                        this.init(rdata);
+                        this.init(tradeid);
                     else
-                        this.load(rdata);
+                        this.load(tradeid);
                 }
             },
 
@@ -679,11 +682,11 @@
                 
                 inited: false,
 
-                init: function(rdata) {
+                init: function(tradeid) {
                    this.datagrid.datagrid({
                         url: this.url,
                         method: 'get',
-                        queryParams: {id: rdata.id},
+                        queryParams: {id: tradeid},
                         
                         idField: 'id',
                 
@@ -728,15 +731,15 @@
                     }
                 },
 
-                load: function(rdata) {
-                    this.datagrid.datagrid('load', {id: rdata.id});
+                load: function(tradeid) {
+                    this.datagrid.datagrid('load', {id: tradeid});
                 },
 
-                show: function(rdata) {
+                show: function(tradeid) {
                     if(!this.inited)
-                        this.init(rdata);
+                        this.init(tradeid);
                     else
-                        this.load(rdata);
+                        this.load(tradeid);
                 }
             },
 
@@ -747,14 +750,14 @@
                 
                 inited: false,
                 
-                 init: function(rdata) {
+                 init: function(tcode) {
                     if (this.inited)
                         return;
 
                     this.propertygrid.propertygrid({
                         url: this.url,
                         method: 'get',
-                        queryParams: {code: rdata.tcode},
+                        queryParams: {code: tcode},
                         
                         showGroup: true,
                         showHeader: true,
@@ -794,15 +797,66 @@
                     }
                 },
 
-                load: function(rdata) {
-                    this.propertygrid.propertygrid('load', {code: rdata.tcode});
+                load: function(tcode) {
+                    this.propertygrid.propertygrid('load', {code: tcode});
                 },
 
-                show: function(rdata) {
+                show: function(tcode) {
                     if(!this.inited)
-                        this.init(rdata);
+                        this.init(tcode);
                     else
-                        this.load(rdata);
+                        this.load(tcode);
+                }
+            },
+
+            // trade status changes
+            status: {
+                url: '/api/user/trade/status',
+                propertygrid: $('#propertygrid_trade_status'),
+
+                inited: false,
+
+                init: function(params) {
+                    if (this.inited)
+                        return;
+
+                    this.propertygrid.propertygrid({
+                        url: this.url,
+                        method: 'get',
+                        queryParams: params,
+
+                        showGroup:true,
+
+                        columns: [[
+                            {field:'name', title:'名称', width:'50%'},
+                            {field:'value', title:'取值', width:'50%'}
+                        ]],
+
+                        loadFilter: function (resp) {
+                            return resp.data;
+                        },
+
+                        onLoadSuccess: function(resp) {
+                        },
+
+                        onLoadError: function() {
+                            $.messager.show({title: '错误', msg: '请求状态变更信息失败'});
+                        }
+                    });
+
+                    this.inited=true;
+                },
+
+                load: function(params) {
+                    this.propertygrid.propertygrid('load', params);
+                },
+
+                show: function(tradeid) {
+                    params = {id:tradeid};
+                    if(!this.inited)
+                        this.init(params);
+                    else
+                        this.load(params);
                 }
             },
 
@@ -819,7 +873,7 @@
             //clear detail
             clear:function() {
                 this.tabs.clear();
-            },
+            }
         },
 
         //init user trade
