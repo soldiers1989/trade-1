@@ -1,8 +1,8 @@
 import time
 
 from tlib import rand
-from tlib.web import dao
-from tlib.web import sqlhelper
+from venus import dao
+from venus import sqlhelper
 from .. import suite, models
 
 

@@ -1,10 +1,10 @@
 """
     coupon dao
 """
-from tlib.web import dao
+from venus import dao
 
 from .. import models
-from tlib.web import sqlhelper
+from venus import sqlhelper
 
 
 class CouponDao(dao.Dao):

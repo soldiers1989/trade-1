@@ -3,7 +3,7 @@
 """
 import time, datetime
 from .. import models
-from tlib.web import dao, sqlhelper
+from venus import dao, sqlhelper
 
 
 class UserDao(dao.Dao):
