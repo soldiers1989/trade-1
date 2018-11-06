@@ -1,6 +1,0 @@
-"""
-    stock relate functions
-"""
-
-
-

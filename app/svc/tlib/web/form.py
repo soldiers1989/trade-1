@@ -1,18 +1,18 @@
 """
-     base class
+    pub form base class
 """
-from . import field
+from . import orm
 
 
 class MetaForm(type):
     def __new__(cls, name, bases, attrs):
-        if name == 'Model':
+        if name == 'Form':
             return type.__new__(cls, name, bases, attrs)
 
         #get declared fields
         fields = {}
         for code, f in attrs.items():
-            if issubclass(f.__class__, field.Field):
+            if issubclass(f.__class__, orm.field.Field):
                 f.code = code
                 if f.name is None:
                     f.name = code
@@ -22,7 +22,7 @@ class MetaForm(type):
         for k in fields.keys():
             del attrs[k]
 
-        # save fields
+        # model fields
         attrs['__fields__'] = fields
 
         return type.__new__(cls, name, bases, attrs)
@@ -30,28 +30,57 @@ class MetaForm(type):
 
 class Form(dict, metaclass=MetaForm):
     def __init__(self, **kwargs):
-        for code, field in self.__fields__.items():
-            self[code] = field.valueof(kwargs.get(code, field.default))
+        super().__init__()
+        for code, field in self.fields().items():
+            self[code] = field.value(kwargs.get(code, field.default))
 
     def __getattr__(self, name):
         return self[name]
 
     def __setattr__(self, name, value):
-        field = self.__fields__.get(name)
+        field = self.fields().get(name)
         if field is None:
             raise field.ErrorFieldNotExist(name)
 
-        self[name] = field.valueof(value)
+        self[name] = field.value(value)
 
+    def values(self):
+        """
+            object values
+        :return:
+            list
+        """
+        vals = []
+        for name in self.fieldnames():
+            vals.append(self[name])
+        return vals
 
-class TestForm(Form):
-    id = field.IntegerField(name='ID', min_value=2)
-    name = field.StringField(name='名称', null=True)
-    sex = field.EnumField(name='性别', choices=('male', 'female'))
-    disable = field.BooleanField(name='禁用')
+    @classmethod
+    def fields(cls):
+        """
+            get table fields
+        :return:
+            dict, name->field
+        """
+        return cls.__fields__
 
+    @classmethod
+    def fieldcodes(cls):
+        """
+            get table fields code
+        :return:
+            list
+        """
+        return list(cls.__fields__.keys())
 
-if __name__ == '__main__':
-    a = TestForm(id=2, name='abc', sex='male', disable=True, age=12)
-    a.id = 3
-    print(a.sex)
+    @classmethod
+    def fieldnames(cls):
+        """
+            get table fields name
+        :return:
+            list
+        """
+        names = []
+        for field in cls.__fields__.values():
+            names.append(field.name)
+        return names

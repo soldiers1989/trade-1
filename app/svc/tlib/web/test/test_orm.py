@@ -1,5 +1,5 @@
-from test import orm
-from test.orm.query import  Q
+from tlib.web import orm
+from tlib.web.orm.query import  Q
 
 class User(orm.model.Model):
     __table__ = 'tb_user'
