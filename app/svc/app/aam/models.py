@@ -5,7 +5,6 @@ from tlib.web import model, field
 from . import suite
 
 
-
 class User(model.Model):
     id = field.IntegerField()
     user = field.StringField(max_length=16)

@@ -12,5 +12,3 @@ def get():
     :return:
     """
     return mysql.DBMysql(_aam)
-
-
