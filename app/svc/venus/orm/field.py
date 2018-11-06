@@ -69,6 +69,19 @@ class Field:
             raise ErrorFieldValue('%s: %s' % (str(self.code), str(e)))
 
 
+class AutoField(Field):
+    def __init__(self, **kwargs):
+        super().__init__(validator.IntegerValidator, null=True)
+
+    def _value(self, val):
+        if val is None:
+            return None
+        try:
+            return int(val)
+        except:
+            raise ErrorFieldValue('invalid auto(integer) value %s' % str(val))
+
+
 class EnumField(Field):
     def __init__(self, **kwargs):
         super().__init__(validator.EnumValidator, **kwargs)

@@ -8,7 +8,7 @@
       "name": "赠送",
       "value": 10.00,
       "detail": "",
-      "status": "unused",
+      "status": "notused",
       "sdate": "2018-10-01",
       "edate": "2018-12-01",
       "ctime": 1527261052
@@ -23,7 +23,7 @@
       "name": "赠送",
       "value": 10.00,
       "detail": "",
-      "status": "unused",
+      "status": "notused",
       "sdate": "2018-10-01",
       "edate": "2018-12-01",
       "ctime": 1527261052
@@ -38,7 +38,7 @@
       "name": "赠送",
       "value": 10.00,
       "detail": "",
-      "status": "unused",
+      "status": "notused",
       "sdate": "2018-10-01",
       "edate": "2018-12-01",
       "ctime": 1527261052
@@ -53,7 +53,7 @@
       "name": "赠送",
       "value": 10.00,
       "detail": "",
-      "status": "unused",
+      "status": "notused",
       "sdate": "2018-10-01",
       "edate": "2018-12-01",
       "ctime": 1527261052

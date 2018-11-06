@@ -2,7 +2,7 @@
     base handler
 """
 import tornado.web
-from . import mysql, config, session
+from . import config, session
 
 
 class Handler(tornado.web.RequestHandler):
@@ -14,9 +14,6 @@ class Handler(tornado.web.RequestHandler):
             overwrite: initialize
         :return:
         """
-        ## init database ##
-        self.db = mysql.get()
-
         ## init session ##
         # get session id from cookie
         csid = self.get_secure_cookie(config.SESSION_NAME)
@@ -67,9 +64,6 @@ class Handler(tornado.web.RequestHandler):
             overwrite: on finish
         :return:
         """
-        # close database
-        self.db.close()
-
         # update session expire time if current user is login
         if self.current_user is not None:
             self.session.expire(config.SESSION_TIMEOUT)

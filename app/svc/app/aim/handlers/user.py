@@ -1,9 +1,8 @@
 """
     user handlers
 """
-from trpc import sms
 from tlib import validator, hash, rand
-from .. import access, handler, daos, error, protocol, verify, forms, config, msgtpl
+from .. import access, handler, daos, error, protocol, verify, forms, config, msgtpl, remote
 
 
 class SessionGetHandler(handler.Handler):
@@ -203,7 +202,7 @@ class UserVerifyHandler(handler.Handler):
         verify.sms.set(phone, code, config.EXPIRE_VERIFY_CODE)
 
         # send message by template
-        sms.send(phone, tpl.format(code))
+        remote.sms.send(phone, tpl.format(code))
 
         # response data
         data = {

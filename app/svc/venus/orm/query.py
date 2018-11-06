@@ -399,15 +399,19 @@ class QuerySet:
         sql += 'insert into `' + self._modelcls.tablename() + '`'
 
         # columns clause #
-        sql += '(' + '`' + '`,`'.join(self._modelcls.fieldcodes()) + '`)'
+        columns = self._modelcls.fieldcodes(noauto=True)
+        sql += '(' + '`' + '`,`'.join(columns) + '`)'
 
         # add ? clause
         v = []
-        for i in range(len(self._modelcls.fieldcodes())):
+        for i in range(len(columns)):
             v.append('%s')
         sql += ' values (' + ','.join(v) + ')'
 
-        return self._db.insert(sql, model.values())
+        affects = self._db.insert(sql, model.values(noauto=True))
+        if affects > 0:
+            model.setauto(self._db.lastrowid())
+        return affects
 
     @property
     def sqlselect(self):

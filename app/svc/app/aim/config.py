@@ -102,3 +102,23 @@ DATABASES = {
     }
 }
 
+## remote service configure ##
+REMOTES = {
+    'sms': {
+        'dev': {
+            'baseurl': 'http://127.0.0.1:10005',
+            'key': 'abc',
+            'safety': True
+        },
+        'test': {
+            'baseurl': 'http://127.0.0.1:10005',
+            'key': 'abc',
+            'safety': True
+        },
+        'online': {
+            'baseurl': 'http://127.0.0.1:10005',
+            'key': 'abc',
+            'safety': True
+        }
+    }
+}

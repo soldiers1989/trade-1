@@ -31,5 +31,6 @@ class _Cache:
         """
         return self._redis.get(key)
 
+
 # default cache object
 default = _Cache(redis.cache)

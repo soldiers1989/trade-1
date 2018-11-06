@@ -128,6 +128,15 @@ def atomic(alias=None):
     :param alias:
     :return:
     """
-    if _databases.get(alias) is None:
+    if len(_databases) == 0:
+        raise DBError('none database has setup.')
+
+    if alias is None:
+        database = list(_databases.values())[0]
+    else:
+        database = _databases.get(alias)
+
+    if database is None:
         raise DBError('database %s has not setup.' % str(alias))
-    return _Transaction(_providers[_databases[alias][0]](**_databases[alias][1]))
+
+    return _Transaction(_providers[database[0]](**database[1]))

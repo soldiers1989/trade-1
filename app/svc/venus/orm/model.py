@@ -4,24 +4,39 @@
 from . import field, query
 
 
+class ModelError(Exception):
+    pass
+
+
 class MetaModel(type):
     def __new__(cls, name, bases, attrs):
         if name == 'Model':
             return type.__new__(cls, name, bases, attrs)
 
         #get declared fields
-        fields = {}
+        fields, autofield = {}, None
         for code, f in attrs.items():
             if issubclass(f.__class__, field.Field):
+                if fields.get(code) is not None:
+                    raise ModelError('duplicate model field: %s'%str(code))
+
                 f.code = code
                 if f.name is None:
                     f.name = code
                 fields[code] = f
 
+                if f.__class__ == field.AutoField:
+                    if autofield is not None:
+                        raise ModelError('duplicate model auto field %s with %s, only one auto field permitted.' % (autofield, str(code)))
+
+                    autofield = code
+
         # remove declare in attrs
         for k in fields.keys():
             del attrs[k]
 
+        # auto field name
+        attrs['__auto__'] = autofield
         # table name
         attrs['__table__'] = attrs.get('__table__', name)
         # model fields
@@ -36,26 +51,38 @@ class Model(dict, metaclass=MetaModel):
         for code, field in self.fields().items():
             self[code] = field.value(kwargs.get(code, field.default))
 
-    def __getattr__(self, name):
-        return self[name]
+    def __getattr__(self, code):
+        return self[code]
 
-    def __setattr__(self, name, value):
-        field = self.fields().get(name)
+    def __setattr__(self, code, value):
+        field = self.fields().get(code)
         if field is None:
-            raise field.ErrorFieldNotExist(name)
+            raise field.ErrorFieldNotExist(code)
 
-        self[name] = field.value(value)
+        self[code] = field.value(value)
 
-    def values(self):
+    def values(self, noauto=False):
         """
             object values
+        :param noauto: exclude auto field value flag
         :return:
             list
         """
         vals = []
-        for name in self.fieldnames():
-            vals.append(self[name])
+        for code in self.fieldcodes():
+            if noauto and self.__auto__ == code:
+                continue
+            vals.append(self[code])
         return vals
+
+    def setauto(self, val):
+        """
+            set auto field value
+        :param val:
+        :return:
+        """
+        if self.__auto__ is not None:
+            self[self.__auto__] = val
 
     @classmethod
     def fields(cls):
@@ -71,13 +98,19 @@ class Model(dict, metaclass=MetaModel):
         return cls.__table__
 
     @classmethod
-    def fieldcodes(cls):
+    def fieldcodes(cls, noauto=False):
         """
             get table fields code
+        :param noauto: exclude auto field code flag
         :return:
             list
         """
-        return list(cls.__fields__.keys())
+        codes = []
+        for k in cls.__fields__.keys():
+            if noauto and cls.__auto__ == k:
+                continue
+            codes.append(k)
+        return codes
 
     @classmethod
     def fieldnames(cls):

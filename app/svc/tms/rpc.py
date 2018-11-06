@@ -396,6 +396,14 @@ class Quote(Rpc):
         return self.get(path, params=params)
 
 
+class Sms(Rpc):
+    """
+        short message service rpc
+    """
+    def send(self):
+        pass
+
+
 class Trade(Rpc):
     """
         trade service rpc

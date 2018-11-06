@@ -46,7 +46,7 @@ all = {
             'discount': '打折'
         },
         'status': {
-            'unused': '未用',
+            'notused': '未用',
             'used': '已用',
             'expired': '过期'
         }

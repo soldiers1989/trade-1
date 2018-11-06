@@ -1,13 +1,17 @@
 """
     field
 """
-from venus import model, field
-from . import suite
+from venus import model, field, db
+from . import config
 
+# setup database
+db.setup('arm', 'mysql', config.DATABASES['aim'][config.MODE])
 
 
 class User(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_user'
+
+    id = field.AutoField()
     user = field.StringField(max_length=16)
     pwd = field.StringField(max_length=64)
     phone = field.StringField(max_length=16)
@@ -18,11 +22,14 @@ class User(model.Model):
 
 
 class UserCoupon(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_user_coupon'
+
+    id = field.AutoField()
     user_id = field.IntegerField()
-    name = field.StringField()
-    money = field.DecimalField(digits=10, decimals=2)
-    status = field.EnumField(choices=suite.enum.values(suite.enum.coupon))
+    type = field.StringField(max_length=16)
+    name = field.StringField(max_length=64)
+    value = field.DecimalField(digits=10, decimals=2)
+    status = field.EnumField(choices=('notused', 'used', 'expired'))
     sdate = field.DateField()
     edate = field.DateField()
     ctime = field.IntegerField()
@@ -30,7 +37,9 @@ class UserCoupon(model.Model):
 
 
 class UserBank(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_user_bank'
+
+    id = field.AutoField()
     user_id = field.IntegerField()
     bank = field.StringField(max_length=16)
     name = field.StringField(max_length=16)
@@ -42,7 +51,9 @@ class UserBank(model.Model):
 
 
 class UserBill(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_user_bill'
+
+    id = field.AutoField()
     user_id = field.IntegerField()
     code = field.StringField(max_length=16)
     item = field.StringField(max_length=16)
@@ -55,17 +66,21 @@ class UserBill(model.Model):
 
 # tb_user_charge
 class UserCharge(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_user_charge'
+
+    id = field.AutoField()
     user_id = field.IntegerField()
     code = field.StringField(max_length=16)
     money = field.DecimalField(digits=10, decimals=2)  # bill money
-    status = field.StringField(max_length=16)
+    status = field.EnumField(choices=('topay', 'paid', 'expired'))
     ctime = field.IntegerField()  # create time
 
 
 # tb_user_draw
 class UserDraw(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_user_charge'
+
+    id = field.AutoField()
     user_id = field.IntegerField()
     code = field.StringField(max_length=16)
     money = field.DecimalField(digits=10, decimals=2)
@@ -73,13 +88,15 @@ class UserDraw(model.Model):
     idc = field.StringField(max_length=32)
     bank = field.StringField(max_length=16)
     account = field.StringField(max_length=32)
-    status = field.StringField(max_length=16, default='paying')
+    status = field.EnumField(choices=('topay', 'paid', 'denied'))
     ctime = field.IntegerField()  # create time
 
 
 # tb_user_stock
 class UserStock(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_user_stock'
+
+    id = field.AutoField()
     user_id = field.IntegerField()
     stock_id = field.StringField(max_length=16)
     deleted = field.BooleanField(default=False)
@@ -88,7 +105,9 @@ class UserStock(model.Model):
 
 
 class Lever(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_lever'
+
+    id = field.AutoField()
     lever = field.IntegerField()
     wline = field.DecimalField(digits=2, decimals=2)
     sline = field.DecimalField(digits=2, decimals=2)
@@ -105,21 +124,25 @@ class Lever(model.Model):
 
 
 class Stock(model.Model):
+    __table__ = 'tb_user_charge'
+
     id = field.StringField(max_length=8)
     name = field.StringField(max_length=16)
     jianpin = field.StringField(max_length=16)
     quanpin = field.StringField(max_length=32)
-    status = field.EnumField(max_length=8, default='open', choices=suite.enum.values(suite.enum.stock))
-    limit = field.EnumField(max_length=8, default='none', choices=suite.enum.values(suite.enum.risk))
+    status = field.EnumField(max_length=8, choices=('open', 'close', 'delisted'))
+    limit = field.EnumField(max_length=8, choices=('none', 'nobuy', 'nodelay'))
     ctime = field.IntegerField()
     mtime = field.IntegerField()
 
 
 class TradeAccount(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_trade_account'
+
+    id = field.AutoField()
     account = field.StringField(max_length=16)
     name = field.StringField(max_length=16)
-    lmoney = field.DecimalField(digits=10, decimals=2)
+    money = field.DecimalField(digits=10, decimals=2)
     cfmin = field.DecimalField(digits=10, decimals=2)
     cfrate = field.DecimalField(digits=6, decimals=6)
     tfrate = field.DecimalField(digits=6, decimals=6)
@@ -129,14 +152,15 @@ class TradeAccount(model.Model):
 
 
 class UserTrade(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_user_trade'
+
+    id = field.AutoField()
     user_id = field.IntegerField()
     stock_id = field.StringField(max_length=8)
     coupon_id = field.IntegerField(null=True)
-    account = field.StringField(null=True, max_lenght=16)
     type = field.StringField(max_length=16)
     code = field.StringField(max_length=16)
-    optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
+    optype = field.EnumField(choices=('xj', 'sj'))
     oprice = field.DecimalField(digits=10, decimals=2)
     ocount = field.IntegerField()
     hprice = field.DecimalField(null=True, digits=10, decimals=2)
@@ -148,41 +172,46 @@ class UserTrade(model.Model):
     scount = field.IntegerField(null=True)
     margin = field.DecimalField(null=True, digits=10, decimals=2)
     ofee = field.DecimalField(null=True, digits=10, decimals=2) # open fee
-    ddays = field.IntegerField(null=True) # delay days
+    dday = field.IntegerField(null=True) # delay days
     dfee = field.DecimalField(null=True, digits=10, decimals=2) # delay fee
     tprofit = field.DecimalField(null=True, digits=10, decimals=2) # total profit
     sprofit = field.DecimalField(null=True, digits=10, decimals=2) # share profit
-    status = field.EnumField(choices=suite.enum.values(suite.enum.trade))
-    slog = field.StringField(null=True)
+    account = field.StringField(null=True, max_lenght=16)
+    status = field.EnumField(choices=('tobuy','buying','cancelbuy','buycanceling','canceled','hold','tosell','selling','cancelsell','sellcanceling','sold','toclose','closing','cancelclose','closecanceling','closed','expired','dropped'))
+    slog = field.StringField(default='')
     ctime = field.IntegerField()  # create time
-    utime = field.IntegerField()  # update time
-    btime = field.IntegerField(null=True)  # bought time
-    stime = field.IntegerField(null=True)  # sold time
-    etime = field.IntegerField(null=True) # end time
+    mtime = field.IntegerField()  # modify time
 
 
 class TradeOrder:
-    id = field.IntegerField()
-    account_id = field.IntegerField()
-    stock_id = field.StringField(max_length=8)
-    otype = field.StringField(max_length=16)
-    optype = field.StringField(max_length=16)
-    ocount = field.IntegerField()
-    oprice = field.DecimalField(digits=10, decimals=2, null=True)
-    otime = field.IntegerField()
+    __table__ = 'tb_trade_order'
+
+    id = field.AutoField()
+    tcode = field.StringField(max_length=16)
+    scode = field.StringField(max_length=8)
+    sname = field.StringField(max_length=16)
     ocode = field.StringField(max_length=16, null=True)
-    dcount = field.IntegerField(null=True)
-    dprice = field.DecimalField(digits=10, decimals=2, null=True)
-    dtime = field.IntegerField(null=True)
+    otype = field.EnumField(choices=('buy', 'sell'))
+    optype = field.EnumField(choices=('sj', 'xj'))
+    oprice = field.DecimalField(digits=10, decimals=2)
+    ocount = field.IntegerField()
+    odate = field.DateField()
+    otime = field.IntegerField()
     dcode = field.StringField(max_length=16, null=True)
-    status = field.StringField(max_length=16)
-    slog = field.StringField(null=True)
+    dprice = field.DecimalField(digits=10, decimals=2)
+    dcount = field.IntegerField(null=True)
+    ddate = field.DateField()
+    dtime = field.IntegerField(null=True)
+    status = field.EnumField(choices=('notsend','tosend','sending','sent','tocancel','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped','expired'))
+    slog = field.StringField(default='')
     ctime = field.IntegerField()
-    utime = field.IntegerField()
+    mtime = field.IntegerField()
 
 
 class TradeLever(model.Model):
-    id = field.IntegerField()
+    __table__ = 'tb_trade_lever'
+
+    id = field.AutoField()
     trade_id = field.IntegerField()
     lever = field.IntegerField()
     wline = field.DecimalField(digits=2, decimals=2)

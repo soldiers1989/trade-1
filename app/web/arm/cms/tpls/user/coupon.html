@@ -37,7 +37,7 @@
         </div>
         <div style="margin-bottom:10px">
             <select class="easyui-combobox" name="status" data-options="label:'状态', prompt:'选择状态', editable:false, required:true" style="width: 100%">
-                <option value="unused">未用</option>
+                <option value="notused">未用</option>
                 <option value="used">已用</option>
             </select>
         </div>
@@ -171,7 +171,7 @@
 
                 // init status combobox
                 this.form.find('input[name="status"]:first').combobox({
-                    data: [{v:'', t:'全部状态'}, {v:'unused', t:'未用'}, {v:'used', t:'已用'}, {v:'expired', t:'过期'}],
+                    data: [{v:'', t:'全部状态'}, {v:'notused', t:'未用'}, {v:'used', t:'已用'}, {v:'expired', t:'过期'}],
                     valueField: 'v',
                     textField: 't'
                 });

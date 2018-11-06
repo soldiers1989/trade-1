@@ -14,10 +14,16 @@ settings = {
 }
 
 
-# start aim service
-def start(port):
+# setup running environments
+def _setup():
     # init logging
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(name)s][%(levelname)s]-%(message)s-[%(filename)s, %(lineno)d]')
+
+
+# start aim service
+def start(port):
+    # setup
+    _setup()
 
     # log start message
     logging.info('start aim service on port %d' % port)

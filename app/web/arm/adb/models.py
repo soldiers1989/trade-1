@@ -307,7 +307,7 @@ class UserDraw(models.Model):
     idc = models.CharField(max_length=32)
     bank = models.CharField(max_length=16)
     account = models.CharField(max_length=32)
-    status = models.CharField(max_length=16, default='paying')
+    status = models.CharField(max_length=16, default='topay')
     ctime = models.BigIntegerField()  # create time
 
     class Meta:
