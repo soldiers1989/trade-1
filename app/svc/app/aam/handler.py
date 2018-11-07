@@ -2,7 +2,7 @@
     base handler
 """
 import tornado.web
-from . import config, mysql
+from . import config
 
 
 class Handler(tornado.web.RequestHandler):
@@ -14,16 +14,14 @@ class Handler(tornado.web.RequestHandler):
             overwrite: initialize
         :return:
         """
-        ## init database ##
-        self.db = mysql.get()
+        pass
 
     def on_finish(self):
         """
             request finished
         :return:
         """
-        ## close database ##
-        self.db.close()
+        pass
 
     def set_default_headers(self):
         """

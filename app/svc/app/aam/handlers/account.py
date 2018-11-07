@@ -1,7 +1,7 @@
 """
     trade account management
 """
-from .. import access, handler, forms, protocol, mysql, daos, beans, error
+from .. import access, handler, forms, protocol, beans, error, models
 
 
 class ListHandler(handler.Handler):
@@ -9,20 +9,15 @@ class ListHandler(handler.Handler):
     @access.needtoken
     def get(self):
         """
-            add new trade request
+            get account list
         :return:
         """
-        # connect database
-        db = mysql.get()
+        with models.db.create() as d:
+            # get accounts
+            accounts = models.TradeAccount.filter(d, **self.cleaned_arguments).all()
 
-        # init dao object
-        dao = daos.account.AccountDao(db)
-
-        # get accounts
-        accounts = dao.list(**self.cleaned_arguments)
-
-        # success
-        self.write(protocol.success(data=accounts))
+            # success
+            self.write(protocol.success(data=accounts))
 
 
 class SelectHandler(handler.Handler):
@@ -36,10 +31,11 @@ class SelectHandler(handler.Handler):
         # get arguments
         form = forms.account.Select(**self.arguments)
 
-        # select account
-        account = beans.account.select(form)
-        if account is None:
-            raise error.account_not_usable
+        with models.db.create() as d:
+            # select account
+            account = models.TradeAccount.filter(d, disable=False).orderby('money').desc().one()
+            if account is None:
+                raise error.account_not_usable
 
-        # success
-        self.write(protocol.success(data=account))
+            # success
+            self.write(protocol.success(data=account))

@@ -1,5 +1,4 @@
-from venus import form, field
-from .. import suite
+from venus.form import form, field
 
 
 class Select(form.Form):
@@ -7,7 +6,6 @@ class Select(form.Form):
         account select form for buy trade order
     """
     stock = field.StringField()
-    type = field.EnumField(choices=suite.enum.values(suite.enum.ttype))
-    optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
+    optype = field.EnumField(choices=('xj', 'sj'))
     oprice = field.DecimalField(digits=10, decimals=2)
     ocount = field.IntegerField()

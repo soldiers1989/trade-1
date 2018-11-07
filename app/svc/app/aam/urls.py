@@ -6,6 +6,9 @@ handlers = [
     (r"/admin/redis/get", handlers.admin.RedisGetHandler),
     (r"/admin/redis/del", handlers.admin.RedisDelHandler),
 
+    (r"/account/list", handlers.account.ListHandler),
+    (r"/account/select", handlers.account.SelectHandler),
+
     (r"/stock/list", handlers.stock.StockListHandler),
     (r"/stock/get", handlers.stock.StockGetHandler),
     (r"/stock/add", handlers.stock.StockAddHandler),
@@ -34,7 +37,4 @@ handlers = [
     (r"/order/cancel", handlers.order.CancelHandler),
     (r"/order/notify", handlers.order.NotifyHandler),
     (r"/order/update", handlers.order.UpdateHandler),
-
-    (r"/account/list", handlers.account.ListHandler),
-    (r"/account/select", handlers.account.SelectHandler),
 ]

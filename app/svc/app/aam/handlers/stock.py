@@ -2,7 +2,7 @@
     stock relate handlers
 """
 import json
-from .. import access, handler, daos, protocol
+from .. import access, handler, protocol, models
 
 
 class StockListHandler(handler.Handler):
@@ -13,12 +13,12 @@ class StockListHandler(handler.Handler):
             echo
         :return:
         """
-        # get all stocks
-        dao = daos.stock.StockDao(self.db)
-        stocks = dao.list()
+        with models.db.create() as d:
+            # get all stocks
+            stocks = models.Stock.filter(d, **self.cleaned_arguments).all()
 
-        # response
-        self.write(protocol.success(data=stocks))
+            # response
+            self.write(protocol.success(data=stocks))
 
 
 class StockGetHandler(handler.Handler):
@@ -32,15 +32,13 @@ class StockGetHandler(handler.Handler):
         # get arguments
         id = self.get_argument('id')
 
-        # get stock
-        dao = daos.stock.StockDao(self.db)
-        stock = dao.get(id=id)
-
-        if stock is None:
-            self.write(protocol.failed(msg='stock not exist'))
-            return
-
-        self.write(protocol.success(data=stock))
+        with models.db.create() as d:
+            # get stock by id
+            stock = models.Stock.filter(d, id=id).one()
+            if stock is None:
+                self.write(protocol.failed(msg='stock not exist'))
+            else:
+                self.write(protocol.success(data=stock))
 
 
 class StockAddHandler(handler.Handler):
@@ -56,22 +54,30 @@ class StockAddHandler(handler.Handler):
         # parse stock data
         stocks = json.loads(self.request.body.decode())
 
-        added, failed = [], []
-        # add stocks
-        dao = daos.stock.StockDao(self.db)
-        for stock in stocks:
-            try:
-                dao.add(stock['id'], stock['name'], stock['jianpin'], stock['quanpin'], stock['status'], stock['limit'])
-                added.append(stock['id'])
-            except:
-                failed.append(stock['id'])
+        with models.db.atomic() as d:
+            existed, added, fails = 0, 0, []
+            # get all stocks
+            localstocks = models.Stock.all(d)
+            existids = [s.id for s in localstocks]
 
-        dao.commit()
+            # add not exist stocks
+            for stock in stocks:
+                if stock['id'] not in existids:
+                    try:
+                        models.Stock(**stock).save(d)
+                        added += 1
+                    except:
+                        fails.append(stock['id'])
+                else:
+                    existed += 1
 
-        # response data
-        data = {
-            'added': added,
-            'failed': failed
-        }
+            # response data
+            data = {
+                'total': len(stocks),
+                'exist': existed,
+                'added': added,
+                'failed': len(fails),
+                'fails': fails
+            }
 
-        self.write(protocol.success(data=data))
+            self.write(protocol.success(data=data))

@@ -414,7 +414,7 @@ class GetStockHandler(handler.Handler):
             sql = '''
                     select a.id as id, b.id as code, b.name as `name`, a.ctime as ctime, a.user_id as user_id
                     from tb_user_stock a, tb_stock b
-                    where a.user_id=%s and a.stock_id = b.id
+                    where a.user_id=%s and a.stock_id = b.id and a.deleted=false
                     order by a.ctime desc
                 '''
             # args

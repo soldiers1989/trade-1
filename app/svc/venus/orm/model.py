@@ -136,6 +136,16 @@ class Model(dict, metaclass=MetaModel):
         """
         return query.QuerySet(db, cls, *q, **filters)
 
+    @classmethod
+    def all(cls, db):
+        """
+            get all data
+        :param db: obj, database object
+        :return:
+            list of model object
+        """
+        return query.QuerySet(db, cls).all()
+
     def save(self, db):
         """
             save current object to specified db
