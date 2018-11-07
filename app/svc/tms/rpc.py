@@ -383,7 +383,7 @@ class Quote(Rpc):
     """
         quote service rpc
     """
-    def get(self, **params):
+    def quote(self, **params):
         """
             get current level 5 quote of stock by @code
         :param code: str, stock code
@@ -400,7 +400,7 @@ class Sms(Rpc):
     """
         short message service rpc
     """
-    def send(self):
+    def send(self, phone, msg):
         pass
 
 

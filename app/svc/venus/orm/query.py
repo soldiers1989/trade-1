@@ -267,11 +267,11 @@ class QuerySet:
         :param cols:
         :return:
         """
-        if not set(*cols).issubset(self._modelcls.fieldcodes()):
+        if not set(cols).issubset(self._modelcls.fieldcodes()):
             raise SQLError('group by columns %s not in table fields' % str(*cols))
 
         if len(cols) != 0:
-            self._groupby = ' group by ' + '`' + '`, `'.join(self._groupby) + '`'
+            self._groupby = ' group by ' + '`' + '`, `'.join(cols) + '`'
         return self
 
     def orderby(self, *cols):
@@ -280,11 +280,11 @@ class QuerySet:
         :param cols:
         :return:
         """
-        if not set(*cols).issubset(self._modelcls.fieldcodes()):
+        if not set(cols).issubset(self._modelcls.fieldcodes()):
             raise SQLError('order by columns %s not in table fields' % str(*cols))
 
         if len(cols) != 0:
-            self._orderby = ' order by ' + '`' + '`, `'.join(self._orderby) + '`'
+            self._orderby = ' order by ' + '`' + '`, `'.join(cols) + '`'
         return self
 
     def asc(self):
@@ -326,7 +326,14 @@ class QuerySet:
         :return:
         """
         # execute query
-        return self._db.select(self.sqlselect, self.sqlargs)
+        results = self._db.select(self.sqlselect, self.sqlargs)
+
+        # convert to model
+        objs = []
+        for result in results:
+            objs.append(self._modelcls(**result))
+
+        return objs
 
     def one(self):
         """
@@ -334,10 +341,18 @@ class QuerySet:
         :return:
         """
         # execute query
-        count, rows = self._db.select(self.sqlselect, self.sqlargs)
-        if count > 0:
-            return rows[0]
+        results = self._db.select(self.sqlselect, self.sqlargs)
+        if len(results) > 0:
+            return self._modelcls(**results[0])
         return None
+
+    def has(self):
+        """
+            has records
+        :return:
+            boolean
+        """
+        return self.one() is not None
 
     def update(self, **colvals):
         """
@@ -411,7 +426,7 @@ class QuerySet:
         affects = self._db.insert(sql, model.values(noauto=True))
         if affects > 0:
             model.setauto(self._db.lastrowid())
-        return affects
+        return model
 
     @property
     def sqlselect(self):

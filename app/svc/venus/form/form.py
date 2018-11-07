@@ -1,7 +1,7 @@
 """
     pub form base class
 """
-
+from . import field
 
 class MetaForm(type):
     def __new__(cls, name, bases, attrs):
@@ -11,7 +11,7 @@ class MetaForm(type):
         #get declared fields
         fields = {}
         for code, f in attrs.items():
-            if issubclass(f.__class__, web.orm.field.Field):
+            if issubclass(f.__class__, field.Field):
                 f.code = code
                 if f.name is None:
                     f.name = code

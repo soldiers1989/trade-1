@@ -36,6 +36,7 @@ class Field:
 
         self.code = None
         self.name = kwargs.get('name')
+        self.hint = kwargs.get('hint')
 
         self.default = self._value(kwargs.get('default'))
 
@@ -64,7 +65,10 @@ class Field:
         try:
             return self.valid(self._value(val))
         except Exception as e:
-            raise ErrorFieldValue('%s: %s' % (self.code, str(e)))
+            if self.hint is not None:
+                raise ErrorFieldValue(self.hint)
+            else:
+                raise ErrorFieldValue('%s: %s' % (self.code, str(e)))
 
 
 class AutoField(Field):
@@ -197,3 +201,4 @@ class DateTimeField(Field):
             return datetime.datetime(val.year, val.month, val.day)
 
         return datetime.datetime.strptime(str(val), self.format)
+

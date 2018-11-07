@@ -1,8 +1,9 @@
 """
     user handlers
 """
+import time, datetime
 from tlib import validator, hash, rand
-from .. import access, handler, daos, error, protocol, verify, forms, config, msgtpl, remote
+from .. import access, handler, error, protocol, verify, forms, config, msgtpl, remote, models
 
 
 class SessionGetHandler(handler.Handler):
@@ -27,14 +28,13 @@ class UserExistHandler(handler.Handler):
         form = forms.user.UserExist(**self.arguments)
 
         # check if user has exist
-        userdao = daos.user.UserDao(self.db)
+        with models.db.create() as d:
+            if models.User.filter(d, user=form.phone).has():
+                data = {'exist': True}
+            else:
+                data = {'exist': False}
 
-        if len(userdao.get(phone=form.phone)) > 0:
-            data = {'exist': True}
-        else:
-            data = {'exist': False}
-
-        return self.write(protocol.success(data=data))
+            return self.write(protocol.success(data=data))
 
 
 class UserRegisterHandler(handler.Handler):
@@ -48,38 +48,27 @@ class UserRegisterHandler(handler.Handler):
         form = forms.user.UserReg(**self.arguments)
 
         # generate password if not set
-        if form.pwd is None:
-            form.pwd = rand.alnum(8)
-
-        # check arguments
-        if not validator.phone(form.phone) and not validator.password(form.pwd):
-            raise error.invalid_parameters
+        form.pwd = form.pwd or rand.alnum(8)
 
         # check verify code
         scode = verify.sms.get(form.phone)
         if scode is None or form.vcode.lower() != scode.lower():
             raise error.wrong_sms_verify_code
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+        with models.db.atomic() as d:
+            # check exists user
+            if models.User.filter(d, phone=form.phone).has():
+                raise error.user_exists
 
-        # check exists user
-        if len(userdao.get(phone=form.phone)) > 0:
-            raise error.user_exists
+            # create user
+            user = models.User(user=form.phone, phone=form.phone, pwd=hash.sha1(form.pwd), money=0.0, disable=False, ctime=int(time.time()), ltime=int(time.time())).save(d)
 
-        # create user
-        if userdao.add(form.phone, hash.sha1(form.pwd)) != 1:
-            raise error.user_register
+            # set user session
+            self.session.set('uid', user.id)
+            self.session.set('phone', user.phone)
 
-        # get user
-        user = userdao.get(user=form.phone)
-
-        # set user session
-        self.session.set('uid', user.id)
-        self.session.set('phone', user.phone)
-
-        # login success
-        self.write(protocol.success(data={'uid':user.id, 'sid': self.session.id}))
+            # login success
+            self.write(protocol.success(data={'uid':user.id, 'sid': self.session.id}))
 
 
 class UserLoginHandler(handler.Handler):
@@ -92,64 +81,47 @@ class UserLoginHandler(handler.Handler):
         # get parameters
         form = forms.user.UserLogin(**self.arguments)
 
-        # check parameters
-        if form.pwd is None and form.vcode is None:
-            raise error.invalid_parameters
+        with models.db.atomic() as d:
+            # get user from database
+            user = models.User.filter(d, user=form.user).one()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+            # user not exist
+            if user is None: # register
+                if form.vcode is None:
+                    raise error.invalid_parameters
 
-        # get user from database
-        user = userdao.get(user=form.user)
+                # check verify code
+                scode = verify.sms.get(form.phone)
+                if scode is None or form.vcode.lower() != scode.lower():
+                    raise error.wrong_sms_verify_code
 
-        # user not exist
-        if user is None: # register
-            if form.vcode is None:
-                raise error.invalid_parameters
+                # generate password if not set
+                form.pwd = form.pwd or rand.alnum(8)
 
-            # check verify code
-            scode = verify.sms.get(form.phone)
-            if scode is None or form.vcode.lower() != scode.lower():
-                raise error.wrong_sms_verify_code
+                # create user
+                user = models.User(user=form.phone, phone=form.phone, pwd=hash.sha1(form.pwd), money=0.0, disable=False, ctime=int(time.time()), ltime=int(time.time())).save(d)
+            else: # login
+                # password invalid
+                if form.pwd is not None and hash.sha1(form.pwd) != user.pwd:
+                    raise error.user_or_pwd_invalid
 
-            # generate password if not set
-            if form.pwd is None:
-                form.pwd = rand.alnum(8)
+                # verify code invalid
+                vcode = verify.sms.get(form.user)
+                if form.vcode and vcode and form.vcode.lower() != vcode.lower():
+                    raise error.user_or_pwd_invalid
 
-            # check arguments
-            if not validator.phone(form.user) and not validator.password(form.pwd):
-                raise error.invalid_parameters
+                # user has disabled
+                if user.disable:
+                    raise error.user_disabled
 
-            # init user model
-            userdao = daos.user.UserDao(self.db)
+            # get user id
+            uid, phone = user.id, user.phone
+            # set user session
+            self.session.set('uid', uid)
+            self.session.set('phone', phone)
 
-            # create user
-            userdao.add(form.user, hash.sha1(form.pwd))
-
-            # get user
-            user = userdao.get(user=form.user)
-        else: # login
-            # password invalid
-            if form.pwd is not None and hash.sha1(form.pwd) != user.pwd:
-                raise error.user_or_pwd_invalid
-
-            # verify code invalid
-            vcode = verify.sms.get(form.user)
-            if form.vcode and vcode and form.vcode.lower() != vcode.lower():
-                raise error.user_or_pwd_invalid
-
-            # user has disabled
-            if user.disable:
-                raise error.user_disabled
-
-        # get user id
-        uid, phone = user.id, user.phone
-        # set user session
-        self.session.set('uid', uid)
-        self.session.set('phone', phone)
-
-        # login success
-        self.write(protocol.success(data={'uid':uid, 'sid': self.session.id}))
+            # login success
+            self.write(protocol.success(data={'uid':uid, 'sid': self.session.id}))
 
 
 class UserLogoutHandler(handler.Handler):
@@ -181,10 +153,6 @@ class UserVerifyHandler(handler.Handler):
 
         # get arguments
         form = forms.user.UserVerifyGet(**self.arguments)
-
-        # check phone number
-        if not validator.phone(phone):
-            raise error.invalid_parameters
 
         # get message template
         tpl = msgtpl.sms.get(form.type)
@@ -245,25 +213,20 @@ class UserPwdChangeHandler(handler.Handler):
         # get arguments
         form = forms.user.UserPwdChange(**self.arguments)
 
-        # check new password
-        if not validator.password(form.npwd):
-            raise error.invalid_parameters
+        with models.db.atomic() as d:
+            # current user id
+            uid = self.get_current_user()
+            # get user from database
+            user = models.User.filter(d, id=uid).one()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+            # match old password
+            if hash.sha1(form.opwd) != user.get('pwd'):
+                raise error.user_pwd_invalid
 
-        # get user from database
-        uid = self.get_current_user()
-        user = userdao.get(id = uid)[0]
+            # update password
+            models.User.filter(d, id=uid).update(pwd=hash.sha1(form.npwd))
 
-        # match old password
-        if hash.sha1(form.opwd) != user.get('pwd'):
-            raise error.user_pwd_invalid
-
-        # update password
-        userdao.update(uid, pwd=hash.sha1(form.npwd))
-
-        self.write(protocol.success())
+            self.write(protocol.success())
 
 
 class UserPwdResetHandler(handler.Handler):
@@ -281,23 +244,21 @@ class UserPwdResetHandler(handler.Handler):
         if sc is None or sc != form.vcode:
             raise error.wrong_sms_verify_code
 
-        # check user if exist
-        userdao = daos.user.UserDao(self.db)
-        user = userdao.get(phone=form.phone)
-        if not user:
-            raise error.invalid_parameters
+        with models.db.atomic() as d:
+            # get user
+            user = models.User.filter(d, phone=form.phone).one()
+            # check user if exist
+            if not user:
+                raise error.invalid_parameters
 
-        # get user id
-        uid = user.id
+            # check new password
+            if not validator.password(form.npwd):
+                raise error.invalid_parameters
 
-        # check new password
-        if not validator.password(form.npwd):
-            raise error.invalid_parameters
+            # set new password
+            models.User.filter(d, id=user.id).update(pwd=hash.sha1(form.npwd))
 
-        # set new password
-        userdao.update(uid, pwd=hash.sha1(form.npwd))
-
-        self.write(protocol.success())
+            self.write(protocol.success())
 
 
 class GetBankHandler(handler.Handler):
@@ -311,14 +272,12 @@ class GetBankHandler(handler.Handler):
         # get user id
         uid = self.get_current_user()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+        with models.db.create() as d:
+            # get user banks
+            banks = models.UserBank.filter(d, user_id=uid, deleted=False).all()
 
-        # get user banks
-        banks = userdao.getbank(user_id=uid, deleted=False)
-
-        # response data
-        self.write(protocol.success(data=banks))
+            # response data
+            self.write(protocol.success(data=banks))
 
 
 class AddBankHandler(handler.Handler):
@@ -335,13 +294,11 @@ class AddBankHandler(handler.Handler):
         # get user id
         uid = self.get_current_user()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+        with models.db.atomic() as d:
+            # add user bank card
+            bank = models.UserBank(user_id=uid, name=name, idc=idc, bank=bank, account=account, deleted=False, ctime=int(time.time()), mtime=int(time.time())).save(d)
 
-        # add user bank card
-        userdao.addbank(uid, name, idc, bank, account)
-
-        self.write(protocol.success())
+            self.write(protocol.success(data=bank))
 
 
 class DelBankHandler(handler.Handler):
@@ -358,13 +315,9 @@ class DelBankHandler(handler.Handler):
         # get user id
         uid = self.get_current_user()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
-
-        # add user bank card
-        userdao.delbank(uid, id)
-
-        self.write(protocol.success())
+        with models.db.atomic() as d:
+            models.UserBank.filter(d, id=id, user_id=uid).update(deleted=True)
+            self.write(protocol.success())
 
 
 class GetCouponHandler(handler.Handler):
@@ -378,14 +331,15 @@ class GetCouponHandler(handler.Handler):
         # get user id
         uid = self.get_current_user()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+        with models.db.create() as d:
+            # today
+            today = datetime.date.today()
 
-        # get user coupons
-        coupons = userdao.getcoupon(uid)
+            # get user coupons
+            coupons = models.UserCoupon.filter(d, user_id=uid, status='notused', sdate__le=today, edate__ge=today).all()
 
-        # response data
-        self.write(protocol.success(data=coupons))
+            # response data
+            self.write(protocol.success(data=coupons))
 
 
 class GetBillHandler(handler.Handler):
@@ -399,13 +353,11 @@ class GetBillHandler(handler.Handler):
         # get user id
         uid = self.get_current_user()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+        with models.db.create() as d:
+            # get user bills
+            bills = models.UserBill.filter(d, user_id=uid).orderby('ctime').desc().all()
 
-        # get user bills
-        bills = userdao.getbill(uid)
-
-        self.write(protocol.success(data=bills))
+            self.write(protocol.success(data=bills))
 
 
 class GetChargeHandler(handler.Handler):
@@ -419,14 +371,12 @@ class GetChargeHandler(handler.Handler):
         # get user id
         uid = self.get_current_user()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+        with models.db.create() as d:
+            # get user charges
+            charges = models.UserCharge.filter(d, user_id=uid).orderby('ctime').desc().all()
 
-        # get user charges
-        charges = userdao.getcharge(uid)
-
-        # response data
-        self.write(protocol.success(data=charges))
+            # response data
+            self.write(protocol.success(data=charges))
 
 
 class GetDrawHandler(handler.Handler):
@@ -440,14 +390,12 @@ class GetDrawHandler(handler.Handler):
         # get user id
         uid = self.get_current_user()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+        with models.db.create() as d:
+            # get user draws
+            draws = models.UserDraw.filter(d, user_id=uid).orderby('ctime').desc().all()
 
-        # get user draws
-        draws = userdao.getdraw(uid)
-
-        # response data
-        self.write(protocol.success(data=draws))
+            # response data
+            self.write(protocol.success(data=draws))
 
 
 class GetStockHandler(handler.Handler):
@@ -461,11 +409,19 @@ class GetStockHandler(handler.Handler):
         # get user id
         uid = self.get_current_user()
 
-        # init user model
-        userdao = daos.user.UserDao(self.db)
+        with models.db.create() as d:
+            # sql
+            sql = '''
+                    select a.id as id, b.id as code, b.name as `name`, a.ctime as ctime, a.user_id as user_id
+                    from tb_user_stock a, tb_stock b
+                    where a.user_id=%s and a.stock_id = b.id
+                    order by a.ctime desc
+                '''
+            # args
+            args = (uid,)
 
-        # get user stocks
-        stocks = userdao.getstock(uid)
+            # get user stocks
+            stocks = models.model.RawModel.select(d, sql, *args)
 
-        # response data
-        self.write(protocol.success(data=stocks))
+            # response data
+            self.write(protocol.success(data=stocks))

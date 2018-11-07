@@ -142,3 +142,50 @@ class Model(dict, metaclass=MetaModel):
         :return:
         """
         return query.QuerySet(db, self.__class__).insert(self)
+
+    @classmethod
+    def select(cls, db, sql, *args):
+        """
+            select data with raw sql
+        :param db: obj, database object
+        :param sql: str, sql
+        :param args: list/tupple, args for sql
+        :return:
+            model objects
+        """
+        objs = []
+
+        results = db.select(sql, *args)
+        for result in results:
+            objs.append(cls(**result))
+
+        return objs
+
+
+class RawModel(dict):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def __getattr__(self, code):
+        return self[code]
+
+    def __setattr__(self, code, value):
+        self[code] = value
+
+    @classmethod
+    def select(cls, db, sql, *args):
+        """
+            select data with raw sql
+        :param db: obj, database object
+        :param sql: str, sql
+        :param args: list/tupple, args for sql
+        :return:
+            model objects
+        """
+        objs = []
+
+        results = db.select(sql, *args)
+        for result in results:
+            objs.append(cls(**result))
+
+        return objs

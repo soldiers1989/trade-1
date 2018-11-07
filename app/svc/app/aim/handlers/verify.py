@@ -1,9 +1,8 @@
 """
     service verifier, including image, sms
 """
-from .. import access, handler, error, protocol, config, verify, msgtpl, forms
 from tlib import rand, image, validator
-from trpc import sms
+from .. import access, handler, error, protocol, config, verify, msgtpl, forms, remote
 
 
 class VerifyIDGetHandler(handler.Handler):
@@ -182,7 +181,7 @@ class VerifySmsHandler(handler.Handler):
         verify.sms.set(form.phone, code, config.EXPIRE_VERIFY_CODE)
 
         # send message by template
-        sms.send(form.phone, tpl.format(code))
+        remote.sms.send(form.phone, tpl.format(code))
 
         # response data
         data = {

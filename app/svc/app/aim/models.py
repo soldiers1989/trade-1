@@ -1,11 +1,11 @@
 """
     field
 """
-from venus import model, field, db
+from venus.orm import model, field, db
 from . import config
 
 # setup database
-db.setup('arm', 'mysql', config.DATABASES['aim'][config.MODE])
+db.setup('arm', 'mysql', **config.DATABASES['aim'][config.MODE])
 
 
 class User(model.Model):
@@ -78,7 +78,7 @@ class UserCharge(model.Model):
 
 # tb_user_draw
 class UserDraw(model.Model):
-    __table__ = 'tb_user_charge'
+    __table__ = 'tb_user_draw'
 
     id = field.AutoField()
     user_id = field.IntegerField()
