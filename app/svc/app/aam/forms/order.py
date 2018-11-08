@@ -1,46 +1,37 @@
 """
     form data for order request
 """
-from venus import form, field
+from venus.form import form, field
 from .. import suite
 
 
-class List(form.Form):
-    status = field.StringField(null=True)
-    date = field.DateField(null=True)
-    sdate = field.DateField(null=True)
-    edate = field.DateField(null=True)
-
-
-class Order(form.Form):
-    otype = field.EnumField(choices=suite.enum.values(suite.enum.otype))
-    account = field.StringField()
-    tcode = field.StringField()
-    scode = field.StringField()
-    sname = field.StringField()
-    optype = field.EnumField(choices=suite.enum.values(suite.enum.ptype))
+class Place(form.Form):
+    tcode = field.StringField(max_length=16)
+    account = field.StringField(max_length=16)
+    scode = field.StringField(max_length=8)
+    sname = field.StringField(max_length=16)
+    otype = field.EnumField(choices=('buy','sell'))
+    optype = field.EnumField(choices=('sj','xj'))
     ocount = field.IntegerField()
     oprice = field.DecimalField(digits=10, decimals=2)
-    callback = field.StringField(null=True)
-    operator = field.StringField(default=suite.enum.operator.sys.code)
+    operator = field.StringField(default='sys')
 
 
 class Cancel(form.Form):
     id = field.IntegerField()
-    operator = field.StringField(default=suite.enum.operator.sys.code)
+    operator = field.StringField(default='sys')
 
 
 class Notify(form.Form):
     id = field.IntegerField()
-    dcount = field.IntegerField(null=True)
-    dprice = field.DecimalField(digits=10, decimals=2, null=True)
+    ocode = field.StringField()
+    dcount = field.IntegerField(default=0)
+    dprice = field.DecimalField(default=0.0, digits=10, decimals=2)
     dcode = field.StringField(null=True)
-    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
-    operator = field.StringField(default=suite.enum.operator.sys.code)
+    status = field.EnumField(choices=('notsend','tosend','sending','sent','tocancel','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped','expired'))
+    operator = field.StringField(default='sys')
 
 
-class Update(form.Form):
+class OCode(form.Form):
     id = field.IntegerField()
-    ocode = field.StringField(null=True)
-    status = field.EnumField(choices=suite.enum.values(suite.enum.order))
-    operator = field.StringField(default=suite.enum.operator.sys.code)
+    ocode = field.StringField()

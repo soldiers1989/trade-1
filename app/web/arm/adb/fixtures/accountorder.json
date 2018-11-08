@@ -1,12 +1,13 @@
 [
     {
-        "model": "adb.tradeorder",
+        "model": "adb.accountorder",
         "pk": 1,
         "fields": {
             "tcode": "000001",
             "account": "10000001",
             "scode": "000001",
             "sname": "平安银行",
+            "ocode": "123",
             "otype": "buy",
             "optype": "xj",
             "oprice": 10.02,
@@ -23,13 +24,14 @@
         }
     },
     {
-        "model": "adb.tradeorder",
+        "model": "adb.accountorder",
         "pk": 2,
         "fields": {
             "tcode": "000002",
             "account": "10000001",
             "scode": "000001",
             "sname": "平安银行",
+            "ocode": "456",
             "otype": "buy",
             "optype": "sj",
             "oprice": 3.24,

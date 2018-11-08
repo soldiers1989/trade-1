@@ -1,7 +1,9 @@
 """
     trade management
 """
-from .. import access, handler, forms, protocol, info, beans
+import decimal, datetime, time
+from tlib import rand
+from .. import access, handler, forms, protocol, info, models, trade, locker, error, template, status
 
 
 class ListHandler(handler.Handler):
@@ -15,222 +17,171 @@ class ListHandler(handler.Handler):
         # list conditions
         conds = self.cleaned_arguments
 
-        # get trade records
-        results = beans.trade.list(**conds)
+        with models.db.create() as d:
+            # get trade records
+            trades = models.UserTrade.filter(d, **conds)
 
-        # success
-        self.write(protocol.success(data=results))
+            # success
+            self.write(protocol.success(data=trades))
 
 
 class UserBuyHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
-        """
-            add new trade request
-        :return:
-        """
-        # get arguments
-        form = forms.trade.UserBuy(**self.arguments)
+        # check
+        # get form arguments
+        form = forms.trade.UserBuy(**self.cleaned_arguments)
 
-        # process user buy
-        trade = beans.trade.user_buy(form)
+        # check trade time/count/price
+        trade.valid(form.stock, 'buy', form.optype, form.oprice, form.ocount)
 
-        # success
-        self.write(protocol.success(msg=info.msg_user_buy_success, data=trade))
+        # check price when order is sj
+        if form.optype == 'sj' and form.oprice < 1.02*trade.get_trading_price(form.stock):
+            raise error.trade_less_margin
+
+        # today
+        today = datetime.date.today()
+
+        with models.db.atomic() as d, locker.user(form.user):
+            # get user
+            user = models.User.filter(d, id=form.user).one()
+            if user is None or user.disable:
+                raise error.user_has_disabled
+
+            # get stock
+            stock = models.Stock.filter(d, id=form.stock).one()
+            if stock is None or stock.status!='normal' or stock.limit in ['nobuy', 'nodelay']:
+                raise error.stock_not_exist
+
+            # get lever
+            lever = models.Lever.filter(d, id=form.lever).one()
+            if lever is None or lever.disable:
+                raise error.lever_not_exist
+
+            # get coupon
+            coupon = None
+            if form.coupon is not None:
+                coupon = models.UserCoupon.filter(d, id=form.coupon).one()
+                if coupon is None or coupon.user_id!=form.user or coupon.status!='notused' or not(coupon.sdate<=today<=coupon.edate):
+                    raise error.coupon_not_exist
+
+            # compute capital
+            capital = form.oprice*form.ocount
+            if not (lever.mmin<=capital<=lever.mmax):
+                raise error.lever_capital_denied
+
+            # compute margin
+            margin = capital / lever.lever
+            if user.money < margin:
+                raise error.user_money_not_enough
+
+            # use coupon
+            if coupon is not None:
+                coupon.status = 'used'
+                coupon.save(d)
+
+            # use money
+            bmoney = user.money
+            user.money -= margin
+            user.save(d)
+
+            # add bill
+            userbill = models.UserBill(user_id=user.id, code=rand.uuid(),
+                            item=template.bill.tmargin.item, detail=template.bill.tmargin.detail % str(margin),
+                            money=margin, bmoney=bmoney, lmoney=user.money,
+                            ctime=int(time.time())).save(d)
+
+            # add trade
+            detail = '%s,%s,%s,%s,%s,%s' % ('buy', form.optype, form.oprice, form.ocount, '0.0', '0')
+            slog = status.append(form.operator, form.otype, '', 'notsend', detail) # status log
+            usertrade = models.UserTrade(user_id=form.user, stock_id=form.stock, coupon_id=form.coupon_id,
+                                        tcode=rand.uuid(), optype=form.optype, oprice=form.oprice, ocount=form.ocount, margin=margin,
+                                        status='tobuy', slog=slog,
+                                        ctime=int(time.time()), mtime=int(time.time()))
+
+            # add lever record
+            tradelever = models.TradeLever(trade_id=usertrade.id, lever=lever.lever, wline=lever.wline, sline=lever.sline,
+                                           ofmin=lever.ofmin, ofrate=lever.ofrate, dfrate=lever.dfrate, psrate=lever.psrate,
+                                           mmin=lever.mmin, mmax=lever.mmax).save(d)
+
+            # add trade margin record
+            trademargin = models.TradeMargin(trade_id=usertrade.id, item=template.margin.init.item, detail=template.margin.init.detail%str(margin),
+                                             money=margin, ctime=int(time.time()))
+
+            # response data
+            data = {
+                'trade': usertrade,
+                'lever': tradelever,
+                'margin': trademargin,
+                'bill': userbill,
+                'user': user
+            }
+
+            self.write(protocol.success(data=data))
 
 
 class UserSellHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
-        # get arguments
-        form = forms.trade.UserSell(**self.arguments)
+        # get form arguments
+        form = forms.trade.UserSell(**self.cleaned_arguments)
 
-        # process
-        trade = beans.trade.user_sell(form)
+        # check trading time
+        trade.valid_trading_time('sell', form.optype)
 
-        # success
-        self.write(protocol.success(msg=info.msg_user_sell_success, data=trade))
+        with models.db.atomic() as d, locker.user(form.user):
+            # get user trade object
+            usertrade = models.UserTrade.filter(d, id=form.trade, user_id=form.user, status='hold').one()
+            if usertrade is None:
+                raise error.trade_operation_denied
 
+            # get stock object
+            stock = models.Stock.filter(usertrade.stock_id).one()
+            if stock is None or stock.status != 'normal':
+                raise error.stock_is_closed
 
-class UserCloseHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get arguments
-        form = forms.trade.UserClose(**self.arguments)
+            # get or check current price
+            if form.optype == 'sj':
+                form.oprice = trade.get_trading_price(stock.id)
+            else:
+                trade.valid_trading_price(stock.id, form.oprice)
 
-        # process
-        trade = beans.trade.user_close(form)
+            #
 
-        # success
-        self.write(protocol.success(msg=info.msg_user_close_success, data=trade))
 
 
 class UserCancelHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
-        # get arguments
-        form = forms.trade.UserCancel(**self.arguments)
-
-        # process
-        trade = beans.trade.user_cancel(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_user_cancel_success, data=trade))
+        pass
 
 
 class SysBuyHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
-        # get arguments
-        form = forms.trade.SysBuy(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_buy(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_buy_success, data=trade))
+        pass
 
 
 class SysSellHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
-        # get arguments
-        form = forms.trade.SysSell(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_sell(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_sell_success, data=trade))
-
-
-class SysCloseHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get arguments
-        form = forms.trade.SysClose(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_close(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_close_success, data=trade))
+        pass
 
 
 class SysCancelHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
-        # get arguments
-        form = forms.trade.UserCancel(**self.arguments)
-
-        #process
-        trade = beans.trade.sys_cancel(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_cancel_success, data=trade))
+        pass
 
 
-class SysBoughtHandler(handler.Handler):
+class NotifyHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
-        # get arguments
-        form = forms.trade.SysBought(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_bought(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_bought_success, data=trade))
-
-
-class SysSoldHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get arguments
-        form = forms.trade.SysSold(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_sold(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_sold_success, data=trade))
-
-
-class SysClosedHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get arguments
-        form = forms.trade.SysClosed(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_closed(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_closed_success, data=trade))
-
-
-class SysCanceledHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get arguments
-        form = forms.trade.SysCanceled(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_canceled(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_canceled_success, data=trade))
-
-
-class SysDroppedHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get arguments
-        form = forms.trade.SysDropped(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_dropped(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_dropped_success, data=trade))
-
-
-class SysExpiredHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get arguments
-        form = forms.trade.SysCanceled(**self.arguments)
-
-        # process
-        trade = beans.trade.sys_canceled(form, True)
-
-        # success
-        self.write(protocol.success(msg=info.msg_sys_expired_success, data=trade))
-
-
-class TradeNotifyHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get arguments
-        form = forms.trade.TradeNotify(**self.arguments)
-
-        # process
-        trade = beans.trade.trade_notify(form)
-
-        # success
-        self.write(protocol.success(msg=info.msg_trade_notify_success, data=trade))
+        pass

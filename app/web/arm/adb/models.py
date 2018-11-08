@@ -111,6 +111,71 @@ class TradeAccount(models.Model):
         return items
 
 
+# tb_account_order
+class AccountOrder(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    tcode = models.CharField(max_length=16, verbose_name='交易编号')
+    account = models.CharField(max_length=16, verbose_name='证券账户')
+    scode = models.CharField(max_length=16, verbose_name='证券代码')
+    sname = models.CharField(max_length=16, verbose_name='证券名称')
+    ocode = models.CharField(max_length=16, null=True, verbose_name='委托编号')
+    otype = models.CharField(max_length=16, verbose_name='委托类型')
+    optype = models.CharField(max_length=16, verbose_name='报价类型')
+    oprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='委托价格')
+    ocount = models.IntegerField(verbose_name='委托数量')
+    odate = models.DateField(verbose_name='委托日期')
+    otime = models.BigIntegerField(verbose_name='委托时间')
+    dcode = models.CharField(max_length=16, null=True, verbose_name='成交编号')
+    dprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='成交价格')
+    dcount = models.IntegerField(verbose_name='成交数量')
+    ddate = models.DateField(null=True, verbose_name='成交日期')
+    dtime = models.BigIntegerField(null=True, verbose_name='成交时间')
+    status = models.CharField(max_length=16, verbose_name='委托状态')
+    slog = models.TextField(blank=True, verbose_name='状态变更')
+    ctime = models.BigIntegerField(verbose_name='创建时间')
+    mtime = models.BigIntegerField(verbose_name='修改时间')
+
+    class Meta:
+        db_table = 'tb_account_order'
+
+    def odata(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        return items
+
+    def ddata(self):
+        items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['_otype'] = enum.all['order']['type'][items['otype']] if items['otype'] else None
+        items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
+        items['_status'] = enum.all['order']['status'][items['status']] if items['status'] else None
+
+        del items['slog']
+
+        return items
+
+    def pdata(self):
+        # get data items & fields
+        items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
+
+        # process status
+        items['otype'] = items['_otype']
+        items['optype'] = items['_optype']
+        items['status'] = items['_status']
+        del items['_otype']
+        del items['_optype']
+        del items['_status']
+
+        # format order/deal time
+        items['otime'] = util.time.datetms(items['otime'])
+        items['dtime'] = util.time.datetms(items['dtime'])
+
+        # property data rows
+        rows = []
+        for k, v in items.items():
+            rows.append({'name':fields[k], 'value': v, 'group': items['otime']})
+
+        return rows
+
+
 # tb_lever
 class Lever(models.Model):
     id = models.AutoField(primary_key=True)
@@ -455,14 +520,12 @@ class TradeOrder(models.Model):
     account = models.CharField(max_length=16, verbose_name='证券账户')
     scode = models.CharField(max_length=16, verbose_name='证券代码')
     sname = models.CharField(max_length=16, verbose_name='证券名称')
-    ocode = models.CharField(max_length=16, null=True, verbose_name='委托编号')
     otype = models.CharField(max_length=16, verbose_name='委托类型')
     optype = models.CharField(max_length=16, verbose_name='报价类型')
     oprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='委托价格')
     ocount = models.IntegerField(verbose_name='委托数量')
     odate = models.DateField(verbose_name='委托日期')
     otime = models.BigIntegerField(verbose_name='委托时间')
-    dcode = models.CharField(max_length=16, null=True, verbose_name='成交编号')
     dprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='成交价格')
     dcount = models.IntegerField(verbose_name='成交数量')
     ddate = models.DateField(null=True, verbose_name='成交日期')
@@ -554,8 +617,7 @@ class TradeFee(models.Model):
     trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE)
     item = models.CharField(max_length=8)
     detail = models.CharField(max_length=64, blank=True)
-    nmoney = models.DecimalField(max_digits=10, decimal_places=2) # need pay money
-    amoney = models.DecimalField(max_digits=10, decimal_places=2) # actual pay money
+    money = models.DecimalField(max_digits=10, decimal_places=2)
     ctime = models.BigIntegerField()  # create time
 
     class Meta:

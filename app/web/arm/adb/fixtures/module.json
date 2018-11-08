@@ -60,7 +60,7 @@
     "pk": 6,
     "fields": {
       "parent": 5,
-      "name": "交易委托",
+      "name": "账户委托",
       "path": "/cms/trade/order/",
       "order": 6,
       "disable": 0,
@@ -118,7 +118,7 @@
     "pk": 11,
     "fields": {
       "parent": 8,
-      "name": "优惠券管理",
+      "name": "优惠券",
       "path": "/cms/user/coupon/",
       "order": 11,
       "disable": 0,
@@ -191,6 +191,18 @@
       "name": "股票列表",
       "path": "/cms/stock/stock/",
       "order": 17,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 18,
+    "fields": {
+      "parent": 8,
+      "name": "交易委托",
+      "path": "/cms/user/order/",
+      "order": 10,
       "disable": 0,
       "ctime": 1527261052
     }

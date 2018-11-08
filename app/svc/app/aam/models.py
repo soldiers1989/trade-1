@@ -151,40 +151,8 @@ class TradeAccount(model.Model):
     mtime = field.IntegerField()
 
 
-class UserTrade(model.Model):
-    __table__ = 'tb_user_trade'
-
-    id = field.AutoField()
-    user_id = field.IntegerField()
-    stock_id = field.StringField(max_length=8)
-    coupon_id = field.IntegerField(null=True)
-    type = field.StringField(max_length=16)
-    code = field.StringField(max_length=16)
-    optype = field.EnumField(choices=('xj', 'sj'))
-    oprice = field.DecimalField(digits=10, decimals=2)
-    ocount = field.IntegerField()
-    hprice = field.DecimalField(null=True, digits=10, decimals=2)
-    hcount = field.IntegerField(null=True) # holding count
-    fcount = field.IntegerField(null=True) # free count, sell able
-    bprice = field.DecimalField(null=True, digits=10, decimals=2)
-    bcount = field.IntegerField(null=True)
-    sprice = field.DecimalField(null=True, digits=10, decimals=2)
-    scount = field.IntegerField(null=True)
-    margin = field.DecimalField(null=True, digits=10, decimals=2)
-    ofee = field.DecimalField(null=True, digits=10, decimals=2) # open fee
-    dday = field.IntegerField(null=True) # delay days
-    dfee = field.DecimalField(null=True, digits=10, decimals=2) # delay fee
-    tprofit = field.DecimalField(null=True, digits=10, decimals=2) # total profit
-    sprofit = field.DecimalField(null=True, digits=10, decimals=2) # share profit
-    account = field.StringField(null=True, max_lenght=16)
-    status = field.EnumField(choices=('tobuy','buying','cancelbuy','buycanceling','canceled','hold','tosell','selling','cancelsell','sellcanceling','sold','toclose','closing','cancelclose','closecanceling','closed','expired','dropped'))
-    slog = field.StringField(default='')
-    ctime = field.IntegerField()  # create time
-    mtime = field.IntegerField()  # modify time
-
-
-class TradeOrder:
-    __table__ = 'tb_trade_order'
+class AccountOrder(model.Model):
+    __table__ = 'tb_account_order'
 
     id = field.AutoField()
     tcode = field.StringField(max_length=16)
@@ -198,6 +166,61 @@ class TradeOrder:
     odate = field.DateField()
     otime = field.IntegerField()
     dcode = field.StringField(max_length=16, null=True)
+    dprice = field.DecimalField(digits=10, decimals=2)
+    dcount = field.IntegerField(null=True)
+    ddate = field.DateField()
+    dtime = field.IntegerField(null=True)
+    status = field.EnumField(choices=('notsend','tosend','sending','sent','tocancel','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped','expired'))
+    slog = field.StringField(default='')
+    ctime = field.IntegerField()
+    mtime = field.IntegerField()
+
+
+class UserTrade(model.Model):
+    __table__ = 'tb_user_trade'
+
+    id = field.AutoField()
+    user_id = field.IntegerField()
+    stock_id = field.StringField(max_length=8)
+    coupon_id = field.IntegerField(null=True)
+    type = field.StringField(max_length=16)
+    code = field.StringField(max_length=16)
+    optype = field.EnumField(choices=('xj', 'sj'))
+    oprice = field.DecimalField(digits=10, decimals=2)
+    ocount = field.IntegerField()
+    hprice = field.DecimalField(digits=10, decimals=2, default='0.00')
+    hcount = field.IntegerField(default=0) # holding count
+    fcount = field.IntegerField(default=0) # free count, sell able
+    bprice = field.DecimalField(digits=10, decimals=2, default='0.00')
+    bcount = field.IntegerField(default=0)
+    sprice = field.DecimalField(digits=10, decimals=2, default='0.00')
+    scount = field.IntegerField(default=0)
+    margin = field.DecimalField(digits=10, decimals=2)
+    ofee = field.DecimalField(digits=10, decimals=2, default='0.00') # open fee
+    dday = field.IntegerField(default=0) # delay days
+    dfee = field.DecimalField(digits=10, decimals=2, default='0.00') # delay fee
+    tprofit = field.DecimalField(digits=10, decimals=2, default='0.00') # total profit
+    sprofit = field.DecimalField(digits=10, decimals=2, default='0.00') # share profit
+    account = field.StringField(null=True, max_lenght=16)
+    status = field.EnumField(choices=('tobuy','buying','cancelbuy','buycanceling','canceled','hold','tosell','selling','cancelsell','sellcanceling','sold','toclose','closing','cancelclose','closecanceling','closed','expired','dropped'))
+    slog = field.StringField(default='')
+    ctime = field.IntegerField()  # create time
+    mtime = field.IntegerField()  # modify time
+
+
+class TradeOrder(model.Model):
+    __table__ = 'tb_trade_order'
+
+    id = field.AutoField()
+    tcode = field.StringField(max_length=16)
+    scode = field.StringField(max_length=8)
+    sname = field.StringField(max_length=16)
+    otype = field.EnumField(choices=('buy', 'sell'))
+    optype = field.EnumField(choices=('sj', 'xj'))
+    oprice = field.DecimalField(digits=10, decimals=2)
+    ocount = field.IntegerField()
+    odate = field.DateField()
+    otime = field.IntegerField()
     dprice = field.DecimalField(digits=10, decimals=2)
     dcount = field.IntegerField(null=True)
     ddate = field.DateField()
@@ -222,3 +245,25 @@ class TradeLever(model.Model):
     psrate = field.DecimalField(digits=6, decimals=6)
     mmin = field.DecimalField(digits=10, decimals=2)
     mmax = field.DecimalField(digits=10, decimals=2)
+
+
+class TradeMargin(model.Model):
+    __table__ = 'tb_trade_margin'
+
+    id = field.AutoField()
+    trade_id = field.IntegerField()
+    item = field.StringField(max_length=16)
+    detail = field.StringField(max_length=64)
+    money = field.DecimalField(10, 2)
+    ctime = field.IntegerField()
+
+
+class TradeFee(model.Model):
+    __table__ = 'tb_trade_fee'
+
+    id = field.AutoField()
+    trade_id = field.IntegerField()
+    item = field.StringField(max_length=16)
+    detail = field.StringField(max_length=64)
+    money = field.DecimalField(10, 2)
+    ctime = field.IntegerField()

@@ -1,29 +1,29 @@
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
     <div data-options="region:'west', split:true" style="width: 80%;">
-        <table id="account_order_datagrid" style="height: 100%;"></table>
+        <table id="trade_order_datagrid" style="height: 100%;"></table>
     </div>
     <div data-options="region:'center', split:true" style="width: 20%">
-        <div class="easyui-tabs" id="account_order_detail_tabs" data-options="fit:true, plain: true">
+        <div class="easyui-tabs" id="trade_order_detail_tabs" data-options="fit:true, plain: true">
             <div title="状态">
                 <div class="easyui-panel" style="width: 100%">
-                    <table id="account_order_status_propertygrid"></table>
+                    <table id="trade_order_status_propertygrid"></table>
                 </div>
             </div>
         </div>
-        <div id="empty_account_order_detail"><p style="text-align: center;">没有选择委托记录!</p></div>
+        <div id="empty_trade_order_detail"><p style="text-align: center;">没有选择委托记录!</p></div>
     </div>
 </div>
 
-<div id="account_order_toolbar">
+<div id="trade_order_toolbar">
     <span>
-        <a href="javascript:void(0)" id="account_order_edit_menubutton" class="easyui-menubutton" data-options="menu:'#account_order_edit_menu', disabled:true,iconCls:'icon-edit'">编辑</a>
-        <div id="account_order_edit_menu" style="width:150px;">
-            <div iconCls="icon-edit" onclick="accountorder.edit.modify.open()">修改</div>
-            <div iconCls="icon-remove" onclick="accountorder.edit.delete.do()">删除</div>
+        <a href="javascript:void(0)" id="trade_order_edit_menubutton" class="easyui-menubutton" data-options="menu:'#trade_order_edit_menu', disabled:true,iconCls:'icon-edit'">编辑</a>
+        <div id="trade_order_edit_menu" style="width:150px;">
+            <div iconCls="icon-edit" onclick="tradeorder.edit.modify.open()">修改</div>
+            <div iconCls="icon-remove" onclick="tradeorder.edit.delete.do()">删除</div>
         </div>
     </span>
     <span style="float: right; margin-right: 18px;">
-        <form class="easyui-form" id="account_order_search_form">
+        <form class="easyui-form" id="trade_order_search_form">
             <input name="otype" data-options="prompt:'委托类型', editable:false, required:false" style="width: 12%;">
             <input name="optype" data-options="prompt:'报价类型', editable:false, required:false" style="width: 12%;">
             <input name="status" data-options="prompt:'交易状态', editable:false, required:false" style="width: 12%;">
@@ -33,22 +33,19 @@
             <input name="edate" class="easyui-datebox" validType="date" style="width: 12%;">
             <input name="words" class="easyui-textbox" data-options="prompt:'id/股票/账户/..'">
 
-            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="accountorder.search.do()">查询</a>
-            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="accountorder.search.reset()">重置</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="tradeorder.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="tradeorder.search.reset()">重置</a>
         </form>
     </span>
 </div>
 
-<div class="easyui-dialog" id="account_order_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#account_order_update_dialog_buttons'">
-    <form class="easyui-form" id="account_order_update_form" method="post" style="margin:0;padding:10px 20px">
+<div class="easyui-dialog" id="trade_order_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#trade_order_update_dialog_buttons'">
+    <form class="easyui-form" id="trade_order_update_form" method="post" style="margin:0;padding:10px 20px">
         <div style="margin-bottom:10px">
             <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-combobox" id="_status" name="status" data-options="label:'交易状态', prompt:'选择交易状态'" required, style="width: 100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ocode" data-options="label:'委托编号', prompt:'输入委托编号', required:false, validType:['text', 'length[1,16]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:false, validType:['digits', 'min[0]']" style="width:100%">
@@ -62,17 +59,17 @@
     </form>
 </div>
 
-<div id="account_order_update_dialog_buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="accountorder.edit.modify.save()" style="width:90px">保存</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="accountorder.edit.modify.cancel()" style="width:90px">取消</a>
+<div id="trade_order_update_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="tradeorder.edit.modify.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="tradeorder.edit.modify.cancel()" style="width:90px">取消</a>
 </div>
 
 <script type="text/javascript">
     // order list/add/update/delete
-    var accountorder = {
+    var tradeorder = {
         // order edit
         edit: {
-            menubutton: $('#account_order_edit_menubutton'),
+            menubutton: $('#trade_order_edit_menubutton'),
 
             // init edit
             init: function() {
@@ -92,9 +89,9 @@
 
             //modify action
             modify: {
-                url: '/api/trade/order/update',
-                dialog: $('#account_order_update_dialog'),
-                form: $('#account_order_update_form'),
+                url: '/api/user/order/update',
+                dialog: $('#trade_order_update_dialog'),
+                form: $('#trade_order_update_form'),
 
                 // init modify dialog
                 init: function() {
@@ -116,13 +113,13 @@
                 // setup modify dialog
                 setup: function(id) {
                     //init status options
-                    $('#_status').combobox('reload', '/api/trade/order/nextstatus?id='+id);
+                    $('#_status').combobox('reload', '/api/user/order/nextstatus?id='+id);
                 },
 
                 // open update dialog
                 open: function() {
                     //get selected row data
-                    row = accountorder.list.getSelected();
+                    row = tradeorder.list.getSelected();
                     if (row){
                         //change row time
                         row.dtime = cube.format.datetime(row.dtime);
@@ -146,15 +143,15 @@
                     this.form.form('submit',{
                         url: this.url,
                         onSubmit: function(){
-                            return accountorder.edit.modify.form.form('validate');
+                            return tradeorder.edit.modify.form.form('validate');
                         },
                         success: function(data){
                             var resp = eval('('+data+')');
                             if (resp.status){
-                                accountorder.edit.modify.dialog.dialog('close');
+                                tradeorder.edit.modify.dialog.dialog('close');
 
                                 //update selected row data
-                                accountorder.list.updateSelected(resp.data);
+                                tradeorder.list.updateSelected(resp.data);
                             } else {
                                 $.messager.show({ title: '错误',  msg: resp.msg });
                             }
@@ -171,28 +168,28 @@
 
             // delete row
             delete: {
-                url: '/api/trade/order/delete',
+                url: '/api/user/order/delete',
 
                 do: function() { // delete
                     // delete action url
                     url = this.url;
 
                     //get selected row data
-                    var row = accountorder.list.getSelected();
+                    var row = tradeorder.list.getSelected();
                     if (!row)
                         return;
 
                     $.messager.confirm({
                         title: '确认',
                         msg: '确认删除交易委托记录 '+row.stock+'('+row.ocount+'股)'+'?',
-                        url: accountorder.edit.delete.url,
+                        url: tradeorder.edit.delete.url,
                         fn: function(r){
                             if (r){
                                 $.post(url, {id: row.id}, function(resp, status){
                                     if(status === 'success'){
                                         if (resp.status){
-                                            accountorder.list.deleteSelected();
-                                            accountorder.detail.hide();
+                                            tradeorder.list.deleteSelected();
+                                            tradeorder.detail.hide();
                                         } else {
                                             $.messager.show({title: '错误', msg: resp.msg});
                                         }
@@ -209,8 +206,8 @@
 
         // order list
         list: {
-            url: '/api/trade/order/list',
-            datagrid: $('#account_order_datagrid'),
+            url: '/api/user/order/list',
+            datagrid: $('#trade_order_datagrid'),
 
             init: function() {
             	//init tree grid
@@ -230,7 +227,7 @@
                     pageSize: 20,
                     pageList: [20, 30, 40, 50, 100],
 
-    				toolbar: '#account_order_toolbar',
+    				toolbar: '#trade_order_toolbar',
 
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
@@ -250,7 +247,6 @@
                         {field:'tcode', title:'交易代码', sortable:true},
                         {field:'ocount', title:'委托数量', sortable:true},
                         {field:'oprice', title:'委托价格', sortable:true},
-                        {field:'ocode', title:'委托编号', sortable:true},
                         {field:'dcount', title:'成交数量', sortable:true},
                         {field:'dprice', title:'成交价格', sortable:true},
                         {field:'dtime', title:'成交时间', sortable:true, formatter: cube.format.datetime},
@@ -263,10 +259,10 @@
                     
                     onLoadSuccess: function(resp) {
                         //disable edit
-                        accountorder.edit.disable();
+                        tradeorder.edit.disable();
 
                         //clear detail
-                        accountorder.detail.hide();
+                        tradeorder.detail.hide();
 
                         //clear selections
                         $(this).datagrid('clearSelections');
@@ -278,9 +274,9 @@
                     
                     onSelect(index, row) {
                         //enable edit
-                        accountorder.edit.enable();
+                        tradeorder.edit.enable();
                         //show detail
-                        accountorder.detail.show();
+                        tradeorder.detail.show();
                     }
                 });
             },
@@ -323,7 +319,7 @@
 
         //search action
         search: {
-            form: $('#account_order_search_form'),
+            form: $('#trade_order_search_form'),
 
             init: function() { //init search form
                 // init order type combobox
@@ -376,7 +372,7 @@
                 };
 
                 //reload by retrieve conditions
-                accountorder.list.load(params);
+                tradeorder.list.load(params);
             },
 
             reset: function() { // reset
@@ -384,7 +380,7 @@
                 this.form.form('clear');
 
                 //reload datagrid
-                accountorder.list.load({});
+                tradeorder.list.load({});
             },
         },
 
@@ -398,18 +394,18 @@
 
             //show detail
             show: function() {
-                $('#empty_account_order_detail').hide();
+                $('#empty_trade_order_detail').hide();
                 this.tabs.show();
             },
 
             //hide detail
             hide:function() {
                 this.tabs.hide();
-                $('#empty_account_order_detail').show();
+                $('#empty_trade_order_detail').show();
             },
 
             tabs: {
-                tabs: $('#account_order_detail_tabs'),
+                tabs: $('#trade_order_detail_tabs'),
 
                 inited: false,
 
@@ -421,13 +417,13 @@
                         border: false,
 
                         onSelect: function(title, index){
-                            row = accountorder.list.getSelected();
+                            row = tradeorder.list.getSelected();
                             if(!row)
                                 return;
 
                             switch (index) {
                                 case 0:
-                                    accountorder.detail.status.show(row.id);
+                                    tradeorder.detail.status.show(row.id);
                                     break;
                                 default:
                                     // statements_def
@@ -446,7 +442,7 @@
                 show: function() {
                     this.tabs.show();
 
-                    row = accountorder.list.getSelected();
+                    row = tradeorder.list.getSelected();
                     if(!row)
                         return;
 
@@ -458,7 +454,7 @@
                     
                     switch (idx) {
                         case 0:
-                            accountorder.detail.status.show(row.id);
+                            tradeorder.detail.status.show(row.id);
                             break;
                         default:
                             // statements_def
@@ -469,8 +465,8 @@
             },
 
             status: {
-                url: '/api/trade/order/status',
-                propertygrid: $('#account_order_status_propertygrid'),
+                url: '/api/user/order/status',
+                propertygrid: $('#trade_order_status_propertygrid'),
 
                 inited: false,
 
@@ -535,7 +531,7 @@
     //init page
     $(function(){
         //init order
-        accountorder.init();
+        tradeorder.init();
     });
 
 </script>

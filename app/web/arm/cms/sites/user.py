@@ -62,3 +62,12 @@ def draw(request):
     """
     return render(request, 'user/draw.html')
 
+
+@auth.need_permit
+def order(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'user/order.html')

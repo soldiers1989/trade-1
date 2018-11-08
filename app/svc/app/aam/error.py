@@ -67,7 +67,11 @@ trade_operation_denied = ProcessError(-1306, '当前状态不允许该操作')
 trade_order_add_failed = ProcessError(-1306, '创建委托记录失败')
 trade_order_callback_failed = ProcessError(-1306, '委托回调通知失败')
 
+order_not_exist = ProcessError(-1307, '订单不存在')
 order_type_not_exists = ProcessError(-1307, '委托类型不存在')
+order_operation_denied = ProcessError(-1307, '当前状态不允许该操作')
+order_notify_data = ProcessError(-1307, '回报订单格式错误')
 
 sold_count_not_match = ProcessError(-1308, '卖出成交数量和委托数量不一致')
 
+trade_less_margin = ProcessError(-1309, '市价单保证金比例过低')

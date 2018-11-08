@@ -12,7 +12,7 @@ def list(request):
     :return:
     """
     try:
-        form = forms.trade.order.List(request.GET)
+        form = forms.user.order.List(request.GET)
         if form.is_valid():
             ## form parameters ##
             params = form.cleaned_data
@@ -36,12 +36,12 @@ def list(request):
             words = params['words']
             if words:
                 if words.isdigit():
-                    q = Q(account=words) | Q(scode=words) | Q(ocode=words) | Q(id=words)
+                    q = Q(account=words) | Q(scode=words) | Q(id=words)
                 else:
                     q = Q(sname__contains=words) | Q(tcode=words)
 
             ## get total count ##
-            total = models.AccountOrder.objects.filter(q, **filters).count()
+            total = models.TradeOrder.objects.filter(q, **filters).count()
 
             # order by#
             sort, order =  params['sort'], params['order']
@@ -59,14 +59,14 @@ def list(request):
             ## query results ##
             if orderby:
                 if start is not None and end is not None:
-                    objects = models.AccountOrder.objects.filter(q, **filters).order_by(orderby)[start:end]
+                    objects = models.TradeOrder.objects.filter(q, **filters).order_by(orderby)[start:end]
                 else:
-                    objects = models.AccountOrder.objects.filter(q, **filters).order_by(orderby)
+                    objects = models.TradeOrder.objects.filter(q, **filters).order_by(orderby)
             else:
                 if start is not None and end is not None:
-                    objects = models.AccountOrder.objects.filter(q, **filters)[start:end]
+                    objects = models.TradeOrder.objects.filter(q, **filters)[start:end]
                 else:
-                    objects = models.AccountOrder.objects.filter(q, **filters)
+                    objects = models.TradeOrder.objects.filter(q, **filters)
 
             ## make results ##
             rows = []
@@ -92,7 +92,7 @@ def add(request):
     :param request:
     :return:
     """
-    form = forms.trade.order.Add(request.POST)
+    form = forms.user.order.Add(request.POST)
     if form.is_valid():
         params = form.cleaned_data
         # check trade/account
@@ -102,7 +102,7 @@ def add(request):
             return resp.failure(hint.ERR_FORM_DATA)
 
         # add new record
-        item = models.AccountOrder(trade_id=params['trade'],
+        item = models.TradeOrder(trade_id=params['trade'],
                                  account_id=params['account'],
                                 otype=params['otype'],
                                 optype=params['optype'],
@@ -123,14 +123,14 @@ def update(request):
     :param request:
     :return:
     """
-    form = forms.trade.order.Update(request.POST)
+    form = forms.user.order.Update(request.POST)
     if form.is_valid():
         # get parameters
         params = form.cleaned_data
-        id, ocode, dcount, dprice, dtime, status = params['id'], params['ocode'], params['dcount'], params['dprice'], params['dtime'], params['status']
+        id, dcount, dprice, dtime, status = params['id'], params['dcount'], params['dprice'], params['dtime'], params['status']
 
         # get order object
-        order = models.AccountOrder.objects.get(id=id)
+        order = models.TradeOrder.objects.get(id=id)
         if order is None:
             return resp.failure(hint.ERR_FORM_DATA)
 
@@ -147,7 +147,7 @@ def update(request):
             logs.extend(json.loads(order.slog))
 
         # update order
-        order.ocode, order.dcount, order.dprice, order.dtime, order.status, order.slog = ocode, dcount, dprice, dtime.timestamp(), status, json.dumps(logs)
+        order.dcount, order.dprice, order.dtime, order.status, order.slog = dcount, dprice, dtime.timestamp(), status, json.dumps(logs)
         order.save()
 
         return resp.success(data=order.ddata())
@@ -162,10 +162,10 @@ def delete(request):
     :param request:
     :return:
     """
-    form = forms.trade.order.Delete(request.POST)
+    form = forms.user.order.Delete(request.POST)
     if form.is_valid():
         id = form.cleaned_data['id']
-        models.AccountOrder.objects.filter(id=id).delete()
+        models.TradeOrder.objects.filter(id=id).delete()
         return resp.success()
     else:
         return resp.failure(str(form.errors))
@@ -185,7 +185,7 @@ def status(request):
     id = request.GET['id']
 
     # get order detail
-    item = models.AccountOrder.objects.get(id=id)
+    item = models.TradeOrder.objects.get(id=id)
     if not item:
         return resp.failure(hint.ERR_FORM_DATA)
 
@@ -225,7 +225,7 @@ def nextstatus(request):
     id = request.GET['id']
 
     # get order
-    order = models.AccountOrder.objects.get(id=id)
+    order = models.TradeOrder.objects.get(id=id)
     if not order:
         return resp.failure(hint.ERR_FORM_DATA)
 

@@ -204,6 +204,14 @@ class _Query(_Node):
             'contains': '`%s` like \'%%%s%%\''
         }
 
+        # operation is/is not null definition
+        OP_NULL = {
+            'null': {
+                True: 'is null',
+                False: 'is not null'
+            }
+        }
+
         # parse name
         items = cname.split('__')
         nitems = len(items)
@@ -233,6 +241,10 @@ class _Query(_Node):
                 return OP_IN[op] % (name, ','.join(['%s' for i in range(0, nelmts)]))
             elif op in list(OP_LIKE.keys()):
                 return OP_LIKE[op] % (name, '%s')
+            elif op in list(OP_NULL.keys()):
+                if cvalue not in [True, False]:
+                    raise SQLError('条件格式错误: %s' % cname)
+                return OP_NULL[cvalue]
             else:
                 raise SQLError('条件格式错误：%s' % cname)
 

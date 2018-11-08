@@ -1,7 +1,8 @@
 """
     order management
 """
-from .. import access, handler, forms, protocol, beans, suite, mysql
+import json,time, datetime, logging
+from .. import access, handler, forms, protocol, trade, models, status, error, locker
 
 
 class ListHandler(handler.Handler):
@@ -15,47 +16,43 @@ class ListHandler(handler.Handler):
         # list conditions
         conds = self.cleaned_arguments
 
-        # get trade records
-        results = beans.order.list(**conds)
+        with models.db.create() as d:
+            # get trade records
+            orders = models.TradeOrder.filter(d, **conds)
 
-        # success
-        self.write(protocol.success(data=results))
+            # success
+            self.write(protocol.success(data=orders))
 
 
-class BuyHandler(handler.Handler):
+class PlaceHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
         """
-            order by
+            order place
         :return:
         """
-        # get arguments
-        form = forms.order.Order(otype=suite.enum.otype.buy.code, **self.arguments)
+        # get form arguments
+        form = forms.order.Place(**self.cleaned_arguments)
 
-        # get trade records
-        order = beans.order.place(form)
+        # check order count/price
+        trade.valid(form.scode, form.otype, form.optype, form.oprice, form.ocount)
 
-        # success
-        self.write(protocol.success(data=order))
+        with models.db.atomic() as d:
+            # detail
+            detail = '%s,%s,%s,%s,%s,%s' % (form.otype, form.optype, form.oprice, form.ocount, '0.0', '0')
+            # status log
+            slog = status.append(form.operator, form.otype, '', 'notsend', detail)
 
+            # add new order
+            order = models.TradeOrder(tcode=form.tcode, account=form.account, scode=form.scode, sname=form.sname,
+                                      otype=form.otype, optype=form.optype, oprice=form.oprice, ocount=form.ocount,
+                                      odate=datetime.date.today(), otime=int(time.time()),
+                                      dprice=0.0, dcount=0, status='notsend', slog=slog,
+                                      ctime=int(time.time()), mtime=int(time.time())).save(d)
 
-class SellHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        """
-            order sell
-        :return:
-        """
-        # get arguments
-        form = forms.order.Order(otype=suite.enum.otype.sell.code, **self.arguments)
-
-        # get trade records
-        order = beans.order.place(form)
-
-        # success
-        self.write(protocol.success(data=order))
+            # response
+            self.write(protocol.success(data=order))
 
 
 class CancelHandler(handler.Handler):
@@ -69,11 +66,28 @@ class CancelHandler(handler.Handler):
         # get arguments
         form = forms.order.Cancel(**self.arguments)
 
-        # get trade records
-        order = beans.order.cancel(form)
+        with models.db.atomic() as d, locker.order(form.id):
+            # get order object
+            order = models.TradeOrder.filter(d, id=form.id).one()
+            if order is None:
+                raise error.order_not_exist
 
-        # success
-        self.write(protocol.success(data=order))
+            # check current order status
+            if order.status not in ['notsend', 'tosend', 'sending', 'sent']:
+                raise error.order_operation_denied
+
+            # next status
+            nextstatus = 'tcanceled' if order.status in ['notsend'] else 'tocancel'
+
+            #status log
+            detail = '%s,%s,%s,%s,%s,%s' % (order.otype, order.optype, order.oprice, order.ocount, order.dprice, order.dcount)
+            order.slog = status.append(form.operator, 'cancel', order.status, nextstatus, detail, order.slog)
+
+            # update order
+            order.save(d)
+
+            # response
+            self.write(protocol.success(data=order))
 
 
 class NotifyHandler(handler.Handler):
@@ -81,33 +95,77 @@ class NotifyHandler(handler.Handler):
     @access.needtoken
     def post(self):
         """
-            order notify
+            order notify, post data format:
+            [
+                {account:account, ocode:ocode, dprice:dprice, dcount:dcount, status:status, operator:operator},
+                {account:account, ocode:ocode, dprice:dprice, dcount:dcount, status:status, operator:operator},
+                ......
+            ]
         :return:
         """
-        # get arguments
-        form = forms.order.Notify(**self.arguments)
+        # get notify orders
+        notifyorders = json.loads(self.request.body.decode())
 
-        # get trade records
-        order = beans.order.notify(form)
+        # validate notify orders
+        for notifyorder in notifyorders:
+            if not {'account','ocode','dprice','dcount','status','operator'}.issubset(set(notifyorder.keys())):
+                raise error.order_notify_data
+            if notifyorder['status'] not in ['sent','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped']:
+                raise error.order_notify_data
 
-        # success
-        self.write(protocol.success(data=order))
+        with models.db.atomic() as d:
+            # get all pending orders of today
+            localorders = models.TradeOrder.filter(d, odate=datetime.date.today(), ocode__null=True, status__in=('notsend, tosend, sending, sent, tocancel, canceling, pdeal')).all()
+
+            # updated orders
+            updatedorders = []
+
+            # process each order
+            for notifyorder in notifyorders:
+                for localorder in localorders:
+                    if notifyorder['account']==localorder.account and notifyorder['ocode']==localorder.ocode:
+                        try:
+                            with locker.order(localorder.id):
+                                # status log
+                                detail = '%s,%s,%s,%s,%s,%s' % (localorder.otype, localorder.optype, localorder.oprice, localorder.ocount, notifyorder['dprice'], notifyorder['dcount'])
+                                slog = status.append(notifyorder['operator'], 'notify', localorder.status, notifyorder['status'], detail, localorder.slog)
+
+                                #update trade order
+                                localorder.update(dprice=notifyorder['dprice'],
+                                                 dcount=notifyorder['dcount'],
+                                                 status=notifyorder['status'],
+                                                 slog=slog,
+                                                 ddate=datetime.date.today(),
+                                                 dtime=int(time.time()),
+                                                 mtime=int(time.time()))
+                                localorder.save(d)
+
+                                updatedorders.append(localorder)
+                        except Exception as e:
+                            logging.error('notify: %s->%s, error: %s' % (str(localorder), str(notifyorder), str(e)))
 
 
-class UpdateHandler(handler.Handler):
+            # response data
+            data = {
+                'updated': len(updatedorders),
+                'updates': updatedorders
+            }
+            self.write(protocol.success(data=data))
+
+
+class OCodeHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
         """
-            order notify
+            order code notify
         :return:
         """
-        # get arguments
-        form = forms.order.Update(**self.arguments)
+        # get form arguments
+        form = forms.order.OCode(**self.cleaned_arguments)
 
-        # get trade records
-        order = beans.order.update(form)
+        with models.db.atomic() as d, locker.order(form.id):
+            # udpate order code
+            models.TradeOrder.filter(d, id=form.id).update(ocode=form.ocode)
 
-        # success
-        self.write(protocol.success(data=order))
-
+            self.write(protocol.success())

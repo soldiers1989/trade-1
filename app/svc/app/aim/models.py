@@ -183,7 +183,7 @@ class UserTrade(model.Model):
     mtime = field.IntegerField()  # modify time
 
 
-class TradeOrder:
+class TradeOrder(model.Model):
     __table__ = 'tb_trade_order'
 
     id = field.AutoField()

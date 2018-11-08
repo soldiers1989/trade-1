@@ -13,6 +13,11 @@ handlers = [
     (r"/stock/get", handlers.stock.StockGetHandler),
     (r"/stock/add", handlers.stock.StockAddHandler),
 
+    (r"/order/list", handlers.order.ListHandler),
+    (r"/order/place", handlers.order.PlaceHandler),
+    (r"/order/cancel", handlers.order.CancelHandler),
+    (r"/order/notify", handlers.order.NotifyHandler),
+    (r"/order/ocode", handlers.order.OCodeHandler),
 
     (r"/trade/list", handlers.trade.ListHandler),
     (r"/trade/user/buy", handlers.trade.UserBuyHandler),
@@ -30,11 +35,4 @@ handlers = [
     (r"/trade/sys/dropped", handlers.trade.SysDroppedHandler),
     (r"/trade/sys/expired", handlers.trade.SysExpiredHandler),
     (r"/trade/notify", handlers.trade.TradeNotifyHandler),
-
-    (r"/order/list", handlers.order.ListHandler),
-    (r"/order/buy", handlers.order.BuyHandler),
-    (r"/order/sell", handlers.order.SellHandler),
-    (r"/order/cancel", handlers.order.CancelHandler),
-    (r"/order/notify", handlers.order.NotifyHandler),
-    (r"/order/update", handlers.order.UpdateHandler),
 ]

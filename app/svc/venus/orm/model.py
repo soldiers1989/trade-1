@@ -75,6 +75,20 @@ class Model(dict, metaclass=MetaModel):
             vals.append(self[code])
         return vals
 
+    def fieldvalues(self, noauto=False):
+        """
+            field->values
+        :param noauto:
+        :return:
+            dict
+        """
+        fvs = {}
+        for k, v in self.items():
+            if noauto and k == self.__auto__:
+                continue
+            fvs[k] = v
+        return fvs
+
     def setauto(self, val):
         """
             set auto field value
@@ -151,7 +165,10 @@ class Model(dict, metaclass=MetaModel):
             save current object to specified db
         :return:
         """
-        return query.QuerySet(db, self.__class__).insert(self)
+        if self.__auto__ is not None and self[self.__auto__] is not None:
+            return query.QuerySet(db, self.__class__, **{self.__auto__:self[self.__auto__]}).update(**self.fieldvalues(True))
+        else:
+            return query.QuerySet(db, self.__class__).insert(self)
 
     @classmethod
     def select(cls, db, sql, *args):

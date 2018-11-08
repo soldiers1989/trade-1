@@ -10,6 +10,7 @@ python3.6 manage.py loaddata --app adb lever.json
 
 
 python3.6 manage.py loaddata --app adb tradeaccount.json
+python3.6 manage.py loaddata --app adb accountorder.json
 
 python3.6 manage.py loaddata --app adb user.json
 python3.6 manage.py loaddata --app adb userbank.json
