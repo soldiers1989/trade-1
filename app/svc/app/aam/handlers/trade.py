@@ -92,13 +92,22 @@ class UserBuyHandler(handler.Handler):
                             money=margin, bmoney=bmoney, lmoney=user.money,
                             ctime=int(time.time())).save(d)
 
-            # add trade
+            # add user trade
             detail = '%s,%s,%s,%s,%s,%s' % ('buy', form.optype, form.oprice, form.ocount, '0.0', '0')
-            slog = status.append(form.operator, form.otype, '', 'notsend', detail) # status log
+            slog = status.append(form.operator, form.otype, '', 'tobuy', detail) # status log
             usertrade = models.UserTrade(user_id=form.user, stock_id=form.stock, coupon_id=form.coupon_id,
                                         tcode=rand.uuid(), optype=form.optype, oprice=form.oprice, ocount=form.ocount, margin=margin,
                                         status='tobuy', slog=slog,
                                         ctime=int(time.time()), mtime=int(time.time()))
+
+            # add trade order
+            detail = '%s,%s,%s,%s,%s,%s' % (form.otype, form.optype, form.oprice, form.ocount, '0.0', '0')
+            slog = status.append(form.operator, form.otype, '', 'notsend', detail)
+            tradeorder = models.TradeOrder(tcode=form.tcode, account=form.account, scode=form.scode, sname=form.sname,
+                                      otype=form.otype, optype=form.optype, oprice=form.oprice, ocount=form.ocount,
+                                      odate=datetime.date.today(), otime=int(time.time()),
+                                      dprice=0.0, dcount=0, status='notsend', slog=slog,
+                                      ctime=int(time.time()), mtime=int(time.time())).save(d)
 
             # add lever record
             tradelever = models.TradeLever(trade_id=usertrade.id, lever=lever.lever, wline=lever.wline, sline=lever.sline,
@@ -112,6 +121,7 @@ class UserBuyHandler(handler.Handler):
             # response data
             data = {
                 'trade': usertrade,
+                'order': tradeorder,
                 'lever': tradelever,
                 'margin': trademargin,
                 'bill': userbill,
@@ -149,7 +159,6 @@ class UserSellHandler(handler.Handler):
                 trade.valid_trading_price(stock.id, form.oprice)
 
             #
-
 
 
 class UserCancelHandler(handler.Handler):

@@ -18,7 +18,7 @@ class ListHandler(handler.Handler):
 
         with models.db.create() as d:
             # get trade records
-            orders = models.TradeOrder.filter(d, **conds)
+            orders = models.AccountOrder.filter(d, **conds)
 
             # success
             self.write(protocol.success(data=orders))
@@ -45,7 +45,7 @@ class PlaceHandler(handler.Handler):
             slog = status.append(form.operator, form.otype, '', 'notsend', detail)
 
             # add new order
-            order = models.TradeOrder(tcode=form.tcode, account=form.account, scode=form.scode, sname=form.sname,
+            order = models.AccountOrder(tcode=form.tcode, account=form.account, scode=form.scode, sname=form.sname,
                                       otype=form.otype, optype=form.optype, oprice=form.oprice, ocount=form.ocount,
                                       odate=datetime.date.today(), otime=int(time.time()),
                                       dprice=0.0, dcount=0, status='notsend', slog=slog,
@@ -68,7 +68,7 @@ class CancelHandler(handler.Handler):
 
         with models.db.atomic() as d, locker.order(form.id):
             # get order object
-            order = models.TradeOrder.filter(d, id=form.id).one()
+            order = models.AccountOrder.filter(d, id=form.id).one()
             if order is None:
                 raise error.order_not_exist
 
@@ -115,7 +115,7 @@ class NotifyHandler(handler.Handler):
 
         with models.db.atomic() as d:
             # get all pending orders of today
-            localorders = models.TradeOrder.filter(d, odate=datetime.date.today(), ocode__null=True, status__in=('notsend, tosend, sending, sent, tocancel, canceling, pdeal')).all()
+            localorders = models.AccountOrder.filter(d, odate=datetime.date.today(), ocode__null=True, status__in=('notsend, tosend, sending, sent, tocancel, canceling, pdeal')).all()
 
             # updated orders
             updatedorders = []
@@ -166,6 +166,6 @@ class OCodeHandler(handler.Handler):
 
         with models.db.atomic() as d, locker.order(form.id):
             # udpate order code
-            models.TradeOrder.filter(d, id=form.id).update(ocode=form.ocode)
+            models.AccountOrder.filter(d, id=form.id).update(ocode=form.ocode)
 
             self.write(protocol.success())
