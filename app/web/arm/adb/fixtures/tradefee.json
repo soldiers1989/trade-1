@@ -6,8 +6,7 @@
             "trade_id": 1,
             "item": "建仓费",
             "detail":"策略建仓",
-            "nmoney": 50.0,
-            "amoney": 50.0,
+            "money": 50.0,
             "ctime": 1527261052
         }
     },
@@ -18,8 +17,7 @@
             "trade_id": 1,
             "item": "延期费",
             "detail":"策略延期",
-            "nmoney": 10.0,
-            "amoney": 10.0,
+            "money": 10.0,
             "ctime": 1527261052
         }
     },
@@ -30,8 +28,7 @@
             "trade_id": 2,
             "item": "建仓费",
             "detail":"策略建仓",
-            "nmoney": 50.0,
-            "amoney": 50.0,
+            "money": 50.0,
             "ctime": 1527261052
         }
     }
