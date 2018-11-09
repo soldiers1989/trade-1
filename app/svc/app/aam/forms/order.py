@@ -2,7 +2,6 @@
     form data for order request
 """
 from venus.form import form, field
-from .. import suite
 
 
 class Place(form.Form):

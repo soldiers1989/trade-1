@@ -323,7 +323,7 @@
                         {field:'status', title:'状态', hidden:true},
                         {field:'_status', title:'状态'},
                         {field:'account', title:'账户', sortable:true},
-                        {field:'tcode', title:'状态', hidden:true},
+                        {field:'tcode', title:'代码', hidden:true},
                         {field:'optype', title:'报价', hidden:true},
                         {field:'_optype', title:'报价'},
                         {field:'lever', title:'杠杆', hidden:true},
@@ -432,7 +432,7 @@
                             if(!rdata)
                                 return;
 
-                            usertrade.detail.tabs.select(idx, rdata.id, rdata.tcode);
+                            usertrade.detail.tabs.select(idx, rdata.id);
                         }
                     });
 
@@ -455,7 +455,7 @@
                     }
 
                     // change tab
-                    this.select(idx, rdata.id, rdata.tcode);
+                    this.select(idx, rdata.id);
                 },
 
                 clear: function() {
@@ -463,7 +463,7 @@
                     $('#empty_trade_detail').show();
                 },
 
-                select: function(idx, tid, tcode) {
+                select: function(idx, tid) {
                     switch (idx) {
                         case 0:
                             usertrade.detail.trade.show(tid);
@@ -475,7 +475,7 @@
                             usertrade.detail.margins.show(tid);
                             break;
                         case 3:
-                            usertrade.detail.orders.show(tcode);
+                            usertrade.detail.orders.show(tid);
                             break;
                         case 4:
                             usertrade.detail.status.show(tid);
@@ -749,14 +749,14 @@
                 
                 inited: false,
                 
-                 init: function(tcode) {
+                 init: function(tradeid) {
                     if (this.inited)
                         return;
 
                     this.propertygrid.propertygrid({
                         url: this.url,
                         method: 'get',
-                        queryParams: {code: tcode},
+                        queryParams: {id: tradeid},
                         
                         showGroup: true,
                         showHeader: true,
@@ -796,15 +796,15 @@
                     }
                 },
 
-                load: function(tcode) {
-                    this.propertygrid.propertygrid('load', {code: tcode});
+                load: function(tradeid) {
+                    this.propertygrid.propertygrid('load', {id: tradeid});
                 },
 
-                show: function(tcode) {
+                show: function(tradeid) {
                     if(!this.inited)
-                        this.init(tcode);
+                        this.init(tradeid);
                     else
-                        this.load(tcode);
+                        this.load(tradeid);
                 }
             },
 

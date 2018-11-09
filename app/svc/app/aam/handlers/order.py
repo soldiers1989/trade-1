@@ -36,7 +36,7 @@ class PlaceHandler(handler.Handler):
         form = forms.order.Place(**self.cleaned_arguments)
 
         # check order count/price
-        trade.valid(form.scode, form.otype, form.optype, form.oprice, form.ocount)
+        trade.valid(form.scode, form.optype, form.oprice, form.ocount)
 
         with models.db.atomic() as d:
             # detail

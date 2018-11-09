@@ -3,7 +3,8 @@
         "model": "adb.tradeorder",
         "pk": 1,
         "fields": {
-            "tcode": "000001",
+            "trade_id":1,
+            "ocode": "000001",
             "account": "10000001",
             "scode": "000001",
             "sname": "平安银行",
@@ -26,7 +27,8 @@
         "model": "adb.tradeorder",
         "pk": 2,
         "fields": {
-            "tcode": "000002",
+            "trade_id":2,
+            "ocode": "000002",
             "account": "10000001",
             "scode": "000001",
             "sname": "平安银行",

@@ -516,8 +516,9 @@ class TradeLever(models.Model):
 # tb_trade_order
 class TradeOrder(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    tcode = models.CharField(max_length=16, verbose_name='交易编号')
-    account = models.CharField(max_length=16, verbose_name='证券账户')
+    trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='订单ID')
+    ocode = models.CharField(max_length=16, verbose_name='委托编号')
+    account = models.CharField(null=True, max_length=16, verbose_name='证券账户')
     scode = models.CharField(max_length=16, verbose_name='证券代码')
     sname = models.CharField(max_length=16, verbose_name='证券名称')
     otype = models.CharField(max_length=16, verbose_name='委托类型')
@@ -540,10 +541,13 @@ class TradeOrder(models.Model):
 
     def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'] = self.trade_id
         return items
 
     def ddata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
+        items['trade'] = self.trade_id
+
         items['_otype'] = enum.all['order']['type'][items['otype']] if items['otype'] else None
         items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
         items['_status'] = enum.all['order']['status'][items['status']] if items['status'] else None

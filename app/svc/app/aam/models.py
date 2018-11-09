@@ -183,8 +183,7 @@ class UserTrade(model.Model):
     user_id = field.IntegerField()
     stock_id = field.StringField(max_length=8)
     coupon_id = field.IntegerField(null=True)
-    type = field.StringField(max_length=16)
-    code = field.StringField(max_length=16)
+    tcode = field.StringField(max_length=16)
     optype = field.EnumField(choices=('xj', 'sj'))
     oprice = field.DecimalField(digits=10, decimals=2)
     ocount = field.IntegerField()
@@ -212,7 +211,9 @@ class TradeOrder(model.Model):
     __table__ = 'tb_trade_order'
 
     id = field.AutoField()
+    trade_id = field.IntegerField()
     tcode = field.StringField(max_length=16)
+    account = field.StringField(null=True, max_lenght=16)
     scode = field.StringField(max_length=8)
     sname = field.StringField(max_length=16)
     otype = field.EnumField(choices=('buy', 'sell'))

@@ -141,16 +141,13 @@ def get_trading_price(scode):
     return decimal.Decimal(q['dqj'])
 
 
-def valid_trading_time(otype, optype):
+def valid_trading_time(optype=None):
     """
         validate trading time
     :param otype:
     :param optype:
     :return:
     """
-    if otype not in ['buy', 'sell'] or optype not in ['xj', 'sj']:
-        raise InvalidOrder('订单类型或报价方式不支持')
-
     if not is_trading_day():
         raise InvalidOrder('非交易日期不能报单')
 
@@ -183,7 +180,7 @@ def valid_trading_count(ocount):
             raise InvalidOrder('订单数量必须是100的整数倍')
 
 
-def valid(scode, otype, optype, oprice, ocount):
+def valid(scode, optype, oprice, ocount):
     """
         validate trade order
     :param scode:
@@ -192,6 +189,6 @@ def valid(scode, otype, optype, oprice, ocount):
     :param oprice:
     :return:
     """
-    valid_trading_time(otype, optype)
+    valid_trading_time(optype)
     valid_trading_price(scode, oprice)
     valid_trading_count(ocount)

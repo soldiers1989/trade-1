@@ -35,7 +35,6 @@ class SysBuy(form.Form):
 
 
 class SysSell(form.Form):
-    type = field.EnumField(choices=('sell', 'close'))
     user = field.IntegerField()
     trade = field.IntegerField()
 
@@ -45,8 +44,15 @@ class SysCancel(form.Form):
     trade = field.IntegerField()
 
 
-class Notify(form.Form):
-    tcode = field.StringField()
-    dcount = field.IntegerField(null=True)
-    dprice = field.DecimalField(null=True, digits=10, decimals=2)
-    status = field.EnumField(choices=('pcanceled', 'tcanceled', 'tdeal', 'pdeal'))
+class SysDropped(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()
+
+
+class SysBought(form.Form):
+    user = field.IntegerField()
+    trade = field.IntegerField()
+    dcount = field.IntegerField()
+    dprice = field.DecimalField(digits=10, decimals=2)
+
+SysSold = SysBought
