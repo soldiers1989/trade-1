@@ -1,7 +1,7 @@
 """
     trade account management
 """
-from .. import access, handler, forms, protocol, beans, error, models
+from .. import access, handler, forms, protocol, error, models
 
 
 class ListHandler(handler.Handler):

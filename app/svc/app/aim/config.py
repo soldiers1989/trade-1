@@ -72,7 +72,7 @@ REDISS = {
 ## database configure ##
 # all databases
 DATABASES = {
-    'aim': {
+    'arm': {
         'dev': {
             'host': '127.0.0.1',
             'user': 'root',
