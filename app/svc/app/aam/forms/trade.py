@@ -29,30 +29,33 @@ class UserCancel(form.Form):
 
 
 class SysBuy(form.Form):
-    user = field.IntegerField()
     trade = field.IntegerField()
     account = field.StringField()
 
 
 class SysSell(form.Form):
-    user = field.IntegerField()
     trade = field.IntegerField()
 
 
 class SysCancel(form.Form):
-    user = field.IntegerField()
     trade = field.IntegerField()
 
 
-class SysDropped(form.Form):
-    user = field.IntegerField()
+class SysDrop(form.Form):
     trade = field.IntegerField()
 
 
-class SysBought(form.Form):
-    user = field.IntegerField()
-    trade = field.IntegerField()
+class OrderBought(form.Form):
+    id = field.IntegerField()
     dcount = field.IntegerField()
     dprice = field.DecimalField(digits=10, decimals=2)
 
-SysSold = SysBought
+
+class OrderSold(form.Form):
+    id = field.IntegerField()
+    dcount = field.IntegerField()
+    dprice = field.DecimalField(digits=10, decimals=2)
+
+
+class OrderCanceled(form.Form):
+    id = field.IntegerField()

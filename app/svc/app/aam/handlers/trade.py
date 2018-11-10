@@ -1,7 +1,7 @@
 """
     trade management
 """
-import json, datetime, time, logging
+import datetime, time, decimal, logging
 from tlib import rand
 from .. import access, handler, forms, protocol, models, trade, locker, error, template, status
 
@@ -179,7 +179,7 @@ class UserSellHandler(handler.Handler):
             # update user trade
             currentstatus, nextstatus = usertrade.status, 'tosell' if form.type=='sell' else 'toclose'
             detail = '%s,%s,%s,%s,%s,%s,%s' % ('sell', form.optype, form.oprice, form.ocount, usertrade.hprice, usertrade.hcount, usertrade.fcount)
-            usertrade.slog = status.append('user', 'sell', currentstatus, nextstatus, detail)
+            usertrade.slog = status.append('user', 'sell', currentstatus, nextstatus, detail, usertrade.slog)
             usertrade.status = nextstatus
             usertrade.fcount -= form.ocount
             usertrade.save(d)
@@ -221,13 +221,13 @@ class UserCancelHandler(handler.Handler):
             # update trade order status
             orderprestatsu = tradeorder.status
             tradeorder.status = orderstatus[orderprestatsu]
-            tradeorder.slog = status.append('user', 'cancel', orderprestatsu, tradeorder.status, '')
+            tradeorder.slog = status.append('user', 'cancel', orderprestatsu, tradeorder.status, '', tradeorder.slog)
             tradeorder.save()
 
             # get next status
             tradeprestatus = usertrade.status
             usertrade.status = tradestatus[tradeprestatus]
-            usertrade.slog = status.append('user', 'cancel', tradeprestatus, usertrade.status, '')
+            usertrade.slog = status.append('user', 'cancel', tradeprestatus, usertrade.status, '', usertrade.slog)
 
             # process cancel operation
             if usertrade.status == 'canceled': # -> canceled
@@ -270,45 +270,46 @@ class SysBuyHandler(handler.Handler):
         # get today
         today = datetime.date.today()
 
-        with models.db.atomic() as d, locker.user(form.user):
+        with models.db.atomic() as d:
             # get user trade object
-            usertrade = models.UserTrade.filter(d, id=form.trade, user_id=form.user, status='tobuy').one()
+            usertrade = models.UserTrade.filter(d, id=form.trade, status='tobuy').one()
             if usertrade is None:
                 raise error.trade_operation_denied
 
-            # get trade order object
-            tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='buy', status='notsend', odate=today).one()
-            if tradeorder is None:
-                raise error.trade_operation_denied
+            with locker.user(usertrade.user_id):
+                # get trade order object
+                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='buy', status='notsend', odate=today).one()
+                if tradeorder is None:
+                    raise error.trade_operation_denied
 
-            # get&check stock status
-            stock = models.Stock.filter(d, id=usertrade.stock_id)
-            if stock is None or stock.status!='normal' or stock.limit!='none':
-                raise error.stock_buy_limited
+                # get&check stock status
+                stock = models.Stock.filter(d, id=usertrade.stock_id)
+                if stock is None or stock.status!='normal' or stock.limit!='none':
+                    raise error.stock_buy_limited
 
-            # select a trade account
-            tradeaccount = models.TradeAccount.filter(d, disable=False).orderby('money').desc().one()
-            if tradeaccount is None:
-                raise error.account_not_usable
+                # select a trade account
+                tradeaccount = models.TradeAccount.filter(d, disable=False).orderby('money').desc().one()
+                if tradeaccount is None:
+                    raise error.account_not_usable
 
-            # update trade order
-            tradeorder.slog = status.append('sys', 'buy', 'notsend', 'tosend', '')
-            tradeorder.status = 'tosend'
-            tradeorder.account = tradeaccount.account
-            tradeorder.save(d)
+                # update trade order
+                tradeorder.slog = status.append('sys', 'buy', 'notsend', 'tosend', '', tradeorder.slog)
+                tradeorder.status = 'tosend'
+                tradeorder.account = tradeaccount.account
+                tradeorder.save(d)
 
-            # update user trade
-            usertrade.slog = status.append('sys', 'buy', usertrade.status, 'buying', '')
-            usertrade.status = 'buying'
-            usertrade.save(d)
+                # update user trade
+                usertrade.slog = status.append('sys', 'buy', usertrade.status, 'buying', '', usertrade.slog)
+                usertrade.status = 'buying'
+                usertrade.save(d)
 
-            # response data
-            data = {
-                'trade': usertrade,
-                'order': tradeorder
-            }
+                # response data
+                data = {
+                    'trade': usertrade,
+                    'order': tradeorder
+                }
 
-            self.write(protocol.success(data=data))
+                self.write(protocol.success(data=data))
 
 
 class SysSellHandler(handler.Handler):
@@ -321,41 +322,42 @@ class SysSellHandler(handler.Handler):
         # get today
         today = datetime.date.today()
 
-        with models.db.atomic() as d, locker.user(form.user):
+        with models.db.atomic() as d:
             # get user trade object
-            usertrade = models.UserTrade.filter(d, id=form.trade, user_id=form.user, status__in=('tosell', 'toclose')).one()
+            usertrade = models.UserTrade.filter(d, id=form.trade, status__in=('tosell', 'toclose')).one()
             if usertrade is None:
                 raise error.trade_operation_denied
 
-            # get trade order object
-            tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='sell', status='notsend', odate=today).one()
-            if tradeorder is None:
-                raise error.trade_operation_denied
+            with locker.user(usertrade.user_id):
+                # get trade order object
+                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='sell', status='notsend', odate=today).one()
+                if tradeorder is None:
+                    raise error.trade_operation_denied
 
-            # get&check stock status
-            stock = models.Stock.filter(d, id=usertrade.stock_id)
-            if stock is None or stock.status!='normal':
-                raise error.stock_is_closed
+                # get&check stock status
+                stock = models.Stock.filter(d, id=usertrade.stock_id)
+                if stock is None or stock.status!='normal':
+                    raise error.stock_is_closed
 
-            # update trade order
-            tradeorder.slog = status.append('sys', 'sell', 'notsend', 'tosend', '')
-            tradeorder.status = 'tosend'
-            tradeorder.save(d)
+                # update trade order
+                tradeorder.slog = status.append('sys', 'sell', 'notsend', 'tosend', '', tradeorder.slog)
+                tradeorder.status = 'tosend'
+                tradeorder.save(d)
 
-            # update user trade
-            tradeprestatus = usertrade.status
-            tradestatus = {'tosell':'selling', 'toclose':'closing'}
-            usertrade.status = tradestatus[tradeprestatus]
-            usertrade.slog = status.append('sys', 'sell', tradeprestatus, usertrade.status, '')
-            usertrade.save(d)
+                # update user trade
+                tradeprestatus = usertrade.status
+                tradestatus = {'tosell':'selling', 'toclose':'closing'}
+                usertrade.status = tradestatus[tradeprestatus]
+                usertrade.slog = status.append('sys', 'sell', tradeprestatus, usertrade.status, '', usertrade.slog)
+                usertrade.save(d)
 
-            # response data
-            data = {
-                'trade': usertrade,
-                'order': tradeorder
-            }
+                # response data
+                data = {
+                    'trade': usertrade,
+                    'order': tradeorder
+                }
 
-            self.write(protocol.success(data=data))
+                self.write(protocol.success(data=data))
 
 
 class SysCancelHandler(handler.Handler):
@@ -368,153 +370,294 @@ class SysCancelHandler(handler.Handler):
         # get today
         today = datetime.date.today()
 
-        with models.db.atomic() as d, locker.user(form.user):
+        with models.db.atomic() as d:
             # get user trade object
-            usertrade = models.UserTrade.filter(d, id=form.trade, user_id=form.user, status__in=('cancelbuy','cancelsell','cancelclose')).one()
+            usertrade = models.UserTrade.filter(d, id=form.trade, status__in=('cancelbuy','cancelsell','cancelclose')).one()
             if usertrade is None:
                 raise error.trade_operation_denied
 
-            # get trade order object
-            tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, status='tocancel', odate=today).one()
-            if tradeorder is None:
-                raise error.trade_operation_denied
+            with locker.user(usertrade.user_id):
+                # get trade order object
+                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, status='tocancel', odate=today).one()
+                if tradeorder is None:
+                    raise error.trade_operation_denied
 
-            # update trade order
-            tradeorder.slog = status.append('sys', 'cancel', 'tocancel', 'canceling', '')
-            tradeorder.status = 'canceling'
-            tradeorder.save(d)
+                # update trade order
+                tradeorder.slog = status.append('sys', 'cancel', 'tocancel', 'canceling', '', tradeorder.slog)
+                tradeorder.status = 'canceling'
+                tradeorder.save(d)
 
-            # update user trade
-            tradeprestatus = usertrade.status
-            tradestatus = {'cancelbuy':'buycanceling', 'cancelsell':'sellcanceling', 'cancelclose':'closecanceling'}
-            usertrade.status = tradestatus[tradeprestatus]
-            usertrade.slog = status.append('sys', 'cancel', tradeprestatus, usertrade.status, '')
-            usertrade.save(d)
+                # update user trade
+                tradeprestatus = usertrade.status
+                tradestatus = {'cancelbuy':'buycanceling', 'cancelsell':'sellcanceling', 'cancelclose':'closecanceling'}
+                usertrade.status = tradestatus[tradeprestatus]
+                usertrade.slog = status.append('sys', 'cancel', tradeprestatus, usertrade.status, '', usertrade.slog)
+                usertrade.save(d)
 
-            # response data
-            data = {
-                'trade': usertrade,
-                'order': tradeorder
-            }
+                # response data
+                data = {
+                    'trade': usertrade,
+                    'order': tradeorder
+                }
 
-            self.write(protocol.success(data=data))
+                self.write(protocol.success(data=data))
 
 
-class SysBoughtHandler(handler.Handler):
+class SysDropHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
         # get form arguments
-        form = forms.trade.SysBought(**self.cleaned_arguments)
-
-
-class SysSoldHandler(handler.Handler):
-    pass
-
-
-class SysCanceledHandler(handler.Handler):
-    pass
-
-
-class SysDroppedHandler(handler.Handler):
-    @access.exptproc
-    @access.needtoken
-    def post(self):
-        # get form arguments
-        form = forms.trade.SysDropped(**self.cleaned_arguments)
+        form = forms.trade.SysDrop(**self.cleaned_arguments)
 
         # get today
         today = datetime.date.today()
 
-        with models.db.atomic() as d, locker.user(form.user):
+        with models.db.atomic() as d:
             # get user trade object
             usertrade = models.UserTrade.filter(d, id=form.trade, user_id=form.user, status='tobuy').one()
             if usertrade is None:
                 raise error.trade_operation_denied
 
-            # get trade order object
-            tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='notsend', odate=today).one()
-            if tradeorder is None:
-                raise error.trade_operation_denied
+            # lock user
+            with locker.user(usertrade.user_id):
+                # get trade order object
+                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='notsend', odate=today).one()
+                if tradeorder is None:
+                    raise error.trade_operation_denied
 
-            # update trade order status
-            orderprestatsu = tradeorder.status
-            tradeorder.status = 'tcanceled'
-            tradeorder.slog = status.append('sys', 'drop', orderprestatsu, tradeorder.status, '')
-            tradeorder.save()
+                # update trade order status
+                orderprestatsu = tradeorder.status
+                tradeorder.status = 'tcanceled'
+                tradeorder.slog = status.append('sys', 'drop', orderprestatsu, tradeorder.status, '', tradeorder.slog)
+                tradeorder.save()
 
-            # update trade record
-            tradeprestatus = usertrade.status
-            usertrade.status = 'canceled'
-            usertrade.slog = status.append('sys', 'drop', tradeprestatus, usertrade.status, '')
-            usertrade.save(d)
+                # update trade record
+                tradeprestatus = usertrade.status
+                usertrade.status = 'canceled'
+                usertrade.slog = status.append('sys', 'drop', tradeprestatus, usertrade.status, '', usertrade.slog)
+                usertrade.save(d)
 
-            # get user object
-            user = models.User.filter(d, id=usertrade.user_id).one()
+                # get user object
+                user = models.User.filter(d, id=usertrade.user_id).one()
 
-            # return margin #
-            # add bill
-            models.UserBill(user_id=usertrade.id, code=rand.uuid(),
-                            item=template.bill.rmargin.item, detail=template.bill.rmargin.detail % str(usertrade.margin),
-                            money=usertrade.margin, bmoney=user.money, lmoney=user.money + usertrade.margin,
-                            ctime=int(time.time())).save(d)
+                # return margin #
+                # add bill
+                models.UserBill(user_id=usertrade.id, code=rand.uuid(),
+                                item=template.bill.rmargin.item, detail=template.bill.rmargin.detail % str(usertrade.margin),
+                                money=usertrade.margin, bmoney=user.money, lmoney=user.money + usertrade.margin,
+                                ctime=int(time.time())).save(d)
 
-            # add money
-            user.money += usertrade.margin
-            user.save(d)
+                # add money
+                user.money += usertrade.margin
+                user.save(d)
 
-            # response data
-            data = {
-                'trade': usertrade,
-                'order': tradeorder
-            }
-            self.write(protocol.success(data=data))
+                # response data
+                data = {
+                    'trade': usertrade,
+                    'order': tradeorder
+                }
+                self.write(protocol.success(data=data))
 
 
-class SysSyncHandler(handler.Handler):
+class OrderBoughtHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
-        """
-            order notify, post data format:
-            [
-                {account:account, ocode:ocode, dprice:dprice, dcount:dcount, status:status, operator:operator},
-                ......
-            ]
-
-            status to process:
-
-        :return:
-        """
-        # get notify orders
-        notifyorders = json.loads(self.request.body.decode())
-
-        # validate notify orders
-        for notifyorder in notifyorders:
-            if not {'account','ocode','dprice','dcount','status','operator'}.issubset(set(notifyorder.keys())):
-                raise error.order_notify_data
-            if notifyorder['status'] not in ['sent','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped']:
-                raise error.order_notify_data
+        # get form arguments
+        form = forms.trade.OrderBought(**self.cleaned_arguments)
 
         with models.db.atomic() as d:
-            # get all pending orders of today
-            localorders = models.TradeOrder.filter(d, odate=datetime.date.today(), ocode__null=True, status__in=('notsend, tosend, sending, sent, tocancel, canceling, pdeal')).all()
+            # get trade order object
+            tradeorder = models.TradeOrder.filter(d, id=form.id, otype='buy', status__in=('sent', 'tocancel', 'canceling')).one()
+            if tradeorder is None:
+                raise error.trade_operation_denied
 
-            # updated orders
-            updatedorders = []
+            # get user trade object
+            usertrade = models.UserTrade.filter(d, id=tradeorder.trade_id, status__in=('buying', 'cancelbuy','buycanceling')).one()
+            if usertrade is None:
+                raise error.trade_operation_denied
 
-            # process each order
-            for notifyorder in notifyorders:
-                for localorder in localorders:
+            # lock user
+            with locker.user(usertrade.user_id):
+                # get trade lever
+                tradelever = models.TradeLever.filter(d, trade_id=usertrade.id).one()
+                if tradelever is None:
+                    raise error.trade_operation_denied
 
-                    if notifyorder['account']==localorder.account and notifyorder['ocode']==localorder.ocode and notifyorder['status']:
-                        pass
+                # update trade order
+                orderprestatus = tradeorder.status
+                tradeorder.dprice = form.dprice
+                tradeorder.dcount = form.dcount
+                tradeorder.ddate = datetime.date.today()
+                tradeorder.dtime = int(time.time())
+                tradeorder.status = 'pdeal' if form.dcount < tradeorder.ocount else 'tdeal'
+                tradeorder.slog = status.append('sys', 'bought', orderprestatus, tradeorder.status, '', tradeorder.slog)
+                tradeorder.mtime = int(time.time())
+                tradeorder.save(d)
+
+                # compute open fee
+                ofee = max(tradelever.ofmin, tradelever.ofrate*form.dprice*form.dcount)
+                # update user trade
+                tradeprestatus = usertrade.status
+                usertrade.ofee = ofee
+                usertrade.hcount = tradeorder.dcount
+                usertrade.hprice = tradeorder.dprice
+                usertrade.fcount = 0
+                usertrade.bcount = tradeorder.bcount
+                usertrade.bprice = tradeorder.bprice
+                usertrade.status = 'hold'
+                usertrade.slog = status.append('sys', 'bought', tradeprestatus, usertrade.status, '', usertrade.slog)
+                usertrade.mtime = int(time.time())
+                usertrade.save()
+
+                # response data
+                data = {
+                    'trade': usertrade,
+                    'order': tradeorder
+                }
+                self.write(protocol.success(data=data))
 
 
+class OrderSoldHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        # get form arguments
+        form = forms.trade.OrderSold(**self.cleaned_arguments)
 
-            # response data
-            data = {
-                'updated': len(updatedorders),
-                'updates': updatedorders
-            }
-            self.write(protocol.success(data=data))
+        with models.db.atomic() as d:
+            # get trade order object
+            tradeorder = models.TradeOrder.filter(d, id=form.id, otype='sell', status__in=('sent', 'tocancel', 'canceling')).one()
+            if tradeorder is None:
+                raise error.trade_operation_denied
+
+            # get user trade object
+            usertrade = models.UserTrade.filter(d, id=tradeorder.trade_id, status__in=('selling', 'cancelsell','sellcanceling')).one()
+            if usertrade is None:
+                raise error.trade_operation_denied
+
+            # lock user
+            with locker.user(usertrade.user_id):
+                # get trade lever
+                tradelever = models.TradeLever.filter(d, trade_id=usertrade.id).one()
+                if tradelever is None:
+                    raise error.trade_operation_denied
+
+                # update trade order
+                orderprestatus = tradeorder.status
+                tradeorder.dprice = form.dprice
+                tradeorder.dcount = form.dcount
+                tradeorder.ddate = datetime.date.today()
+                tradeorder.dtime = int(time.time())
+                tradeorder.status = 'pdeal' if form.dcount < tradeorder.ocount else 'tdeal'
+                tradeorder.slog = status.append('sys', 'sold', orderprestatus, tradeorder.status, '', tradeorder.slog)
+                tradeorder.mtime = int(time.time())
+                tradeorder.save(d)
+
+                # compute sold count&average price
+                scount = tradeorder.dcount + usertrade.scount
+                sprice = (tradeorder.dprice*tradeorder.dcount + usertrade.sprice*usertrade.scount) / scount
+
+                # compute profit
+                tprofit = scount * (sprice - usertrade.bprice)
+                sprofit = max(decimal.Decimal('0.00'), tprofit*tradelever.psrate)
+
+                # update user trade
+                tradeprestatus = usertrade.status
+                usertrade.hcount -= tradeorder.dcount
+                usertrade.sprice = sprice
+                usertrade.scount = scount
+                usertrade.tprofit = tprofit
+                usertrade.sprofit = sprofit
+                usertrade.status = 'hold' if usertrade.hcount > 0 else 'sold'
+                usertrade.slog = status.append('sys', 'sold', tradeprestatus, usertrade.status, '', usertrade.slog)
+                usertrade.mtime = int(time.time())
+                usertrade.save()
+
+                # settlement
+                if usertrade.status == 'sold':
+                    # get user
+                    user = models.User.filter(d, usertrade.user_id).one()
+                    if user is None:
+                        raise error.trade_operation_denied
+
+                    # bill money
+                    money = tprofit + usertrade.margin - usertrade.ofee - usertrade.dfee - usertrade.sprofit
+
+                    # add bill
+                    models.UserBill(user_id=user.id, code=rand.uuid(),
+                                    item=template.bill.settle.item, detail=template.bill.settle.detail%(money),
+                                    money=money, bmoney=user.money, lmoney=user.money+money, ctime=int(time.time())).save(d)
+
+                    # update user
+                    user.money += money
+                    user.save(d)
+
+                # response data
+                data = {
+                    'trade': usertrade,
+                    'order': tradeorder
+                }
+                self.write(protocol.success(data=data))
+
+
+class OrderCanceledHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        # get form arguments
+        form = forms.trade.OrderCanceled(**self.cleaned_arguments)
+
+        with models.db.atomic() as d:
+            # get trade order object
+            tradeorder = models.TradeOrder.filter(d, id=form.id, status__in=('canceling')).one()
+            if tradeorder is None:
+                raise error.trade_operation_denied
+
+            # get user trade object
+            usertrade = models.UserTrade.filter(d, id=tradeorder.trade_id, status__in=('buycanceling', 'sellcanceling')).one()
+            if usertrade is None:
+                raise error.trade_operation_denied
+
+            # lock user
+            with locker.user(usertrade.user_id):
+                # update trade order
+                orderprestatus = tradeorder.status
+                tradeorder.status = 'tcanceled'
+                tradeorder.slog = status.append('sys', 'canceled', orderprestatus, tradeorder.status, '', tradeorder.slog)
+                tradeorder.mtime = int(time.time())
+                tradeorder.save(d)
+
+                tradeprestatus = usertrade.status
+                # update user trade
+                if tradeprestatus == 'sellcanceling':
+                    # update free count
+                    usertrade.fcount += tradeorder.ocount
+                    usertrade.status = 'hold'
+                else:
+                    # return margin #
+                    # get user object
+                    user = models.User.filter(d, id=usertrade.user_id).one()
+
+                    # add bill
+                    models.UserBill(user_id=user.id, code=rand.uuid(),
+                                    item=template.bill.settle.item, detail=template.bill.settle.detail%(usertrade.margin),
+                                    money=usertrade.margin, bmoney=user.money, lmoney=user.money+usertrade.margin, ctime=int(time.time())).save(d)
+
+                    # update user
+                    user.money += usertrade.margin
+                    user.save(d)
+
+                    # update status
+                    usertrade.status = 'canceled'
+                usertrade.slog = status.append('sys', 'canceled', tradeprestatus, usertrade.status, '', usertrade.slog)
+                usertrade.mtime = int(time.time())
+                usertrade.save()
+
+                # response data
+                data = {
+                    'trade': usertrade,
+                    'order': tradeorder
+                }
+                self.write(protocol.success(data=data))

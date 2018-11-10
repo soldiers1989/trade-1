@@ -11,11 +11,10 @@ class _ItemTpl:
 class _Bill:
     tmargin = _ItemTpl('扣保证金', '扣保证金%s元') # take margin
     rmargin = _ItemTpl('退保证金', '退保证金%s元') # return margin
-    profit = _ItemTpl('交易结算', '结算金额%s元')
+    settle = _ItemTpl('交易结算', '结算金额%s元') # settlement
 
 
 bill = _Bill
-
 
 
 class _Margin:

@@ -128,8 +128,8 @@ class FloatField(Field):
 
 class DecimalField(Field):
     def __init__(self, **kwargs):
-        super().__init__(validator.DecimalValidator, **kwargs)
         self._digits = kwargs.get('digits', None)
+        super().__init__(validator.DecimalValidator, **kwargs)
 
     @property
     def context(self):
