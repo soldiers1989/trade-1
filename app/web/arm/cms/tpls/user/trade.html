@@ -1,9 +1,9 @@
 
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
-    <div data-options="region:'west', split:true" style="width: 75%;">
+    <div data-options="region:'west', split:true" style="width: 72%;">
         <table id="datagrid_trade" style="height: 100%;"></table>
     </div>
-    <div data-options="region:'center', split:true" style="width: 25%">
+    <div data-options="region:'center', split:true" style="width: 28%">
         <div class="easyui-tabs" id="tabs_trade_detail" fit="true" border="true" plain="true" style="width: 100%">
             <div title="详情">
                 <div class="easyui-panel" style="height:100%;">
@@ -11,7 +11,8 @@
                         <a href="#" id="btn_trade_buy" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('buy')">买入</a>
                         <a href="#" id="btn_trade_sell" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('sell')">卖出</a>
                         <a href="#" id="btn_trade_close" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('close')">平仓</a>
-                        <a href="#" id="btn_trade_cancel" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('cancel')">取消</a>
+                        <a href="#" id="btn_trade_cancel" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('cancel')">撤单</a>
+                        <a href="#" id="btn_trade_drop" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('drop')">弃单</a>
                     </div>
                     <div>
                         <table id="propertygrid_trade_detail"></table>
@@ -225,6 +226,7 @@
                         return usertrade.add.form.form('validate');
                     },
                     success: function(data){
+                        console.log(data);
                         var resp = eval('('+data+')');
                         if (resp.status){
                             usertrade.add.close();
@@ -529,8 +531,8 @@
                         showHeader: true,
 
                         columns: [[
-                            {field:'name', title:'名称', width:'50%'},
-                            {field:'value', title:'取值', width:'50%'}
+                            {field:'name', title:'名称', width:'40%'},
+                            {field:'value', title:'取值', width:'60%'}
                         ]],
 
                         loadFilter: function (resp) {
@@ -563,8 +565,10 @@
                 resetActions: function(status) {
                     if (['tobuy'].includes(status)){
                         $('#btn_trade_buy').linkbutton('enable');
+                        $('#btn_trade_drop').linkbutton('enable');
                     } else {
                         $('#btn_trade_buy').linkbutton('disable');
+                        $('#btn_trade_drop').linkbutton('disable');
                     }
 
                     if (['tosell'].includes(status)){
@@ -579,7 +583,7 @@
                         $('#btn_trade_close').linkbutton('disable');
                     }
 
-                    if (['tobuy', 'tosell', 'toclose'].includes(status)){
+                    if (['cancelbuy', 'cancelsell', 'cancelclose'].includes(status)){
                         $('#btn_trade_cancel').linkbutton('enable');
                     } else {
                         $('#btn_trade_cancel').linkbutton('disable');
@@ -591,7 +595,7 @@
                     if(!row)
                         return;
 
-                    var url = '/api/user/trade/deal';
+                    var url = '/api/user/trade/process';
                     $.post(url, {id: row.id, act: action}, function(resp, status){
                         if(status === 'success'){
                             if (resp.status){

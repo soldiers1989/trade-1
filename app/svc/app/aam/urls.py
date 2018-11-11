@@ -33,4 +33,5 @@ handlers = [
     (r"/trade/order/bought", handlers.trade.OrderBoughtHandler),
     (r"/trade/order/sold", handlers.trade.OrderSoldHandler),
     (r"/trade/order/canceled", handlers.trade.OrderCanceledHandler),
+    (r"/trade/order/expired", handlers.trade.OrderExpiredHandler),
 ]

@@ -1,11 +1,11 @@
 """
     api for cms
 """
-import time, datetime, json, util
-from django.db import transaction
+import datetime, json, util
 from django.db.models import Q
 from adb import models
 from cms import auth, resp, hint, forms, error
+from .. import remote
 
 
 @auth.catch_exception
@@ -132,7 +132,7 @@ def get(request):
     # want formatted data
     return resp.success(data=data)
 
-
+@auth.catch_exception
 @auth.need_login
 def add(request):
     """
@@ -140,93 +140,16 @@ def add(request):
     :param request:
     :return:
     """
-    try:
-        form = forms.user.trade.Add(request.POST)
-        if form.is_valid():
-            # clean form data
-            params = form.cleaned_data
 
-            with transaction.atomic():
-                # get params
-                userid, leverid, stockid, couponid = params['user'], params['lever'], params['stock'], params['coupon']
+    form = forms.user.trade.Add(request.POST)
+    if form.is_valid():
+        # clean form data
+        params = form.cleaned_data
 
-                # get user/lever/stock/coupon
-                user = models.User.objects.get(id=userid)
-                lever = models.Lever.objects.get(id=leverid)
-                stock = models.Stock.objects.get(id=stockid)
-                usercoupon = models.UserCoupon.objects.get(id=couponid) if couponid else None
+        # remote add new order
+        data = remote.aam.trade_user_buy(**params)
 
-                # compute margin
-
-
-                # get user
-
-
-                # take margin
-
-
-                # add trade
-                trade = models.UserTrade(user_id = params['user'],
-                                        stock_id = params['stock'],
-                                        coupon_id = params['coupon'],
-                                        tcode = util.rand.uuid(),
-                                        optype = 'xj',
-                                        oprice = 0.0 if params['oprice'] is None else params['oprice'],
-                                        ocount = params['ocount'],
-                                        hprice = 0.0,
-                                        hcount = 0,
-                                        fcount = 0,
-                                        bprice = 0.0,
-                                        bcount = 0,
-                                        sprice = 0.0,
-                                        scount = 0,
-                                        margin = 0.0,
-                                        ofee = 0.0,
-                                        dday = 0,
-                                        dfee = 0.0,
-                                        tprofit = 0.0,
-                                        sprofit = 0.0,
-                                        status = 'tobuy',
-                                        ctime=int(time.time()),
-                                        mtime=int(time.time()))
-                trade.save()
-
-                # add lever
-                tradelever = models.TradeLever(trade_id = trade.id,
-                                               lever = lever.lever,
-                                               wline = lever.wline,
-                                               sline = lever.sline,
-                                               ofmin = lever.ofmin,
-                                               ofrate = lever.ofrate,
-                                               dfrate = lever.dfrate,
-                                               psrate = lever.psrate,
-                                               mmin = lever.mmin,
-                                               mmax = lever.mmax)
-                tradelever.save()
-
-                # add trade order
-                tradeorder = models.TradeOrder(tcode = trade.tcode,
-                                               account = '10000001',
-                                               scode = '000001',
-                                               sname = '中国平安',
-                                               otype = 'buy',
-                                               optype = params['optype'],
-                                               ocount = params['ocount'],
-                                               oprice = trade.oprice,
-                                               odate = '2018-10-02',
-                                               otime = int(time.time()),
-                                               dprice = 0.0,
-                                               dcount = 0,
-                                               status = 'notsend',
-                                               ctime = int(time.time()),
-                                               mtime = int(time.time()))
-                tradeorder.save()
-
-            return resp.success()
-        else:
-            return resp.failure(hint.ERR_FORM_DATA, data={'errors':form.errors})
-    except Exception as e:
-        return resp.failure(str(e))
+        return resp.success(data=data)
 
 
 @auth.need_login
@@ -369,32 +292,6 @@ def orders(request):
 
 @auth.catch_exception
 @auth.need_login
-def deal(request):
-    """
-        process user trade order
-    :param request:
-    :return:
-    """
-    form = forms.user.trade.Deal(request.POST)
-    if form.is_valid():
-        # trade id
-        tradeid, action = form.cleaned_data['id'], form.cleaned_data['act']
-
-        # process user trade order #
-
-        # get new record data #
-        obj = models.UserTrade.objects.get(id=tradeid)
-
-        ## response data ##
-        data = obj.ddata()
-
-        return resp.success(data=data)
-    else:
-        return resp.failure(str(form.errors))
-
-
-@auth.catch_exception
-@auth.need_login
 def status(request):
     """
         get order
@@ -431,3 +328,33 @@ def status(request):
     }
 
     return resp.success(data=data)
+
+
+@auth.catch_exception
+@auth.need_login
+def process(request):
+    """
+        process user trade order
+    :param request:
+    :return:
+    """
+    form = forms.user.trade.Process(request.POST)
+    if form.is_valid():
+        # trade id
+        tradeid, action = form.cleaned_data['id'], form.cleaned_data['act']
+
+        # process trade option
+        if action == 'buy':
+            data = remote.aam.trade_sys_buy(trade=tradeid)
+        elif action in ['sell', 'close']:
+            data = remote.aam.trade_sys_sell(trade=tradeid)
+        elif action == 'cancel':
+            data = remote.aam.trade_sys_cancel(trade=tradeid)
+        elif action == 'drop':
+            data = remote.aam.trade_sys_drop(trade=tradeid)
+        else:
+            raise error.invalid_parameters
+
+        return resp.success(data=data)
+    else:
+        return resp.failure(str(form.errors))

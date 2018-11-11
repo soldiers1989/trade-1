@@ -29,10 +29,10 @@ class Add(forms.Form):
     lever = forms.IntegerField()
     coupon = forms.IntegerField(required=False)
     optype = forms.CharField()
-    ocount = forms.IntegerField(min_value=100)
     oprice = forms.DecimalField(initial=0.0, required=False)
+    ocount = forms.IntegerField(min_value=100)
 
 
-class Deal(forms.Form):
+class Process(forms.Form):
     id = forms.IntegerField()
     act = forms.CharField(max_length=16);

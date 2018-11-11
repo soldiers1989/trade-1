@@ -124,7 +124,7 @@ class Lever(model.Model):
 
 
 class Stock(model.Model):
-    __table__ = 'tb_user_charge'
+    __table__ = 'tb_stock'
 
     id = field.StringField(max_length=8)
     name = field.StringField(max_length=16)
@@ -212,7 +212,7 @@ class TradeOrder(model.Model):
 
     id = field.AutoField()
     trade_id = field.IntegerField()
-    tcode = field.StringField(max_length=16)
+    ocode = field.StringField(max_length=16)
     account = field.StringField(null=True, max_lenght=16)
     scode = field.StringField(max_length=8)
     sname = field.StringField(max_length=16)
@@ -222,9 +222,9 @@ class TradeOrder(model.Model):
     ocount = field.IntegerField()
     odate = field.DateField()
     otime = field.IntegerField()
-    dprice = field.DecimalField(digits=10, decimals=2)
-    dcount = field.IntegerField(null=True)
-    ddate = field.DateField()
+    dprice = field.DecimalField(initial=0.0, digits=10, decimals=2)
+    dcount = field.IntegerField(initial=0)
+    ddate = field.DateField(null=True)
     dtime = field.IntegerField(null=True)
     status = field.EnumField(choices=('notsend','tosend','sending','sent','tocancel','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped','expired'))
     slog = field.StringField(default='')

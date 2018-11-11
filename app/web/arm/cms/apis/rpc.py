@@ -2,7 +2,7 @@
     remote process communication api
 """
 import requests
-from tlib import token
+from . import token
 
 
 # rpc access error
@@ -333,7 +333,7 @@ class Aam(Rpc):
         :return:
         """
         # remote path
-        path = '/trade/sys/dropped'
+        path = '/trade/sys/drop'
 
         # access service
         return self.post(path, params=params)

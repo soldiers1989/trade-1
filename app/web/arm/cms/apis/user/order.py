@@ -36,7 +36,7 @@ def list(request):
             words = params['words']
             if words:
                 if words.isdigit():
-                    q = Q(account=words) | Q(scode=words) | Q(id=words)
+                    q = Q(account=words) | Q(scode=words) | Q(id=words) | Q(trade__id=words)
                 else:
                     q = Q(sname__contains=words) | Q(tcode=words)
 

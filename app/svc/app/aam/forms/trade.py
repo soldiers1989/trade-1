@@ -10,7 +10,7 @@ class UserBuy(form.Form):
     lever = field.IntegerField()
     coupon = field.IntegerField(null=True)
     optype = field.EnumField(choices=('xj','sj'))
-    oprice = field.DecimalField(digits=10, decimals=2)
+    oprice = field.DecimalField(digits=10, decimals=2, null=True)
     ocount = field.IntegerField()
 
 
@@ -30,7 +30,6 @@ class UserCancel(form.Form):
 
 class SysBuy(form.Form):
     trade = field.IntegerField()
-    account = field.StringField()
 
 
 class SysSell(form.Form):

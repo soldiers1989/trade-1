@@ -148,6 +148,9 @@ def valid_trading_time(optype=None):
     :param optype:
     :return:
     """
+    if DEBUG:
+        return
+
     if not is_trading_day():
         raise InvalidOrder('非交易日期不能报单')
 

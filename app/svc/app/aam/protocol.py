@@ -1,12 +1,12 @@
 """
     protocol for quote service
 """
-import json, decimal
+import json, decimal, datetime
 
 
 class JEncoder(json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, decimal.Decimal):
+        if isinstance(o, decimal.Decimal) or isinstance(o, datetime.date) or isinstance(o, datetime.datetime) or isinstance(o, datetime.time):
             return str(o)
 
         return super(JEncoder, self).default(o)
