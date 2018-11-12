@@ -1,12 +1,25 @@
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
-    <div data-options="region:'west', split:true" style="width: 80%;">
+    <div data-options="region:'west', split:true" style="width: 75%;">
         <table id="trade_order_datagrid" style="height: 100%;"></table>
     </div>
-    <div data-options="region:'center', split:true" style="width: 20%">
-        <div class="easyui-tabs" id="trade_order_detail_tabs" data-options="fit:true, plain: true">
+    <div data-options="region:'center', split:true" style="width: 25%; height: 100%;">
+        <div class="easyui-tabs" id="tabs_trade_order" data-options="fit:true, plain: true" style="height: 100%;width: 100%;">
+            <div title="操作">
+                <div class="easyui-panel" style="height:100%;width:100%">
+                    <div style="margin: 6px; height: 5%; width: 100%">
+                        <a href="#" id="btn_trade_order_sent" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('sent')">已报</a>
+                        <a href="#" id="btn_trade_order_dealt" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('bought')">已成</a>
+                        <a href="#" id="btn_trade_order_canceled" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('canceled')">已撤</a>
+                        <a href="#" id="btn_trade_order_expired" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('expired')">过期</a>
+                    </div>
+                    <div style="height:95%; width: 100%">
+                        <iframe id="iframe_trade_order_quote" src="" style="height: 100%;width: 100%"></iframe>
+                    </div>
+                </div>
+            </div>
             <div title="状态">
-                <div class="easyui-panel" style="width: 100%">
-                    <table id="trade_order_status_propertygrid"></table>
+                <div class="easyui-panel" style="height: 100%; width: 100%">
+                    <table id="propertygrid_trade_order_status"></table>
                 </div>
             </div>
         </div>
@@ -200,8 +213,8 @@
                             }
                         }
                     });
-                },
-            },
+                }
+            }
         },
 
         // order list
@@ -263,7 +276,7 @@
                         tradeorder.edit.disable();
 
                         //clear detail
-                        tradeorder.detail.hide();
+                        tradeorder.tabs.hide();
 
                         //clear selections
                         $(this).datagrid('clearSelections');
@@ -276,8 +289,8 @@
                     onSelect(index, row) {
                         //enable edit
                         tradeorder.edit.enable();
-                        //show detail
-                        tradeorder.detail.show();
+                        //show tabs
+                        tradeorder.tabs.show();
                     }
                 });
             },
@@ -288,6 +301,25 @@
 
             reload: function() {
                 this.datagrid.datagrid('reload');
+            },
+
+            insertRow: function(row) {
+                index = 0;
+                this.datagrid.datagrid('insertRow', {
+                  index: index,
+                  row: row
+                });
+
+                this.datagrid.datagrid('selectRow', index);
+            },
+
+            updateRow: function(row) {
+                index = this.datagrid.datagrid('getRowIndex', row.id);
+                this.datagrid.datagrid('updateRow', {
+                    index: index,
+                    row: row
+                });
+                this.datagrid.datagrid('selectRow', index);
             },
 
             getSelected: function() {
@@ -382,92 +414,139 @@
 
                 //reload datagrid
                 tradeorder.list.load({});
+            }
+        },
+
+        // detail tabs
+        tabs: {
+            tabs: $('#tabs_trade_order'),
+            inited: false,
+
+            init: function() {
+                if (this.inited)
+                    return;
+
+                this.tabs.tabs({
+                    border: false,
+
+                    onSelect: function(title, index){
+                        row = tradeorder.list.getSelected();
+                        if(!row)
+                            return;
+
+                        tradeorder.tabs.select(index, row.id);
+                    }
+                });
+
+                this.inited = true;
             },
+
+            hide: function() {
+                $('#empty_trade_order_detail').show();
+                this.tabs.hide();
+            },
+
+            show: function() {
+                $('#empty_trade_order_detail').hide();
+
+                this.tabs.show();
+                row = tradeorder.list.getSelected();
+                if(!row)
+                    return;
+
+                idx = 0;
+                tab = this.tabs.tabs('getSelected');
+                if(tab) {
+                    idx = this.tabs.tabs('getTabIndex', tab);
+                }
+                this.select(idx, row.id);
+            },
+
+            select: function (index, orderid) {
+                switch (idx) {
+                    case 0:
+                        tradeorder.detail.operation.show(orderid);
+                        break;
+                    case 1:
+                        tradeorder.detail.status.show(orderid);
+                        break;
+                    default:
+                        // statements_def
+                        break;
+                }
+            }
         },
 
         // order detail
-       detail: {
-            //init detail
-            init: function() {
-                this.tabs.init();
-                this.hide();
-            },
+        detail: {
+            // order operation
+            operation: {
+                show: function(orderid) {
+                    var url = '/api/user/order/get?id='+orderid+"&_t=d";
+                    $.get(url, function(resp, status){
+                        if(status === 'success'){
+                            if (resp.status){
+                                //permit operation
+                                status = resp.data.status;
+                                if (['tosend'].includes(status)){
+                                    $('#btn_trade_order_sent').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_order_sent').linkbutton('disable');
+                                }
 
-            //show detail
-            show: function() {
-                $('#empty_trade_order_detail').hide();
-                this.tabs.show();
-            },
+                                if (['sent'].includes(status)){
+                                    $('#btn_trade_order_dealt').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_order_dealt').linkbutton('disable');
+                                }
 
-            //hide detail
-            hide:function() {
-                this.tabs.hide();
-                $('#empty_trade_order_detail').show();
-            },
+                                if (['canceling'].includes(status)){
+                                    $('#btn_trade_order_canceled').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_order_canceled').linkbutton('disable');
+                                }
 
-            tabs: {
-                tabs: $('#trade_order_detail_tabs'),
+                                if (['sent'].includes(status)){
+                                    $('#btn_trade_order_expired').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_order_expired').linkbutton('disable');
+                                }
 
-                inited: false,
-
-                init: function() {
-                    if (this.inited)
-                        return;
-
-                    this.tabs.tabs({
-                        border: false,
-
-                        onSelect: function(title, index){
-                            row = tradeorder.list.getSelected();
-                            if(!row)
-                                return;
-
-                            switch (index) {
-                                case 0:
-                                    tradeorder.detail.status.show(row.id);
-                                    break;
-                                default:
-                                    // statements_def
-                                    break;
+                                //show stock quote
+                                $('#iframe_trade_order_quote').attr('src', 'http://m.10jqka.com.cn/stockpage/hs_'+resp.data.scode+'/');
+                            } else {
+                                $.messager.show({title: '错误', msg: resp.msg});
                             }
+                        } else {
+                            $.messager.show({title: '错误', msg: '请求服务器错误'});
                         }
-                    });
-
-                    this.inited = true;
+                    },'json');
                 },
 
-                hide: function() {
-                    this.tabs.hide();
-                },
-
-                show: function() {
-                    this.tabs.show();
-
-                    row = tradeorder.list.getSelected();
+                do: function(action) {
+                    var row = tradeorder.list.getSelected();
                     if(!row)
                         return;
 
-                    idx = 0;
-                    tab = this.tabs.tabs('getSelected');
-                    if(tab) {
-                        idx = this.tabs.tabs('getTabIndex', tab);
-                    }
-                    
-                    switch (idx) {
-                        case 0:
-                            tradeorder.detail.status.show(row.id);
-                            break;
-                        default:
-                            // statements_def
-                            break;
-                    }
-
+                    var url = '/api/user/order/process';
+                    $.post(url, {id: row.id, act: action}, function(resp, status){
+                        if(status === 'success'){
+                            if (resp.status){
+                                tradeorder.list.updateRow(resp.data);
+                                $.messager.show({title: '成功', msg: resp.msg});
+                            } else {
+                                $.messager.show({title: '错误', msg: resp.msg});
+                            }
+                        } else {
+                            $.messager.show({title: '错误', msg: '请求服务器错误'});
+                        }
+                    },'json');
                 }
             },
 
+            // order status
             status: {
-                url: '/api/user/order/status',
-                propertygrid: $('#trade_order_status_propertygrid'),
+                propertygrid: $('#propertygrid_trade_order_status'),
 
                 inited: false,
 
@@ -476,7 +555,7 @@
                         return;
 
                     this.propertygrid.propertygrid({
-                        url: this.url,
+                        url: '/api/user/order/status',
                         method: 'get',
                         queryParams: params,
                 
@@ -524,8 +603,8 @@
             this.search.init();
             // init list
             this.list.init();
-            // init detail
-            this.detail.init();
+            // init tabs
+            this.tabs.init();
         }
     };
 

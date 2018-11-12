@@ -41,7 +41,6 @@ def list(request):
 
             # order by#
             sort, order =  params['sort'], params['order']
-            orderby = None
             if sort and order:
                 order = '-' if order=='desc' else ''
                 orderby = order+sort
@@ -54,7 +53,6 @@ def list(request):
                 start, end = (page-1)*size, page*size
 
             ## query results ##
-            objects = []
             if orderby:
                 if start is not None and end is not None:
                     objects = models.UserCoupon.objects.filter(**filters).order_by(orderby)[start:end]

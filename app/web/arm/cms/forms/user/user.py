@@ -16,6 +16,7 @@ class List(forms.Form):
 
 class Get(forms.Form):
     id = forms.IntegerField()
+    _t = forms.CharField(required=False)
 
 
 class Query(forms.Form):

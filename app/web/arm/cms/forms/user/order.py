@@ -17,6 +17,10 @@ class List(forms.Form):
     words = forms.CharField(required=False)
 
 
+class Get(forms.Form):
+    id = forms.IntegerField()
+
+
 class Add(forms.Form):
     trade = forms.IntegerField()
     account = forms.IntegerField()
@@ -39,3 +43,8 @@ class Update(forms.Form):
 
 class Delete(forms.Form):
     id = forms.IntegerField()
+
+
+class Process(forms.Form):
+    id = forms.IntegerField()
+    act = forms.CharField(max_length=16);

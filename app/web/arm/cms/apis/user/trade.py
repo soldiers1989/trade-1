@@ -149,6 +149,12 @@ def add(request):
         # remote add new order
         data = remote.aam.trade_user_buy(**params)
 
+        # get new trade object
+        usertrade = models.UserTrade.objects.filter(id=data['trade']['id']).first()
+
+        # response data
+        data = usertrade.ddata()
+
         return resp.success(data=data)
 
 
@@ -354,6 +360,12 @@ def process(request):
             data = remote.aam.trade_sys_drop(trade=tradeid)
         else:
             raise error.invalid_parameters
+
+        # get processed trade object
+        usertrade = models.UserTrade.objects.filter(id=tradeid).first()
+
+        # response data
+        data = usertrade.ddata()
 
         return resp.success(data=data)
     else:

@@ -79,6 +79,7 @@ class UserBuyHandler(handler.Handler):
             # use coupon
             if coupon is not None:
                 coupon.status = 'used'
+                coupon.utime = int(time.time())
                 coupon.save(d)
 
             # use money
@@ -117,7 +118,7 @@ class UserBuyHandler(handler.Handler):
 
             # add trade margin record
             trademargin = models.TradeMargin(trade_id=usertrade.id, item=template.margin.init.item, detail=template.margin.init.detail%str(margin),
-                                             money=margin, ctime=int(time.time()))
+                                             money=margin, ctime=int(time.time())).save(d)
 
             # response data
             data = {
@@ -441,6 +442,13 @@ class SysDropHandler(handler.Handler):
                 # get user object
                 user = models.User.filter(d, id=usertrade.user_id).one()
 
+                # return coupon #
+                if usertrade.coupon_id is not None:
+                    usercoupon = models.UserCoupon.filter(d, id=usertrade.coupon_id).one()
+                    usercoupon.status = 'notused'
+                    usercoupon.utime = None
+                    usercoupon.save(d)
+
                 # return margin #
                 # add bill
                 models.UserBill(user_id=usertrade.user_id, code=rand.uuid(),
@@ -498,6 +506,10 @@ class OrderBoughtHandler(handler.Handler):
 
                 # compute open fee
                 ofee = max(tradelever.ofmin, tradelever.ofrate*form.dprice*form.dcount)
+                # add trade fee record
+                tradefee = models.TradeFee(trade_id=usertrade.id, item=template.fee.open.item, detail=template.fee.open.detail % ofee,
+                                           money=ofee, ctime=int(time.time())).save(d)
+
                 # update user trade
                 tradeprestatus = usertrade.status
                 usertrade.ofee = ofee
@@ -514,7 +526,8 @@ class OrderBoughtHandler(handler.Handler):
                 # response data
                 data = {
                     'trade': usertrade,
-                    'order': tradeorder
+                    'order': tradeorder,
+                    'fee': tradefee
                 }
                 self.write(protocol.success(data=data))
 
@@ -582,12 +595,22 @@ class OrderSoldHandler(handler.Handler):
                     if user is None:
                         raise error.trade_operation_denied
 
-                    # bill money
-                    money = tprofit + usertrade.margin - usertrade.ofee - usertrade.dfee - usertrade.sprofit
+                    # get coupon
+                    coupon_cash, coupon_discount = decimal.Decimal('0.00'), decimal.Decimal('1.00')
+                    if usertrade.coupon_id is not None:
+                        usercoupon = models.UserCoupon.filter(d, id=usertrade.coupon_id).one()
+                        if usercoupon.type == 'cash':
+                            coupon_cash = usercoupon.value
+                        if usercoupon.type == 'discount':
+                            coupon_discount = usercoupon.value
 
+                    # bill money
+                    money = tprofit + usertrade.margin + coupon_cash - sprofit - (usertrade.ofee + usertrade.dfee)*coupon_discount
+                    # bill detail
+                    detail = template.bill.settle.detail % money
                     # add bill
                     models.UserBill(user_id=user.id, code=rand.uuid(),
-                                    item=template.bill.settle.item, detail=template.bill.settle.detail%(money),
+                                    item=template.bill.settle.item, detail=detail,
                                     money=money, bmoney=user.money, lmoney=user.money+money, ctime=int(time.time())).save(d)
 
                     # update user
@@ -668,7 +691,7 @@ class OrderExpiredHandler(handler.Handler):
     @access.needtoken
     def post(self):
         # get form arguments
-        form = forms.trade.OrderCanceled(**self.cleaned_arguments)
+        form = forms.trade.OrderExpired(**self.cleaned_arguments)
 
         with models.db.atomic() as d:
             # get trade order object

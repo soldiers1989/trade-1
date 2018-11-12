@@ -2,6 +2,7 @@
     message template
 """
 
+
 class _ItemTpl:
     def __init__(self, item, detail):
         self.item = item
@@ -18,8 +19,16 @@ bill = _Bill
 
 
 class _Margin:
-    init = _ItemTpl('初始保证金', '初始保证金%s元')
-    add = _ItemTpl('追加保证金', '追加保证金%s元')
+    init = _ItemTpl('初始', '初始保证金%s元')
+    add = _ItemTpl('追加', '追加保证金%s元')
 
 
 margin = _Margin
+
+
+class _Fee:
+    open = _ItemTpl('建仓', '建仓费用%s元')
+    delay = _ItemTpl('延期', '延期费用%s元')
+
+
+fee = _Fee

@@ -8,7 +8,7 @@ from .. import access, handler, error, protocol, verify, forms, config, msgtpl, 
 
 class SessionGetHandler(handler.Handler):
     @access.exptproc
-    def get(self):
+    async def get(self):
         """
             get session id
         :return:

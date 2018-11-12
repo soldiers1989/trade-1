@@ -1,8 +1,8 @@
 import time, json, datetime, util
 from adb import models
 from django.db.models import Q
-from cms import auth, resp, hint, forms, enum, state
-
+from cms import auth, resp, hint, forms, enum, state, error
+from .. import remote
 
 @auth.need_login
 def list(request):
@@ -83,6 +83,32 @@ def list(request):
             return resp.failure(hint.ERR_FORM_DATA)
     except Exception as e:
         return resp.failure(str(e))
+
+
+@auth.catch_exception
+@auth.need_login
+def get(request):
+    """
+        get order
+    :param request:
+    :return:
+    """
+    if request.method != 'GET':
+        return resp.failure(msg='method not support')
+
+    form = forms.user.order.Get(request.GET)
+    if form.is_valid():
+        orderid =form.cleaned_data['id']
+
+        # get order detail
+        tradeorder = models.TradeOrder.objects.filter(id=orderid).first()
+
+        # response data
+        data = tradeorder.ddata()
+
+        return resp.success(data=data)
+    else:
+        return resp.failure(msg=str(form.errors))
 
 
 @auth.need_login
@@ -241,3 +267,39 @@ def nextstatus(request):
 
     # response next status options
     return resp.success(data=options)
+
+
+@auth.catch_exception
+@auth.need_login
+def process(request):
+    """
+        process user trade order
+    :param request:
+    :return:
+    """
+    form = forms.user.order.Process(request.POST)
+    if form.is_valid():
+        # order id
+        orderid, action = form.cleaned_data['id'], form.cleaned_data['act']
+
+        # process trade option
+        if action == 'sent':
+            pass
+        elif action in ['dealt']:
+            pass
+        elif action == 'canceled':
+            pass
+        elif action == 'expired':
+            pass
+        else:
+            raise error.invalid_parameters
+
+        # get processed trade order
+        tradeorder = models.TradeOrder.objects.filter(id=orderid).first()
+
+        # response data
+        data = tradeorder.ddata()
+
+        return resp.success(data=data)
+    else:
+        return resp.failure(str(form.errors))

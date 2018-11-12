@@ -58,3 +58,7 @@ class OrderSold(form.Form):
 
 class OrderCanceled(form.Form):
     id = field.IntegerField()
+
+
+class OrderExpired(form.Form):
+    id = field.IntegerField()

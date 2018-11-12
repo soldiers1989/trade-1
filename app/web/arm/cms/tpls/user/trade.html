@@ -1,22 +1,27 @@
 
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
-    <div data-options="region:'west', split:true" style="width: 72%;">
+    <div data-options="region:'west', split:true" style="width: 72%">
         <table id="datagrid_trade" style="height: 100%;"></table>
     </div>
-    <div data-options="region:'center', split:true" style="width: 28%">
+    <div data-options="region:'center', split:true" style="width: 28%; height: 100%">
         <div class="easyui-tabs" id="tabs_trade_detail" fit="true" border="true" plain="true" style="width: 100%">
+            <div title="操作">
+                <div class="easyui-panel" style="height:100%;width:100%">
+                    <div style="margin: 6px; height: 5%; width: 100%">
+                        <a href="#" id="btn_trade_buy" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.operation.do('buy')">买入</a>
+                        <a href="#" id="btn_trade_sell" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.operation.do('sell')">卖出</a>
+                        <a href="#" id="btn_trade_close" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.operation.do('close')">平仓</a>
+                        <a href="#" id="btn_trade_cancel" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.operation.do('cancel')">撤单</a>
+                        <a href="#" id="btn_trade_drop" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.operation.do('drop')">弃单</a>
+                    </div>
+                    <div style="height:95%; width: 100%">
+                        <iframe id="iframe_trade_quote" src="" style="height: 100%;width: 100%"></iframe>
+                    </div>
+                </div>
+            </div>
             <div title="详情">
                 <div class="easyui-panel" style="height:100%;">
-                    <div style="margin: 6px">
-                        <a href="#" id="btn_trade_buy" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('buy')">买入</a>
-                        <a href="#" id="btn_trade_sell" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('sell')">卖出</a>
-                        <a href="#" id="btn_trade_close" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('close')">平仓</a>
-                        <a href="#" id="btn_trade_cancel" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('cancel')">撤单</a>
-                        <a href="#" id="btn_trade_drop" class="easyui-linkbutton" data-options="width:'60px'" onclick="usertrade.detail.trade.doActions('drop')">弃单</a>
-                    </div>
-                    <div>
-                        <table id="propertygrid_trade_detail"></table>
-                    </div>
+                    <table id="propertygrid_trade_detail"></table>
                 </div>
             </div>
             <div title="费用">
@@ -134,7 +139,7 @@
                     
                     onChange: function(newv, oldv) {
                         if($(this).textbox('isValid')){
-                            $('#trade_add_coupon').combobox({queryParams: {user:$(this).val(), status:'unused'}}).combobox('reload', '/api/user/coupon/list');
+                            $('#trade_add_coupon').combobox({queryParams: {id:$(this).val(), _t:'usable'}}).combobox('reload', '/api/user/user/coupons');
                         }
                     }
                 });
@@ -174,7 +179,11 @@
                     valueField: 'id',
                     textField: 'money',
                     loadFilter: function(resp) {
-                        return resp.data.rows;
+                        rows = [];
+                        for(i=0; i<resp.data.rows.length; i++){
+                            rows.push({id: resp.data.rows[i].id, money:resp.data.rows[i]._type+": "+resp.data.rows[i].value})
+                        }
+                        return rows;
                     }
                 });
 
@@ -226,11 +235,10 @@
                         return usertrade.add.form.form('validate');
                     },
                     success: function(data){
-                        console.log(data);
                         var resp = eval('('+data+')');
                         if (resp.status){
                             usertrade.add.close();
-                            usertrade.list.reload();
+                            usertrade.list.insertRow(resp.data);
                         } else {
                             $.messager.show({ title: '错误',  msg: resp.msg });
                         }
@@ -331,7 +339,7 @@
                         {field:'lever', title:'杠杆', hidden:true},
                         {field:'_lever', title:'杠杆', sortable:true},
                         {field:'oprice', title:'订单价', sortable:true},
-                        {field:'ocount', title:'订单量', sortable:true},
+                        {field:'ocount', title:'订单量', sortable:true}
 
                     ]],
                     columns: [[
@@ -349,7 +357,7 @@
                         {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
                         {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
                         {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.datetime},
-                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime},
+                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime}
                     ]],
 
                     loadFilter: function (resp) {
@@ -384,6 +392,25 @@
 
             reload: function() {
                 this.datagrid.datagrid('reload');
+            },
+
+            insertRow: function(row) {
+                index = 0;
+                this.datagrid.datagrid('insertRow', {
+                  index: index,
+                  row: row
+                });
+
+                this.datagrid.datagrid('selectRow', index);
+            },
+
+            updateRow: function(row) {
+                index = this.datagrid.datagrid('getRowIndex', row.id);
+                this.datagrid.datagrid('updateRow', {
+                    index: index,
+                    row: row
+                });
+                this.datagrid.datagrid('selectRow', index);
             },
 
             getSelected: function() {
@@ -468,23 +495,93 @@
                 select: function(idx, tid) {
                     switch (idx) {
                         case 0:
-                            usertrade.detail.trade.show(tid);
+                            usertrade.detail.operation.show(tid);
                             break;
                         case 1:
-                            usertrade.detail.fees.show(tid);
+                            usertrade.detail.trade.show(tid);
                             break;
                         case 2:
-                            usertrade.detail.margins.show(tid);
+                            usertrade.detail.fees.show(tid);
                             break;
                         case 3:
-                            usertrade.detail.orders.show(tid);
+                            usertrade.detail.margins.show(tid);
                             break;
                         case 4:
+                            usertrade.detail.orders.show(tid);
+                            break;
+                        case 5:
                             usertrade.detail.status.show(tid);
                             break;
                         default:
                             break;
                     }
+                }
+            },
+
+            // trade operation
+            operation: {
+                show: function(tid) {
+                    var url = '/api/user/trade/get?id='+tid+"&_t=d";
+                    $.get(url, function(resp, status){
+                        if(status === 'success'){
+                            if (resp.status){
+                                //permit operation
+                                status = resp.data.status;
+                                if (['tobuy'].includes(status)){
+                                    $('#btn_trade_buy').linkbutton('enable');
+                                    $('#btn_trade_drop').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_buy').linkbutton('disable');
+                                    $('#btn_trade_drop').linkbutton('disable');
+                                }
+
+                                if (['tosell'].includes(status)){
+                                    $('#btn_trade_sell').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_sell').linkbutton('disable');
+                                }
+
+                                if (['toclose'].includes(status)){
+                                    $('#btn_trade_close').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_close').linkbutton('disable');
+                                }
+
+                                if (['cancelbuy', 'cancelsell', 'cancelclose'].includes(status)){
+                                    $('#btn_trade_cancel').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_cancel').linkbutton('disable');
+                                }
+
+                                //show stock quote
+                                $('#iframe_trade_quote').attr('src', 'http://m.10jqka.com.cn/stockpage/hs_'+resp.data.rows.stock+'/');
+                            } else {
+                                $.messager.show({title: '错误', msg: resp.msg});
+                            }
+                        } else {
+                            $.messager.show({title: '错误', msg: '请求服务器错误'});
+                        }
+                    },'json');
+                },
+
+                do: function(action) {
+                    var row = usertrade.list.getSelected();
+                    if(!row)
+                        return;
+
+                    var url = '/api/user/trade/process';
+                    $.post(url, {id: row.id, act: action}, function(resp, status){
+                        if(status === 'success'){
+                            if (resp.status){
+                                usertrade.list.updateRow(resp.data);
+                                $.messager.show({title: '成功', msg: resp.msg});
+                            } else {
+                                $.messager.show({title: '错误', msg: resp.msg});
+                            }
+                        } else {
+                            $.messager.show({title: '错误', msg: '请求服务器错误'});
+                        }
+                    },'json');
                 }
             },
 
@@ -516,10 +613,6 @@
                     this.inited = true;
                 },
 
-                clear: function() {
-                    this.clearPropertyGrid();
-                },
-
                 initPropertyGrid: function(tradeid) {
                     // init trade detail property grid
                     this.propertygrid.propertygrid({
@@ -544,69 +637,12 @@
                         },
 
                         onLoadSuccess: function(resp) {
-                            usertrade.detail.trade.resetActions(resp.status);
                         },
 
                         onLoadError: function() {
                             $.messager.show({title: '错误', msg: '请求订单详情数据失败'});
                         }
                     });
-                },
-
-                clearPropertyGrid: function() {
-                    if (this.inited){
-                        len = this.propertygrid.propertygrid('getRows').length;
-                        for (i=0; i<len; i++){
-                            this.propertygrid.propertygrid('deleteRow', 0);
-                        }
-                    }
-                },
-
-                resetActions: function(status) {
-                    if (['tobuy'].includes(status)){
-                        $('#btn_trade_buy').linkbutton('enable');
-                        $('#btn_trade_drop').linkbutton('enable');
-                    } else {
-                        $('#btn_trade_buy').linkbutton('disable');
-                        $('#btn_trade_drop').linkbutton('disable');
-                    }
-
-                    if (['tosell'].includes(status)){
-                        $('#btn_trade_sell').linkbutton('enable');
-                    } else {
-                        $('#btn_trade_sell').linkbutton('disable');
-                    }
-
-                    if (['toclose'].includes(status)){
-                        $('#btn_trade_close').linkbutton('enable');
-                    } else {
-                        $('#btn_trade_close').linkbutton('disable');
-                    }
-
-                    if (['cancelbuy', 'cancelsell', 'cancelclose'].includes(status)){
-                        $('#btn_trade_cancel').linkbutton('enable');
-                    } else {
-                        $('#btn_trade_cancel').linkbutton('disable');
-                    }
-                },
-
-                doActions: function(action) {
-                    var row = usertrade.list.getSelected();
-                    if(!row)
-                        return;
-
-                    var url = '/api/user/trade/process';
-                    $.post(url, {id: row.id, act: action}, function(resp, status){
-                        if(status === 'success'){
-                            if (resp.status){
-                                $.messager.show({title: '成功', msg: resp.msg});
-                            } else {
-                                $.messager.show({title: '错误', msg: resp.msg});
-                            }
-                        } else {
-                            $.messager.show({title: '错误', msg: '请求服务器错误'});
-                        }
-                    },'json');
                 }
             },
 

@@ -26,7 +26,7 @@ class UserCoupon(model.Model):
 
     id = field.AutoField()
     user_id = field.IntegerField()
-    type = field.StringField(max_length=16)
+    type = field.EnumField(choices=('cash', 'discount'))
     name = field.StringField(max_length=64)
     value = field.DecimalField(digits=10, decimals=2)
     status = field.EnumField(choices=('notused', 'used', 'expired'))

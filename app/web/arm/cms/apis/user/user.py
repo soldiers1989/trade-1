@@ -264,13 +264,19 @@ def coupons(request):
         form = forms.user.user.Get(request.POST)
         if form.is_valid():
             # user id
-            userid = form.cleaned_data['id']
+            userid, type = form.cleaned_data['id'], form.cleaned_data['_t']
+            # filters
+            filters = {
+                'user__id': userid
+            }
+            if type == 'usable':
+                today = datetime.date.today()
+                filters['status'] = 'notused'
+                filters['sdate__lte'] = today
+                filters['edate__gte'] = today
 
             # get fee records of order
-            objects = models.UserCoupon.objects.filter(user__id=userid)
-
-            ## get total count ##
-            total = objects.count()
+            objects = models.UserCoupon.objects.filter(**filters).all()
 
             ## make results ##
             rows = []
@@ -279,7 +285,7 @@ def coupons(request):
 
             ## response data ##
             data = {
-                'total': total,
+                'total': len(objects),
                 'rows': rows
             }
 
