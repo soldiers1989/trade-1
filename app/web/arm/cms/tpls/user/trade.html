@@ -554,7 +554,10 @@
                                 }
 
                                 //show stock quote
-                                $('#iframe_trade_quote').attr('src', 'http://m.10jqka.com.cn/stockpage/hs_'+resp.data.rows.stock+'/');
+                                secmap = {'600':'1','601':'1','603':'1', '000':'2','002':'2','300':'2'};
+                                code = resp.data.rows.stock + secmap[resp.data.rows.stock.substr(0,3)];
+                                $('#iframe_trade_quote').attr('src', 'https://emwap.eastmoney.com/quota/stock/index/'+code);
+                                //$('#iframe_trade_quote').attr('src', 'http://m.10jqka.com.cn/stockpage/hs_'+resp.data.rows.stock+'/');
                             } else {
                                 $.messager.show({title: '错误', msg: resp.msg});
                             }

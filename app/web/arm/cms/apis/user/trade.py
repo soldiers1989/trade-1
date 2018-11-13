@@ -158,6 +158,33 @@ def add(request):
         return resp.success(data=data)
 
 
+@auth.catch_exception
+@auth.need_login
+def update(request):
+    """
+        update
+    :param request:
+    :return:
+    """
+    form = forms.user.trade.Update(request.POST)
+    if form.is_valid():
+        # get parameters
+        params = form.cleaned_data
+
+        # update order
+        remote.aam.trade_update(**params)
+
+        # get updated order
+        obj = models.UserTrade.objects.get(id=form.id)
+
+        # response data
+        data = obj.ddata()
+
+        return resp.success(data=data)
+    else:
+        return resp.failure(str(form.errors))
+
+
 @auth.need_login
 def lever(request):
     try:

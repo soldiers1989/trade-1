@@ -17,3 +17,6 @@ ERR_NOT_AUTHORIZED = "未授权"
 
 ERR_FORM_DATA = '操作失败，请检查您的输入数据'
 ERR_RECORD_EXISTS = '记录已存在'
+
+ERR_TRADE_ORDER_NOT_EXIST = '订单不存在'
+ERR_TRADE_ORDER_OPERATION_DENIED = '订单操作非法'

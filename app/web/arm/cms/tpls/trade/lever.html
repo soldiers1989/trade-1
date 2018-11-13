@@ -68,14 +68,14 @@
             add: '/api/trade/lever/add',
             update: '/api/trade/lever/update',
             delete: '/api/trade/lever/delete',
-            reorder: '/api/trade/lever/reorder',
+            reorder: '/api/trade/lever/reorder'
         },
 
         init: function() { //init
         	//init tree grid
             this.datagrid.datagrid({
                 url: this.urls.list,
-                method: 'post',
+                method: 'get',
                 
                 idField: 'id',
  		
@@ -176,7 +176,7 @@
                 fn: function(r){
                     if (r){
                         $.post(this.url, {id: row.id}, function(resp, status){
-                            if(status == 'success'){
+                            if(status === 'success'){
                                 if (resp.status){
                                     lever.refresh();
                                 } else {
@@ -194,9 +194,9 @@
         save: function() { // save
             var url, params={};
             // get action url
-            if(this.action == 'add') {
+            if(this.action === 'add') {
                 url = this.urls.add;
-            } else if (this.action == 'update'){
+            } else if (this.action === 'update'){
                 //get selected row data
                 var row = this.datagrid.datagrid('getSelected');
                 if (!row)
@@ -237,7 +237,7 @@
 
         reorder: function(sid, sorder, tid, torder) { //reorder
             $.post(this.urls.reorder, {sid: sid, sorder: sorder, tid: tid, torder: torder}, function(resp, status){
-            if(status == 'success'){
+            if(status === 'success'){
                 if (resp.status){
                     lever.refresh();
                 } else {

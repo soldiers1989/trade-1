@@ -55,7 +55,17 @@ class Model(dict, metaclass=MetaModel):
         return self[code]
 
     def __setattr__(self, code, value):
-        field = self.fields().get(code)
+        self.set(code, value)
+
+    def set(self, code, value):
+        """
+            set model object code->value
+        :param code:
+        :param value:
+        :return:
+        """
+        fields = self.fields()
+        field = fields.get(code)
         if field is None:
             raise field.ErrorFieldNotExist(code)
 
@@ -169,6 +179,17 @@ class Model(dict, metaclass=MetaModel):
             return query.QuerySet(db, self.__class__, **{self.__auto__:self[self.__auto__]}).update(**self.fieldvalues(True))
         else:
             return query.QuerySet(db, self.__class__).insert(self)
+
+    def update(self, **kvs):
+        """
+            update model object values
+        :param kvs: dict, field->value
+        :return:
+            self
+        """
+        for k, v in kvs.items():
+            self.set(k, v)
+        return self
 
     @classmethod
     def select(cls, db, sql, *args):

@@ -1,14 +1,14 @@
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
-    <div data-options="region:'west', split:true" style="width: 75%;">
+    <div data-options="region:'west', split:true" style="width: 72%;">
         <table id="trade_order_datagrid" style="height: 100%;"></table>
     </div>
-    <div data-options="region:'center', split:true" style="width: 25%; height: 100%;">
+    <div data-options="region:'center', split:true" style="width: 28%; height: 100%;">
         <div class="easyui-tabs" id="tabs_trade_order" data-options="fit:true, plain: true" style="height: 100%;width: 100%;">
             <div title="操作">
                 <div class="easyui-panel" style="height:100%;width:100%">
                     <div style="margin: 6px; height: 5%; width: 100%">
                         <a href="#" id="btn_trade_order_sent" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('sent')">已报</a>
-                        <a href="#" id="btn_trade_order_dealt" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('bought')">已成</a>
+                        <a href="#" id="btn_trade_order_dealt" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.dealt.open()">已成</a>
                         <a href="#" id="btn_trade_order_canceled" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('canceled')">已撤</a>
                         <a href="#" id="btn_trade_order_expired" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('expired')">过期</a>
                     </div>
@@ -58,7 +58,49 @@
             <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-combobox" id="_status" name="status" data-options="label:'交易状态', prompt:'选择交易状态'" required, style="width: 100%">
+            <input class="easyui-combobox" name="status" data-options="label:'交易状态', prompt:'选择交易状态',
+                                                                       method: 'get', url: '/api/enum?c=order&i=status',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       loadFilter: function(resp) {
+                                                                            return resp.data;
+                                                                       }" style="width: 100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-combobox" name="account" data-options="label:'交易账户', prompt:'选择交易账户',
+                                                                       method: 'get', url: '/api/trade/account/list?disable=false',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       loadFilter: function(resp) {
+                                                                            data = [];
+                                                                            for (i=0; i<resp.data.rows.length; i++){
+                                                                                data.push({id:resp.data.rows[i].account, text:resp.data.rows[i].name+'('+resp.data.rows[i].money+')'});
+                                                                            }
+                                                                            return data;
+                                                                       }" style="width: 100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-combobox" name="optype" data-options="label:'报价方式', prompt:'选择报价方式',
+                                                                       method: 'get', url: '/api/enum?c=order&i=price',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       onChange: function(nval, oval) {
+                                                                            tb = $('#tb_trade_order_update_oprice');
+                                                                            if (nval==='sj') {
+                                                                                tb.textbox('disable');
+                                                                            } else {
+                                                                                tb.textbox('enable');
+                                                                            }
+                                                                       },
+                                                                       loadFilter: function(resp) {
+                                                                            return resp.data;
+                                                                       }" style="width: 100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'输入成交数量', required:false, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" id="tb_trade_order_update_oprice" name="oprice" data-options="label:'委托价格', prompt:'输入成交价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-datetimebox" name="otime" label="委托时间" prompt="选择委托时间" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:false, validType:['digits', 'min[0]']" style="width:100%">
@@ -67,7 +109,7 @@
             <input class="easyui-textbox" name="dprice" data-options="label:'成交价格', prompt:'输入成交价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-datetimebox" name="dtime" label="成交时间" prompt="选择发生时间" style="width:100%">
+            <input class="easyui-datetimebox" name="dtime" label="成交时间" prompt="选择成交时间" style="width:100%">
         </div>
     </form>
 </div>
@@ -76,6 +118,27 @@
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="tradeorder.edit.modify.save()" style="width:90px">保存</a>
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="tradeorder.edit.modify.cancel()" style="width:90px">取消</a>
 </div>
+
+
+<div class="easyui-dialog" id="trade_order_dealt_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#trade_order_dealt_dialog_buttons'">
+    <form class="easyui-form" id="trade_order_dealt_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:true, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="dprice" data-options="label:'成交价格', prompt:'输入成交价格（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="trade_order_dealt_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="tradeorder.detail.operation.dealt.save()" style="width:90px">确定</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="tradeorder.detail.operation.dealt.cancel()" style="width:90px">取消</a>
+</div>
+
 
 <script type="text/javascript">
     // order list/add/update/delete
@@ -86,8 +149,7 @@
 
             // init edit
             init: function() {
-                //init modify components
-                this.modify.init();
+                //init edit
             },
 
             // enable edit
@@ -106,29 +168,6 @@
                 dialog: $('#trade_order_update_dialog'),
                 form: $('#trade_order_update_form'),
 
-                // init modify dialog
-                init: function() {
-                    $('#_status').combobox({
-                        url: '/api/enum?c=order&i=status',
-                        method: 'get',
-
-                        valueField:'id',
-                        textField:'text',
-
-                        limitToList: true,
-
-                        loadFilter: function(resp) {
-                            return resp.data;
-                        }
-                    });
-                },
-
-                // setup modify dialog
-                setup: function(id) {
-                    //init status options
-                    $('#_status').combobox('reload', '/api/user/order/nextstatus?id='+id);
-                },
-
                 // open update dialog
                 open: function() {
                     //get selected row data
@@ -136,11 +175,9 @@
                     if (row){
                         //change row time
                         row.dtime = cube.format.datetime(row.dtime);
+                        row.otime = cube.format.datetime(row.otime);
                         // clear form
                         this.form.form('clear');
-                        
-                        // setup dialog
-                        this.setup(row.id);
 
                         //load form data
                         this.form.form('load', row);
@@ -463,7 +500,7 @@
             },
 
             select: function (index, orderid) {
-                switch (idx) {
+                switch (index) {
                     case 0:
                         tradeorder.detail.operation.show(orderid);
                         break;
@@ -513,7 +550,10 @@
                                 }
 
                                 //show stock quote
-                                $('#iframe_trade_order_quote').attr('src', 'http://m.10jqka.com.cn/stockpage/hs_'+resp.data.scode+'/');
+                                secmap = {'600':'1','601':'1','603':'1', '000':'2','002':'2','300':'2'};
+                                code = resp.data.scode + secmap[resp.data.scode.substr(0,3)];
+                                $('#iframe_trade_order_quote').attr('src', 'https://emwap.eastmoney.com/quota/stock/index/'+code);
+                                //$('#iframe_trade_order_quote').attr('src', 'http://m.10jqka.com.cn/stockpage/hs_'+resp.data.scode+'/');
                             } else {
                                 $.messager.show({title: '错误', msg: resp.msg});
                             }
@@ -523,7 +563,7 @@
                     },'json');
                 },
 
-                do: function(action) {
+                process: function(action) {
                     var row = tradeorder.list.getSelected();
                     if(!row)
                         return;
@@ -541,6 +581,59 @@
                             $.messager.show({title: '错误', msg: '请求服务器错误'});
                         }
                     },'json');
+                },
+
+                dealt: {
+                    url: '/api/user/order/process',
+                    dialog: $('#trade_order_dealt_dialog'),
+                    form: $('#trade_order_dealt_form'),
+
+                    // open update dialog
+                    open: function() {
+                        //get selected row data
+                        row = tradeorder.list.getSelected();
+                        if (row){
+                            // clear form
+                            this.form.form('clear');
+
+                            //load form data
+                            this.form.form('load', {id:row.id, dcount:row.ocount, dprice:row.oprice});
+
+                            //open dialog
+                            this.dialog.dialog('open').dialog('center').dialog('setTitle','委托成交');
+                        }
+                    },
+
+                    // save update results
+                    save: function() {
+                        //submit form
+                        this.form.form('submit',{
+                            url: this.url,
+                            queryParams: {
+                                act: 'dealt'
+                            },
+                            onSubmit: function(){
+                                return tradeorder.detail.operation.dealt.form.form('validate');
+                            },
+                            success: function(data){
+                                var resp = eval('('+data+')');
+                                if (resp.status){
+                                    tradeorder.detail.operation.dealt.dialog.dialog('close');
+
+                                    //update selected row data
+                                    tradeorder.list.updateSelected(resp.data);
+                                } else {
+                                    $.messager.show({ title: '错误',  msg: resp.msg });
+                                }
+                            }
+                        });
+                    },
+
+                    // cancel operation
+                    cancel: function() {
+                        //close dialog
+                        this.dialog.dialog('close');
+                    }
                 }
             },
 

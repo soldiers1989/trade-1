@@ -29,10 +29,34 @@ class Add(forms.Form):
     lever = forms.IntegerField()
     coupon = forms.IntegerField(required=False)
     optype = forms.CharField()
-    oprice = forms.DecimalField(initial=0.0, required=False)
+    oprice = forms.DecimalField(required=False, initial=0.0, max_digits=10, decimal_places=2)
     ocount = forms.IntegerField(min_value=100)
+
+
+class Update(forms.Form):
+    id = forms.IntegerField()
+    optype = forms.ChoiceField(required=False, choices=(('xj','xj'), ('sj','sj')))
+    oprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
+    ocount = forms.IntegerField(required=False)
+    hprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
+    hcount = forms.IntegerField(required=False) # holding count
+    fcount = forms.IntegerField(required=False) # free count, sell able
+    bprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
+    bcount = forms.IntegerField(required=False)
+    sprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
+    scount = forms.IntegerField(required=False)
+    margin = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
+    ofee = forms.DecimalField(required=False, max_digits=10, decimal_places=2) # open fee
+    dday = forms.IntegerField(required=False) # delay days
+    dfee = forms.DecimalField(required=False, max_digits=10, decimal_places=2) # delay fee
+    tprofit = forms.DecimalField(required=False, max_digits=10, decimal_places=2) # total profit
+    sprofit = forms.DecimalField(required=False, max_digits=10, decimal_places=2) # share profit
+    account = forms.CharField(required=False, max_length=16)
+    status = forms.ChoiceField(required=False, choices=('tobuy','buying','cancelbuy','buycanceling','canceled','hold','tosell','selling','cancelsell','sellcanceling','sold','toclose','closing','cancelclose','closecanceling','closed','expired','dropped'))
 
 
 class Process(forms.Form):
     id = forms.IntegerField()
-    act = forms.CharField(max_length=16);
+    act = forms.CharField(max_length=16)
+    dprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
+    dcount = forms.IntegerField(required=False)

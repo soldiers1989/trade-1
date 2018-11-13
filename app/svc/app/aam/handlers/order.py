@@ -109,9 +109,9 @@ class NotifyHandler(handler.Handler):
         # validate notify orders
         for notifyorder in notifyorders:
             if not {'account','ocode','dprice','dcount','status','operator'}.issubset(set(notifyorder.keys())):
-                raise error.order_notify_data
+                raise error.order_notify_data_invalid
             if notifyorder['status'] not in ['sent','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped']:
-                raise error.order_notify_data
+                raise error.order_notify_data_invalid
 
         with models.db.atomic() as d:
             # get all pending orders of today

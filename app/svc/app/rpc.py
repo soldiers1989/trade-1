@@ -240,15 +240,28 @@ class Aam(Rpc):
         # access service
         return self.get(path, params=params)
 
+    def trade_update(self, **params):
+        """
+            update a trade record
+        :param id: user trade id
+        :return:
+        """
+        # remote path
+        path = '/trade/update'
+
+        # access service
+        return self.get(path, params=params)
+
     def trade_user_buy(self, **params):
         """
             user buy
         :param user: int, user id
-        :param lever: int, lever id
         :param stock: str, stock code
-        :param ptype: str, price type: xj or sj
-        :param price: decimal, buy price
-        :param count: int, buy count
+        :param lever: int, lever id
+        :param coupon: int, coupon id
+        :param optype: str, price type: xj or sj
+        :param oprice: decimal, buy price
+        :param ocount: int, buy count
         :return:
         """
         # remote path
@@ -333,7 +346,19 @@ class Aam(Rpc):
         :return:
         """
         # remote path
-        path = '/trade/sys/dropped'
+        path = '/trade/sys/drop'
+
+        # access service
+        return self.post(path, params=params)
+
+    def trade_order_sent(self, **params):
+        """
+            trade order has sent
+        :param id: int, order id
+        :return:
+        """
+        # remote path
+        path = '/trade/order/sent'
 
         # access service
         return self.post(path, params=params)
@@ -341,10 +366,9 @@ class Aam(Rpc):
     def trade_order_bought(self, **params):
         """
             trade order has bought
-        :param user: int, user id
-        :param trade: int, trade id
-        :param price: decimal, stock price
-        :param count: int, stock count
+        :param id: int, trade order id
+        :param dprice: decimal, stock price
+        :param dcount: int, stock count
         :return:
         """
         # remote path
@@ -356,10 +380,9 @@ class Aam(Rpc):
     def trade_order_sold(self, **params):
         """
             trade order has sold
-        :param user: int, user id
-        :param trade: int, trade id
-        :param price: decimal, stock price
-        :param count: int, stock count
+        :param id: int, trade order id
+        :param dprice: decimal, stock price
+        :param dcount: int, stock count
         :return:
         """
         # remote path
@@ -371,8 +394,7 @@ class Aam(Rpc):
     def trade_order_canceled(self, **params):
         """
             trade order has canceled
-        :param user: int, user id
-        :param trade: int, trade id
+        :param id: int, trade order id
         :return:
         """
         # remote path
@@ -384,8 +406,7 @@ class Aam(Rpc):
     def trade_order_expired(self, **params):
         """
             trade order has expired
-        :param user: int, user id
-        :param trade: int, trade id
+        :param id: int, trade order id
         :return:
         """
         # remote path
@@ -393,3 +414,15 @@ class Aam(Rpc):
 
         # access service
         return self.post(path, params=params)
+
+    def trade_order_update(self, **params):
+        """
+            update a trade order record
+        :param id: trade order id
+        :return:
+        """
+        # remote path
+        path = '/trade/order/update'
+
+        # access service
+        return self.get(path, params=params)

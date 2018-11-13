@@ -25,6 +25,28 @@ class ListHandler(handler.Handler):
             self.write(protocol.success(data=trades))
 
 
+class UpdateHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        # get form arguments
+        form = forms.trade.Update(**self.cleaned_arguments)
+
+        with models.db.atomic() as d:
+            # get user trade object
+            usertrade = models.UserTrade.filter(d, id=form.id).one()
+            if usertrade is None:
+                raise error.trade_not_exist
+
+            # lock user
+            with locker.user(usertrade.user_id):
+                # update
+                usertrade.update(**form).save(d)
+
+                # response data
+                self.write(protocol.success(data=usertrade))
+
+
 class UserBuyHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
@@ -145,7 +167,7 @@ class UserSellHandler(handler.Handler):
 
         # check sell type
         if form.type not in ['sell', 'close']:
-            raise error.invalid_parameters
+            raise error.trade_operation_denied
 
         with models.db.atomic() as d, locker.user(form.user):
             # get user trade object
@@ -155,7 +177,7 @@ class UserSellHandler(handler.Handler):
 
             # get stock object
             stock = models.Stock.filter(usertrade.stock_id).one()
-            if stock is None or stock.status != 'normal':
+            if stock is None or stock.status != 'open':
                 raise error.stock_is_closed
 
             # get & check sell price
@@ -213,7 +235,7 @@ class UserCancelHandler(handler.Handler):
 
             # get trade order object
             ordertype = {'tobuy': 'buy', 'tosell': 'sell', 'toclose': 'sell', 'buying': 'buy', 'selling': 'sell', 'closing': 'sell'}
-            orderstatus = {'notsend':'tcanceled', 'tosend':'tocancel', 'sending':'tocancel', 'sent':'tocancel'}
+            orderstatus = {'notsend':'tcanceled', 'tosend':'tcanceled', 'sending':'tocancel', 'sent':'tocancel'}
             tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype=ordertype[usertrade.status], odate=today).one()
             if tradeorder is None or tradeorder.status not in orderstatus.keys():
                 raise error.trade_operation_denied
@@ -279,7 +301,7 @@ class SysBuyHandler(handler.Handler):
 
             with locker.user(usertrade.user_id):
                 # get trade order object
-                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='buy', status='notsend', odate=today).one()
+                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='buy', status='notsend').one()
                 if tradeorder is None:
                     raise error.trade_operation_denied
 
@@ -331,7 +353,7 @@ class SysSellHandler(handler.Handler):
 
             with locker.user(usertrade.user_id):
                 # get trade order object
-                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='sell', status='notsend', odate=today).one()
+                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='sell', status='notsend').one()
                 if tradeorder is None:
                     raise error.trade_operation_denied
 
@@ -379,7 +401,7 @@ class SysCancelHandler(handler.Handler):
 
             with locker.user(usertrade.user_id):
                 # get trade order object
-                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, status='tocancel', odate=today).one()
+                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, status='tocancel').one()
                 if tradeorder is None:
                     raise error.trade_operation_denied
 
@@ -423,7 +445,7 @@ class SysDropHandler(handler.Handler):
             # lock user
             with locker.user(usertrade.user_id):
                 # get trade order object
-                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='buy', status='notsend', odate=today).one()
+                tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype='buy', status='notsend').one()
                 if tradeorder is None:
                     raise error.trade_operation_denied
 
@@ -464,6 +486,41 @@ class SysDropHandler(handler.Handler):
                 data = {
                     'trade': usertrade,
                     'order': tradeorder
+                }
+                self.write(protocol.success(data=data))
+
+
+class OrderSentHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        # get form arguments
+        form = forms.trade.OrderSent(**self.cleaned_arguments)
+
+        with models.db.atomic() as d:
+            # get trade order object
+            tradeorder = models.TradeOrder.filter(d, id=form.id, status__in=('tosend', 'sending')).one()
+            if tradeorder is None:
+                raise error.trade_operation_denied
+
+            # get user trade object
+            usertrade = models.UserTrade.filter(d, id=tradeorder.trade_id, status__in=('buying', 'selling','closing')).one()
+            if usertrade is None:
+                raise error.trade_operation_denied
+
+            # lock user
+            with locker.user(usertrade.user_id):
+                # update trade order
+                orderprestatus = tradeorder.status
+                tradeorder.status = 'sent'
+                tradeorder.slog = status.append('sys', 'send', orderprestatus, tradeorder.status, '', tradeorder.slog)
+                tradeorder.mtime = int(time.time())
+                tradeorder.save(d)
+
+                # response data
+                data = {
+                    'trade': usertrade,
+                    'order': tradeorder,
                 }
                 self.write(protocol.success(data=data))
 
@@ -516,12 +573,12 @@ class OrderBoughtHandler(handler.Handler):
                 usertrade.hcount = tradeorder.dcount
                 usertrade.hprice = tradeorder.dprice
                 usertrade.fcount = 0
-                usertrade.bcount = tradeorder.bcount
-                usertrade.bprice = tradeorder.bprice
+                usertrade.bcount = tradeorder.dcount
+                usertrade.bprice = tradeorder.dprice
                 usertrade.status = 'hold'
                 usertrade.slog = status.append('sys', 'bought', tradeprestatus, usertrade.status, '', usertrade.slog)
                 usertrade.mtime = int(time.time())
-                usertrade.save()
+                usertrade.save(d)
 
                 # response data
                 data = {
@@ -745,3 +802,30 @@ class OrderExpiredHandler(handler.Handler):
                     'order': tradeorder
                 }
                 self.write(protocol.success(data=data))
+
+
+class OrderUpdateHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        # get form arguments
+        form = forms.trade.OrderUpdate(**self.cleaned_arguments)
+
+        with models.db.atomic() as d:
+            # get trade order object
+            tradeorder = models.TradeOrder.filter(d, id=form.id).one()
+            if tradeorder is None:
+                raise error.order_not_exist
+
+            # get user trade object
+            usertrade = models.UserTrade.filter(d, id=tradeorder.trade_id, status__in=('buying', 'selling', 'closing')).one()
+            if usertrade is None:
+                raise error.trade_not_exist
+
+            # lock user
+            with locker.user(usertrade.user_id):
+                # update order
+                tradeorder.update(**form).save(d)
+
+                # response data
+                self.write(protocol.success(data=tradeorder))

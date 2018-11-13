@@ -71,6 +71,7 @@ urlpatterns = [
     path('user/trade/list', user.trade.list, name="api.user.trade.list"),
     path('user/trade/get', user.trade.get, name="api.user.trade.get"),
     path('user/trade/add', user.trade.add, name="api.user.trade.add"),
+    path('user/trade/update', user.trade.update, name="api.user.trade.update"),
     path('user/trade/fees', user.trade.fees, name="api.user.trade.fees"),
     path('user/trade/margins', user.trade.margins, name="api.user.trade.margins"),
     path('user/trade/orders', user.trade.orders, name="api.user.trade.orders"),
@@ -84,7 +85,7 @@ urlpatterns = [
     path('user/order/update', user.order.update, name="api.user.order.update"),
     path('user/order/delete', user.order.delete, name="api.user.order.delete"),
     path('user/order/status', user.order.status, name="api.user.order.status"),
-    path('user/order/nextstatus', user.order.nextstatus, name="api.user.order.nextstatus"),
+    path('user/order/process', user.order.process, name="api.user.order.process"),
 
     path('user/coupon/list', user.coupon.list, name="api.user.coupon.list"),
     path('user/coupon/add', user.coupon.add, name="api.user.coupon.add"),

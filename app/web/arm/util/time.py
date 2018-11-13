@@ -14,15 +14,15 @@ def utime(date, format=None):
         unix timestamp
     """
     if date is None:
-        return 0;
+        return 0
 
-    if isinstance(date, datetime.date):
+    if isinstance(date, datetime.date) or isinstance(date, datetime.datetime):
         return time.mktime(date.timetuple())
     elif isinstance(date, str):
         format = format if format is not None else DEFAULT_DATE_FORMAT
         return time.mktime(time.strptime(date, format))
     else:
-        raise 'input date format is not support'
+        raise ValueError('input date format is not support')
 
 
 def dates(tm, format=None):

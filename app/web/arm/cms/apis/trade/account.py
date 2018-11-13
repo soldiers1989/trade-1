@@ -12,7 +12,7 @@ def list(request):
     :return:
     """
     try:
-        form = forms.trade.account.List(request.POST)
+        form = forms.trade.account.List(request.GET)
         if form.is_valid():
             ## form parameters ##
             params = form.cleaned_data

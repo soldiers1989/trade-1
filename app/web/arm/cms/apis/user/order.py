@@ -142,6 +142,7 @@ def add(request):
         return resp.failure(str(form.errors))
 
 
+@auth.catch_exception
 @auth.need_login
 def update(request):
     """
@@ -152,31 +153,27 @@ def update(request):
     form = forms.user.order.Update(request.POST)
     if form.is_valid():
         # get parameters
-        params = form.cleaned_data
-        id, dcount, dprice, dtime, status = params['id'], params['dcount'], params['dprice'], params['dtime'], params['status']
+        params = {}
+        for k,v in form.cleaned_data.items():
+            if v is not None:
+                params[k] = v
 
-        # get order object
-        order = models.TradeOrder.objects.get(id=id)
-        if order is None:
-            return resp.failure(hint.ERR_FORM_DATA)
-
-        # get admin object
-        admin = models.Admin.objects.get(id=auth.get_admin_id(request))
-        if admin is None:
-            return resp.failure(hint.ERR_NOT_AUTHORIZED)
-
-        # update trade
-
-        # update status change log
-        logs = [{'user': admin.user, 'action':'修改', 'before': enum.all['order']['status'].get(order.status), 'after': enum.all['order']['status'].get(status), 'time': int(time.time())}]
-        if order.slog is not None:
-            logs.extend(json.loads(order.slog))
+        # process datetime->unix timestamp
+        if params.get('otime') is not None:
+            params['otime'] = int(util.time.utime(params['otime']))
+        if params.get('dtime') is not None:
+            params['dtime'] = int(util.time.utime(params['dtime']))
 
         # update order
-        order.dcount, order.dprice, order.dtime, order.status, order.slog = dcount, dprice, dtime.timestamp(), status, json.dumps(logs)
-        order.save()
+        remote.aam.trade_order_update(**params)
 
-        return resp.success(data=order.ddata())
+        # get updated order
+        obj = models.TradeOrder.objects.get(id=params['id'])
+
+        # response data
+        data = obj.ddata()
+
+        return resp.success(data=data)
     else:
         return resp.failure(str(form.errors))
 
@@ -213,7 +210,7 @@ def status(request):
     # get order detail
     item = models.TradeOrder.objects.get(id=id)
     if not item:
-        return resp.failure(hint.ERR_FORM_DATA)
+        return resp.failure(hint.ERR_TRADE_ORDER_NOT_EXIST)
 
     # logs
     logs = []
@@ -239,38 +236,6 @@ def status(request):
 
 @auth.catch_exception
 @auth.need_login
-def nextstatus(request):
-    """
-        get next status
-    :param request:
-    :return:
-    """
-    if request.method != 'GET':
-        return resp.failure(msg='method not support')
-
-    id = request.GET['id']
-
-    # get order
-    order = models.TradeOrder.objects.get(id=id)
-    if not order:
-        return resp.failure(hint.ERR_FORM_DATA)
-
-    nstatus = [order.status]
-    # get next status
-    nstatus.extend(state.order.sys.get(order.status, []))
-
-    options = []
-    # next status options
-    for s in nstatus:
-        txt = enum.all['order']['status'].get(s)
-        options.append({'id': s, 'text': txt})
-
-    # response next status options
-    return resp.success(data=options)
-
-
-@auth.catch_exception
-@auth.need_login
 def process(request):
     """
         process user trade order
@@ -279,18 +244,29 @@ def process(request):
     """
     form = forms.user.order.Process(request.POST)
     if form.is_valid():
-        # order id
-        orderid, action = form.cleaned_data['id'], form.cleaned_data['act']
+        # get params
+        params = form.cleaned_data
+        orderid, action = params['id'], params['act']
+
+        # get order
+        order = models.TradeOrder.objects.get(id=orderid)
+        if not order:
+            return resp.failure(hint.ERR_TRADE_ORDER_NOT_EXIST)
 
         # process trade option
         if action == 'sent':
-            pass
+            remote.aam.trade_order_sent(id=orderid)
         elif action in ['dealt']:
-            pass
+            if order.otype == 'buy':
+                remote.aam.trade_order_bought(id=orderid, dprice=params['dprice'], dcount=params['dcount'])
+            elif order.otype == 'sell':
+                remote.aam.trade_order_sold(id=orderid, dprice=params['dprice'], dcount=params['dcount'])
+            else:
+                raise resp.failure(hint.ERR_TRADE_ORDER_OPERATION_DENIED)
         elif action == 'canceled':
-            pass
+            remote.aam.trade_order_canceled(id=orderid)
         elif action == 'expired':
-            pass
+            remote.aam.trade_order_expired(id=orderid)
         else:
             raise error.invalid_parameters
 

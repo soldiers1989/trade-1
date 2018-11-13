@@ -35,10 +35,28 @@ class Add(forms.Form):
 
 class Update(forms.Form):
     id = forms.IntegerField()
+    account = forms.CharField(required=False, max_length=16)
+    optype = forms.ChoiceField(required=False, choices=(('xj','xj'), ('sj','sj')))
+    oprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
+    ocount = forms.IntegerField(required=False)
+    otime = forms.DateTimeField(required=False)
     dcount = forms.IntegerField(required=False)
-    dprice = forms.DecimalField(max_digits=10, decimal_places=2, required=False)
+    dprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
     dtime = forms.DateTimeField(required=False)
-    status = forms.CharField(max_length=16)
+    status = forms.ChoiceField(required=False, choices=(('notsend','notsend'),
+                                                        ('tosend','tosend'),
+                                                        ('sending','sending'),
+                                                        ('sent','sent'),
+                                                        ('tocancel','tocancel'),
+                                                        ('canceling','canceling'),
+                                                        ('pcanceled','pcanceled'),
+                                                        ('tcanceled','tcanceled'),
+                                                        ('fcanceled','fcanceled'),
+                                                        ('pdeal','pdeal'),
+                                                        ('tdeal','tdeal'),
+                                                        ('dropped','dropped'),
+                                                        ('expired','expired')))
+
 
 
 class Delete(forms.Form):
@@ -47,4 +65,6 @@ class Delete(forms.Form):
 
 class Process(forms.Form):
     id = forms.IntegerField()
-    act = forms.CharField(max_length=16);
+    act = forms.CharField(max_length=16)
+    dcount = forms.IntegerField(required=False)
+    dprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)

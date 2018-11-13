@@ -15,7 +15,7 @@ def list(request):
     :return:
     """
     try:
-        form = forms.trade.lever.List(request.POST)
+        form = forms.trade.lever.List(request.GET)
         if form.is_valid():
             roles = None
 
@@ -49,7 +49,7 @@ def get(request):
     :return:
     """
     try:
-        form = forms.trade.lever.Get(request.POST)
+        form = forms.trade.lever.Get(request.GET)
         if form.is_valid():
             id = form.cleaned_data['id']
             item = models.Lever.objects.get(id=id)
