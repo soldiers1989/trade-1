@@ -55,6 +55,10 @@ class Update(forms.Form):
     status = forms.ChoiceField(required=False, choices=('tobuy','buying','cancelbuy','buycanceling','canceled','hold','tosell','selling','cancelsell','sellcanceling','sold','toclose','closing','cancelclose','closecanceling','closed','expired','dropped'))
 
 
+class Delete(forms.Form):
+    id = forms.IntegerField()
+
+
 class Process(forms.Form):
     id = forms.IntegerField()
     act = forms.CharField(max_length=16)

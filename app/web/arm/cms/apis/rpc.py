@@ -391,6 +391,18 @@ class Aam(Rpc):
         # access service
         return self.post(path, params=params)
 
+    def trade_order_canceling(self, **params):
+        """
+            trade order is canceling
+        :param id: int, trade order id
+        :return:
+        """
+        # remote path
+        path = '/trade/order/canceling'
+
+        # access service
+        return self.post(path, params=params)
+
     def trade_order_canceled(self, **params):
         """
             trade order has canceled

@@ -4,7 +4,7 @@
         <table id="datagrid_trade" style="height: 100%;"></table>
     </div>
     <div data-options="region:'center', split:true" style="width: 28%; height: 100%">
-        <div class="easyui-tabs" id="tabs_trade_detail" fit="true" border="true" plain="true" style="width: 100%">
+        <div class="easyui-tabs" id="tabs_trade_detail" fit="true" border="true" plain="true" style="height: 100%;width: 100%">
             <div title="操作">
                 <div class="easyui-panel" style="height:100%;width:100%">
                     <div style="margin: 6px; height: 5%; width: 100%">
@@ -20,27 +20,27 @@
                 </div>
             </div>
             <div title="详情">
-                <div class="easyui-panel" style="height:100%;">
+                <div class="easyui-panel" style="height:100%;width: 100%">
                     <table id="propertygrid_trade_detail"></table>
                 </div>
             </div>
             <div title="费用">
-                <div class="easyui-panel" style="height:100%;">
+                <div class="easyui-panel" style="height:100%;width: 100%">
                     <table id="datagrid_trade_fees"></table>
                 </div>
             </div>
             <div title="保证金">
-                <div class="easyui-panel" style="height:100%;">
+                <div class="easyui-panel" style="height:100%;width: 100%">
                     <table id="datagrid_trade_margins"></table>
                 </div>
             </div>
             <div title="委托">
-                <div class="easyui-panel" style="height:100%;">
+                <div class="easyui-panel" style="height:100%;width: 100%">
                     <table id="propertygrid_trade_orders"></table>
                 </div>
             </div>
             <div title="状态">
-                <div class="easyui-panel" style="height:100%;">
+                <div class="easyui-panel" style="height:100%;width: 100%">
                     <table id="propertygrid_trade_status"></table>
                 </div>
             </div>
@@ -57,9 +57,7 @@
         <a href="javascript:void(0)" id="trade_edit_menubutton" class="easyui-menubutton" data-options="menu:'#trade_edit_menu', disabled:true,iconCls:'icon-edit'">编辑</a>
         <div id="trade_edit_menu" style="width:150px;">
             <div iconCls="icon-edit" onclick="usertrade.edit.modify.open()">修改</div>
-            <div iconCls="icon-edit" onclick="usertrade.edit.modify.open()">买入</div>
-            <div iconCls="icon-edit" onclick="usertrade.edit.modify.open()">卖出</div>
-            <div iconCls="icon-edit" onclick="usertrade.edit.modify.open()">平仓</div>
+            <div iconCls="icon-remove" onclick="usertrade.edit.delete.do()">删除</div>
         </div>
     </span>
     <span style="float: right; margin-right: 18px;">
@@ -109,6 +107,100 @@
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="usertrade.add.close()" style="width:90px">取消</a>
 </div>
 
+
+<div class="easyui-dialog" id="trade_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#trade_update_dialog_buttons'">
+    <form class="easyui-form" id="trade_update_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-combobox" name="account" data-options="label:'交易账户', prompt:'选择交易账户',
+                                                                       method: 'get', url: '/api/trade/account/list?disable=false',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       loadFilter: function(resp) {
+                                                                            data = [];
+                                                                            for (i=0; i<resp.data.rows.length; i++){
+                                                                                data.push({id:resp.data.rows[i].account, text:resp.data.rows[i].name+'('+resp.data.rows[i].money+')'});
+                                                                            }
+                                                                            return data;
+                                                                       }" style="width: 100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-combobox" name="status" data-options="label:'订单状态', prompt:'选择订单状态',
+                                                                       method: 'get', url: '/api/enum?c=trade&i=status',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       loadFilter: function(resp) {
+                                                                            return resp.data;
+                                                                       }" style="width: 100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-combobox" name="optype" data-options="label:'报价方式', prompt:'选择报价方式',
+                                                                       method: 'get', url: '/api/enum?c=order&i=price',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       onChange: function(nval, oval) {
+                                                                            tb = $('#tb_trade_update_oprice');
+                                                                            if (nval==='sj') {
+                                                                                tb.textbox('disable');
+                                                                            } else {
+                                                                                tb.textbox('enable');
+                                                                            }
+                                                                       },
+                                                                       loadFilter: function(resp) {
+                                                                            return resp.data;
+                                                                       }" style="width: 100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'输入委托数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" id="tb_trade_update_oprice" name="oprice" data-options="label:'委托价格', prompt:'输入委托价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="hcount" data-options="label:'持仓数量', prompt:'输入持仓数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="hprice" data-options="label:'持仓价格', prompt:'输入持仓价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="fcount" data-options="label:'可用数量', prompt:'输入可用数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="bcount" data-options="label:'买入数量', prompt:'输入买入数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="bprice" data-options="label:'买入价格', prompt:'输入买入价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="scount" data-options="label:'卖出数量', prompt:'输入卖出数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="sprice" data-options="label:'卖出价格', prompt:'输入卖出价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="margin" data-options="label:'保证金', prompt:'输入保证金（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="ofee" data-options="label:'建仓费', prompt:'输入建仓费（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="dday" data-options="label:'延期天数', prompt:'输入延期天数(天)', required:false, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="dfee" data-options="label:'延期费', prompt:'输入延期费（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="tprofit" data-options="label:'盈利总额', prompt:'输入盈利总额（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="sprofit" data-options="label:'盈利分成', prompt:'输入盈利分成（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="trade_update_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="usertrade.edit.modify.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="usertrade.edit.modify.cancel()" style="width:90px">取消</a>
+</div>
 
 <script type="text/javascript">
     // user trade list/add/update/delete
@@ -162,12 +254,15 @@
                 //init lever combobox
                 $('#trade_add_lever').combobox({
                     url:'/api/trade/lever/list',
-                    editable:false,
-                    valueField:'id',
-                    textField:'lever',
                     queryParams: {
                         disable: 'false'
                     },
+
+                    valueField:'id',
+                    textField:'lever',
+
+                    limitToList: true,
+
                     loadFilter: function(resp) {
                         return resp.data.rows;
                     }
@@ -175,9 +270,11 @@
 
                 //init coupon combobox
                 $('#trade_add_coupon').combobox({
-                    editable:false,
                     valueField: 'id',
                     textField: 'money',
+
+                    limitToList: true,
+
                     loadFilter: function(resp) {
                         rows = [];
                         for(i=0; i<resp.data.rows.length; i++){
@@ -244,6 +341,112 @@
                         }
                     }
                 });
+            }
+        },
+
+        // user trade edit
+        edit: {
+            menubutton: $('#trade_edit_menubutton'),
+
+            // init edit
+            init: function() {
+                //init edit
+            },
+
+            // enable edit
+            enable: function() {
+                this.menubutton.menubutton('enable');
+            },
+
+            // disable edit
+            disable: function() {
+                this.menubutton.menubutton('disable');
+            },
+
+            //modify action
+            modify: {
+                url: '/api/user/trade/update',
+                dialog: $('#trade_update_dialog'),
+                form: $('#trade_update_form'),
+
+                // open update dialog
+                open: function() {
+                    //get selected row data
+                    row = usertrade.list.getSelected();
+                    if (row){
+                        // clear form
+                        this.form.form('clear');
+
+                        //load form data
+                        this.form.form('load', row);
+
+                        //open dialog
+                        this.dialog.dialog('open').dialog('center').dialog('setTitle','修改交易订单');
+                    }
+                },
+
+                // save update results
+                save: function() {
+                    //submit form
+                    this.form.form('submit',{
+                        url: this.url,
+                        onSubmit: function(){
+                            return usertrade.edit.modify.form.form('validate');
+                        },
+                        success: function(data){
+                            var resp = eval('('+data+')');
+                            if (resp.status){
+                                usertrade.edit.modify.dialog.dialog('close');
+
+                                //update selected row data
+                                usertrade.list.updateSelected(resp.data);
+                            } else {
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                            }
+                        }
+                    });
+                },
+
+                // cancel update operation
+                cancel: function() {
+                    //close dialog
+                    this.dialog.dialog('close');
+                }
+            },
+
+            // delete row
+            delete: {
+                do: function() { // delete
+                    // delete action url
+                    url = this.url;
+
+                    //get selected row data
+                    var row = usertrade.list.getSelected();
+                    if (!row)
+                        return;
+
+                    $.messager.confirm({
+                        title: '确认',
+                        msg: '确认删除交易订单 '+row.stock+'('+row.ocount+'股)'+'?',
+                        url: '/api/user/trade/delete',
+                        fn: function(r){
+                            if (r){
+                                $.post(url, {id: row.id}, function(resp, status){
+                                    if(status === 'success'){
+                                        if (resp.status){
+                                            usertrade.list.deleteSelected();
+                                            usertrade.detail.clear();
+                                        } else {
+                                            $.messager.show({title: '错误', msg: resp.msg});
+                                        }
+                                    } else {
+                                        $.messager.show({title: '错误', msg: '请求服务器错误'});
+                                    }
+                                },'json');
+                            }
+                        }
+                    });
+                }
             }
         },
 
@@ -369,8 +572,10 @@
                     },
 
                     onLoadSuccess: function(resp) {
+                        //disable edit
+                        usertrade.edit.disable();
+                        //hide detail
                         usertrade.detail.clear();
-
                         //clear selections
                         $(this).datagrid('clearSelections');
                     },
@@ -380,6 +585,8 @@
                     },
                     
                     onSelect: function(index, row) {
+                        //enable edit
+                        usertrade.edit.enable();
                         // show detail
                         usertrade.detail.show();
                     }

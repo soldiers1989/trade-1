@@ -263,6 +263,8 @@ def process(request):
                 remote.aam.trade_order_sold(id=orderid, dprice=params['dprice'], dcount=params['dcount'])
             else:
                 raise resp.failure(hint.ERR_TRADE_ORDER_OPERATION_DENIED)
+        elif action == 'canceling':
+            remote.aam.trade_order_canceling(id=orderid)
         elif action == 'canceled':
             remote.aam.trade_order_canceled(id=orderid)
         elif action == 'expired':

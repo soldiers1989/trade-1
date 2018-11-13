@@ -70,6 +70,10 @@ class OrderSent(form.Form):
     id = field.IntegerField()
 
 
+class OrderCanceling(form.Form):
+    id = field.IntegerField()
+
+
 class OrderBought(form.Form):
     id = field.IntegerField()
     dcount = field.IntegerField()

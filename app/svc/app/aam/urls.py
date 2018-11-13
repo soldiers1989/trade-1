@@ -32,6 +32,7 @@ handlers = [
     (r"/trade/sys/drop", handlers.trade.SysDropHandler),
 
     (r"/trade/order/sent", handlers.trade.OrderSentHandler),
+    (r"/trade/order/canceling", handlers.trade.OrderCancelingHandler),
     (r"/trade/order/bought", handlers.trade.OrderBoughtHandler),
     (r"/trade/order/sold", handlers.trade.OrderSoldHandler),
     (r"/trade/order/canceled", handlers.trade.OrderCanceledHandler),

@@ -186,6 +186,22 @@ def update(request):
 
 
 @auth.need_login
+def delete(request):
+    """
+        delete api
+    :param request:
+    :return:
+    """
+    form = forms.user.trade.Delete(request.POST)
+    if form.is_valid():
+        id = form.cleaned_data['id']
+        models.UserTrade.objects.filter(id=id).delete()
+        return resp.success()
+    else:
+        return resp.failure(str(form.errors))
+
+
+@auth.need_login
 def lever(request):
     try:
         form = forms.user.trade.Get(request.GET)

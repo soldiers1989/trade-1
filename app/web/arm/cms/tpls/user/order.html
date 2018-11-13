@@ -7,10 +7,11 @@
             <div title="操作">
                 <div class="easyui-panel" style="height:100%;width:100%">
                     <div style="margin: 6px; height: 5%; width: 100%">
-                        <a href="#" id="btn_trade_order_sent" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('sent')">已报</a>
+                        <a href="#" id="btn_trade_order_sent" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.process('sent')">已报</a>
                         <a href="#" id="btn_trade_order_dealt" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.dealt.open()">已成</a>
-                        <a href="#" id="btn_trade_order_canceled" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('canceled')">已撤</a>
-                        <a href="#" id="btn_trade_order_expired" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.do('expired')">过期</a>
+                        <a href="#" id="btn_trade_order_canceling" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.process('canceling')">正撤</a>
+                        <a href="#" id="btn_trade_order_canceled" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.process('canceled')">已撤</a>
+                        <a href="#" id="btn_trade_order_expired" class="easyui-linkbutton" data-options="width:'50px'" onclick="tradeorder.detail.operation.process('expired')">过期</a>
                     </div>
                     <div style="height:95%; width: 100%">
                         <iframe id="iframe_trade_order_quote" src="" style="height: 100%;width: 100%"></iframe>
@@ -94,10 +95,10 @@
                                                                        }" style="width: 100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'输入成交数量', required:false, validType:['digits', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'输入委托数量', required:false, validType:['digits', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" id="tb_trade_order_update_oprice" name="oprice" data-options="label:'委托价格', prompt:'输入成交价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+            <input class="easyui-textbox" id="tb_trade_order_update_oprice" name="oprice" data-options="label:'委托价格', prompt:'输入委托价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-datetimebox" name="otime" label="委托时间" prompt="选择委托时间" style="width:100%">
@@ -231,7 +232,7 @@
 
                     $.messager.confirm({
                         title: '确认',
-                        msg: '确认删除交易委托记录 '+row.stock+'('+row.ocount+'股)'+'?',
+                        msg: '确认删除交易委托记录 '+row.sname+'('+row.ocount+'股)'+'?',
                         url: tradeorder.edit.delete.url,
                         fn: function(r){
                             if (r){
@@ -535,6 +536,12 @@
                                     $('#btn_trade_order_dealt').linkbutton('enable');
                                 } else {
                                     $('#btn_trade_order_dealt').linkbutton('disable');
+                                }
+
+                                if (['tocancel'].includes(status)){
+                                    $('#btn_trade_order_canceling').linkbutton('enable');
+                                } else {
+                                    $('#btn_trade_order_canceling').linkbutton('disable');
                                 }
 
                                 if (['canceling'].includes(status)){
