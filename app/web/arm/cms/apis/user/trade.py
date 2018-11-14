@@ -175,7 +175,7 @@ def update(request):
         remote.aam.trade_update(**params)
 
         # get updated order
-        obj = models.UserTrade.objects.get(id=form.id)
+        obj = models.UserTrade.objects.get(id=params['id'])
 
         # response data
         data = obj.ddata()

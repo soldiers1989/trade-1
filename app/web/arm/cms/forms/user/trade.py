@@ -52,7 +52,12 @@ class Update(forms.Form):
     tprofit = forms.DecimalField(required=False, max_digits=10, decimal_places=2) # total profit
     sprofit = forms.DecimalField(required=False, max_digits=10, decimal_places=2) # share profit
     account = forms.CharField(required=False, max_length=16)
-    status = forms.ChoiceField(required=False, choices=('tobuy','buying','cancelbuy','buycanceling','canceled','hold','tosell','selling','cancelsell','sellcanceling','sold','toclose','closing','cancelclose','closecanceling','closed','expired','dropped'))
+    status = forms.ChoiceField(required=False, choices=(('tobuy','tobuy'),('buying','buying'),('cancelbuy','cancelbuy'),
+                                                        ('buycanceling','buycanceling'),('canceled','canceled'),('hold','hold'),
+                                                        ('tosell','tosell'),('selling','selling'),('cancelsell','cancelsell'),
+                                                        ('sellcanceling','sellcanceling'),('sold','sold'),('toclose','toclose'),
+                                                        ('closing','closing'),('cancelclose','cancelclose'),('closecanceling','closecanceling'),
+                                                        ('closed','closed'),('expired','expired'),('dropped','dropped')))
 
 
 class Delete(forms.Form):

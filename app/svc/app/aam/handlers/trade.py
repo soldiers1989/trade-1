@@ -19,7 +19,7 @@ class ListHandler(handler.Handler):
 
         with models.db.create() as d:
             # get trade records
-            trades = models.UserTrade.filter(d, **conds)
+            trades = models.UserTrade.filter(d, **conds).all()
 
             # success
             self.write(protocol.success(data=trades))
@@ -176,13 +176,13 @@ class UserSellHandler(handler.Handler):
                 raise error.trade_operation_denied
 
             # get stock object
-            stock = models.Stock.filter(usertrade.stock_id).one()
+            stock = models.Stock.filter(d, id=usertrade.stock_id).one()
             if stock is None or stock.status != 'open':
                 raise error.stock_is_closed
 
             # get & check sell price
             if form.optype == 'sj':
-                form.oprice = trade.get_trading_price(stock.id)
+                form.oprice = decimal.Decimal(trade.get_trading_price(form.stock)).quantize(decimal.Decimal('0.00'))
             else:
                 trade.valid_trading_price(stock.id, form.oprice)
 
@@ -193,7 +193,7 @@ class UserSellHandler(handler.Handler):
             # add trade order
             detail = '%s,%s,%s,%s,%s,%s' % ('sell', form.optype, form.oprice, form.ocount, '0.0', '0')
             slog = status.append('user', 'sell', '', 'notsend', detail)
-            tradeorder = models.TradeOrder(trade_id=usertrade.id, tcode=usertrade.tcode, account=usertrade.account, scode=stock.id, sname=stock.name,
+            tradeorder = models.TradeOrder(trade_id=usertrade.id, ocode=rand.uuid(), account=usertrade.account, scode=stock.id, sname=stock.name,
                                            otype='sell', optype=form.optype, oprice=form.oprice, ocount=form.ocount,
                                            odate=datetime.date.today(), otime=int(time.time()),
                                            dprice=0.0, dcount=0, status='notsend', slog=slog,
@@ -233,7 +233,7 @@ class UserCancelHandler(handler.Handler):
             # get trade order object
             ordertype = {'tobuy': 'buy', 'tosell': 'sell', 'toclose': 'sell', 'buying': 'buy', 'selling': 'sell', 'closing': 'sell'}
             orderstatus = {'notsend':'tcanceled', 'tosend':'tcanceled', 'sending':'sending', 'sent':'sent'}
-            tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype=ordertype[usertrade.status]).one()
+            tradeorder = models.TradeOrder.filter(d, trade_id=usertrade.id, otype=ordertype[usertrade.status], status__in=list(orderstatus.keys())).one()
             if tradeorder is None or tradeorder.status not in orderstatus.keys():
                 raise error.trade_operation_denied
 
@@ -349,9 +349,6 @@ class SysSellHandler(handler.Handler):
         # get form arguments
         form = forms.trade.SysSell(**self.cleaned_arguments)
 
-        # get today
-        today = datetime.date.today()
-
         with models.db.atomic() as d:
             # get user trade object
             usertrade = models.UserTrade.filter(d, id=form.trade, status__in=('tosell', 'toclose')).one()
@@ -365,8 +362,8 @@ class SysSellHandler(handler.Handler):
                     raise error.trade_operation_denied
 
                 # get&check stock status
-                stock = models.Stock.filter(d, id=usertrade.stock_id)
-                if stock is None or stock.status!='normal':
+                stock = models.Stock.filter(d, id=usertrade.stock_id).one()
+                if stock is None or stock.status!='open':
                     raise error.stock_is_closed
 
                 # update trade order
@@ -397,9 +394,6 @@ class SysCancelHandler(handler.Handler):
     def post(self):
         # get form arguments
         form = forms.trade.SysCancel(**self.cleaned_arguments)
-
-        # get today
-        today = datetime.date.today()
 
         with models.db.atomic() as d:
             # get user trade object
@@ -442,9 +436,6 @@ class SysDropHandler(handler.Handler):
     def post(self):
         # get form arguments
         form = forms.trade.SysDrop(**self.cleaned_arguments)
-
-        # get today
-        today = datetime.date.today()
 
         with models.db.atomic() as d:
             # get user trade object
@@ -681,7 +672,7 @@ class OrderSoldHandler(handler.Handler):
 
                 # compute profit
                 tprofit = scount * (sprice - usertrade.bprice)
-                sprofit = max(decimal.Decimal('0.00'), tprofit*tradelever.psrate)
+                sprofit = max(decimal.Decimal('0.00'), tprofit*tradelever.psrate).quantize(decimal.Decimal('0.00'))
 
                 # update user trade
                 tradeprestatus = usertrade.status
@@ -698,7 +689,7 @@ class OrderSoldHandler(handler.Handler):
                 # settlement
                 if usertrade.status == 'sold':
                     # get user
-                    user = models.User.filter(d, usertrade.user_id).one()
+                    user = models.User.filter(d, id=usertrade.user_id).one()
                     if user is None:
                         raise error.trade_operation_denied
 
@@ -713,6 +704,7 @@ class OrderSoldHandler(handler.Handler):
 
                     # bill money
                     money = tprofit + usertrade.margin + coupon_cash - sprofit - (usertrade.ofee + usertrade.dfee)*coupon_discount
+                    money = money.quantize(decimal.Decimal('0.00'))
                     # bill detail
                     detail = template.bill.settle.detail % money
                     # add bill

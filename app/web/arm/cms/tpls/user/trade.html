@@ -108,91 +108,97 @@
 </div>
 
 
-<div class="easyui-dialog" id="trade_update_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#trade_update_dialog_buttons'">
-    <form class="easyui-form" id="trade_update_form" method="post" style="margin:0;padding:10px 20px">
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-combobox" name="account" data-options="label:'交易账户', prompt:'选择交易账户',
-                                                                       method: 'get', url: '/api/trade/account/list?disable=false',
-                                                                       valueField:'id',textField:'text',limitToList: true,
-                                                                       loadFilter: function(resp) {
-                                                                            data = [];
-                                                                            for (i=0; i<resp.data.rows.length; i++){
-                                                                                data.push({id:resp.data.rows[i].account, text:resp.data.rows[i].name+'('+resp.data.rows[i].money+')'});
-                                                                            }
-                                                                            return data;
-                                                                       }" style="width: 100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-combobox" name="status" data-options="label:'订单状态', prompt:'选择订单状态',
-                                                                       method: 'get', url: '/api/enum?c=trade&i=status',
-                                                                       valueField:'id',textField:'text',limitToList: true,
-                                                                       loadFilter: function(resp) {
-                                                                            return resp.data;
-                                                                       }" style="width: 100%" required>
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-combobox" name="optype" data-options="label:'报价方式', prompt:'选择报价方式',
-                                                                       method: 'get', url: '/api/enum?c=order&i=price',
-                                                                       valueField:'id',textField:'text',limitToList: true,
-                                                                       onChange: function(nval, oval) {
-                                                                            tb = $('#tb_trade_update_oprice');
-                                                                            if (nval==='sj') {
-                                                                                tb.textbox('disable');
-                                                                            } else {
-                                                                                tb.textbox('enable');
-                                                                            }
-                                                                       },
-                                                                       loadFilter: function(resp) {
-                                                                            return resp.data;
-                                                                       }" style="width: 100%" required>
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'输入委托数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" id="tb_trade_update_oprice" name="oprice" data-options="label:'委托价格', prompt:'输入委托价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="hcount" data-options="label:'持仓数量', prompt:'输入持仓数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="hprice" data-options="label:'持仓价格', prompt:'输入持仓价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="fcount" data-options="label:'可用数量', prompt:'输入可用数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="bcount" data-options="label:'买入数量', prompt:'输入买入数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="bprice" data-options="label:'买入价格', prompt:'输入买入价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="scount" data-options="label:'卖出数量', prompt:'输入卖出数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="sprice" data-options="label:'卖出价格', prompt:'输入卖出价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="margin" data-options="label:'保证金', prompt:'输入保证金（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ofee" data-options="label:'建仓费', prompt:'输入建仓费（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="dday" data-options="label:'延期天数', prompt:'输入延期天数(天)', required:false, validType:['digits', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="dfee" data-options="label:'延期费', prompt:'输入延期费（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="tprofit" data-options="label:'盈利总额', prompt:'输入盈利总额（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
-        </div>
-        <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="sprofit" data-options="label:'盈利分成', prompt:'输入盈利分成（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+<div class="easyui-dialog" id="trade_update_dialog" style="width:620px;height: 500px;" data-options="closed:true,modal:true,border:'thin',buttons:'#trade_update_dialog_buttons'">
+    <form class="easyui-form" id="trade_update_form" method="post">
+        <div class="easyui-layout" style="width: 620px;height: 500px">
+            <div region="west" style="width: 300px;padding: 10px;">
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-combobox" name="account" data-options="label:'交易账户', prompt:'选择交易账户',
+                                                                               method: 'get', url: '/api/trade/account/list?disable=false',
+                                                                               valueField:'id',textField:'text',limitToList: true,
+                                                                               loadFilter: function(resp) {
+                                                                                    data = [];
+                                                                                    for (i=0; i<resp.data.rows.length; i++){
+                                                                                        data.push({id:resp.data.rows[i].account, text:resp.data.rows[i].name+'('+resp.data.rows[i].money+')'});
+                                                                                    }
+                                                                                    return data;
+                                                                               }" style="width: 100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-combobox" name="status" data-options="label:'订单状态', prompt:'选择订单状态',
+                                                                               method: 'get', url: '/api/enum?c=trade&i=status',
+                                                                               valueField:'id',textField:'text',limitToList: true,
+                                                                               loadFilter: function(resp) {
+                                                                                    return resp.data;
+                                                                               }" style="width: 100%" required>
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-combobox" name="optype" data-options="label:'报价方式', prompt:'选择报价方式',
+                                                                               method: 'get', url: '/api/enum?c=order&i=price',
+                                                                               valueField:'id',textField:'text',limitToList: true,
+                                                                               onChange: function(nval, oval) {
+                                                                                    tb = $('#tb_trade_update_oprice');
+                                                                                    if (nval==='sj') {
+                                                                                        tb.textbox('disable');
+                                                                                    } else {
+                                                                                        tb.textbox('enable');
+                                                                                    }
+                                                                               },
+                                                                               loadFilter: function(resp) {
+                                                                                    return resp.data;
+                                                                               }" style="width: 100%" required>
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'输入委托数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" id="tb_trade_update_oprice" name="oprice" data-options="label:'委托价格', prompt:'输入委托价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="hcount" data-options="label:'持仓数量', prompt:'输入持仓数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="hprice" data-options="label:'持仓价格', prompt:'输入持仓价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="fcount" data-options="label:'可用数量', prompt:'输入可用数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="bcount" data-options="label:'买入数量', prompt:'输入买入数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+                </div>
+            </div>
+            <div region="center" style="width:300px;padding: 10px;">
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="bprice" data-options="label:'买入价格', prompt:'输入买入价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="scount" data-options="label:'卖出数量', prompt:'输入卖出数量（股）', required:false, validType:['digits', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="sprice" data-options="label:'卖出价格', prompt:'输入卖出价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="margin" data-options="label:'保证金', prompt:'输入保证金（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="ofee" data-options="label:'建仓费', prompt:'输入建仓费（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="dday" data-options="label:'延期天数', prompt:'输入延期天数(天)', required:false, validType:['digits', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="dfee" data-options="label:'延期费', prompt:'输入延期费（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="tprofit" data-options="label:'盈利总额', prompt:'输入盈利总额（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="sprofit" data-options="label:'盈利分成', prompt:'输入盈利分成（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+            </div>
         </div>
     </form>
 </div>
@@ -417,9 +423,6 @@
             // delete row
             delete: {
                 do: function() { // delete
-                    // delete action url
-                    url = this.url;
-
                     //get selected row data
                     var row = usertrade.list.getSelected();
                     if (!row)
@@ -431,7 +434,9 @@
                         url: '/api/user/trade/delete',
                         fn: function(r){
                             if (r){
-                                $.post(url, {id: row.id}, function(resp, status){
+                                $.post(this.url, {id: row.id}, function(resp, status){
+                                    console.log(resp);
+                                    console.log(status);
                                     if(status === 'success'){
                                         if (resp.status){
                                             usertrade.list.deleteSelected();
