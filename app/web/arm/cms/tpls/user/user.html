@@ -204,7 +204,7 @@
 
                 //reload datagrid
                 user.list.load({});
-            },
+            }
         },
 
         //user list
@@ -225,9 +225,8 @@
                     rownumbers: false,
                     singleSelect: true,
 
-                    pageNumber: 1,
                     pageSize: 20,
-                    pageList: [5, 10, 20, 30, 40, 50, 100],
+                    pageList: [10, 20, 50, 100],
                     
                     toolbar: '#user_toolbar',
                     columns: [[
@@ -578,7 +577,7 @@
                         columns: [[
                             {field:'id', title:'ID', width:'50px'},
                             {field:'ctime', title:'时间', formatter: cube.format.datetime, width:'150px'},
-                            {field:'item', title:'项目', width:'50px'},
+                            {field:'item', title:'项目', width:'60px'},
                             {field:'bmoney', title:'金额', width:'80px'},
                             {field:'lmoney', title:'余额', width:'80px'},
                             {field:'detail', title:'详情', width:'200px'},

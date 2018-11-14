@@ -10,7 +10,7 @@ class ListHandler(handler.Handler):
     @access.needtoken
     def get(self):
         """
-            get trade records
+            get account order list
         :return:
         """
         # list conditions
@@ -18,7 +18,11 @@ class ListHandler(handler.Handler):
 
         with models.db.create() as d:
             # get trade records
-            orders = models.AccountOrder.filter(d, **conds)
+            orders = models.AccountOrder.filter(d, **conds).all()
+
+            # remote slog field
+            for order in orders:
+                del order['slog']
 
             # success
             self.write(protocol.success(data=orders))
@@ -39,17 +43,22 @@ class PlaceHandler(handler.Handler):
         trade.valid(form.scode, form.optype, form.oprice, form.ocount)
 
         with models.db.atomic() as d:
-            # detail
-            detail = '%s,%s,%s,%s,%s,%s' % (form.otype, form.optype, form.oprice, form.ocount, '0.0', '0')
-            # status log
-            slog = status.append(form.operator, form.otype, '', 'notsend', detail)
+            # check if order has exist
+            order = models.AccountOrder.filter(d, tcode=form.ocode).one()
 
             # add new order
-            order = models.AccountOrder(tcode=form.tcode, account=form.account, scode=form.scode, sname=form.sname,
-                                      otype=form.otype, optype=form.optype, oprice=form.oprice, ocount=form.ocount,
-                                      odate=datetime.date.today(), otime=int(time.time()),
-                                      dprice=0.0, dcount=0, status='notsend', slog=slog,
-                                      ctime=int(time.time()), mtime=int(time.time())).save(d)
+            if order is None:
+                # detail
+                detail = '%s,%s,%s,%s,%s,%s' % (form.otype, form.optype, form.oprice, form.ocount, '0.0', '0')
+                # status log
+                slog = status.append(form.operator, form.otype, '', 'notsend', detail)
+
+                # add order
+                order = models.AccountOrder(tcode=form.ocode, account=form.account, scode=form.scode, sname=form.sname,
+                                          otype=form.otype, optype=form.optype, oprice=form.oprice, ocount=form.ocount,
+                                          odate=datetime.date.today(), otime=int(time.time()),
+                                          dprice=0.0, dcount=0, status='notsend', slog=slog,
+                                          ctime=int(time.time()), mtime=int(time.time())).save(d)
 
             # response
             self.write(protocol.success(data=order))
@@ -67,8 +76,15 @@ class CancelHandler(handler.Handler):
         form = forms.order.Cancel(**self.arguments)
 
         with models.db.atomic() as d, locker.order(form.id):
+            # filters
+            filters = {}
+            if form.id is not None:
+                filters['id'] = form.id
+            if form.ocode is not None:
+                filters['tcode'] = form.ocode
+
             # get order object
-            order = models.AccountOrder.filter(d, id=form.id).one()
+            order = models.AccountOrder.filter(d, **filters).one()
             if order is None:
                 raise error.order_not_exist
 

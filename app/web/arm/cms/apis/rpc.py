@@ -158,7 +158,7 @@ class Aam(Rpc):
             list
         """
         # remote path
-        path = '/order/list'
+        path = '/account/order/list'
 
         # access service
         return self.get(path, params=params)
@@ -177,7 +177,7 @@ class Aam(Rpc):
         :return:
         """
         # remote path
-        path = '/order/place'
+        path = '/account/order/place'
 
         # access service
         return self.post(path, params=params)
@@ -190,7 +190,7 @@ class Aam(Rpc):
         :return:
         """
         # remote path
-        path = '/order/cancel'
+        path = '/account/order/cancel'
 
         # access service
         return self.post(path, params=params)
@@ -207,7 +207,7 @@ class Aam(Rpc):
         :return:
         """
         # remote path
-        path = '/order/notify'
+        path = '/account/order/notify'
 
         # access service
         return self.post(path, params=params)
@@ -223,7 +223,7 @@ class Aam(Rpc):
             dict
         """
         # remote path
-        path = '/order/ocode'
+        path = '/account/order/ocode'
 
         # access service
         return self.post(path, params=params)
@@ -350,6 +350,18 @@ class Aam(Rpc):
 
         # access service
         return self.post(path, params=params)
+
+    def trade_order_list(self, **params):
+        """
+            filter trade order records by @conds
+        :param conds: dict, sql filter conditions
+        :return:
+        """
+        # remote path
+        path = '/trade/order/list'
+
+        # access service
+        return self.get(path, params=params)
 
     def trade_order_sent(self, **params):
         """

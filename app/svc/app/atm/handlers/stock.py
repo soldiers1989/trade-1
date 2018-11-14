@@ -1,31 +1,40 @@
 import json
-from .. import handler, access, tasks, protocol, forms, task, error
+from .. import handler, access, tasks, protocol, executor
 
 
 class SyncAllHandler(handler.Handler):
     """
-        sync stocks from source
+        sync all stocks
     """
     @access.exptproc
     @access.needtoken
     def post(self):
         """
-            process sync all stock task
-        :param args:
-        :param kwargs:
+            sync all stocks, post json data format:
+            {
+                "config":{
+                    "rpc": {
+                        "aam": {
+                            "baseurl": "http://localhost:9001",
+                            "key": "abc",
+                            "safety": false
+                        },
+                        "mds": {
+                            "baseurl": "http://localhost:10007",
+                            "key": "abc",
+                            "safety": false
+                        }
+                    }
+                },
+                "callback": "callback url to notify sync result, could be None"
+            }
         :return:
         """
-        if self.request.body is None:
-            raise error.missing_parameters
-
-
-        # get callback url
-        form = forms.task.Task(**self.arguments)
-
         # get config from post json data
         config = json.loads(self.request.body.decode())
 
-        # start a new sync task
-        task.manager.take(tasks.stock.SyncAllService.__name__, tasks.stock.SyncAllService(callback=form.callback, config=config))
+        # submit task
+        executor.submit(tasks.stock.sync_all, config=config['config'], callback=config.get('callback'))
 
+        # response success
         self.write(protocol.success())

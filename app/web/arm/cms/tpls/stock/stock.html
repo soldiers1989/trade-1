@@ -112,6 +112,8 @@
                     rownumbers: true,
                     singleSelect: true,
 
+                    pageSize: 20,
+                    pageList: [10, 20, 50, 100],
 
     				toolbar: '#stock_toolbar',
                     columns: [[
@@ -199,7 +201,7 @@
 
                 //reload datagrid
                 stock.list.load({});
-            },
+            }
         },
 
         //add action
@@ -240,7 +242,7 @@
             cancel: function() { //cancel add
                 //close dialog
                 this.dialog.dialog('close');
-            },
+            }
         },
 
         //update action
@@ -298,7 +300,7 @@
             cancel: function() {
                 //close dialog
                 this.dialog.dialog('close');
-            },
+            }
         },
 
         // delete row
@@ -321,7 +323,7 @@
                     fn: function(r){
                         if (r){
                             $.post(url, {id: row.id}, function(resp, status){
-                                if(status == 'success'){
+                                if(status === 'success'){
                                     if (resp.status){
                                         stock.list.reload();
                                     } else {

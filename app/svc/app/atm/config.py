@@ -4,6 +4,9 @@
 # running mode, dev/test/online
 MODE = "dev"
 
+# max executor works
+EXECUTOR_WORKERS = 10
+
 # configure for tornado appliaction
 DEBUG = True
 AUTORELOAD = True

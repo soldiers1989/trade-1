@@ -12,25 +12,24 @@ handlers = [
 
     (r"/account/list", handlers.account.ListHandler),
     (r"/account/select", handlers.account.SelectHandler),
-
-    (r"/order/list", handlers.order.ListHandler),
-    (r"/order/place", handlers.order.PlaceHandler),
-    (r"/order/cancel", handlers.order.CancelHandler),
-    (r"/order/notify", handlers.order.NotifyHandler),
-    (r"/order/ocode", handlers.order.OCodeHandler),
+    (r"/account/order/list", handlers.order.ListHandler),
+    (r"/account/order/place", handlers.order.PlaceHandler),
+    (r"/account/order/cancel", handlers.order.CancelHandler),
+    (r"/account/order/notify", handlers.order.NotifyHandler),
+    (r"/account/order/ocode", handlers.order.OCodeHandler),
 
     (r"/trade/list", handlers.trade.ListHandler),
+    (r"/trade/clear", handlers.trade.ClearHandler),
     (r"/trade/update", handlers.trade.UpdateHandler),
-
     (r"/trade/user/buy", handlers.trade.UserBuyHandler),
     (r"/trade/user/sell", handlers.trade.UserSellHandler),
     (r"/trade/user/cancel", handlers.trade.UserCancelHandler),
-
     (r"/trade/sys/buy", handlers.trade.SysBuyHandler),
     (r"/trade/sys/sell", handlers.trade.SysSellHandler),
     (r"/trade/sys/cancel", handlers.trade.SysCancelHandler),
     (r"/trade/sys/drop", handlers.trade.SysDropHandler),
 
+    (r"/trade/order/list", handlers.trade.OrderListHandler),
     (r"/trade/order/sent", handlers.trade.OrderSentHandler),
     (r"/trade/order/canceling", handlers.trade.OrderCancelingHandler),
     (r"/trade/order/bought", handlers.trade.OrderBoughtHandler),

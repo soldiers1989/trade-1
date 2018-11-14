@@ -5,7 +5,7 @@ from venus.form import form, field
 
 
 class Place(form.Form):
-    tcode = field.StringField(max_length=16)
+    ocode = field.StringField(max_length=16)
     account = field.StringField(max_length=16)
     scode = field.StringField(max_length=8)
     sname = field.StringField(max_length=16)
@@ -17,7 +17,8 @@ class Place(form.Form):
 
 
 class Cancel(form.Form):
-    id = field.IntegerField()
+    id = field.IntegerField(null=True)
+    ocode = field.StringField(null=True)
     operator = field.StringField(default='sys')
 
 

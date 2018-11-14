@@ -156,6 +156,7 @@ class AccountOrder(model.Model):
 
     id = field.AutoField()
     tcode = field.StringField(max_length=16)
+    account = field.StringField(max_lenght=16)
     scode = field.StringField(max_length=8)
     sname = field.StringField(max_length=16)
     ocode = field.StringField(max_length=16, null=True)
@@ -168,7 +169,7 @@ class AccountOrder(model.Model):
     dcode = field.StringField(max_length=16, null=True)
     dprice = field.DecimalField(digits=10, decimals=2)
     dcount = field.IntegerField(null=True)
-    ddate = field.DateField()
+    ddate = field.DateField(null=True)
     dtime = field.IntegerField(null=True)
     status = field.EnumField(choices=('notsend','tosend','sending','sent','tocancel','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped','expired'))
     slog = field.StringField(default='')

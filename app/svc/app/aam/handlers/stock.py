@@ -66,7 +66,7 @@ class StockAddHandler(handler.Handler):
                     try:
                         models.Stock(**stock).save(d)
                         added += 1
-                    except:
+                    except Exception as e:
                         fails.append(stock['id'])
                 else:
                     existed += 1

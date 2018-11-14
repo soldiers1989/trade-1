@@ -1,54 +1,48 @@
 """
     stock relate tasks
 """
-import logging, tms, app
+import time
 from xpinyin import Pinyin
 
-from .. import task
+from .. import remote
 
 
-class SyncAllService(task.Task):
+def sync_all(*args, **kwargs):
     """
-        sync stock from remote source: sina/cninfo/...etc
-        config format:
+        sync all stocks from market data service, update the new stocks to aam service
+        kwargs:
         {
-            rpc: {
-                aam: {
-                    baseurl: <baseurl>
-                    key: <key>
-                    safety: <True|False>
-                },
-                mds: {
-                    baseurl: <baseurl>
-                    key: <key>
-                    safety: <True|False>
+            config:{
+                rpc: {
+                    aam: {
+                        baseurl: <baseurl>
+                        key: <key>
+                        safety: <True|False>
+                    },
+                    mds: {
+                        baseurl: <baseurl>
+                        key: <key>
+                        safety: <True|False>
+                    }
                 }
-            }
+            },
+            callback: <url>
         }
+    :param args:
+    :param kwargs:
+    :return:
     """
-    def __init__(self, *args, **kwargs):
-        """
-            init
-        :param args:
-        :param kwargs:
-        """
+    try:
         # get config
-        config = kwargs.get('config')['rpc']
+        config, callback = kwargs.get('config'), kwargs.get('callback')
 
         # init remote rpc
-        self._aam = app.rpc.Aam(config['aam']['baseurl'], config['aam'].get('key'), config['aam'].get('safety', False))
-        self._mds = tms.rpc.Mds(config['mds']['baseurl'], config['mds'].get('key'), config['mds'].get('safety', False))
+        rpcaam = remote.aam.Aam(config['rpc']['aam']['baseurl'], config['rpc']['aam'].get('key'), config['rpc']['aam'].get('safety', False))
+        rpcmds = remote.tms.Mds(config['rpc']['mds']['baseurl'], config['rpc']['mds'].get('key'), config['rpc']['mds'].get('safety', False))
 
-        super().__init__(*args, **kwargs)
-
-    def execute(self):
-        """
-            sync stock
-        :return:
-        """
         # get local stock list
         localstocks = {}
-        stocks = self._aam.stock_list()
+        stocks = rpcaam.stock_list()
         for stock in stocks:
             localstocks[stock['id']] = stock['id']
 
@@ -56,7 +50,7 @@ class SyncAllService(task.Task):
         newstocks = []
 
         # get remote stocks from
-        remotestocks = self._mds.stock_list()
+        remotestocks = rpcmds.stock_list()
         for stock in remotestocks:
             if localstocks.get(stock['zqdm']) is None:
                 newstocks.append(stock)
@@ -76,13 +70,17 @@ class SyncAllService(task.Task):
                 'jianpin': jianpin,
                 'quanpin': quanpin,
                 'status': 'open',
-                'limit': 'none'
+                'limit': 'none',
+                'ctime': int(time.time()),
+                'mtime': int(time.time())
             })
 
         # add new stocks
-        resp = self._aam.stock_add(tidystocks)
+        resp = rpcaam.stock_add(tidystocks)
 
         # add/failed count
-        added, failed = len(resp.get('added')), len(resp.get('failed'))
+        added, failed = resp.get('added'), resp.get('failed')
 
-        return 'local:%d, remote:%d, added:%d, failed:%d' % (len(localstocks), len(remotestocks), added, failed)
+        return 'stock(sync_all): local:%d, remote:%d, added:%d, failed:%d' % (len(localstocks), len(remotestocks), added, failed)
+    except Exception as e:
+        raise RuntimeError('stock(sync_all): %s'%str(e))

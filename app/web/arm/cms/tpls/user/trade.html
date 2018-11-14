@@ -529,9 +529,8 @@
                     rownumbers: false,
                     singleSelect: true,
 
-                    pageNumber: 1,
                     pageSize: 20,
-                    pageList: [5, 10, 20, 30, 40, 50, 100],
+                    pageList: [10, 20, 50, 100],
                     
                     toolbar: '#trade_toolbar',
                     frozenColumns: [[
@@ -564,6 +563,7 @@
                         {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},
                         {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
                         {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
+                        {field:'_coupon', title:'优惠券', sortable:false, formatter: cube.format.none},
                         {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.datetime},
                         {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime}
                     ]],

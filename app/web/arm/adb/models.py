@@ -114,7 +114,7 @@ class TradeAccount(models.Model):
 # tb_account_order
 class AccountOrder(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    tcode = models.CharField(max_length=16, verbose_name='交易编号')
+    tcode = models.CharField(max_length=16, verbose_name='交易编号', unique=True)
     account = models.CharField(max_length=16, verbose_name='证券账户')
     scode = models.CharField(max_length=16, verbose_name='证券代码')
     sname = models.CharField(max_length=16, verbose_name='证券名称')
@@ -443,6 +443,7 @@ class UserTrade(models.Model):
         items['_optype'] = enum.all['order']['price'][items['optype']] if items['optype'] else None
         items['_status'] = enum.all['trade']['status'][items['status']] if items['status'] else None
         items['_lever'] = self.tradelever.lever
+        items['_coupon'] = '%s: %s' % (items['coupon'].type,items['coupon'].value) if items['coupon'] else None
 
         items['user'], items['stock'], items['coupon'], items['lever'] = self.user_id, self.stock_id, self.coupon_id, self.tradelever.id
 
@@ -459,7 +460,7 @@ class UserTrade(models.Model):
         # get data items & fields
         items, fields = self.ddata(), dict([(f.name, f.verbose_name) for f in self._meta.fields])
 
-        items['user'], items['stock'], items['optype'], items['status'] = items['_user'], items['_stock'], items['_optype'], items['_status']
+        items['user'], items['stock'], items['coupon'], items['optype'], items['status'] = items['_user'], items['_stock'], '%s,%s' % (items['coupon'], items['_coupon']) if items['coupon'] is not None else None, items['_optype'], items['_status']
 
         # add lever fields
         #fields['lever'] = '杠杆倍数'
@@ -517,7 +518,7 @@ class TradeLever(models.Model):
 class TradeOrder(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
     trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='订单ID')
-    ocode = models.CharField(max_length=16, verbose_name='委托编号')
+    ocode = models.CharField(max_length=16, verbose_name='委托编号', unique=True)
     account = models.CharField(null=True, max_length=16, verbose_name='证券账户')
     scode = models.CharField(max_length=16, verbose_name='证券代码')
     sname = models.CharField(max_length=16, verbose_name='证券名称')

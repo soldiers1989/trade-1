@@ -2,7 +2,7 @@
     remote process communication api
 """
 import requests
-from tlib import token
+from . import token
 
 
 # rpc access error
@@ -236,6 +236,18 @@ class Aam(Rpc):
         """
         # remote path
         path = '/trade/list'
+
+        # access service
+        return self.get(path, params=params)
+
+    def trade_clear(self, **params):
+        """
+            clear trade daily fees
+        :param params: dict
+        :return:
+        """
+        # remote path
+        path = '/trade/clear'
 
         # access service
         return self.get(path, params=params)

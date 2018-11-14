@@ -1,7 +1,7 @@
 """
     trade management
 """
-import datetime, time, decimal, logging
+import datetime, time, decimal
 from tlib import rand
 from .. import access, handler, forms, protocol, models, trade, locker, error, template, status
 
@@ -21,8 +21,77 @@ class ListHandler(handler.Handler):
             # get trade records
             trades = models.UserTrade.filter(d, **conds).all()
 
+            # remote slog field
+            for trade in trades:
+                del trade['slog']
+
             # success
             self.write(protocol.success(data=trades))
+
+
+class ClearHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def get(self):
+        """
+            clear user trade daily fees
+        :return:
+        """
+        with models.db.create() as d:
+            # get user trade which has holding count
+            usertrades = models.UserTrade.filter(d, hcount__gt=0).all()
+
+            # get today
+            today = datetime.date.today()
+
+            cleared, failed = [], []
+            # clear user trade
+            for usertrade in usertrades:
+                try:
+                    # get delay days
+                    cday = datetime.date.fromtimestamp(usertrade.ctime)
+                    days, cleareddays, clearedfees = (today-cday).days+1, usertrade.dday, usertrade.dfee
+
+                    # already cleared
+                    if days <= cleareddays:
+                        continue
+
+                    # get user trade lever
+                    tradelever = models.TradeLever.filter(d, trade_id=usertrade.id).one()
+
+                    # capital used
+                    capital = usertrade.hcount*usertrade.hprice
+                    # compute delay fees
+                    deltadays = days - cleareddays
+                    deltfees = decimal.Decimal(deltadays*capital*tradelever.dfrate).quantize(decimal.Decimal('0.00'))
+
+                    # add trade fee record
+                    models.TradeFee(trade_id=usertrade.id, item=template.fee.delay.item, detail=template.fee.delay.detail % deltfees,
+                                               money=deltfees, ctime=int(time.time())).save(d)
+
+                    # update user trade
+                    usertrade.dday += deltadays
+                    usertrade.dfee += deltfees
+                    usertrade.save(d)
+
+                    # commit
+                    d.commit()
+
+                    # remote slog
+                    del usertrade['slog']
+                    cleared.append(usertrade)
+                except Exception as e:
+                    del usertrade['slog']
+                    failed.append(usertrade)
+                    d.rollback()
+
+            # response data
+            data = {
+                'cleared': cleared,
+                'failed': failed
+            }
+            # success
+            self.write(protocol.success(data=data))
 
 
 class UpdateHandler(handler.Handler):
@@ -492,6 +561,29 @@ class SysDropHandler(handler.Handler):
                 self.write(protocol.success(data=data))
 
 
+class OrderListHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def get(self):
+        """
+            get trade records
+        :return:
+        """
+        # list conditions
+        conds = self.cleaned_arguments
+
+        with models.db.create() as d:
+            # get trade orders
+            orders = models.TradeOrder.filter(d, **conds).all()
+
+            # remote slog field
+            for order in orders:
+                del order['slog']
+
+            # success
+            self.write(protocol.success(data=orders))
+
+
 class OrderSentHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
@@ -828,10 +920,17 @@ class OrderExpiredHandler(handler.Handler):
                     usertrade.fcount += tradeorder.ocount
                     usertrade.status = 'hold'
                 else:
-                    # return margin #
                     # get user object
                     user = models.User.filter(d, id=usertrade.user_id).one()
 
+                    # return coupon #
+                    if usertrade.coupon_id is not None:
+                        usercoupon = models.UserCoupon.filter(d, id=usertrade.coupon_id).one()
+                        usercoupon.status = 'notused'
+                        usercoupon.utime = None
+                        usercoupon.save(d)
+
+                    # return margin #
                     # add bill
                     models.UserBill(user_id=user.id, code=rand.uuid(),
                                     item=template.bill.settle.item, detail=template.bill.settle.detail%(usertrade.margin),
