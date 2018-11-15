@@ -7,7 +7,7 @@
             <div title="操作">
                 <div class="easyui-panel" style="height:100%;width:100%">
                     <div style="margin: 6px; height: 5%; width: 100%">
-                        <a href="#" id="btn_account_order_sent" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('sent')">已报</a>
+                        <a href="#" id="btn_account_order_sent" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.sent.open()">已报</a>
                         <a href="#" id="btn_account_order_dealt" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.dealt.open()">已成</a>
                         <a href="#" id="btn_account_order_canceling" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('canceling')">正撤</a>
                         <a href="#" id="btn_account_order_canceled" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('canceled')">已撤</a>
@@ -140,6 +140,22 @@
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="accountorder.detail.operation.dealt.cancel()" style="width:90px">取消</a>
 </div>
 
+
+<div class="easyui-dialog" id="account_order_sent_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#account_order_sent_dialog_buttons'">
+    <form class="easyui-form" id="account_order_sent_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="ocode" data-options="label:'委托编号', prompt:'输入委托编号', required:true, validType:['text', 'length[3,16]']" style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="account_order_sent_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="accountorder.detail.operation.dealt.save()" style="width:90px">确定</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="accountorder.detail.operation.dealt.cancel()" style="width:90px">取消</a>
+</div>
 
 <script type="text/javascript">
     // order list/add/update/delete
