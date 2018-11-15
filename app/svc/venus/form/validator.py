@@ -27,7 +27,7 @@ class EnumValidator(Validator):
 
     def valid(self, val):
         val = super().valid(val)
-        if self._choices is not None and not val in self._choices:
+        if val is not None and self._choices is not None and not val in self._choices:
             raise ErrorValidation('enum value %s is not in choices: %s' % (str(val), str(self._choices)))
         return val
 

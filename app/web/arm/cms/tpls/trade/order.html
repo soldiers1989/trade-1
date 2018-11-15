@@ -1,12 +1,26 @@
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
-    <div data-options="region:'west', split:true" style="width: 80%;">
+    <div data-options="region:'west', split:true" style="width: 72%;">
         <table id="account_order_datagrid" style="height: 100%;"></table>
     </div>
-    <div data-options="region:'center', split:true" style="width: 20%">
-        <div class="easyui-tabs" id="account_order_detail_tabs" data-options="fit:true, plain: true">
+    <div data-options="region:'center', split:true" style="width: 28%; height: 100%;">
+        <div class="easyui-tabs" id="tabs_account_order" data-options="fit:true, plain: true" style="height: 100%;width: 100%;">
+            <div title="操作">
+                <div class="easyui-panel" style="height:100%;width:100%">
+                    <div style="margin: 6px; height: 5%; width: 100%">
+                        <a href="#" id="btn_account_order_sent" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('sent')">已报</a>
+                        <a href="#" id="btn_account_order_dealt" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.dealt.open()">已成</a>
+                        <a href="#" id="btn_account_order_canceling" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('canceling')">正撤</a>
+                        <a href="#" id="btn_account_order_canceled" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('canceled')">已撤</a>
+                        <a href="#" id="btn_account_order_expired" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('expired')">过期</a>
+                    </div>
+                    <div style="height:95%; width: 100%">
+                        <iframe id="iframe_account_order_quote" src="" style="height: 100%;width: 100%"></iframe>
+                    </div>
+                </div>
+            </div>
             <div title="状态">
-                <div class="easyui-panel" style="width: 100%">
-                    <table id="account_order_status_propertygrid"></table>
+                <div class="easyui-panel" style="height: 100%; width: 100%">
+                    <table id="propertygrid_account_order_status"></table>
                 </div>
             </div>
         </div>
@@ -45,10 +59,49 @@
             <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-combobox" id="_status" name="status" data-options="label:'交易状态', prompt:'选择交易状态'" required, style="width: 100%">
+            <input class="easyui-combobox" name="status" data-options="label:'交易状态', prompt:'选择交易状态',
+                                                                       method: 'get', url: '/api/enum?c=order&i=status',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       loadFilter: function(resp) {
+                                                                            return resp.data;
+                                                                       }" style="width: 100%" required>
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-textbox" name="ocode" data-options="label:'委托编号', prompt:'输入委托编号', required:false, validType:['text', 'length[1,16]']" style="width:100%">
+            <input class="easyui-combobox" name="account" data-options="label:'交易账户', prompt:'选择交易账户',
+                                                                       method: 'get', url: '/api/trade/account/list?disable=false',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       loadFilter: function(resp) {
+                                                                            data = [];
+                                                                            for (i=0; i<resp.data.rows.length; i++){
+                                                                                data.push({id:resp.data.rows[i].account, text:resp.data.rows[i].name+'('+resp.data.rows[i].money+')'});
+                                                                            }
+                                                                            return data;
+                                                                       }" style="width: 100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-combobox" name="optype" data-options="label:'报价方式', prompt:'选择报价方式',
+                                                                       method: 'get', url: '/api/enum?c=order&i=price',
+                                                                       valueField:'id',textField:'text',limitToList: true,
+                                                                       onChange: function(nval, oval) {
+                                                                            tb = $('#tb_account_order_update_oprice');
+                                                                            if (nval==='sj') {
+                                                                                tb.textbox('disable');
+                                                                            } else {
+                                                                                tb.textbox('enable');
+                                                                            }
+                                                                       },
+                                                                       loadFilter: function(resp) {
+                                                                            return resp.data;
+                                                                       }" style="width: 100%" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="ocount" data-options="label:'委托数量', prompt:'输入委托数量', required:false, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" id="tb_account_order_update_oprice" name="oprice" data-options="label:'委托价格', prompt:'输入委托价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-datetimebox" name="otime" label="委托时间" prompt="选择委托时间" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
             <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:false, validType:['digits', 'min[0]']" style="width:100%">
@@ -57,7 +110,7 @@
             <input class="easyui-textbox" name="dprice" data-options="label:'成交价格', prompt:'输入成交价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
         </div>
         <div style="margin-bottom:10px">
-            <input class="easyui-datetimebox" name="dtime" label="成交时间" prompt="选择发生时间" style="width:100%">
+            <input class="easyui-datetimebox" name="dtime" label="成交时间" prompt="选择成交时间" style="width:100%">
         </div>
     </form>
 </div>
@@ -66,6 +119,27 @@
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="accountorder.edit.modify.save()" style="width:90px">保存</a>
     <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="accountorder.edit.modify.cancel()" style="width:90px">取消</a>
 </div>
+
+
+<div class="easyui-dialog" id="account_order_dealt_dialog" style="width:400px" data-options="closed:true,modal:true,border:'thin',buttons:'#account_order_dealt_dialog_buttons'">
+    <form class="easyui-form" id="account_order_dealt_form" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="dcount" data-options="label:'成交数量', prompt:'输入成交数量', required:true, validType:['digits', 'min[0]']" style="width:100%">
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="dprice" data-options="label:'成交价格', prompt:'输入成交价格（元）', required:true, validType:['number', 'min[0]']" style="width:100%">
+        </div>
+    </form>
+</div>
+
+<div id="account_order_dealt_dialog_buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="accountorder.detail.operation.dealt.save()" style="width:90px">确定</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="accountorder.detail.operation.dealt.cancel()" style="width:90px">取消</a>
+</div>
+
 
 <script type="text/javascript">
     // order list/add/update/delete
@@ -76,8 +150,7 @@
 
             // init edit
             init: function() {
-                //init modify components
-                this.modify.init();
+                //init edit
             },
 
             // enable edit
@@ -96,29 +169,6 @@
                 dialog: $('#account_order_update_dialog'),
                 form: $('#account_order_update_form'),
 
-                // init modify dialog
-                init: function() {
-                    $('#_status').combobox({
-                        url: '/api/enum?c=order&i=status',
-                        method: 'get',
-
-                        valueField:'id',
-                        textField:'text',
-
-                        limitToList: true,
-
-                        loadFilter: function(resp) {
-                            return resp.data;
-                        }
-                    });
-                },
-
-                // setup modify dialog
-                setup: function(id) {
-                    //init status options
-                    $('#_status').combobox('reload', '/api/trade/order/nextstatus?id='+id);
-                },
-
                 // open update dialog
                 open: function() {
                     //get selected row data
@@ -126,11 +176,9 @@
                     if (row){
                         //change row time
                         row.dtime = cube.format.datetime(row.dtime);
+                        row.otime = cube.format.datetime(row.otime);
                         // clear form
                         this.form.form('clear');
-                        
-                        // setup dialog
-                        this.setup(row.id);
 
                         //load form data
                         this.form.form('load', row);
@@ -184,7 +232,7 @@
 
                     $.messager.confirm({
                         title: '确认',
-                        msg: '确认删除交易委托记录 '+row.stock+'('+row.ocount+'股)'+'?',
+                        msg: '确认删除交易委托记录 '+row.sname+'('+row.ocount+'股)'+'?',
                         url: accountorder.edit.delete.url,
                         fn: function(r){
                             if (r){
@@ -203,8 +251,8 @@
                             }
                         }
                     });
-                },
-            },
+                }
+            }
         },
 
         // order list
@@ -233,6 +281,7 @@
 
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
+                        {field:'tcode', title:'交易代码', sortable:true},
                         {field:'scode', title:'股票代码', sortable:false},
                         {field:'sname', title:'股票名称', sortable:false},
                         {field:'account', title:'交易账户', sortable:true},
@@ -246,10 +295,9 @@
                     ]],
 
                     columns: [[
-                        {field:'tcode', title:'交易代码', sortable:true},
+                        {field:'ocode', title:'委托代码', sortable:true},
                         {field:'ocount', title:'委托数量', sortable:true},
                         {field:'oprice', title:'委托价格', sortable:true},
-                        {field:'ocode', title:'委托编号', sortable:true},
                         {field:'dcount', title:'成交数量', sortable:true},
                         {field:'dprice', title:'成交价格', sortable:true},
                         {field:'dtime', title:'成交时间', sortable:true, formatter: cube.format.datetime},
@@ -265,7 +313,7 @@
                         accountorder.edit.disable();
 
                         //clear detail
-                        accountorder.detail.hide();
+                        accountorder.tabs.hide();
 
                         //clear selections
                         $(this).datagrid('clearSelections');
@@ -278,8 +326,8 @@
                     onSelect(index, row) {
                         //enable edit
                         accountorder.edit.enable();
-                        //show detail
-                        accountorder.detail.show();
+                        //show tabs
+                        accountorder.tabs.show();
                     }
                 });
             },
@@ -290,6 +338,25 @@
 
             reload: function() {
                 this.datagrid.datagrid('reload');
+            },
+
+            insertRow: function(row) {
+                index = 0;
+                this.datagrid.datagrid('insertRow', {
+                  index: index,
+                  row: row
+                });
+
+                this.datagrid.datagrid('selectRow', index);
+            },
+
+            updateRow: function(row) {
+                index = this.datagrid.datagrid('getRowIndex', row.id);
+                this.datagrid.datagrid('updateRow', {
+                    index: index,
+                    row: row
+                });
+                this.datagrid.datagrid('selectRow', index);
             },
 
             getSelected: function() {
@@ -384,92 +451,201 @@
 
                 //reload datagrid
                 accountorder.list.load({});
+            }
+        },
+
+        // detail tabs
+        tabs: {
+            tabs: $('#tabs_account_order'),
+            inited: false,
+
+            init: function() {
+                if (this.inited)
+                    return;
+
+                this.tabs.tabs({
+                    border: false,
+
+                    onSelect: function(title, index){
+                        row = accountorder.list.getSelected();
+                        if(!row)
+                            return;
+
+                        accountorder.tabs.select(index, row.id);
+                    }
+                });
+
+                this.inited = true;
             },
+
+            hide: function() {
+                $('#empty_account_order_detail').show();
+                this.tabs.hide();
+            },
+
+            show: function() {
+                $('#empty_account_order_detail').hide();
+
+                this.tabs.show();
+                row = accountorder.list.getSelected();
+                if(!row)
+                    return;
+
+                idx = 0;
+                tab = this.tabs.tabs('getSelected');
+                if(tab) {
+                    idx = this.tabs.tabs('getTabIndex', tab);
+                }
+                this.select(idx, row.id);
+            },
+
+            select: function (index, orderid) {
+                switch (index) {
+                    case 0:
+                        accountorder.detail.operation.show(orderid);
+                        break;
+                    case 1:
+                        accountorder.detail.status.show(orderid);
+                        break;
+                    default:
+                        // statements_def
+                        break;
+                }
+            }
         },
 
         // order detail
-       detail: {
-            //init detail
-            init: function() {
-                this.tabs.init();
-                this.hide();
-            },
+        detail: {
+            // order operation
+            operation: {
+                show: function(orderid) {
+                    var url = '/api/trade/order/get?id='+orderid+"&_t=d";
+                    $.get(url, function(resp, status){
+                        if(status === 'success'){
+                            if (resp.status){
+                                //permit operation
+                                status = resp.data.status;
+                                if (['tosend'].includes(status)){
+                                    $('#btn_account_order_sent').linkbutton('enable');
+                                } else {
+                                    $('#btn_account_order_sent').linkbutton('disable');
+                                }
 
-            //show detail
-            show: function() {
-                $('#empty_account_order_detail').hide();
-                this.tabs.show();
-            },
+                                if (['sent'].includes(status)){
+                                    $('#btn_account_order_dealt').linkbutton('enable');
+                                } else {
+                                    $('#btn_account_order_dealt').linkbutton('disable');
+                                }
 
-            //hide detail
-            hide:function() {
-                this.tabs.hide();
-                $('#empty_account_order_detail').show();
-            },
+                                if (['tocancel'].includes(status)){
+                                    $('#btn_account_order_canceling').linkbutton('enable');
+                                } else {
+                                    $('#btn_account_order_canceling').linkbutton('disable');
+                                }
 
-            tabs: {
-                tabs: $('#account_order_detail_tabs'),
+                                if (['canceling'].includes(status)){
+                                    $('#btn_account_order_canceled').linkbutton('enable');
+                                } else {
+                                    $('#btn_account_order_canceled').linkbutton('disable');
+                                }
 
-                inited: false,
+                                if (['sent'].includes(status)){
+                                    $('#btn_account_order_expired').linkbutton('enable');
+                                } else {
+                                    $('#btn_account_order_expired').linkbutton('disable');
+                                }
 
-                init: function() {
-                    if (this.inited)
-                        return;
-
-                    this.tabs.tabs({
-                        border: false,
-
-                        onSelect: function(title, index){
-                            row = accountorder.list.getSelected();
-                            if(!row)
-                                return;
-
-                            switch (index) {
-                                case 0:
-                                    accountorder.detail.status.show(row.id);
-                                    break;
-                                default:
-                                    // statements_def
-                                    break;
+                                //show stock quote
+                                secmap = {'600':'1','601':'1','603':'1', '000':'2','002':'2','300':'2'};
+                                code = resp.data.scode + secmap[resp.data.scode.substr(0,3)];
+                                $('#iframe_account_order_quote').attr('src', 'https://emwap.eastmoney.com/quota/stock/index/'+code);
+                                //$('#iframe_account_order_quote').attr('src', 'http://m.10jqka.com.cn/stockpage/hs_'+resp.data.scode+'/');
+                            } else {
+                                $.messager.show({title: '错误', msg: resp.msg});
                             }
+                        } else {
+                            $.messager.show({title: '错误', msg: '请求服务器错误'});
                         }
-                    });
-
-                    this.inited = true;
+                    },'json');
                 },
 
-                hide: function() {
-                    this.tabs.hide();
-                },
-
-                show: function() {
-                    this.tabs.show();
-
-                    row = accountorder.list.getSelected();
+                process: function(action) {
+                    var row = accountorder.list.getSelected();
                     if(!row)
                         return;
 
-                    idx = 0;
-                    tab = this.tabs.tabs('getSelected');
-                    if(tab) {
-                        idx = this.tabs.tabs('getTabIndex', tab);
-                    }
-                    
-                    switch (idx) {
-                        case 0:
-                            accountorder.detail.status.show(row.id);
-                            break;
-                        default:
-                            // statements_def
-                            break;
-                    }
+                    var url = '/api/trade/order/process';
+                    $.post(url, {id: row.id, act: action}, function(resp, status){
+                        if(status === 'success'){
+                            if (resp.status){
+                                accountorder.list.updateRow(resp.data);
+                                $.messager.show({title: '成功', msg: resp.msg});
+                            } else {
+                                $.messager.show({title: '错误', msg: resp.msg});
+                            }
+                        } else {
+                            $.messager.show({title: '错误', msg: '请求服务器错误'});
+                        }
+                    },'json');
+                },
 
+                dealt: {
+                    url: '/api/trade/order/process',
+                    dialog: $('#account_order_dealt_dialog'),
+                    form: $('#account_order_dealt_form'),
+
+                    // open update dialog
+                    open: function() {
+                        //get selected row data
+                        row = accountorder.list.getSelected();
+                        if (row){
+                            // clear form
+                            this.form.form('clear');
+
+                            //load form data
+                            this.form.form('load', {id:row.id, dcount:row.ocount, dprice:row.oprice});
+
+                            //open dialog
+                            this.dialog.dialog('open').dialog('center').dialog('setTitle','委托成交');
+                        }
+                    },
+
+                    // save update results
+                    save: function() {
+                        //submit form
+                        this.form.form('submit',{
+                            url: this.url,
+                            queryParams: {
+                                act: 'dealt'
+                            },
+                            onSubmit: function(){
+                                return accountorder.detail.operation.dealt.form.form('validate');
+                            },
+                            success: function(data){
+                                var resp = eval('('+data+')');
+                                if (resp.status){
+                                    accountorder.detail.operation.dealt.dialog.dialog('close');
+
+                                    //update selected row data
+                                    accountorder.list.updateSelected(resp.data);
+                                } else {
+                                    $.messager.show({ title: '错误',  msg: resp.msg });
+                                }
+                            }
+                        });
+                    },
+
+                    // cancel operation
+                    cancel: function() {
+                        //close dialog
+                        this.dialog.dialog('close');
+                    }
                 }
             },
 
+            // order status
             status: {
-                url: '/api/trade/order/status',
-                propertygrid: $('#account_order_status_propertygrid'),
+                propertygrid: $('#propertygrid_account_order_status'),
 
                 inited: false,
 
@@ -478,15 +654,15 @@
                         return;
 
                     this.propertygrid.propertygrid({
-                        url: this.url,
+                        url: '/api/trade/order/status',
                         method: 'get',
                         queryParams: params,
                 
                         showGroup:true,
 
                         columns: [[
-                            {field:'name', title:'名称', width:'50%'},
-                            {field:'value', title:'取值', width:'50%'}
+                            {field:'name', title:'名称', width:'20%'},
+                            {field:'value', title:'取值', width:'80%'}
                         ]],
 
                         loadFilter: function (resp) {
@@ -526,8 +702,8 @@
             this.search.init();
             // init list
             this.list.init();
-            // init detail
-            this.detail.init();
+            // init tabs
+            this.tabs.init();
         }
     };
 

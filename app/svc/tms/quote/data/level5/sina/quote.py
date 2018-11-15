@@ -2,8 +2,8 @@
     agent to sina quote data
 """
 import time
-from tlib.stock.quote.level5 import quote, server, error
-from tlib.stock.quote.level5.sina import config, parser, path
+from .. import quote, server, error
+from . import config, parser, path
 
 
 class SinaQuote(quote.Quote):

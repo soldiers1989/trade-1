@@ -163,6 +163,19 @@ class Aam(Rpc):
         # access service
         return self.get(path, params=params)
 
+    def order_accounts(self, **params):
+        """
+            get order accounts by @conds
+        :param conds: dict, sql filters
+        :return:
+            list
+        """
+        # remote path
+        path = '/account/order/accounts'
+
+        # access service
+        return self.get(path, params=params)
+
     def order_place(self, **params):
         """
             order buy
@@ -195,7 +208,7 @@ class Aam(Rpc):
         # access service
         return self.post(path, params=params)
 
-    def order_notify(self, **params):
+    def order_notify(self, json=None):
         """
             order notify
         :param id:
@@ -210,20 +223,114 @@ class Aam(Rpc):
         path = '/account/order/notify'
 
         # access service
+        return self.post(path, json=json)
+
+    def order_take(self, **params):
+        """
+            notify order sending
+        :return:
+            dict
+        """
+        # remote path
+        path = '/account/order/take'
+
+        # access service
         return self.post(path, params=params)
 
-    def order_ocode(self, **params):
+    def order_sending(self, **params):
         """
-            update order code
+            notify order sending
         :param id:
-        :param status:
+        :param operator:
+        :return:
+            dict
+        """
+        # remote path
+        path = '/account/order/sending'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_sent(self, **params):
+        """
+            notify order sent
+        :param id:
         :param operator:
         :param ocode:
         :return:
             dict
         """
         # remote path
-        path = '/account/order/ocode'
+        path = '/account/order/sent'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_dealt(self, **params):
+        """
+            notify order dealt
+        :param id:
+        :param operator:
+        :return:
+            dict
+        """
+        # remote path
+        path = '/account/order/dealt'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_canceling(self, **params):
+        """
+            notify order canceling
+        :param id:
+        :param operator:
+        :return:
+            dict
+        """
+        # remote path
+        path = '/account/order/canceling'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_canceled(self, **params):
+        """
+            notify order canceled
+        :param id:
+        :param operator:
+        :return:
+            dict
+        """
+        # remote path
+        path = '/account/order/canceld'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_expired(self, **params):
+        """
+            notify order expired
+        :param id:
+        :param operator:
+        :return:
+            dict
+        """
+        # remote path
+        path = '/account/order/expired'
+
+        # access service
+        return self.post(path, params=params)
+
+    def order_update(self, **params):
+        """
+            udpate order
+        :param id:
+        :return:
+            dict
+        """
+        # remote path
+        path = '/account/order/update'
 
         # access service
         return self.post(path, params=params)
@@ -236,6 +343,18 @@ class Aam(Rpc):
         """
         # remote path
         path = '/trade/list'
+
+        # access service
+        return self.get(path, params=params)
+
+    def trade_clear(self, **params):
+        """
+            clear trade daily fees
+        :param params: dict
+        :return:
+        """
+        # remote path
+        path = '/trade/clear'
 
         # access service
         return self.get(path, params=params)

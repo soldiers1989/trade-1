@@ -63,7 +63,7 @@ class ClearHandler(handler.Handler):
                     capital = usertrade.hcount*usertrade.hprice
                     # compute delay fees
                     deltadays = days - cleareddays
-                    deltfees = decimal.Decimal(deltadays*capital*tradelever.dfrate).quantize(decimal.Decimal('0.00'))
+                    deltfees = deltadays*capital*tradelever.dfrate
 
                     # add trade fee record
                     models.TradeFee(trade_id=usertrade.id, item=template.fee.delay.item, detail=template.fee.delay.detail % deltfees,
@@ -101,6 +101,11 @@ class UpdateHandler(handler.Handler):
         # get form arguments
         form = forms.trade.Update(**self.cleaned_arguments)
 
+        # get update items
+        updateitems = {}
+        for k in self.cleaned_arguments:
+            updateitems[k] = form[k]
+
         with models.db.atomic() as d:
             # get user trade object
             usertrade = models.UserTrade.filter(d, id=form.id).one()
@@ -109,10 +114,15 @@ class UpdateHandler(handler.Handler):
 
             # lock user
             with locker.user(usertrade.user_id):
-                # update
-                usertrade.update(**form).save(d)
+                # update trade
+                tradeprestatus = usertrade.status
+                usertrade.update(**updateitems)
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'update', tradeprestatus, usertrade.status, detail, usertrade.slog)
+                usertrade.save(d)
 
                 # response data
+                del usertrade['slog']
                 self.write(protocol.success(data=usertrade))
 
 
@@ -126,7 +136,7 @@ class UserBuyHandler(handler.Handler):
 
         # get current
         if form.optype == 'sj':
-            form.oprice = decimal.Decimal(trade.get_trading_price(form.stock)).quantize(decimal.Decimal('0.00'))
+            form.oprice = trade.get_trading_price(form.stock)
 
         # check trade time/count/price
         trade.valid(form.stock, form.optype, form.oprice, form.ocount)
@@ -163,7 +173,7 @@ class UserBuyHandler(handler.Handler):
                 raise error.lever_capital_denied
 
             # compute margin
-            margin = (capital / lever.lever).quantize(decimal.Decimal('0.00'))
+            margin = capital / lever.lever
             if user.money < margin:
                 raise error.user_money_not_enough
 
@@ -185,21 +195,21 @@ class UserBuyHandler(handler.Handler):
                             ctime=int(time.time())).save(d)
 
             # add user trade
-            detail = '%s,%s,%s,%s,%s,%s,%s' % ('buy', form.optype, form.oprice, form.ocount, '0.0', '0', '0')
-            slog = status.append('user', 'buy', '', 'tobuy', detail) # status log
             usertrade = models.UserTrade(user_id=form.user, stock_id=form.stock, coupon_id=form.coupon,
                                         tcode=rand.uuid(), optype=form.optype, oprice=form.oprice, ocount=form.ocount, margin=margin,
-                                        status='tobuy', slog=slog,
-                                        ctime=int(time.time()), mtime=int(time.time())).save(d)
+                                        status='tobuy', ctime=int(time.time()), mtime=int(time.time()))
+            detail = status.trade_detail(**usertrade)
+            usertrade.slog = status.append('user', 'buy', '', 'tobuy', detail)
+            usertrade.save(d)
 
             # add trade order
-            detail = '%s,%s,%s,%s,%s,%s' % ('buy', form.optype, form.oprice, form.ocount, '0.0', '0')
-            slog = status.append('sys', 'buy', '', 'notsend', detail)
             tradeorder = models.TradeOrder(trade_id=usertrade.id, ocode=rand.uuid(), scode=stock.id, sname=stock.name,
                                            otype='buy', optype=form.optype, oprice=form.oprice, ocount=form.ocount,
                                            odate=datetime.date.today(), otime=int(time.time()),
-                                           dprice=0.0, dcount=0, status='notsend', slog=slog,
-                                           ctime=int(time.time()), mtime=int(time.time())).save(d)
+                                           dprice=0.0, dcount=0, status='notsend', ctime=int(time.time()), mtime=int(time.time()))
+            detail = status.order_detail(**tradeorder)
+            tradeorder.slog = status.append('sys', 'buy', '', 'notsend', detail)
+            tradeorder.save(d)
 
 
             # add lever record
@@ -251,7 +261,7 @@ class UserSellHandler(handler.Handler):
 
             # get & check sell price
             if form.optype == 'sj':
-                form.oprice = decimal.Decimal(trade.get_trading_price(form.stock)).quantize(decimal.Decimal('0.00'))
+                form.oprice = trade.get_trading_price(form.stock)
             else:
                 trade.valid_trading_price(stock.id, form.oprice)
 
@@ -260,20 +270,21 @@ class UserSellHandler(handler.Handler):
                 raise error.stock_count_not_enough
 
             # add trade order
-            detail = '%s,%s,%s,%s,%s,%s' % ('sell', form.optype, form.oprice, form.ocount, '0.0', '0')
-            slog = status.append('user', 'sell', '', 'notsend', detail)
             tradeorder = models.TradeOrder(trade_id=usertrade.id, ocode=rand.uuid(), account=usertrade.account, scode=stock.id, sname=stock.name,
                                            otype='sell', optype=form.optype, oprice=form.oprice, ocount=form.ocount,
                                            odate=datetime.date.today(), otime=int(time.time()),
-                                           dprice=0.0, dcount=0, status='notsend', slog=slog,
-                                           ctime=int(time.time()), mtime=int(time.time())).save(d)
+                                           dprice=0.0, dcount=0, status='notsend',
+                                           ctime=int(time.time()), mtime=int(time.time()))
+            detail = status.order_detail(**tradeorder)
+            tradeorder.slog = status.append('user', 'sell', '', 'notsend', detail)
+            tradeorder.save(d)
 
             # update user trade
             currentstatus, nextstatus = usertrade.status, 'tosell' if form.type=='sell' else 'toclose'
-            detail = '%s,%s,%s,%s,%s,%s,%s' % ('sell', form.optype, form.oprice, form.ocount, usertrade.hprice, usertrade.hcount, usertrade.fcount)
-            usertrade.slog = status.append('user', 'sell', currentstatus, nextstatus, detail, usertrade.slog)
             usertrade.status = nextstatus
             usertrade.fcount -= form.ocount
+            detail = status.trade_detail(**usertrade)
+            usertrade.slog = status.append('user', 'sell', currentstatus, usertrade.status, detail, usertrade.slog)
             usertrade.save(d)
 
             # response data
@@ -310,14 +321,13 @@ class UserCancelHandler(handler.Handler):
             # update trade order status
             orderprestatsu = tradeorder.status
             tradeorder.status = orderstatus[orderprestatsu]
-            detail = '%s,%s,%s,%s,%s,%s' % ('cancel', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
+            detail = status.order_detail(**tradeorder)
             tradeorder.slog = status.append('user', 'cancel', orderprestatsu, tradeorder.status, detail, tradeorder.slog)
             tradeorder.save(d)
 
             # get next status
             tradeprestatus = usertrade.status
             usertrade.status = tradestatus[tradeprestatus]
-            usertrade.slog = status.append('user', 'cancel', tradeprestatus, usertrade.status, '', usertrade.slog)
 
             # process cancel operation
             if usertrade.status == 'canceled': # -> canceled
@@ -347,6 +357,8 @@ class UserCancelHandler(handler.Handler):
                 pass
 
             # update trade record
+            detail = status.trade_detail(**usertrade)
+            usertrade.slog = status.append('user', 'cancel', tradeprestatus, usertrade.status, detail, usertrade.slog)
             usertrade.save(d)
 
             # response data
@@ -390,16 +402,19 @@ class SysBuyHandler(handler.Handler):
                     raise error.account_not_usable
 
                 # update trade order
+                orderprestatus = tradeorder.status
                 tradeorder.status = 'tosend'
                 tradeorder.account = tradeaccount.account
-                detail = '%s,%s,%s,%s,%s,%s' % ('buy', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
-                tradeorder.slog = status.append('sys', 'buy', 'notsend', 'tosend', detail, tradeorder.slog)
+                detail = status.order_detail(**tradeorder)
+                tradeorder.slog = status.append('sys', 'buy', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.save(d)
 
                 # update user trade
-                usertrade.slog = status.append('sys', 'buy', usertrade.status, 'buying', '', usertrade.slog)
+                tradeprestatus = usertrade.status
                 usertrade.account = tradeaccount.account
                 usertrade.status = 'buying'
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'buy', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # response data
@@ -436,16 +451,18 @@ class SysSellHandler(handler.Handler):
                     raise error.stock_is_closed
 
                 # update trade order
+                orderprestatus = tradeorder.status
                 tradeorder.status = 'tosend'
-                detail = '%s,%s,%s,%s,%s,%s' % ('sell', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
-                tradeorder.slog = status.append('sys', 'sell', 'notsend', 'tosend', detail, tradeorder.slog)
+                detail = status.order_detail(**tradeorder)
+                tradeorder.slog = status.append('sys', 'sell', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.save(d)
 
                 # update user trade
                 tradeprestatus = usertrade.status
                 tradestatus = {'tosell':'selling', 'toclose':'closing'}
                 usertrade.status = tradestatus[tradeprestatus]
-                usertrade.slog = status.append('sys', 'sell', tradeprestatus, usertrade.status, '', usertrade.slog)
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'sell', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # response data
@@ -479,7 +496,7 @@ class SysCancelHandler(handler.Handler):
                 # update trade order
                 orderprestatus = tradeorder.status
                 tradeorder.status = 'tocancel'
-                detail = '%s,%s,%s,%s,%s,%s' % ('cancel', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
+                detail = status.order_detail(**tradeorder)
                 tradeorder.slog = status.append('sys', 'cancel', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.save(d)
 
@@ -487,7 +504,8 @@ class SysCancelHandler(handler.Handler):
                 tradeprestatus = usertrade.status
                 tradestatus = {'cancelbuy':'buycanceling', 'cancelsell':'sellcanceling', 'cancelclose':'closecanceling'}
                 usertrade.status = tradestatus[tradeprestatus]
-                usertrade.slog = status.append('sys', 'cancel', tradeprestatus, usertrade.status, '', usertrade.slog)
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'cancel', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # response data
@@ -522,14 +540,15 @@ class SysDropHandler(handler.Handler):
                 # update trade order status
                 orderprestatsu = tradeorder.status
                 tradeorder.status = 'tcanceled'
-                detail = '%s,%s,%s,%s,%s,%s' % ('cancel', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
+                detail = status.order_detail(**tradeorder)
                 tradeorder.slog = status.append('sys', 'drop', orderprestatsu, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.save(d)
 
                 # update trade record
                 tradeprestatus = usertrade.status
                 usertrade.status = 'canceled'
-                usertrade.slog = status.append('sys', 'drop', tradeprestatus, usertrade.status, '', usertrade.slog)
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'drop', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # get user object
@@ -607,7 +626,7 @@ class OrderSentHandler(handler.Handler):
                 # update trade order
                 orderprestatus = tradeorder.status
                 tradeorder.status = 'sent'
-                detail = '%s,%s,%s,%s,%s,%s' % ('send', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
+                detail = status.order_detail(**tradeorder)
                 tradeorder.slog = status.append('sys', 'send', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.mtime = int(time.time())
                 tradeorder.save(d)
@@ -643,7 +662,7 @@ class OrderCancelingHandler(handler.Handler):
                 # update trade order
                 orderprestatus = tradeorder.status
                 tradeorder.status = 'canceling'
-                detail = '%s,%s,%s,%s,%s,%s' % ('cancel', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
+                detail = status.order_detail(**tradeorder)
                 tradeorder.slog = status.append('sys', 'send', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.mtime = int(time.time())
                 tradeorder.save(d)
@@ -688,9 +707,9 @@ class OrderBoughtHandler(handler.Handler):
                 tradeorder.ddate = datetime.date.today()
                 tradeorder.dtime = int(time.time())
                 tradeorder.status = 'pdeal' if form.dcount < tradeorder.ocount else 'tdeal'
-                detail = '%s,%s,%s,%s,%s,%s' % ('bought', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
-                tradeorder.slog = status.append('sys', 'bought', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.mtime = int(time.time())
+                detail = status.order_detail(**tradeorder)
+                tradeorder.slog = status.append('sys', 'bought', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.save(d)
 
                 # compute open fee
@@ -708,8 +727,9 @@ class OrderBoughtHandler(handler.Handler):
                 usertrade.bcount = tradeorder.dcount
                 usertrade.bprice = tradeorder.dprice
                 usertrade.status = 'hold'
-                usertrade.slog = status.append('sys', 'bought', tradeprestatus, usertrade.status, '', usertrade.slog)
                 usertrade.mtime = int(time.time())
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'bought', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # response data
@@ -753,9 +773,9 @@ class OrderSoldHandler(handler.Handler):
                 tradeorder.ddate = datetime.date.today()
                 tradeorder.dtime = int(time.time())
                 tradeorder.status = 'pdeal' if form.dcount < tradeorder.ocount else 'tdeal'
-                detail = '%s,%s,%s,%s,%s,%s' % ('sold', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
-                tradeorder.slog = status.append('sys', 'sold', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.mtime = int(time.time())
+                detail = status.order_detail(**tradeorder)
+                tradeorder.slog = status.append('sys', 'sold', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.save(d)
 
                 # compute sold count&average price
@@ -764,7 +784,7 @@ class OrderSoldHandler(handler.Handler):
 
                 # compute profit
                 tprofit = scount * (sprice - usertrade.bprice)
-                sprofit = max(decimal.Decimal('0.00'), tprofit*tradelever.psrate).quantize(decimal.Decimal('0.00'))
+                sprofit = max(decimal.Decimal('0.00'), tprofit*tradelever.psrate)
 
                 # update user trade
                 tradeprestatus = usertrade.status
@@ -774,8 +794,9 @@ class OrderSoldHandler(handler.Handler):
                 usertrade.tprofit = tprofit
                 usertrade.sprofit = sprofit
                 usertrade.status = 'hold' if usertrade.hcount > 0 else 'sold'
-                usertrade.slog = status.append('sys', 'sold', tradeprestatus, usertrade.status, '', usertrade.slog)
                 usertrade.mtime = int(time.time())
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'sold', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # settlement
@@ -796,7 +817,6 @@ class OrderSoldHandler(handler.Handler):
 
                     # bill money
                     money = tprofit + usertrade.margin + coupon_cash - sprofit - (usertrade.ofee + usertrade.dfee)*coupon_discount
-                    money = money.quantize(decimal.Decimal('0.00'))
                     # bill detail
                     detail = template.bill.settle.detail % money
                     # add bill
@@ -839,9 +859,9 @@ class OrderCanceledHandler(handler.Handler):
                 # update trade order
                 orderprestatus = tradeorder.status
                 tradeorder.status = 'tcanceled'
-                detail = '%s,%s,%s,%s,%s,%s' % ('canceled', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
-                tradeorder.slog = status.append('sys', 'canceled', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.mtime = int(time.time())
+                detail = status.order_detail(**tradeorder)
+                tradeorder.slog = status.append('sys', 'canceled', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.save(d)
 
                 tradeprestatus = usertrade.status
@@ -873,8 +893,10 @@ class OrderCanceledHandler(handler.Handler):
 
                     # update status
                     usertrade.status = 'canceled'
-                usertrade.slog = status.append('sys', 'canceled', tradeprestatus, usertrade.status, '', usertrade.slog)
+
                 usertrade.mtime = int(time.time())
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'canceled', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # response data
@@ -908,9 +930,9 @@ class OrderExpiredHandler(handler.Handler):
                 # update trade order
                 orderprestatus = tradeorder.status
                 tradeorder.status = 'expired'
-                detail = '%s,%s,%s,%s,%s,%s' % ('expired', tradeorder.optype, tradeorder.oprice, tradeorder.ocount, tradeorder.dprice, tradeorder.dcount)
-                tradeorder.slog = status.append('sys', 'expired', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.mtime = int(time.time())
+                detail = status.order_detail(**tradeorder)
+                tradeorder.slog = status.append('sys', 'expired', orderprestatus, tradeorder.status, detail, tradeorder.slog)
                 tradeorder.save(d)
 
                 tradeprestatus = usertrade.status
@@ -942,8 +964,9 @@ class OrderExpiredHandler(handler.Handler):
 
                     # update status
                     usertrade.status = 'expired'
-                usertrade.slog = status.append('sys', 'expired', tradeprestatus, usertrade.status, '', usertrade.slog)
                 usertrade.mtime = int(time.time())
+                detail = status.trade_detail(**usertrade)
+                usertrade.slog = status.append('sys', 'expired', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # response data
@@ -961,6 +984,11 @@ class OrderUpdateHandler(handler.Handler):
         # get form arguments
         form = forms.trade.OrderUpdate(**self.cleaned_arguments)
 
+        # get update items
+        updateitems = {}
+        for k in self.cleaned_arguments:
+            updateitems[k] = form[k]
+
         with models.db.atomic() as d:
             # get trade order object
             tradeorder = models.TradeOrder.filter(d, id=form.id).one()
@@ -974,12 +1002,12 @@ class OrderUpdateHandler(handler.Handler):
 
             # lock user
             with locker.user(usertrade.user_id):
-                # do not change oprice when optype is sj
-                if form.optype == 'sj':
-                    form.oprice = tradeorder.oprice
-
                 # update order
-                tradeorder.update(**form).save(d)
+                orderprestatus = tradeorder.status
+                tradeorder.update(**updateitems)
+                detail = status.order_detail(**tradeorder)
+                tradeorder.slog = status.append('sys', 'update', orderprestatus, tradeorder.status, detail, tradeorder.slog)
+                tradeorder.save(d)
 
                 # response data
                 self.write(protocol.success(data=tradeorder))

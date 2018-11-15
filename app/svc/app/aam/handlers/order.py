@@ -28,6 +28,100 @@ class ListHandler(handler.Handler):
             self.write(protocol.success(data=orders))
 
 
+class AccoutsHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def get(self):
+        """
+            get account order list
+        :return:
+        """
+        # list conditions
+        conds = self.cleaned_arguments
+
+        with models.db.create() as d:
+            # get trade records
+            orders = models.AccountOrder.filter(d, **conds).all()
+
+            # distinct accounts
+            accounts = list(set([order['account'] for order in orders]))
+
+            # success
+            self.write(protocol.success(data=accounts))
+
+
+class UpdateHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        # get form arguments
+        form = forms.order.Update(**self.cleaned_arguments)
+
+        # get update items
+        updateitems = {}
+        for k in self.cleaned_arguments:
+            updateitems[k] = form[k]
+
+        with models.db.atomic() as d:
+            # get account order object
+            accountorder = models.AccountOrder.filter(d, id=form.id).one()
+            if accountorder is None:
+                raise error.order_not_exist
+
+            # lock order
+            with locker.order(accountorder.id):
+                # update order
+                orderprestatus = accountorder.status
+                accountorder.update(**updateitems)
+                detail = status.order_detail(**accountorder)
+                accountorder.slog = status.append('sys', 'update', orderprestatus, accountorder.status, detail, accountorder.slog)
+                accountorder.save(d)
+
+                # response data
+                self.write(protocol.success(data=accountorder))
+
+
+class TakeHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+            take today's not-send order, make to-send status
+        :return:
+        """
+        with models.db.create() as d:
+            # get account orders
+            accountorders = models.AccountOrder.filter(d, status='notsend', odate=datetime.date.today()).all()
+
+            taked, failed = [], []
+            # take each order
+            for accountorder in accountorders:
+                try:
+                    with locker.order(accountorder.id):
+                        orderprestatus = accountorder.status
+                        accountorder.status = 'tosend'
+                        detail = status.order_detail(**accountorder)
+                        accountorder.slog = status.append('sys', 'take', orderprestatus, accountorder.status, detail, accountorder.slog)
+                        accountorder.save(d)
+                        d.commit()
+
+                        del accountorder['slog']
+                        taked.append(accountorder)
+                except Exception as e:
+                    del accountorder['slog']
+                    failed.append(accountorder)
+
+
+            # response data
+            data = {
+                'taked': taked,
+                'failed': failed
+            }
+
+            # success
+            self.write(protocol.success(data=data))
+
+
 class PlaceHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
@@ -48,11 +142,9 @@ class PlaceHandler(handler.Handler):
 
             # add new order
             if order is None:
-                # detail
-                detail = '%s,%s,%s,%s,%s,%s' % (form.otype, form.optype, form.oprice, form.ocount, '0.0', '0')
                 # status log
+                detail = status.order_detail(**form)
                 slog = status.append(form.operator, form.otype, '', 'notsend', detail)
-
                 # add order
                 order = models.AccountOrder(tcode=form.ocode, account=form.account, scode=form.scode, sname=form.sname,
                                           otype=form.otype, optype=form.optype, oprice=form.oprice, ocount=form.ocount,
@@ -92,14 +184,12 @@ class CancelHandler(handler.Handler):
             if order.status not in ['notsend', 'tosend', 'sending', 'sent']:
                 raise error.order_operation_denied
 
-            # next status
-            nextstatus = 'tcanceled' if order.status in ['notsend'] else 'tocancel'
-
-            #status log
-            detail = '%s,%s,%s,%s,%s,%s' % (order.otype, order.optype, order.oprice, order.ocount, order.dprice, order.dcount)
-            order.slog = status.append(form.operator, 'cancel', order.status, nextstatus, detail, order.slog)
-
             # update order
+            orderprestatus = order.status
+            order.status = 'tcanceled' if orderprestatus in ['notsend', 'tosend'] else 'tocancel'
+            detail = status.order_detail(**order)
+            order.slog = status.append(form.operator, 'cancel', orderprestatus, order.status, detail, order.slog)
+
             order.save(d)
 
             # response
@@ -129,47 +219,46 @@ class NotifyHandler(handler.Handler):
             if notifyorder['status'] not in ['sent','canceling','pcanceled','tcanceled','fcanceled','pdeal','tdeal','dropped']:
                 raise error.order_notify_data_invalid
 
-        with models.db.atomic() as d:
+        with models.db.create() as d:
             # get all pending orders of today
-            localorders = models.AccountOrder.filter(d, odate=datetime.date.today(), ocode__null=True, status__in=('notsend, tosend, sending, sent, tocancel, canceling, pdeal')).all()
+            localorders = models.AccountOrder.filter(d, odate=datetime.date.today(), status__in=('sent, tocancel, canceling, pdeal')).all()
 
-            # updated orders
-            updatedorders = []
-
+            notified, failed = [], []
             # process each order
-            for notifyorder in notifyorders:
-                for localorder in localorders:
-                    if notifyorder['account']==localorder.account and notifyorder['ocode']==localorder.ocode:
-                        try:
+            for localorder in localorders:
+                for notifyorder in notifyorders:
+                    try:
+                        if notifyorder['account']==localorder.account and notifyorder['ocode']==localorder.ocode:
                             with locker.order(localorder.id):
-                                # status log
-                                detail = '%s,%s,%s,%s,%s,%s' % (localorder.otype, localorder.optype, localorder.oprice, localorder.ocount, notifyorder['dprice'], notifyorder['dcount'])
-                                slog = status.append(notifyorder['operator'], 'notify', localorder.status, notifyorder['status'], detail, localorder.slog)
-
+                                orderprestatus = localorder.status
                                 #update trade order
                                 localorder.update(dprice=notifyorder['dprice'],
                                                  dcount=notifyorder['dcount'],
                                                  status=notifyorder['status'],
-                                                 slog=slog,
                                                  ddate=datetime.date.today(),
                                                  dtime=int(time.time()),
                                                  mtime=int(time.time()))
+                                detail = status.order_detail(**localorder)
+                                localorder.slog = status.append(notifyorder.get('operator', 'sys'), 'notify', orderprestatus, localorder.status, detail, localorder.slog)
+
                                 localorder.save(d)
+                                d.commit()
 
-                                updatedorders.append(localorder)
-                        except Exception as e:
-                            logging.error('notify: %s->%s, error: %s' % (str(localorder), str(notifyorder), str(e)))
-
+                                del localorder['slog']
+                                notified.append(localorder)
+                    except Exception as e:
+                        del localorder['slog']
+                        notified.append(localorder)
 
             # response data
             data = {
-                'updated': len(updatedorders),
-                'updates': updatedorders
+                'notified': notified,
+                'failed': failed
             }
             self.write(protocol.success(data=data))
 
 
-class OCodeHandler(handler.Handler):
+class SendingHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def post(self):
@@ -178,10 +267,181 @@ class OCodeHandler(handler.Handler):
         :return:
         """
         # get form arguments
-        form = forms.order.OCode(**self.cleaned_arguments)
+        form = forms.order.Sending(**self.cleaned_arguments)
 
         with models.db.atomic() as d, locker.order(form.id):
-            # udpate order code
-            models.AccountOrder.filter(d, id=form.id).update(ocode=form.ocode)
+            # get order
+            order = models.AccountOrder.filter(d, id=form.id).one()
+            if order is None:
+                raise error.order_not_exist
+            if order.status not in ['tosend']:
+                raise error.order_operation_denied
 
-            self.write(protocol.success())
+            # udpate order
+            orderprestatus = order.status
+            order.status = 'sending'
+            detail = status.order_detail(**order)
+            order.slog = status.append(form.operator, 'send', orderprestatus, order.status, detail, order.slog)
+
+            order.save(d)
+
+            del order['slog']
+            self.write(protocol.success(data=order))
+
+
+class SentHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+            order code notify
+        :return:
+        """
+        # get form arguments
+        form = forms.order.Sent(**self.cleaned_arguments)
+
+        with models.db.atomic() as d, locker.order(form.id):
+            # get order
+            order = models.AccountOrder.filter(d, id=form.id).one()
+            if order is None:
+                raise error.order_not_exist
+            if order.status not in ['sending']:
+                raise error.order_operation_denied
+
+            # udpate order
+            orderprestatus = order.status
+            order.status = 'sent'
+            order.ocode = form.ocode
+            detail = status.order_detail(**order)
+            order.slog = status.append(form.operator, 'send', orderprestatus, order.status, detail, order.slog)
+
+            order.save(d)
+
+            del order['slog']
+            self.write(protocol.success(data=order))
+
+
+class DealtHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+            notify order dealt
+        :return:
+        """
+        # get form arguments
+        form = forms.order.Dealt(**self.cleaned_arguments)
+
+        with models.db.atomic() as d, locker.order(form.id):
+            # get order
+            order = models.AccountOrder.filter(d, id=form.id).one()
+            if order is None:
+                raise error.order_not_exist
+            if order.status not in ['sent', 'tocancel', 'canceling']:
+                raise error.order_operation_denied
+
+            # udpate order
+            orderprestatus = order.status
+            order.status = 'pdeal' if form.dcount < order.ocount else 'tdeal'
+            order.dprice = form.dprice
+            order.dcount = form.dcount
+            detail = status.order_detail(**order)
+            order.slog = status.append(form.operator, 'deal', orderprestatus, order.status, detail, order.slog)
+
+            order.save(d)
+
+            del order['slog']
+            self.write(protocol.success(data=order))
+
+
+class CancelingHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+            notify order canceling
+        :return:
+        """
+        # get form arguments
+        form = forms.order.Canceling(**self.cleaned_arguments)
+
+        with models.db.atomic() as d, locker.order(form.id):
+            # get order
+            order = models.AccountOrder.filter(d, id=form.id).one()
+            if order is None:
+                raise error.order_not_exist
+            if order.status not in ['tocancel']:
+                raise error.order_operation_denied
+
+            # udpate order
+            orderprestatus = order.status
+            order.status = 'canceling'
+            detail = status.order_detail(**order)
+            order.slog = status.append(form.operator, 'cancel', orderprestatus, order.status, detail, order.slog)
+
+            order.save(d)
+
+            del order['slog']
+            self.write(protocol.success(data=order))
+
+
+class CanceledHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+            notify order canceled
+        :return:
+        """
+        # get form arguments
+        form = forms.order.Canceled(**self.cleaned_arguments)
+
+        with models.db.atomic() as d, locker.order(form.id):
+            # get order
+            order = models.AccountOrder.filter(d, id=form.id).one()
+            if order is None:
+                raise error.order_not_exist
+            if order.status not in ['canceling']:
+                raise error.order_operation_denied
+
+            # udpate order
+            orderprestatus = order.status
+            order.status = 'tcanceled'
+            detail = status.order_detail(**order)
+            order.slog = status.append(form.operator, 'cancel', orderprestatus, order.status, detail, order.slog)
+
+            order.save(d)
+
+            del order['slog']
+            self.write(protocol.success(data=order))
+
+
+class ExpiredHandler(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        """
+            notify order canceled
+        :return:
+        """
+        # get form arguments
+        form = forms.order.Expired(**self.cleaned_arguments)
+
+        with models.db.atomic() as d, locker.order(form.id):
+            # get order
+            order = models.AccountOrder.filter(d, id=form.id).one()
+            if order is None:
+                raise error.order_not_exist
+            if order.status not in ['sent']:
+                raise error.order_operation_denied
+
+            # udpate order
+            orderprestatus = order.status
+            order.status = 'expired'
+            detail = status.order_detail(**order)
+            order.slog = status.append(form.operator, 'expire', orderprestatus, order.status, detail, order.slog)
+
+            order.save(d)
+
+            del order['slog']
+            self.write(protocol.success(data=order))

@@ -2,7 +2,7 @@
 
 """
 import random
-from tlib.stock.util import digit, stock
+from .. import util
 
 
 def addse(codes):
@@ -12,10 +12,7 @@ def addse(codes):
     :return:
         array, stock codes with exchange flag
     """
-    ncodes = []
-    for code in codes:
-        ncodes.append(stock.addse(code))
-    return ncodes
+    return util.addse(codes)
 
 
 def randnum():
@@ -23,7 +20,7 @@ def randnum():
         generate random number
     :return:
     """
-    return digit.strbasen(round(random.random() * 60466176), 36)
+    return util.strbasen(round(random.random() * 60466176), 36)
 
 
 def make(codes):

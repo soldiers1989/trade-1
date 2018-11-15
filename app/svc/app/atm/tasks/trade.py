@@ -52,7 +52,7 @@ def take(*args, **kwargs):
             except Exception as e:
                 failed.append(str(usertrade)+", error: "+str(e))
 
-        return 'trade(take): \ntaked:\n%sfailed:\n%s' % ('\n'.join(taked), '\n'.join(failed))
+        return '\ntrade(take): \ntaked:\n%s\nfailed:\n%s\n' % ('\n'.join(taked), '\n'.join(failed))
     except Exception as e:
         raise RuntimeError('trade(take): %s'%str(e))
 
@@ -105,7 +105,7 @@ def place(*args, **kwargs):
             except Exception as e:
                 failed.append(str(tradeorder)+", error: "+str(e))
 
-        return 'trade(place): \nplaced:\n%sfailed:\n%s' % ('\n'.join(placed), '\n'.join(failed))
+        return '\ntrade(place): \nplaced:\n%s\nfailed:\n%s\n' % ('\n'.join(placed), '\n'.join(failed))
     except Exception as e:
         raise RuntimeError('trade(place): %s'%str(e))
 
@@ -170,7 +170,7 @@ def notify(*args, **kwargs):
                 except Exception as e:
                     failed.append(str(tradeorder)+", error: "+str(e))
 
-        return 'trade(notify): \nnotified:\n%sfailed:\n%s' % ('\n'.join(notified), '\n'.join(failed))
+        return '\ntrade(notify): \nnotified:\n%s\nfailed:\n%s\n' % ('\n'.join(notified), '\n'.join(failed))
     except Exception as e:
         raise RuntimeError('trade(notify): %s'%str(e))
 
@@ -206,7 +206,7 @@ def clear(*args, **kwargs):
         # dict -> string arrays
         cleared, failed = [str(i) for i in result['cleared']], [str(i) for i in result['failed']]
 
-        return 'trade(clear): \ncleared:\n%sfailed:\n%s' % ('\n'.join(cleared), '\n'.join(failed))
+        return '\ntrade(clear): \ncleared:\n%s\nfailed:\n%s\n' % ('\n'.join(cleared), '\n'.join(failed))
     except Exception as e:
         raise RuntimeError('trade(clear): %s'%str(e))
 
@@ -249,6 +249,6 @@ def expire(*args, **kwargs):
             except Exception as e:
                 failed.append(str(tradeorder)+", error: "+str(e))
 
-        return 'trade(expire): \nexpired:\n%sfailed:\n%s' % ('\n'.join(expired), '\n'.join(failed))
+        return '\ntrade(expire): \nexpired:\n%s\nfailed:\n%s\n' % ('\n'.join(expired), '\n'.join(failed))
     except Exception as e:
         raise RuntimeError('trade(expire): %s'%str(e))

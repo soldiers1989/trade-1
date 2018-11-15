@@ -203,12 +203,12 @@ class TradeOrder(quote.Callback):
         """
         # check status
         if self.cleared or self.status in [Status.expired, Status.dropped, Status.tcanceled, Status.pcanceled, Status.tdeal]:
-            return False
+            return False # unsubscribe quote
 
         # make deal by price
         self.deal(price)
 
-        # unsubscribe quote
+        # continue subscribe quote
         return True
 
     @property

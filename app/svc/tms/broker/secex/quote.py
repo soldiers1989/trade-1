@@ -2,7 +2,7 @@
     quote service
 """
 import time, threading, logging, decimal, random
-from trpc import quote
+from tms import rpc
 
 
 class QuoteServiceError(Exception):
@@ -59,6 +59,14 @@ class Symbol:
         # subscribe upper target price
         self.uprice = decimal.Decimal('0.000')
 
+    def has_subscriber(self):
+        """
+            check if has subscriber
+        :return:
+            boolean
+        """
+        return len(self._subscribers) > 0
+
     def add_subscriber(self, subscriber: Subscriber):
         """
             add a new subscriber
@@ -79,8 +87,6 @@ class Symbol:
         """
         if self._subscribers.get(id) is not None:
             del self._subscribers[id]
-            # update target lower/upper price
-            self.update_price()
             return True
 
         return False
@@ -216,6 +222,8 @@ class QuoteService(threading.Thread):
                         symbolobj = self._symbols.get(symbol)
                         if symbolobj is not None:
                             symbolobj.notify_subscriber(price)
+                            if not symbolobj.has_subscriber():
+                                del self._symbols[symbol]
 
                     logging.info('quote service loop finished')
             except Exception as e:
@@ -308,7 +316,7 @@ class SimuQuoteService(QuoteService):
             if key is None:
                 raise QuoteServiceError('未知的远程行情服务key')
 
-        self._quoterpc = quote.QuoteRpc(baseurl, key, safety)
+        self._quoterpc = rpc.Mds(baseurl, key, safety)
 
         # init super
         super().__init__(**kwargs)
@@ -327,7 +335,7 @@ class SimuQuoteService(QuoteService):
                 if isinstance(symbol, Symbol):
                     scode = symbol.code
 
-                quotes[scode] = decimal.Decimal(self._quoterpc.get_quote(scode)['dqj']).quantize(decimal.Decimal('0.000'))
+                quotes[scode] = decimal.Decimal(self._quoterpc.stock_quote(zqdm=scode)[0]['dqj']).quantize(decimal.Decimal('0.000'))
             except Exception as e:
                 logging.error('query quote of symbol: %s failed, error: %s' % (scode, str(e)))
 

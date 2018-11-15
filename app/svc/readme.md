@@ -15,6 +15,8 @@
 * PyMySQL
     * 功能：mysql数据库访问
     * 版本：0.8.0
+* xpinyin
+* xlrd
 
 ## 应用服务
 * aam

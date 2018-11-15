@@ -86,7 +86,7 @@ class EnumField(Field):
         super().__init__(validator.EnumValidator, **kwargs)
 
     def _value(self, val):
-        return str(val)
+        return str(val) if val is not None else None
 
 
 class BooleanField(Field):
@@ -129,6 +129,8 @@ class FloatField(Field):
 class DecimalField(Field):
     def __init__(self, **kwargs):
         self._digits = kwargs.get('digits', None)
+        self._decimals = kwargs.get('decimals', None)
+        self._quantize = decimal.Decimal('.'+self._decimals*'0') if self._decimals is not None else None
         super().__init__(validator.DecimalValidator, **kwargs)
 
     @property
@@ -140,10 +142,14 @@ class DecimalField(Field):
             return None
 
         if isinstance(val, float):
-            return self.context.create_decimal_from_float(val)
+            cval = self.context.create_decimal_from_float(val)
         else:
-            return decimal.Decimal(val)
+            cval = decimal.Decimal(val)
 
+        if self._quantize is None:
+            return cval
+
+        return cval.quantize(self._quantize)
 
 class StringField(Field):
     def __init__(self, **kwargs):
