@@ -258,8 +258,10 @@ def process(request):
             return resp.failure(hint.ERR_ACCOUNT_ORDER_NOT_EXIST)
 
         # process trade option
-        if action == 'sent':
-            remote.aam.order_sent(id=orderid)
+        if action == 'sending':
+            remote.aam.order_sending(id=orderid)
+        elif action == 'sent':
+            remote.aam.order_sent(id=orderid, ocode=params['ocode'])
         elif action in ['dealt']:
             remote.aam.order_dealt(id=orderid, dprice=params['dprice'], dcount=params['dcount'])
         elif action == 'canceling':

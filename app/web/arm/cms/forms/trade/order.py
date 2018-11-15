@@ -66,5 +66,6 @@ class Delete(forms.Form):
 class Process(forms.Form):
     id = forms.IntegerField()
     act = forms.CharField(max_length=16)
+    ocode = forms.CharField(required=False, max_length=16)
     dcount = forms.IntegerField(required=False)
     dprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)

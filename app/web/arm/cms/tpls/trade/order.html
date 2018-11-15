@@ -7,6 +7,7 @@
             <div title="操作">
                 <div class="easyui-panel" style="height:100%;width:100%">
                     <div style="margin: 6px; height: 5%; width: 100%">
+                        <a href="#" id="btn_account_order_sending" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('sending')">正报</a>
                         <a href="#" id="btn_account_order_sent" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.sent.open()">已报</a>
                         <a href="#" id="btn_account_order_dealt" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.dealt.open()">已成</a>
                         <a href="#" id="btn_account_order_canceling" class="easyui-linkbutton" data-options="width:'50px'" onclick="accountorder.detail.operation.process('canceling')">正撤</a>
@@ -153,8 +154,8 @@
 </div>
 
 <div id="account_order_sent_dialog_buttons">
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="accountorder.detail.operation.dealt.save()" style="width:90px">确定</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="accountorder.detail.operation.dealt.cancel()" style="width:90px">取消</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="accountorder.detail.operation.sent.save()" style="width:90px">确定</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="accountorder.detail.operation.sent.cancel()" style="width:90px">取消</a>
 </div>
 
 <script type="text/javascript">
@@ -542,6 +543,12 @@
                                 //permit operation
                                 status = resp.data.status;
                                 if (['tosend'].includes(status)){
+                                    $('#btn_account_order_sending').linkbutton('enable');
+                                } else {
+                                    $('#btn_account_order_sending').linkbutton('disable');
+                                }
+
+                                if (['sending'].includes(status)){
                                     $('#btn_account_order_sent').linkbutton('enable');
                                 } else {
                                     $('#btn_account_order_sent').linkbutton('disable');
@@ -641,6 +648,59 @@
                                 var resp = eval('('+data+')');
                                 if (resp.status){
                                     accountorder.detail.operation.dealt.dialog.dialog('close');
+
+                                    //update selected row data
+                                    accountorder.list.updateSelected(resp.data);
+                                } else {
+                                    $.messager.show({ title: '错误',  msg: resp.msg });
+                                }
+                            }
+                        });
+                    },
+
+                    // cancel operation
+                    cancel: function() {
+                        //close dialog
+                        this.dialog.dialog('close');
+                    }
+                },
+
+                sent: {
+                    url: '/api/trade/order/process',
+                    dialog: $('#account_order_sent_dialog'),
+                    form: $('#account_order_sent_form'),
+
+                    // open update dialog
+                    open: function() {
+                        //get selected row data
+                        row = accountorder.list.getSelected();
+                        if (row){
+                            // clear form
+                            this.form.form('clear');
+
+                            //load form data
+                            this.form.form('load', {id:row.id, ocode:row.tcode});
+
+                            //open dialog
+                            this.dialog.dialog('open').dialog('center').dialog('setTitle','委托已报');
+                        }
+                    },
+
+                    // save update results
+                    save: function() {
+                        //submit form
+                        this.form.form('submit',{
+                            url: this.url,
+                            queryParams: {
+                                act: 'sent'
+                            },
+                            onSubmit: function(){
+                                return accountorder.detail.operation.sent.form.form('validate');
+                            },
+                            success: function(data){
+                                var resp = eval('('+data+')');
+                                if (resp.status){
+                                    accountorder.detail.operation.sent.dialog.dialog('close');
 
                                     //update selected row data
                                     accountorder.list.updateSelected(resp.data);
