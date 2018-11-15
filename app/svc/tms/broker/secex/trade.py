@@ -150,7 +150,7 @@ class TradeOrder(quote.Callback):
         if self.status in [Status.tcanceled, Status.pcanceled, Status.tdeal]:
             return
 
-        if self.dcount is None:
+        if self.dcount is None or self.dcount==0:
             self.status = Status.tcanceled
             # notify account with canceled message
             self.canceled()

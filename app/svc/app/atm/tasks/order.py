@@ -125,7 +125,7 @@ def notify(*args, **kwargs):
 
 
         # get today's pending account order's accounts
-        accounts = rpcaam.order_accounts(status__in='sent, tocancel, canceling, pdeal', odate=datetime.date.today())
+        accounts = rpcaam.order_accounts(status__in='sent,tocancel,canceling,pdeal', odate=datetime.date.today())
 
         notified, failed, errors = [], [], []
         # get each account today's orders
@@ -138,7 +138,7 @@ def notify(*args, **kwargs):
                     notifyorders.append({
                         'account': account,
                         'ocode': order['wtbh'],
-                        'dprice': order['cjje'],
+                        'dprice': order['cjjg'],
                         'dcount': order['cjsl'],
                         'status': order['ztsm'],
                         'operator': 'sys'

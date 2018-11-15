@@ -132,7 +132,7 @@ class PlaceHandler(handler.Handler):
         """
         account, symbol, otype, ptype, oprice, ocount  = self.get_argument('account'), self.get_argument('symbol'), self.get_argument('otype'), self.get_argument('ptype'), self.get_argument('oprice'), self.get_argument('ocount')
         result = secex.trade.default.place(account, symbol, otype, ptype, oprice, ocount)
-        self.write(protocol.success(data=result))
+        self.write(protocol.success(data=[result]))
 
 
 class CancelHandler(handler.Handler):
@@ -145,7 +145,7 @@ class CancelHandler(handler.Handler):
         """
         account, ocode = self.get_argument('account'), self.get_argument('ocode')
         result = secex.trade.default.cancel(account, ocode)
-        self.write(protocol.success(data=result))
+        self.write(protocol.success(data=[result]))
 
 
 class ClearHandler(handler.Handler):

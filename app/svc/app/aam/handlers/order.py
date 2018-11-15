@@ -221,7 +221,7 @@ class NotifyHandler(handler.Handler):
 
         with models.db.create() as d:
             # get all pending orders of today
-            localorders = models.AccountOrder.filter(d, odate=datetime.date.today(), status__in=('sent, tocancel, canceling, pdeal')).all()
+            localorders = models.AccountOrder.filter(d, odate=datetime.date.today(), status__in=('sent', 'tocancel', 'canceling', 'pdeal')).all()
 
             notified, failed = [], []
             # process each order

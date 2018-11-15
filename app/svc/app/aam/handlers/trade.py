@@ -261,7 +261,7 @@ class UserSellHandler(handler.Handler):
 
             # get & check sell price
             if form.optype == 'sj':
-                form.oprice = trade.get_trading_price(form.stock)
+                form.oprice = trade.get_trading_price(stock.id)
             else:
                 trade.valid_trading_price(stock.id, form.oprice)
 
@@ -818,7 +818,7 @@ class OrderSoldHandler(handler.Handler):
                     # bill money
                     money = tprofit + usertrade.margin + coupon_cash - sprofit - (usertrade.ofee + usertrade.dfee)*coupon_discount
                     # bill detail
-                    detail = template.bill.settle.detail % money
+                    detail = template.bill.settle.detail % money.quantize(decimal.Decimal('0.00'))
                     # add bill
                     models.UserBill(user_id=user.id, code=rand.uuid(),
                                     item=template.bill.settle.item, detail=detail,
