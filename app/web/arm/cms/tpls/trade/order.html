@@ -414,7 +414,9 @@
                     url: '/api/enum?c=order&i=type',
                     valueField: 'id',
                     textField: 'text',
-                    
+
+                    multiple: false,
+
                     loadFilter: function(resp){
                         return resp.data;
                     }
@@ -425,6 +427,8 @@
                     url: '/api/enum?c=order&i=price',
                     valueField: 'id',
                     textField: 'text',
+
+                    multiple: false,
 
                     loadFilter: function(resp){
                         return resp.data;
@@ -437,6 +441,8 @@
                     valueField: 'id',
                     textField: 'text',
 
+                    multiple: true,
+
                     loadFilter: function(resp){
                         return resp.data;
                     }
@@ -448,11 +454,18 @@
                 if(!this.form.form('validate'))
                     return;
 
+                // status input
+                statuslst = [];
+                statuss = this.form.find('input[name="status"]');
+                for (i=0; i<statuss.length; i++){
+                    statuslst.push($(statuss[i]).val());
+                }
+
                 //get parameters
                 params = {
                     otype: this.form.find('input[name="otype"]:first').val(),
                     optype: this.form.find('input[name="optype"]:first').val(),
-                    status: this.form.find('input[name="status"]:first').val(),
+                    status: statuslst.join(','),
                     words: this.form.find('input[name="words"]:first').val(),
                     sdate: this.form.find('input[name="sdate"]:first').val(),
                     edate: this.form.find('input[name="edate"]:first').val()

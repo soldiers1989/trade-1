@@ -11,9 +11,11 @@ urlpatterns = [
     path('auth/module/', auth.module, name="cms.auth.module"),
     path('auth/role/', auth.role, name="cms.auth.role"),
 
+    path('trade/account/', trade.account, name="cms.trade.account"),
     path('trade/lever/', trade.lever, name="cms.trade.lever"),
     path('trade/order/', trade.order, name="cms.trade.order"),
-    path('trade/account/', trade.account, name="cms.trade.account"),
+    path('trade/dash/', trade.dash, name="cms.trade.dash"),
+
 
     path('user/user/', user.user, name="cms.user.user"),
     path('user/bill/', user.bill, name="cms.user.bill"),

@@ -24,21 +24,25 @@ def list(request):
                 filters['otype'] = otype
             if optype:
                 filters['optype'] = optype
-            if status:
-                filters['status'] = status
             if sdate:
                 filters['ctime__gte'] = util.time.utime(sdate)
             if edate:
                 filters['ctime__lt'] = util.time.utime(edate+datetime.timedelta(days=1))
 
-            ## search words ##
             q = Q()
+            ## status options ##
+            if status:
+                for q1 in [(Q(status=s)) for s in status.split(',')]:
+                   q  = q | q1
+
+            ## search words ##
             words = params['words']
             if words:
                 if words.isdigit():
-                    q = Q(account=words) | Q(scode=words) | Q(id=words) | Q(trade__id=words)
+                    q2 = Q(account=words) | Q(scode=words) | Q(id=words) | Q(trade__id=words)
                 else:
-                    q = Q(sname__contains=words) | Q(tcode=words)
+                    q2 = Q(sname__contains=words) | Q(tcode=words)
+                q = q & q2
 
             ## get total count ##
             total = models.TradeOrder.objects.filter(q, **filters).count()

@@ -1,0 +1,478 @@
+<div class="easyui-layout" data-options="fit:true, split:true, border: true">
+    <div data-options="region:'north', split:true" style="width: 100%;height: 50%">
+        <table id="datagrid_dash_user_trade" style="height: 100%;"></table>
+    </div>
+    <div data-options="region:'center', split:true" style="width: 100%;">
+        <div class="easyui-layout" data-options="fit:true, split:true, border: true">
+            <div data-options="region:'west', split:true" style="width: 50%;height: 50%;">
+                <table id="datagrid_dash_user_order" style="height: 100%;"></table>
+            </div>
+            <div data-options="region:'center', split:true" style="width: 50%;height: 50%;">
+                <table id="datagrid_dash_trade_order" style="height: 100%;"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var tradedash = {
+        // user trade dash
+        usertrade: {
+            url: '/api/user/trade/list',
+            params: {
+                status: 'tobuy,buying,cancelbuy,buycanceling,tosell,selling,cancelsell,sellcanceling,toclose,closing,cancelclose,closecanceling'
+            },
+            datagrid: $('#datagrid_dash_user_trade'),
+
+            auto_refresh: true,
+            refresh_interval: 5000,
+            current_timer: null,
+
+            init: function() {
+                this.datagrid.datagrid({
+                    method: 'get',
+                    url: this.url,
+                    queryParams: this.params,
+
+                    title: '用户交易',
+                    idField: 'id',
+
+                    striped: true,
+                    fitColumns: true,
+                    pagination: false,
+                    rownumbers: false,
+                    singleSelect: true,
+
+                    frozenColumns: [[
+                        {field:'id', title:'ID', sortable:true},
+                        {field:'user', title:'用户'},
+                        {field:'stock', title:'股票', hidden:true},
+                        {field:'_stock', title:'股票'},
+                        {field:'status', title:'状态', hidden:true},
+                        {field:'_status', title:'状态'},
+                        {field:'account', title:'账户', sortable:true},
+                        {field:'tcode', title:'代码', hidden:true},
+                        {field:'optype', title:'报价', hidden:true},
+                        {field:'_optype', title:'报价'},
+                        {field:'lever', title:'杠杆', hidden:true},
+                        {field:'_lever', title:'杠杆', sortable:true},
+                        {field:'oprice', title:'单价', sortable:true},
+                        {field:'ocount', title:'单量', sortable:true}
+
+                    ]],
+                    columns: [[
+                        {field:'hprice', title:'成本', sortable:true, formatter: cube.format.none},
+                        {field:'hcount', title:'持仓', sortable:true, formatter: cube.format.none},
+                        {field:'fcount', title:'可卖', sortable:true, formatter: cube.format.none},
+                        {field:'bprice', title:'买价', sortable:true, formatter: cube.format.none},
+                        {field:'bcount', title:'买量', sortable:true, formatter: cube.format.none},
+                        {field:'sprice', title:'卖价', sortable:true, formatter: cube.format.none},
+                        {field:'scount', title:'卖量', sortable:true, formatter: cube.format.none},
+                        {field:'margin', title:'保证金', sortable:true},
+                        {field:'ofee', title:'建仓费', sortable:true},
+                        {field:'dday', title:'天数', sortable:true, formatter: cube.format.none},
+                        {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},
+                        {field:'tprofit', title:'盈利', sortable:true, formatter: cube.format.none},
+                        {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
+                        {field:'_coupon', title:'优惠券', sortable:false, formatter: cube.format.none},
+                        {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.datetime},
+                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime}
+                    ]],
+
+                    loadFilter: function (resp) {
+                        if(!resp.status){
+                            $.messager.show({title: '错误', msg: resp.msg});
+                            return {total:0, rows:[]}
+                        }
+                        return resp.data;
+                    },
+
+                    onLoadSuccess: function(resp) {
+                        // refresh data after timer interval
+                        tradedash.usertrade.autoRefresh();
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求用户交易数据失败'});
+                                                // refresh data after timer interval
+                        tradedash.usertrade.autoRefresh();
+                    },
+
+                    onSelect: function(index, row) {
+
+                    }
+                });
+            },
+
+            startRefresh: function() {
+                this.auto_refresh = true;
+                this.autoRefresh();
+            },
+
+            autoRefresh: function() {
+                if (this.auto_refresh) {
+                    this.current_timer = setTimeout(this.reload, this.refresh_interval);
+                }
+            },
+
+            stopRefresh: function() {
+                this.auto_refresh = false;
+                if (this.current_timer != null){
+                    clearTimeout(this.current_timer);
+                }
+            },
+
+
+            reload: function() {
+                $.get(tradedash.usertrade.url, tradedash.usertrade.params,
+                    function (resp, status, xhr) {
+                        if (status==='success'){
+                               tradedash.usertrade.updateRows(resp.data.rows);
+                        } else {
+                            $.messager.show({title: '错误', msg: '刷新用户交易数据失败'});
+                        }
+
+                        tradedash.usertrade.autoRefresh();
+                    },
+                    'json'
+                ).fail(function () {
+                        $.messager.show({title: '错误', msg: '刷新用户交易数据失败'});
+                        tradedash.usertrade.autoRefresh();
+                })
+            },
+
+            updateRows(rows) {
+                //console.log('---update rows---');
+                newrows = []; oldrows = [];
+                drows = this.datagrid.datagrid('getRows');
+                for (i=0; i<rows.length; i++){
+                    bexist = false;
+                    for (j=0; j<drows.length; j++){
+                        if (rows[i].id === drows[j].id) {
+                            oldrows.push([drows[j], rows[i]]);
+                            bexist = true;
+                            break;
+                        }
+                    }
+                    if (!bexist){
+                        newrows.push(rows[i]);
+                    }
+                }
+
+                // update old rows
+                for (i=0; i<oldrows.length; i++){
+                    index = this.datagrid.datagrid('getRowIndex', oldrows[i][0]);
+                    this.datagrid.datagrid('updateRow', {index: index, row: oldrows[i][1]});
+                }
+                //console.log(oldrows);
+
+                // add new rows
+                for (i=0; i<newrows.length; i++){
+                    this.datagrid.datagrid('appendRow', newrows[i]);
+                }
+                //console.log(newrows)
+            }
+        },
+
+        // user order dash
+        userorder: {
+            url: '/api/user/order/list',
+            params: {
+                status: 'notsend,tosend,sending,sent,tocancel,canceling,pdeal'
+            },
+
+            datagrid: $('#datagrid_dash_user_order'),
+
+            auto_refresh: true,
+            refresh_interval: 5000,
+            current_timer: null,
+
+            init: function() {
+            	//init tree grid
+                this.datagrid.datagrid({
+                    method: 'get',
+                    url: this.url,
+                    queryParams: this.params,
+
+                    title: '用户委托',
+                    idField: 'id',
+
+    				striped: true,
+    				fitColumns: true,
+                    pagination: false,
+                    rownumbers: false,
+                    singleSelect: true,
+
+                    frozenColumns: [[
+                        {field:'id', title:'ID', sortable:true},
+                        {field:'trade', title:'订单', sortable:true},
+                        {field:'ocode', title:'代码', sortable:true},
+                        {field:'scode', title:'股票', sortable:false, hiddent:true},
+                        {field:'sname', title:'股票', sortable:false},
+                        {field:'account', title:'账户', sortable:true},
+                        {field:'otype', title:'买卖', sortable:true, hidden:true},
+                        {field:'_otype', title:'买卖', sortable:true},
+                        {field:'optype', title:'报价', sortable:true, hidden:true},
+                        {field:'_optype', title:'报价', sortable:true},
+                        {field:'status', title:'状态', sortable:true, hidden:true},
+                        {field:'_status', title:'状态', sortable:true}
+                    ]],
+
+                    columns: [[
+                        {field:'ocount', title:'委量', sortable:true},
+                        {field:'oprice', title:'委价', sortable:true},
+                        {field:'dcount', title:'成量', sortable:true},
+                        {field:'dprice', title:'成价', sortable:true},
+                        {field:'dtime', title:'成交时间', sortable:true, formatter: cube.format.datetime},
+                        {field:'otime', title:'委托时间', sortable:true, formatter: cube.format.datetime}
+                    ]],
+
+                    loadFilter: function (resp) {
+                        return resp.data;
+                    },
+
+                    onLoadSuccess: function(resp) {
+                        // refresh data after timer interval
+                        tradedash.userorder.autoRefresh();
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求用户委托记录数据失败'});
+                        // refresh data after timer interval
+                        tradedash.userorder.autoRefresh();
+                    },
+
+                    onSelect(index, row) {
+                    }
+                });
+            },
+
+            startRefresh: function() {
+                this.auto_refresh = true;
+                this.autoRefresh();
+            },
+
+            autoRefresh: function() {
+                if (this.auto_refresh) {
+                    this.current_timer = setTimeout(this.reload, this.refresh_interval);
+                }
+            },
+
+            stopRefresh: function() {
+                this.auto_refresh = false;
+                if (this.current_timer != null){
+                    clearTimeout(this.current_timer);
+                }
+            },
+
+
+            reload: function() {
+                $.get(tradedash.userorder.url, tradedash.userorder.params,
+                    function (resp, status, xhr) {
+                        if (status==='success'){
+                               tradedash.userorder.updateRows(resp.data.rows);
+                        } else {
+                            $.messager.show({title: '错误', msg: '刷新用户委托数据失败'});
+                        }
+
+                        tradedash.userorder.autoRefresh();
+                    },
+                    'json'
+                ).fail(function () {
+                        $.messager.show({title: '错误', msg: '刷新用户委托数据失败'});
+                        tradedash.userorder.autoRefresh();
+                })
+            },
+
+            updateRows(rows) {
+                //console.log('---update rows---');
+                newrows = []; oldrows = [];
+                drows = this.datagrid.datagrid('getRows');
+                for (i=0; i<rows.length; i++){
+                    bexist = false;
+                    for (j=0; j<drows.length; j++){
+                        if (rows[i].id === drows[j].id) {
+                            oldrows.push([drows[j], rows[i]]);
+                            bexist = true;
+                            break;
+                        }
+                    }
+                    if (!bexist){
+                        newrows.push(rows[i]);
+                    }
+                }
+
+                // update old rows
+                for (i=0; i<oldrows.length; i++){
+                    index = this.datagrid.datagrid('getRowIndex', oldrows[i][0]);
+                    this.datagrid.datagrid('updateRow', {index: index, row: oldrows[i][1]});
+                }
+                //console.log(oldrows);
+
+                // add new rows
+                for (i=0; i<newrows.length; i++){
+                    this.datagrid.datagrid('appendRow', newrows[i]);
+                }
+                //console.log(newrows)
+            }
+        },
+
+        // trade order dash
+        tradeorder: {
+            url: '/api/trade/order/list',
+            params: {
+                status: 'notsend,tosend,sending,sent,tocancel,canceling,pdeal'
+            },
+
+            datagrid: $('#datagrid_dash_trade_order'),
+
+            auto_refresh: true,
+            refresh_interval: 5000,
+            current_timer: null,
+
+            init: function() {
+            	//init tree grid
+                this.datagrid.datagrid({
+                    method: 'get',
+                    url: this.url,
+                    queryParams: this.params,
+
+                    title: '交易委托',
+                    idField: 'id',
+
+    				striped: true,
+    				fitColumns: true,
+                    pagination: false,
+                    rownumbers: false,
+                    singleSelect: true,
+                    loading: false,
+
+                    frozenColumns: [[
+                        {field:'id', title:'ID', sortable:true},
+                        {field:'tcode', title:'代码', sortable:true},
+                        {field:'scode', title:'股票', sortable:false, hidden:true},
+                        {field:'sname', title:'股票', sortable:false},
+                        {field:'account', title:'账户', sortable:true},
+                        {field:'otype', title:'买卖', sortable:true, hidden:true},
+                        {field:'_otype', title:'买卖', sortable:true},
+                        {field:'optype', title:'报价', sortable:true, hidden:true},
+                        {field:'_optype', title:'报价', sortable:true},
+
+                        {field:'status', title:'状态', sortable:true, hidden:true},
+                        {field:'_status', title:'状态', sortable:true}
+                    ]],
+
+                    columns: [[
+                        {field:'ocode', title:'委码', sortable:true},
+                        {field:'ocount', title:'委量', sortable:true},
+                        {field:'oprice', title:'委价', sortable:true},
+                        {field:'dcount', title:'成量', sortable:true},
+                        {field:'dprice', title:'成价', sortable:true},
+                        {field:'dtime', title:'成交时间', sortable:true, formatter: cube.format.datetime},
+                        {field:'otime', title:'委托时间', sortable:true, formatter: cube.format.datetime}
+                    ]],
+
+                    loadFilter: function (resp) {
+                        return resp.data;
+                    },
+
+                    onLoadSuccess: function(resp) {
+                        // refresh data after timer interval
+                        tradedash.tradeorder.autoRefresh();
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '加载交易委托数据失败'});
+                        // refresh data after timer interval
+                        tradedash.tradeorder.autoRefresh();
+                    },
+
+                    onSelect(index, row) {
+                    }
+                });
+            },
+
+
+            startRefresh: function() {
+                this.auto_refresh = true;
+                this.autoRefresh();
+            },
+
+            autoRefresh: function() {
+                if (this.auto_refresh) {
+                    this.current_timer = setTimeout(this.reload, this.refresh_interval);
+                }
+            },
+
+            stopRefresh: function() {
+                this.auto_refresh = false;
+                if (this.current_timer != null){
+                    clearTimeout(this.current_timer);
+                }
+            },
+
+
+            reload: function() {
+                $.get(tradedash.tradeorder.url, tradedash.tradeorder.params,
+                    function (resp, status, xhr) {
+                        if (status==='success'){
+                               tradedash.tradeorder.updateRows(resp.data.rows);
+                        } else {
+                            $.messager.show({title: '错误', msg: '刷新交易委托数据失败'});
+                        }
+                        tradedash.tradeorder.autoRefresh();
+                    },
+                    'json'
+                ).fail(function () {
+                        $.messager.show({title: '错误', msg: '刷新交易委托数据失败'});
+                        tradedash.tradeorder.autoRefresh();
+                })
+            },
+
+            updateRows(rows) {
+                //console.log('---update rows---');
+                newrows = []; oldrows = [];
+                drows = this.datagrid.datagrid('getRows');
+                for (i=0; i<rows.length; i++){
+                    bexist = false;
+                    for (j=0; j<drows.length; j++){
+                        if (rows[i].id === drows[j].id) {
+                            oldrows.push([drows[j], rows[i]]);
+                            bexist = true;
+                            break;
+                        }
+                    }
+                    if (!bexist){
+                        newrows.push(rows[i]);
+                    }
+                }
+
+                // update old rows
+                for (i=0; i<oldrows.length; i++){
+                    index = this.datagrid.datagrid('getRowIndex', oldrows[i][0]);
+                    this.datagrid.datagrid('updateRow', {index: index, row: oldrows[i][1]});
+                }
+                //console.log(oldrows);
+
+                // add new rows
+                for (i=0; i<newrows.length; i++){
+                    this.datagrid.datagrid('appendRow', newrows[i]);
+                }
+                //console.log(newrows)
+            }
+        },
+
+        // init all dash
+        init: function () {
+            this.usertrade.init();
+            this.userorder.init();
+            this.tradeorder.init();
+        }
+    };
+
+    // init trade dash
+    $(function () {
+        tradedash.init();
+    });
+</script>

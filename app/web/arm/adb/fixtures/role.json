@@ -7,23 +7,5 @@
       "disable": 0,
       "ctime": 1527261052
     }
-  },
-  {
-    "model": "adb.role",
-    "pk": 2,
-    "fields": {
-      "name": "销售",
-      "disable": 0,
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.role",
-    "pk": 3,
-    "fields": {
-      "name": "商务",
-      "disable": 0,
-      "ctime": 1527261052
-    }
   }
 ]

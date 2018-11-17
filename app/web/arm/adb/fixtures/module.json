@@ -47,67 +47,9 @@
   },
   {
     "model": "adb.module",
-    "pk": 5,
-    "fields": {
-      "name": "交易管理",
-      "order": 5,
-      "disable": 0,
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.module",
-    "pk": 6,
-    "fields": {
-      "parent": 5,
-      "name": "账户委托",
-      "path": "/cms/trade/order/",
-      "order": 6,
-      "disable": 0,
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.module",
-    "pk": 7,
-    "fields": {
-      "parent": 5,
-      "name": "交易杠杆",
-      "path": "/cms/trade/lever/",
-      "order": 7,
-      "disable": 0,
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.module",
-    "pk": 8,
-    "fields": {
-      "name": "用户管理",
-      "order": 8,
-      "disable": 0,
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.module",
-    "pk": 9,
-    "fields": {
-      "parent": 8,
-      "name": "用户列表",
-      "path": "/cms/user/user/",
-      "order": 9,
-      "disable": 0,
-      "ctime": 1527261052
-    }
-  },
-  {
-    "model": "adb.module",
     "pk": 10,
     "fields": {
-      "parent": 8,
-      "name": "资金明细",
-      "path": "/cms/user/bill/",
+      "name": "交易管理",
       "order": 10,
       "disable": 0,
       "ctime": 1527261052
@@ -117,9 +59,9 @@
     "model": "adb.module",
     "pk": 11,
     "fields": {
-      "parent": 8,
-      "name": "优惠券",
-      "path": "/cms/user/coupon/",
+      "parent": 10,
+      "name": "交易账户",
+      "path": "/cms/trade/account/",
       "order": 11,
       "disable": 0,
       "ctime": 1527261052
@@ -129,9 +71,9 @@
     "model": "adb.module",
     "pk": 12,
     "fields": {
-      "parent": 8,
-      "name": "充值记录",
-      "path": "/cms/user/charge/",
+      "parent": 10,
+      "name": "交易杠杆",
+      "path": "/cms/trade/lever/",
       "order": 12,
       "disable": 0,
       "ctime": 1527261052
@@ -141,9 +83,9 @@
     "model": "adb.module",
     "pk": 13,
     "fields": {
-      "parent": 8,
-      "name": "提现记录",
-      "path": "/cms/user/draw/",
+      "parent": 10,
+      "name": "用户交易",
+      "path": "/cms/user/trade/",
       "order": 13,
       "disable": 0,
       "ctime": 1527261052
@@ -153,9 +95,9 @@
     "model": "adb.module",
     "pk": 14,
     "fields": {
-      "parent": 8,
-      "name": "用户交易",
-      "path": "/cms/user/trade/",
+      "parent": 10,
+      "name": "用户委托",
+      "path": "/cms/user/order/",
       "order": 14,
       "disable": 0,
       "ctime": 1527261052
@@ -165,10 +107,10 @@
     "model": "adb.module",
     "pk": 15,
     "fields": {
-      "parent": 5,
-      "name": "交易账户",
-      "path": "/cms/trade/account/",
-      "order": 9,
+      "parent": 10,
+      "name": "交易委托",
+      "path": "/cms/trade/order/",
+      "order": 15,
       "disable": 0,
       "ctime": 1527261052
     }
@@ -177,7 +119,9 @@
     "model": "adb.module",
     "pk": 16,
     "fields": {
-      "name": "股票管理",
+      "parent": 10,
+      "name": "交易监控",
+      "path": "/cms/trade/dash/",
       "order": 16,
       "disable": 0,
       "ctime": 1527261052
@@ -185,24 +129,92 @@
   },
   {
     "model": "adb.module",
-    "pk": 17,
+    "pk": 20,
     "fields": {
-      "parent": 16,
-      "name": "股票列表",
-      "path": "/cms/stock/stock/",
-      "order": 17,
+      "name": "用户管理",
+      "order": 20,
       "disable": 0,
       "ctime": 1527261052
     }
   },
   {
     "model": "adb.module",
-    "pk": 18,
+    "pk": 21,
     "fields": {
-      "parent": 8,
-      "name": "交易委托",
-      "path": "/cms/user/order/",
-      "order": 10,
+      "parent": 20,
+      "name": "用户列表",
+      "path": "/cms/user/user/",
+      "order": 21,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 22,
+    "fields": {
+      "parent": 20,
+      "name": "充值记录",
+      "path": "/cms/user/charge/",
+      "order": 22,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 23,
+    "fields": {
+      "parent": 20,
+      "name": "提现记录",
+      "path": "/cms/user/draw/",
+      "order": 23,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 24,
+    "fields": {
+      "parent": 20,
+      "name": "优惠券",
+      "path": "/cms/user/coupon/",
+      "order": 24,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 25,
+    "fields": {
+      "parent": 20,
+      "name": "资金明细",
+      "path": "/cms/user/bill/",
+      "order": 25,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 30,
+    "fields": {
+      "name": "股票管理",
+      "order": 30,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 31,
+    "fields": {
+      "parent": 30,
+      "name": "股票列表",
+      "path": "/cms/stock/stock/",
+      "order": 31,
       "disable": 0,
       "ctime": 1527261052
     }

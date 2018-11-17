@@ -454,7 +454,7 @@ class UserTrade(models.Model):
     def odata(self):
         items = dict([(attr, getattr(self, attr)) for attr in [f.name for f in self._meta.fields]])
         items['user'], items['stock'], items['coupon'] = self.user_id, self.stock_id, self.coupon_id
-        return items;
+        return items
 
     def pdata(self):
         # get data items & fields

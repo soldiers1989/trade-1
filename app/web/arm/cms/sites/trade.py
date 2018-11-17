@@ -31,3 +31,13 @@ def account(request):
     :return:
     """
     return render(request, 'trade/account.html')
+
+
+@auth.need_permit
+def dash(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'trade/dash.html')
