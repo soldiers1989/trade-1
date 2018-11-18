@@ -1,12 +1,16 @@
 from . import handlers
 
 handlers = [
+    (r"/task/list", handlers.task.List),
+    (r"/task/load", handlers.task.Load),
+
     (r"/task/add", handlers.task.Add),
     (r"/task/del", handlers.task.Delete),
     (r"/task/clear", handlers.task.Clear),
 
     (r"/task/enable", handlers.task.Enable),
     (r"/task/disable", handlers.task.Disable),
+
     (r"/task/execute", handlers.task.Execute),
     (r"/task/callback", handlers.task.Callback),
 

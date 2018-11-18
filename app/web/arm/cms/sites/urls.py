@@ -1,4 +1,4 @@
-from cms.sites import index, login, auth, trade, user, stock
+from cms.sites import index, login, auth, trade, user, stock, sys
 from django.urls import path
 
 urlpatterns = [
@@ -26,4 +26,6 @@ urlpatterns = [
     path('user/order/', user.order, name="cms.user.order"),
 
     path('stock/stock/', stock.stock, name="cms.stock.stock"),
+
+    path('sys/crond/', sys.crond, name="cms.sys.crond"),
 ]

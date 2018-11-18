@@ -662,3 +662,23 @@ class File(models.Model):
 
     class Meta:
         db_table = 'tb_file'
+
+
+# tb_crond
+class Crond(models.Model):
+    id = models.AutoField(primary_key=True)
+    code = models.CharField(max_length=16, unique=True)
+    name = models.CharField(max_length=16)
+    config = models.CharField(max_length=32)
+    method = models.CharField(max_length=16)
+    url = models.CharField(max_length=256)
+    data = models.TextField(null=True)
+    json = models.TextField(null=True)
+    status = models.CharField(max_length=16)
+    exclusive = models.BooleanField()
+    maxkeep = models.IntegerField()
+    ctime = models.BigIntegerField()
+    mtime = models.BigIntegerField()
+
+    class Meta:
+        db_table = 'tb_crond'

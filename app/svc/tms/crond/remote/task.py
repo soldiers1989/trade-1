@@ -1,12 +1,12 @@
 """
     remote task
 """
-import requests, logging
+import requests, logging, time
 from .. import timer, config, error
 
 
 class RemoteTask(timer.Runnable):
-    def __init__(self, id, name, url, method, data, json):
+    def __init__(self, id, code, name, method, url, data, json, ctime=int(time.time()), mtime=int(time.time())):
         """
             create a remote task with remote url and crond string
         :param url:
@@ -20,11 +20,14 @@ class RemoteTask(timer.Runnable):
             raise error.post_data_duplicate
 
         self._id = id
+        self._code = code
         self._name = name
-        self._url = url
         self._method = method
+        self._url = url
         self._data = data
         self._json = json
+        self._ctime = ctime
+        self._mtime = mtime
 
     def execute(self, seq):
         try:
@@ -43,3 +46,14 @@ class RemoteTask(timer.Runnable):
         except Exception as e:
             logging.error(str(e))
             return False, str(e)
+
+    def desc(self):
+        return {
+            'code': self._code,
+            'method': self._method,
+            'url': self._url,
+            'data': self._data,
+            'json': self._json,
+            'ctime': self._ctime,
+            'mtime': self._mtime
+        }

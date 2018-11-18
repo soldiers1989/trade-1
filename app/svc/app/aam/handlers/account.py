@@ -1,7 +1,7 @@
 """
     trade account management
 """
-from .. import access, handler, forms, protocol, error, models
+from .. import access, handler, protocol, error, models
 
 
 class ListHandler(handler.Handler):
@@ -28,9 +28,6 @@ class SelectHandler(handler.Handler):
             add new trade request
         :return:
         """
-        # get arguments
-        form = forms.account.Select(**self.arguments)
-
         with models.db.create() as d:
             # select account
             account = models.TradeAccount.filter(d, disable=False).orderby('money').desc().one()

@@ -191,6 +191,15 @@ class Model(dict, metaclass=MetaModel):
             self.set(k, v)
         return self
 
+    def delete(self, db):
+        """
+            delete model from database
+        :return:
+        """
+        if self.__auto__ is None or self[self.__auto__] is None:
+            raise ModelError('model has not an primary key')
+        return query.QuerySet(db, self.__class__, **{self.__auto__:self[self.__auto__]}).delete()
+
     @classmethod
     def select(cls, db, sql, *args):
         """

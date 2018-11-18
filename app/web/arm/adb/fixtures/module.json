@@ -218,5 +218,27 @@
       "disable": 0,
       "ctime": 1527261052
     }
+  },
+  {
+    "model": "adb.module",
+    "pk": 40,
+    "fields": {
+      "name": "系统管理",
+      "order": 40,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
+    "pk": 41,
+    "fields": {
+      "parent": 40,
+      "name": "定时任务",
+      "path": "/cms/sys/crond/",
+      "order": 41,
+      "disable": 0,
+      "ctime": 1527261052
+    }
   }
 ]

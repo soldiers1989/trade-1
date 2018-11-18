@@ -1,0 +1,43 @@
+from django import forms
+
+
+class List(forms.Form):
+    status = forms.ChoiceField(required=False, choices=(('started', 'started'),('stopped', 'stopped')))
+    words = forms.CharField(required=False)
+
+
+class Add(forms.Form):
+    code = forms.CharField(min_length=1, max_length=16)
+    name = forms.CharField(min_length=1, max_length=16)
+    config = forms.CharField(min_length=1, max_length=32)
+    method = forms.ChoiceField(choices=(('get','get'), ('post','post')))
+    url = forms.CharField(min_length=1, max_length=256)
+    data = forms.CharField(initial=None, required=False)
+    json = forms.CharField(initial=None, required=False)
+    status = forms.CharField(min_length=1, max_length=8)
+    exclusive = forms.BooleanField()
+    maxkeep = forms.IntegerField()
+
+
+class Get(forms.Form):
+    id = forms.IntegerField()
+
+
+class Delete(forms.Form):
+    id = forms.IntegerField()
+
+
+class Enable(forms.Form):
+    id = forms.IntegerField()
+
+
+class Disable(forms.Form):
+    id = forms.IntegerField()
+
+
+class Execute(forms.Form):
+    id = forms.IntegerField()
+
+
+class Detail(forms.Form):
+    id = forms.IntegerField()

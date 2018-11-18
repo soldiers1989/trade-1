@@ -1,8 +1,8 @@
 import json, datetime, util
 from adb import models
 from django.db.models import Q
-from cms import auth, resp, hint, forms, error
-from .. import remote
+from cms import auth, resp, hint, forms, error, remote
+
 
 @auth.need_login
 def list(request):

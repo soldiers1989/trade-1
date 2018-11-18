@@ -1,6 +1,7 @@
 """
     remote task manager
 """
+import time
 from . import task
 from .. import timer
 
@@ -12,14 +13,15 @@ class TaskManager:
         """
         self._tasks = {}
 
-    def add(self, id, name, cond, url, method, data=None, json=None, exclusive=True, maxkeep=20):
+    def add(self, id, code, name, cond, method, url, data=None, json=None, stopped=True, exclusive=True, maxkeep=20, ctime=int(time.time()), mtime=int(time.time())):
         """
             add a new timer task
         :param id: str, timer task id
+        :param code: str, timer task code
         :param name: str, timer task name
         :param cond: str, timer condition
-        :param url: str, remote url
         :param method: str, post or get
+        :param url: str, remote url
         :param data: str, post data for remote url
         :param json: str, post json data for remote urls
         :param exclusive: bool, exclusive for same id task
@@ -27,10 +29,10 @@ class TaskManager:
         :return:
         """
         # create new remote runnable task
-        remotetask = task.RemoteTask(id, name, url, method, data=None, json=None)
+        remotetask = task.RemoteTask(id, code, name, method, url, data=None, json=None, ctime=ctime, mtime=mtime)
 
         # add to timer
-        timer.default.add(id, name, cond, remotetask, exclusive, maxkeep)
+        timer.default.add(id, name, cond, remotetask, stopped, exclusive, maxkeep)
 
     def delete(self, id):
         """
@@ -90,7 +92,7 @@ class TaskManager:
         """
         timer.default.notify(id, seq, status, result)
 
-    def status(self, id):
+    def status(self, id=None):
         """
             get task status
         :param id:

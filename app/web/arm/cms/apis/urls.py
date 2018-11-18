@@ -1,6 +1,6 @@
 from django.urls import path
 
-from cms.apis import auth, trade, user, stock
+from cms.apis import auth, trade, user, stock, sys
 from cms.apis import echo, enum
 
 
@@ -115,4 +115,15 @@ urlpatterns = [
     path('stock/stock/delete', stock.stock.delete, name="api.stock.stock.delete"),
     path('stock/stock/query', stock.stock.query, name="api.stock.stock.query"),
     path('stock/stock/has', stock.stock.has, name="api.stock.stock.has"),
+
+    path('sys/crond/list', sys.crond.list, name="api.sys.crond.list"),
+    path('sys/crond/load', sys.crond.load, name="api.sys.crond.load"),
+    path('sys/crond/get', sys.crond.get, name="api.sys.crond.get"),
+    path('sys/crond/add', sys.crond.add, name="api.sys.crond.add"),
+    path('sys/crond/delete', sys.crond.delete, name="api.sys.crond.delete"),
+    path('sys/crond/clear', sys.crond.clear, name="api.sys.crond.clear"),
+    path('sys/crond/enable', sys.crond.enable, name="api.sys.crond.enable"),
+    path('sys/crond/disable', sys.crond.disable, name="api.sys.crond.disable"),
+    path('sys/crond/execute', sys.crond.execute, name="api.sys.crond.execute"),
+    path('sys/crond/detail', sys.crond.detail, name="api.sys.crond.detail"),
 ]

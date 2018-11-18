@@ -4,8 +4,7 @@
 import datetime, json, util
 from django.db.models import Q
 from adb import models
-from cms import auth, resp, hint, forms, error
-from .. import remote
+from cms import auth, resp, hint, forms, error, remote
 
 
 @auth.catch_exception

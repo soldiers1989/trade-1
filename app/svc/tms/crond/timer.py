@@ -70,13 +70,13 @@ class _Executor(threading.Thread):
         """
         self._status.status = _Status.DOING
 
-        self._status.estime = time.time()
+        self._status.estime = int(time.time())
         try:
             # do something
             self._status.estatus, self._status.eresult = self._runnable.execute(self._seq)
         except Exception as e:
             self._status.estatus, self._status.eresult = False, str(e)
-        self._status.eetime = time.time()
+        self._status.eetime = int(time.time())
 
         self._status.status = _Status.DONE
 
@@ -295,7 +295,7 @@ class _Task:
          timer task
      """
 
-    def __init__(self, id, name, runnable, exclusive, maxkeep):
+    def __init__(self, id, name, runnable, stopped, exclusive, maxkeep):
         """
             init task
         :param id:
@@ -317,7 +317,7 @@ class _Task:
         self._maxkeep = maxkeep
 
         # stop flag for task
-        self._stopped = False
+        self._stopped = stopped
 
         # execute count & latest execute time
         self._count = 0
@@ -402,15 +402,20 @@ class _Task:
             get task status
         :return:
         """
-        return {
+        data = {
             'id': self._id,
             'name': self._name,
             'count': self._count,
             'latest': self._latest,
             'maxkeep': self._maxkeep,
             'exclusive': self._exclusive,
-            'stopped': self._stopped,
+            'status': 'stopped' if self._stopped else 'started'
         }
+
+        # runnable object information
+        data.update(self._runnable.desc())
+
+        return data
 
     def detail(self):
         """
@@ -429,7 +434,7 @@ class _CrondTask(_Task):
     """
         crontab task
     """
-    def __init__(self, id, name, condstr, runnable, exclusive=False, maxkeep=10):
+    def __init__(self, id, name, condstr, runnable, stopped=True, exclusive=False, maxkeep=10):
         """
             init timer task
         :param id:
@@ -440,7 +445,7 @@ class _CrondTask(_Task):
         :param maxkeep:
         """
         # timer task
-        super().__init__(id, name, runnable, exclusive, maxkeep)
+        super().__init__(id, name, runnable, stopped, exclusive, maxkeep)
 
         # time condition
         self._cond = _Cond(condstr)
@@ -466,7 +471,7 @@ class _CrondTask(_Task):
         :return:
         """
         results = super().status()
-        results['conifg'] = str(self._cond)
+        results['config'] = str(self._cond)
         return results
 
     def _expired(self, tm):
@@ -501,7 +506,7 @@ class _TimerTask(_Task):
     """
         timer task
     """
-    def __init__(self, id, name, interval, runnable, exclusive=False, maxkeep=10):
+    def __init__(self, id, name, interval, runnable, stopped=True, exclusive=False, maxkeep=10):
         """
 
         :param id:
@@ -518,7 +523,7 @@ class _TimerTask(_Task):
         self._last_execute_time = time.time()
 
         # init super class
-        super().__init__(id, name, runnable, exclusive, maxkeep)
+        super().__init__(id, name, runnable, stopped, exclusive, maxkeep)
 
     def schedule(self, tm):
         """
@@ -534,7 +539,7 @@ class _TimerTask(_Task):
 
     def status(self):
         results = super().status()
-        results['conifg'] = str(self._interval)
+        results['config'] = str(self._interval)
         return results
 
     def _expired(self, tm):
@@ -562,7 +567,7 @@ class _Timer(threading.Thread):
 
         threading.Thread.__init__(self)
 
-    def add(self, id, name, condstr, runnable, exclusive=False, maxkeep=10):
+    def add(self, id, name, condstr, runnable, stopped=True, exclusive=False, maxkeep=10):
         """
 
         :param id:
@@ -581,9 +586,9 @@ class _Timer(threading.Thread):
                 raise TimerError('timer task with id: %s has exist' % str(id))
 
             if isinstance(condstr, int) or condstr.isdigit():
-                task = _TimerTask(id, name, condstr, runnable, exclusive, maxkeep)
+                task = _TimerTask(id, name, condstr, runnable, stopped, exclusive, maxkeep)
             else:
-                task = _CrondTask(id, name, condstr, runnable, exclusive, maxkeep)
+                task = _CrondTask(id, name, condstr, runnable, stopped, exclusive, maxkeep)
 
             self._tasks[id] = task
 

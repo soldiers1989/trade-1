@@ -26,3 +26,35 @@ HEADERS = [
 ]
 
 
+
+## database configure ##
+DATABASES = {
+    'arm': {
+        'dev': {
+            'host': '127.0.0.1',
+            'user': 'root',
+            'password': 'root',
+            'database': 'arm',
+            'port': 3306,
+            'charset': 'utf8'
+        },
+
+        'test': {
+            'host': '127.0.0.1',
+            'user': 'root',
+            'password': 'root',
+            'database': 'arm',
+            'port': 3306,
+            'charset': 'utf8'
+        },
+
+        'online': {
+            'host': '127.0.0.1',
+            'user': 'root',
+            'password': 'root',
+            'database': 'arm',
+            'port': 3306,
+            'charset': 'utf8'
+        }
+    }
+}

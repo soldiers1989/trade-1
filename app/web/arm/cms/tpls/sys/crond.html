@@ -1,0 +1,156 @@
+<div class="easyui-layout" data-options="fit:true, split:true, border: true">
+    <div data-options="region:'west', split:true" style="width: 75%;height: 100%;">
+        <table id="datagrid_sys_crond_list" style="height: 100%;"></table>
+    </div>
+    <div data-options="region:'center', split:true" style="width: 25%;height: 100%;">
+        <div class="easyui-tabs" id="tabs_sys_crond_item" data-options="fit:true, plain: true" style="height: 100%;width: 100%;">
+            <div title="详情">
+                <div class="easyui-panel" style="height: 100%; width: 100%">
+                        详情
+                </div>
+            </div>
+            <div title="历史">
+                <div class="easyui-panel" style="height: 100%; width: 100%">
+                        历史
+                </div>
+            </div>
+        </div>
+        <div id="empty_sys_crond_item"><p style="text-align: center;">没有选择记录!</p></div>
+        <div id="error_sys_crond_item"><p style="text-align: center;">加载记录出错!</p></div>
+    </div>
+</div>
+
+<div id="toolbar_sys_crond_search">
+    <span style="float: left">
+        <a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="lever.update()">加载</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-clear" plain="true" onclick="lever.delete()">清空</a>
+    </span>
+    <span>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="lever.add()">新建</a>
+    </span>
+    <span>
+        <a href="javascript:void(0)" id="menubutton_sys_crond_operation" class="easyui-menubutton" data-options="menu:'#menu_sys_crond_operation', disabled:true,iconCls:'icon-edit'">操作</a>
+        <div id="menu_sys_crond_operation" style="width:150px;">
+            <div iconCls="icon-reload" onclick="">启动</div>
+            <div iconCls="icon-lock" onclick="">停止</div>
+            <div iconCls="icon-ok" onclick="">执行</div>
+            <div iconCls="icon-edit_remove" onclick="">删除</div>
+        </div>
+    </span>
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="form_sys_crond_search">
+            <input name="status" class="easyui-textbox" data-options="prompt:'任务状态', required:false">
+            <input name="words" class="easyui-textbox" data-options="prompt:'id/名称', required:false">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="syscrond.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="syscrond.search.reset()">重置</a>
+        </form>
+    </span>
+</div>
+
+<script type="text/javascript">
+    var syscrond = {
+        // tool bar
+        toolbar: {
+            // load button
+            load: {
+
+            },
+
+            // clear button
+            clear: {
+
+            },
+
+            // create button
+            create: {
+
+            },
+
+            // task operate
+            operate: {
+
+            },
+
+            // task search
+            search: {
+
+            }
+        },
+
+        // crond task list
+        list: {
+            url: '/api/sys/crond/list',
+
+            datagrid: $('#datagrid_sys_crond_list'),
+
+            init: function () {
+                //init data grid
+                this.datagrid.datagrid({
+                    method: 'get',
+                    url: this.url,
+
+                    toolbar: '#toolbar_sys_crond_search',
+
+                    striped: true,
+                    fitColumns: true,
+                    pagination: false,
+                    rownumbers: true,
+                    singleSelect: true,
+
+                    idField: 'id',
+                    columns: [[
+                        {field: 'id', title: 'ID', sortable: false, width:'5%'},
+                        {field: 'name', title: '名称', sortable: false, width:'10%'},
+                        {field: 'config', title: '配置', sortable: false, width:'10%'},
+                        {field: 'method', title: '方式', sortable: false, width:'5%'},
+                        {field: 'url', title: 'URL', sortable: false, width:'30%'},
+                        {field: 'status', title: '状态', sortable: false, width:'5%', formatter: function (val) {
+                                                                                                        if(val==='started')
+                                                                                                            return '已启动';
+                                                                                                        else if(val==='stopped')
+                                                                                                            return '已停止';
+                                                                                                        else
+                                                                                                            return '未知';
+                                                                                                    }},
+                        {field: 'exclusive', title: '单例', sortable: false, width:'5%', formatter: cube.format.boolean},
+                        {field: 'maxkeep', title: '保留', sortable: false, width:'5%'},
+                        {field: 'count', title: '执行次数', sortable: false, width:'6%'},
+                        {field: 'latest', title: '最近执行', sortable: false, width:'19%', formatter: cube.format.datetime}
+                    ]],
+
+                    loadFilter: function (resp) {
+                        console.log(resp);
+                        return resp.data;
+                    },
+
+                    onLoadSuccess: function (resp) {
+
+                    },
+
+                    onLoadError: function () {
+                        $.messager.show({title: '错误', msg: '请求定时任务数据失败'});
+                    },
+
+                    onSelect(index, row) {
+                    }
+                });
+            }
+        },
+
+        // task item
+        item: {
+
+        },
+
+        init: function () {
+            // init list
+            this.list.init();
+        }
+    };
+
+    //init page
+    $(function(){
+        syscrond.init();
+    });
+</script>
