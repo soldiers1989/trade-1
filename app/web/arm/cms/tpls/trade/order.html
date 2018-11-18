@@ -369,6 +369,9 @@
 
             updateRow: function(row) {
                 index = this.datagrid.datagrid('getRowIndex', row.id);
+                if (index==null)
+                    return;
+
                 this.datagrid.datagrid('updateRow', {
                     index: index,
                     row: row
@@ -663,7 +666,7 @@
                                     accountorder.detail.operation.dealt.dialog.dialog('close');
 
                                     //update selected row data
-                                    accountorder.list.updateSelected(resp.data);
+                                    accountorder.list.updateRow(resp.data);
                                 } else {
                                     $.messager.show({ title: '错误',  msg: resp.msg });
                                 }

@@ -54,7 +54,6 @@ def list(request):
 
     # order by#
     sort, order =  params['sort'], params['order']
-    orderby = None
     if sort and order:
         order = '-' if order=='desc' else ''
         orderby = order+sort

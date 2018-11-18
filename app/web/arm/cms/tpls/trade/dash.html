@@ -14,6 +14,92 @@
     </div>
 </div>
 
+<div id="toolbar_dash_user_trade" style="background-color: #F5F5F5;height: 9%;">
+    <span style="float: left; margin: 5px;">
+        <b>用户交易</b>
+    </span>
+    <span style="float: left; margin: 5px 0 5px 10px;">
+        |刷新时间:<span id="refresh_time_dash_user_trade">-</span>
+    </span>
+    <span style="float: right;">
+        <a href="#" class="easyui-switchbutton" iconCls="icon-reload" data-options="onText:'停止',
+                                                                                    offText:'刷新',
+                                                                                    checked: true,
+                                                                                    onChange: function(checked){
+                                                                                        if(checked){
+                                                                                            tradedash.usertrade.startRefresh();
+                                                                                        } else {
+                                                                                            tradedash.usertrade.stopRefresh();
+                                                                                        }
+                                                                                    }">刷新</a>
+    </span>
+    <span style="float: right; margin-right: 20px">
+        <input class="easyui-combobox" data-options="valueField: 'id',
+                                                     textField: 'text',
+                                                     data: [{id:'3000', text:'3S'},{id:'5000', text:'5S'},{id:'10000', text:'10S'},{id:'15000', text:'15S'},{id:'30000', text:'30S'}],
+                                                     onSelect: function(record){
+                                                        tradedash.usertrade.refresh_interval = record.id;
+                                                     }" value="5000" style="width: 60px;">
+    </span>
+</div>
+
+<div id="toolbar_dash_user_order" style="background-color: #F5F5F5;height: 9%;">
+    <span style="float: left; margin: 5px;">
+        <b>用户委托</b>
+    </span>
+    <span style="float: left; margin: 5px 0 5px 10px;">
+        |刷新时间:<span id="refresh_time_dash_user_order">-</span>
+    </span>
+    <span style="float: right;">
+        <a href="#" class="easyui-switchbutton" iconCls="icon-reload" data-options="onText:'停止',
+                                                                            offText:'刷新',
+                                                                            checked: true,
+                                                                            onChange: function(checked){
+                                                                                if(checked){
+                                                                                    tradedash.userorder.startRefresh();
+                                                                                } else {
+                                                                                    tradedash.userorder.stopRefresh();
+                                                                                }
+                                                                            }">刷新</a>
+    </span>
+    <span style="float: right; margin-right: 20px">
+    <input class="easyui-combobox" data-options="valueField: 'id',
+                                                 textField: 'text',
+                                                 data: [{id:'3000', text:'3S'},{id:'5000', text:'5S'},{id:'10000', text:'10S'},{id:'15000', text:'15S'},{id:'30000', text:'30S'}],
+                                                 onSelect: function(record){
+                                                    tradedash.userorder.refresh_interval = record.id;
+                                                 }" value="5000" style="width: 60px;">
+    </span>
+</div>
+
+<div id="toolbar_dash_trade_order" style="background-color: #F5F5F5;height: 9%;">
+    <span style="float: left; margin: 5px;">
+        <b>交易委托</b>
+    </span>
+    <span style="float: left; margin: 5px 0 5px 10px;">
+        |刷新时间:<span id="refresh_time_dash_trade_order">-</span>
+    </span>
+    <span style="float: right;">
+        <a href="#" class="easyui-switchbutton" iconCls="icon-reload" data-options="onText:'停止',
+                                                                                    offText:'刷新',
+                                                                                    checked: true,
+                                                                                    onChange: function(checked){
+                                                                                        if(checked){
+                                                                                            tradedash.tradeorder.startRefresh();
+                                                                                        } else {
+                                                                                            tradedash.tradeorder.stopRefresh();
+                                                                                        }
+                                                                                    }">刷新</a>
+    </span>
+    <span style="float: right; margin-right: 20px">
+    <input class="easyui-combobox" data-options="valueField: 'id',
+                                                 textField: 'text',
+                                                 data: [{id:'3000', text:'3S'},{id:'5000', text:'5S'},{id:'10000', text:'10S'},{id:'15000', text:'15S'},{id:'30000', text:'30S'}],
+                                                 onSelect: function(record){
+                                                    tradedash.tradeorder.refresh_interval = record.id;
+                                                 }" value="5000" style="width: 60px;">
+    </span>
+</div>
 
 <script type="text/javascript">
     var tradedash = {
@@ -35,18 +121,20 @@
                     url: this.url,
                     queryParams: this.params,
 
-                    title: '用户交易',
-                    idField: 'id',
+                    //title: '用户交易',
+                    toolbar: '#toolbar_dash_user_trade',
 
                     striped: true,
-                    fitColumns: true,
+                    fitColumns: false,
                     pagination: false,
-                    rownumbers: false,
+                    rownumbers: true,
                     singleSelect: true,
 
+                    idField: 'id',
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
-                        {field:'user', title:'用户'},
+                        {field:'user', title:'用户', hidden:true},
+                        {field:'_user', title:'用户'},
                         {field:'stock', title:'股票', hidden:true},
                         {field:'_stock', title:'股票'},
                         {field:'status', title:'状态', hidden:true},
@@ -77,7 +165,7 @@
                         {field:'sprofit', title:'分成', sortable:true, formatter: cube.format.none},
                         {field:'_coupon', title:'优惠券', sortable:false, formatter: cube.format.none},
                         {field:'ctime', title:'创建日', sortable:true, formatter: cube.format.datetime},
-                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime}
+                        {field:'ftime', title:'结束日', sortable:true, formatter: cube.format.datetime, hidden:true}
                     ]],
 
                     loadFilter: function (resp) {
@@ -128,7 +216,8 @@
                 $.get(tradedash.usertrade.url, tradedash.usertrade.params,
                     function (resp, status, xhr) {
                         if (status==='success'){
-                               tradedash.usertrade.updateRows(resp.data.rows);
+                            $('#refresh_time_dash_user_trade').text((new Date()).toLocaleString());
+                            tradedash.usertrade.updateRows(resp.data.rows);
                         } else {
                             $.messager.show({title: '错误', msg: '刷新用户交易数据失败'});
                         }
@@ -144,8 +233,10 @@
 
             updateRows(rows) {
                 //console.log('---update rows---');
-                newrows = []; oldrows = [];
+                newrows = []; oldrows = []; delrows = [];
                 drows = this.datagrid.datagrid('getRows');
+
+                // find new & old rows
                 for (i=0; i<rows.length; i++){
                     bexist = false;
                     for (j=0; j<drows.length; j++){
@@ -160,18 +251,39 @@
                     }
                 }
 
+                // find deleted rows
+                for (i=0; i<drows.length; i++){
+                    bexist = false;
+                    for (j=0; j<rows.length; j++){
+                        if (drows[i].id === rows[j].id) {
+                            bexist = true;
+                            break;
+                        }
+                    }
+                    if (!bexist){
+                        delrows.push(drows[i]);
+                    }
+                }
+
                 // update old rows
+                //console.log(oldrows);
                 for (i=0; i<oldrows.length; i++){
                     index = this.datagrid.datagrid('getRowIndex', oldrows[i][0]);
                     this.datagrid.datagrid('updateRow', {index: index, row: oldrows[i][1]});
                 }
-                //console.log(oldrows);
+
+                // delete removed rows
+                //console.log(delrows);
+                for (i=0; i<delrows.length; i++){
+                    index = this.datagrid.datagrid('getRowIndex', delrows[i]);
+                    this.datagrid.datagrid('deleteRow', index);
+                }
 
                 // add new rows
+                //console.log(newrows);
                 for (i=0; i<newrows.length; i++){
                     this.datagrid.datagrid('appendRow', newrows[i]);
                 }
-                //console.log(newrows)
             }
         },
 
@@ -195,20 +307,21 @@
                     url: this.url,
                     queryParams: this.params,
 
-                    title: '用户委托',
-                    idField: 'id',
+                    //title: '用户委托',
+                    toolbar: '#toolbar_dash_user_order',
 
     				striped: true,
     				fitColumns: true,
                     pagination: false,
-                    rownumbers: false,
+                    rownumbers: true,
                     singleSelect: true,
 
+                    idField: 'id',
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
                         {field:'trade', title:'订单', sortable:true},
                         {field:'ocode', title:'代码', sortable:true},
-                        {field:'scode', title:'股票', sortable:false, hiddent:true},
+                        {field:'scode', title:'股票', sortable:false, hidden:true},
                         {field:'sname', title:'股票', sortable:false},
                         {field:'account', title:'账户', sortable:true},
                         {field:'otype', title:'买卖', sortable:true, hidden:true},
@@ -224,7 +337,7 @@
                         {field:'oprice', title:'委价', sortable:true},
                         {field:'dcount', title:'成量', sortable:true},
                         {field:'dprice', title:'成价', sortable:true},
-                        {field:'dtime', title:'成交时间', sortable:true, formatter: cube.format.datetime},
+                        {field:'dtime', title:'成交时间', sortable:true, formatter: cube.format.datetime, hidden:true},
                         {field:'otime', title:'委托时间', sortable:true, formatter: cube.format.datetime}
                     ]],
 
@@ -271,7 +384,8 @@
                 $.get(tradedash.userorder.url, tradedash.userorder.params,
                     function (resp, status, xhr) {
                         if (status==='success'){
-                               tradedash.userorder.updateRows(resp.data.rows);
+                            $('#refresh_time_dash_user_order').text((new Date()).toLocaleString());
+                            tradedash.userorder.updateRows(resp.data.rows);
                         } else {
                             $.messager.show({title: '错误', msg: '刷新用户委托数据失败'});
                         }
@@ -287,8 +401,10 @@
 
             updateRows(rows) {
                 //console.log('---update rows---');
-                newrows = []; oldrows = [];
+                newrows = []; oldrows = []; delrows = [];
                 drows = this.datagrid.datagrid('getRows');
+
+                // find new & old rows
                 for (i=0; i<rows.length; i++){
                     bexist = false;
                     for (j=0; j<drows.length; j++){
@@ -303,18 +419,39 @@
                     }
                 }
 
+                // find deleted rows
+                for (i=0; i<drows.length; i++){
+                    bexist = false;
+                    for (j=0; j<rows.length; j++){
+                        if (drows[i].id === rows[j].id) {
+                            bexist = true;
+                            break;
+                        }
+                    }
+                    if (!bexist){
+                        delrows.push(drows[i]);
+                    }
+                }
+
                 // update old rows
+                //console.log(oldrows);
                 for (i=0; i<oldrows.length; i++){
                     index = this.datagrid.datagrid('getRowIndex', oldrows[i][0]);
                     this.datagrid.datagrid('updateRow', {index: index, row: oldrows[i][1]});
                 }
-                //console.log(oldrows);
+
+                // delete removed rows
+                //console.log(delrows);
+                for (i=0; i<delrows.length; i++){
+                    index = this.datagrid.datagrid('getRowIndex', delrows[i]);
+                    this.datagrid.datagrid('deleteRow', index);
+                }
 
                 // add new rows
+                //console.log(newrows);
                 for (i=0; i<newrows.length; i++){
                     this.datagrid.datagrid('appendRow', newrows[i]);
                 }
-                //console.log(newrows)
             }
         },
 
@@ -338,16 +475,17 @@
                     url: this.url,
                     queryParams: this.params,
 
-                    title: '交易委托',
-                    idField: 'id',
+                    //title: '交易委托',
+                    toolbar: '#toolbar_dash_trade_order',
 
     				striped: true,
     				fitColumns: true,
                     pagination: false,
-                    rownumbers: false,
+                    rownumbers: true,
                     singleSelect: true,
                     loading: false,
 
+                    idField: 'id',
                     frozenColumns: [[
                         {field:'id', title:'ID', sortable:true},
                         {field:'tcode', title:'代码', sortable:true},
@@ -369,7 +507,7 @@
                         {field:'oprice', title:'委价', sortable:true},
                         {field:'dcount', title:'成量', sortable:true},
                         {field:'dprice', title:'成价', sortable:true},
-                        {field:'dtime', title:'成交时间', sortable:true, formatter: cube.format.datetime},
+                        {field:'dtime', title:'成交时间', sortable:true, formatter: cube.format.datetime, hidden:true},
                         {field:'otime', title:'委托时间', sortable:true, formatter: cube.format.datetime}
                     ]],
 
@@ -417,7 +555,8 @@
                 $.get(tradedash.tradeorder.url, tradedash.tradeorder.params,
                     function (resp, status, xhr) {
                         if (status==='success'){
-                               tradedash.tradeorder.updateRows(resp.data.rows);
+                            $('#refresh_time_dash_trade_order').text((new Date()).toLocaleString());
+                            tradedash.tradeorder.updateRows(resp.data.rows);
                         } else {
                             $.messager.show({title: '错误', msg: '刷新交易委托数据失败'});
                         }
@@ -432,8 +571,10 @@
 
             updateRows(rows) {
                 //console.log('---update rows---');
-                newrows = []; oldrows = [];
+                newrows = []; oldrows = []; delrows = [];
                 drows = this.datagrid.datagrid('getRows');
+
+                // find new & old rows
                 for (i=0; i<rows.length; i++){
                     bexist = false;
                     for (j=0; j<drows.length; j++){
@@ -448,18 +589,39 @@
                     }
                 }
 
+                // find deleted rows
+                for (i=0; i<drows.length; i++){
+                    bexist = false;
+                    for (j=0; j<rows.length; j++){
+                        if (drows[i].id === rows[j].id) {
+                            bexist = true;
+                            break;
+                        }
+                    }
+                    if (!bexist){
+                        delrows.push(drows[i]);
+                    }
+                }
+
                 // update old rows
+                //console.log(oldrows);
                 for (i=0; i<oldrows.length; i++){
                     index = this.datagrid.datagrid('getRowIndex', oldrows[i][0]);
                     this.datagrid.datagrid('updateRow', {index: index, row: oldrows[i][1]});
                 }
-                //console.log(oldrows);
+
+                // delete removed rows
+                //console.log(delrows);
+                for (i=0; i<delrows.length; i++){
+                    index = this.datagrid.datagrid('getRowIndex', delrows[i]);
+                    this.datagrid.datagrid('deleteRow', index);
+                }
 
                 // add new rows
+                //console.log(newrows);
                 for (i=0; i<newrows.length; i++){
                     this.datagrid.datagrid('appendRow', newrows[i]);
                 }
-                //console.log(newrows)
             }
         },
 
