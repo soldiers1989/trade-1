@@ -1,3 +1,4 @@
+import time
 from cms import auth, resp, forms, remote
 
 
@@ -84,7 +85,7 @@ def delete(request):
     :param request:
     :return:
     """
-    form = forms.sys.crond.Delete(request.GET)
+    form = forms.sys.crond.Delete(request.POST)
     if form.is_valid():
         # get params
         params = form.cleaned_data
@@ -119,7 +120,7 @@ def enable(request):
     :param request:
     :return:
     """
-    form = forms.sys.crond.Enable(request.GET)
+    form = forms.sys.crond.Enable(request.POST)
     if form.is_valid():
         # get params
         params = form.cleaned_data
@@ -139,7 +140,7 @@ def disable(request):
     :param request:
     :return:
     """
-    form = forms.sys.crond.Disable(request.GET)
+    form = forms.sys.crond.Disable(request.POST)
     if form.is_valid():
         # get params
         params = form.cleaned_data
@@ -159,7 +160,7 @@ def execute(request):
     :param request:
     :return:
     """
-    form = forms.sys.crond.Execute(request.GET)
+    form = forms.sys.crond.Execute(request.POST)
     if form.is_valid():
         # get params
         params = form.cleaned_data
@@ -186,6 +187,22 @@ def detail(request):
 
         # request rpc
         data = remote.crond.detail(**params)
+
+        rows, newrows = data['rows'], []
+        rows.sort(key=lambda x: x['seq'], reverse=True)
+        names = {'status':'执行状态', 'estime':'开始时间', 'eetime':'结束时间', 'eresult':'执行结果'}
+        # convert data
+        for row in rows:
+            group = '执行序号-'+str(row['seq'])
+            for k, v in row.items():
+                if names.get(k) is not None:
+                    v = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(v)) if 'time' in k else v
+                    newrows.append({'name':names[k], 'value':str(v), 'group':group})
+
+        data = {
+            'total': len(newrows),
+            'rows': newrows
+        }
 
         # response data
         return resp.success(data = data)

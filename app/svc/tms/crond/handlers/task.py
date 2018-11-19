@@ -115,8 +115,10 @@ class Add(handler.Handler):
         code, name, config, url, method = self.get_argument('code'), self.get_argument('name'), self.get_argument('config'), self.get_argument('url'), self.get_argument('method')
         data, jsons, exclusive, maxkeep = self.get_argument('data', None), self.get_argument('json', None), self.get_argument('exclusive', True), self.get_argument('maxkeep', 20)
 
+        data = data.strip() if data is not None else None
+        data = data if data!='' else None
         jsons = jsons.strip() if jsons is not None else None
-        jsons = json.dumps(json.loads(jsons)) if jsons is not None else jsons
+        jsons = json.dumps(json.loads(jsons)) if jsons is not None and jsons!='' else None
 
         with models.db.atomic() as d:
             # add new crond object to database if task has exist

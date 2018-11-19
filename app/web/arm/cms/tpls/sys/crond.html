@@ -6,17 +6,21 @@
         <div class="easyui-tabs" id="tabs_sys_crond_item" data-options="fit:true, plain: true" style="height: 100%;width: 100%;">
             <div title="详情">
                 <div class="easyui-panel" style="height: 100%; width: 100%">
-                        详情
+                    <div style="width: 100%;height: 50%">
+                        <input id="json_sys_crond_item"  class="easyui-textbox" data-options="label:'Json',prompt:'未配置',multiline:true,labelPosition:'top',fit:true">
+                    </div>
+                    <div style="width: 100%;height: 50%">
+                        <input id="data_sys_crond_item"  class="easyui-textbox" data-options="label:'Data',prompt:'未配置',multiline:true,labelPosition:'top',fit:true">
+                    </div>
                 </div>
             </div>
             <div title="历史">
                 <div class="easyui-panel" style="height: 100%; width: 100%">
-                        历史
+                    <table id="propertygrid_sys_crond_history"></table>
                 </div>
             </div>
         </div>
         <div id="empty_sys_crond_item"><p style="text-align: center;">没有选择记录!</p></div>
-        <div id="error_sys_crond_item"><p style="text-align: center;">加载记录出错!</p></div>
     </div>
 </div>
 
@@ -29,12 +33,12 @@
         <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="syscrond.toolbar.add.open()">新建</a>
     </span>
     <span>
-        <a href="javascript:void(0)" id="menubutton_sys_crond_operation" class="easyui-menubutton" data-options="menu:'#menu_sys_crond_operation', disabled:true,iconCls:'icon-edit'">操作</a>
-        <div id="menu_sys_crond_operation" style="width:150px;">
-            <div iconCls="icon-reload" onclick="">启动</div>
-            <div iconCls="icon-lock" onclick="">停止</div>
-            <div iconCls="icon-ok" onclick="">执行</div>
-            <div iconCls="icon-edit_remove" onclick="">删除</div>
+        <a href="javascript:void(0)" id="menubutton_sys_crond_operate" class="easyui-menubutton" data-options="menu:'#menu_sys_crond_operate', disabled:true,iconCls:'icon-edit'">操作</a>
+        <div id="menu_sys_crond_operate" style="width:150px;">
+            <div iconCls="icon-reload" onclick="syscrond.toolbar.operate.start()">启动</div>
+            <div iconCls="icon-lock" onclick="syscrond.toolbar.operate.stop()">停止</div>
+            <div iconCls="icon-ok" onclick="syscrond.toolbar.operate.execute()">执行</div>
+            <div iconCls="icon-edit_remove" onclick="syscrond.toolbar.operate.delete()">删除</div>
         </div>
     </span>
     <span style="float: right; margin-right: 18px;">
@@ -161,7 +165,101 @@
 
             // task operate
             operate: {
-
+                menu:{
+                    menubutton: $('#menubutton_sys_crond_operate'),
+    
+                    // enable edit
+                    enable: function() {
+                        this.menubutton.menubutton('enable');
+                    },
+    
+                    // disable edit
+                    disable: function() {
+                        this.menubutton.menubutton('disable');
+                    }    
+                },
+                
+                start:function () {
+                    url = '/api/sys/crond/enable';
+                    row = syscrond.list.getSelected();
+                    $.post(url, {id: row.id},
+                        function (resp, status) {
+                            if (resp.status){
+                                syscrond.list.updateSelected(resp.data);
+                                $.messager.show({title: '信息', msg: '启动定时任务成功'});
+                            } else {
+                                $.messager.show({title: '错误', msg: '启动定时任务失败\n'+resp.msg});
+                            }
+                        },
+                        'json'
+                    ).fail(function () {
+                        $.messager.show({title: '错误', msg: '启动定时任务失败'});
+                    });
+                },
+                
+                stop:function () {
+                    url = '/api/sys/crond/disable';
+                    row = syscrond.list.getSelected();
+                    $.post(url, {id: row.id},
+                        function (resp, status) {
+                            if (resp.status){
+                                syscrond.list.updateSelected(resp.data);
+                                $.messager.show({title: '信息', msg: '停止定时任务成功'});
+                            } else {
+                                $.messager.show({title: '错误', msg: '停止定时任务失败\n'+resp.msg});
+                            }
+                        },
+                        'json'
+                    ).fail(function () {
+                        $.messager.show({title: '错误', msg: '停止定时任务失败'});
+                    });
+                },
+                
+                execute: function () {
+                    url = '/api/sys/crond/execute';
+                    row = syscrond.list.getSelected();
+                    $.post(url, {id: row.id},
+                        function (resp, status) {
+                            if (resp.status){
+                                syscrond.list.updateSelected(resp.data);
+                                $.messager.show({title: '信息', msg: '执行定时任务成功'});
+                            } else {
+                                $.messager.show({title: '错误', msg: '执行定时任务失败\n'+resp.msg});
+                            }
+                        },
+                        'json'
+                    ).fail(function () {
+                        $.messager.show({title: '错误', msg: '执行定时任务失败'});
+                    });
+                },
+                
+                delete: function () {
+                    row = syscrond.list.getSelected();
+                    $.messager.confirm({
+                        title: '确认',
+                        msg: '确认删除定时任务 ' + row.name +' ?',
+                        url: accountorder.edit.delete.url,
+                        fn: function (r) {
+                            if (r) {
+                                url = '/api/sys/crond/delete';
+                                row = syscrond.list.getSelected();
+                                $.post(url, {id: row.id},
+                                    function (resp, status) {
+                                        if (resp.status) {
+                                            syscrond.list.deleteSelected();
+                                            $.messager.show({title: '信息', msg: '删除定时任务成功'});
+                                        } else {
+                                            $.messager.show({title: '错误', msg: '删除定时任务失败\n' + resp.msg});
+                                        }
+                                    },
+                                    'json'
+                                ).fail(function () {
+                                    $.messager.show({title: '错误', msg: '删除定时任务失败\n' + resp.msg});
+                                });
+                            }
+                        }
+                    });
+                }
             },
 
             // task search
@@ -215,6 +313,7 @@
                     idField: 'id',
                     columns: [[
                         {field: 'id', title: 'ID', sortable: false, width:'5%'},
+                        {field: 'code', title: '代码', sortable: false, width:'10%'},
                         {field: 'name', title: '名称', sortable: false, width:'10%'},
                         {field: 'config', title: '配置', sortable: false, width:'10%'},
                         {field: 'method', title: '方式', sortable: false, width:'5%'},
@@ -229,8 +328,8 @@
                                                                                                     }},
                         {field: 'exclusive', title: '单例', sortable: false, width:'5%', formatter: cube.format.boolean},
                         {field: 'maxkeep', title: '保留', sortable: false, width:'5%'},
-                        {field: 'count', title: '执行次数', sortable: false, width:'6%'},
-                        {field: 'latest', title: '最近执行', sortable: false, width:'19%', formatter: cube.format.datetime}
+                        {field: 'count', title: '次数', sortable: false, width:'5%'},
+                        {field: 'latest', title: '最近', sortable: false, width:'15%', formatter: cube.format.datetime}
                     ]],
 
                     loadFilter: function (resp) {
@@ -243,7 +342,12 @@
                     },
 
                     onLoadSuccess: function (resp) {
-
+                        //disable menus
+                        syscrond.toolbar.operate.menu.disable();
+                        //hide tabs
+                        syscrond.tabs.hide();
+                        //clear selections
+                        $(this).datagrid('clearSelections');
                     },
 
                     onLoadError: function () {
@@ -251,12 +355,42 @@
                     },
 
                     onSelect(index, row) {
+                        //enable menus
+                        syscrond.toolbar.operate.menu.enable();
+                        //show tabs
+                        syscrond.tabs.show(row);
                     }
                 });
             },
             
             load: function (params) {
                 this.datagrid.datagrid('load', params);
+            },
+
+            getSelected: function() {
+                row = this.datagrid.datagrid('getSelected');
+                return row;
+            },
+
+            updateSelected: function(newrow) {
+                row = this.datagrid.datagrid('getSelected');
+                if(!row)
+                    return;
+
+                rindex = this.datagrid.datagrid('getRowIndex', row);
+                this.datagrid.datagrid('updateRow', {
+                    index: rindex,
+                    row: newrow
+                });
+            },
+
+            deleteSelected: function() {
+                row = this.datagrid.datagrid('getSelected');
+                if(!row)
+                    return;
+                rindex = this.datagrid.datagrid('getRowIndex', row);
+                this.datagrid.datagrid('deleteRow', rindex);
+                syscrond.tabs.hide();
             },
 
             insertRow: function(row) {
@@ -270,14 +404,145 @@
             }
         },
 
-        // task item
-        item: {
+        // detail tabs
+        tabs: {
+            tabs: $('#tabs_sys_crond_item'),
 
+            inited: false,
+
+            init: function() {
+                if (this.inited)
+                    return;
+
+                this.tabs.tabs({
+                    border: false,
+
+                    onSelect: function(title, index){
+                        row = syscrond.list.getSelected();
+                        if(!row)
+                            return;
+
+                        syscrond.tabs.select(index, row);
+                    }
+                });
+
+                this.inited = true;
+            },
+
+            hide: function() {
+                $('#empty_sys_crond_item').show();
+                this.tabs.hide();
+            },
+
+            show: function(row) {
+                $('#empty_sys_crond_item').hide();
+                this.tabs.show();
+
+                tab = this.tabs.tabs('getSelected');
+                if(tab) {
+                    idx = this.tabs.tabs('getTabIndex', tab);
+                    this.select(idx, row);
+                } else {
+                    this.select(0, row);
+                }
+            },
+
+            select: function (index, row) {
+                switch (index) {
+                    case 0:
+                        syscrond.items.detail.show(row);
+                        break;
+                    case 1:
+                        syscrond.items.history.show(row);
+                        break;
+                    default:
+                        // statements_def
+                        break;
+                }
+            }
+        },
+
+        // task items
+        items: {
+            // detail panel
+            detail:{
+                show: function (row) {
+                    if (row.data != null)
+                        $('#data_sys_crond_item').textbox('setValue', row.data);
+                    else
+                        $('#data_sys_crond_item').textbox('setValue', null);
+
+                    if (row.json != null) {
+                        val = JSON.stringify(JSON.parse(row.json), null, 3);
+                        $('#json_sys_crond_item').textbox('setValue', val);
+                    } else {
+                        $('#json_sys_crond_item').textbox('setValue', null);
+                    }
+                }
+            },
+
+            // history panel
+            history:{
+                propertygrid: $('#propertygrid_sys_crond_history'),
+
+                inited: false,
+
+                init: function(params) {
+                    if (this.inited)
+                        return;
+
+                    this.propertygrid.propertygrid({
+                        url: '/api/sys/crond/detail',
+                        method: 'get',
+                        queryParams: params,
+
+                        showGroup:true,
+
+                        columns: [[
+                            {field:'name', title:'名称', width:'20%'},
+                            {field:'value', title:'取值', width:'80%'}
+                        ]],
+
+                        loadFilter: function (resp) {
+                            if(!resp.status){
+                                $.messager.show({title: '错误', msg: '请求执行历史失败'});
+                                return {total:0, rows:[]};
+                            }
+
+                            return resp.data;
+                        },
+
+                        onLoadSuccess: function(resp) {
+                        },
+
+                        onLoadError: function() {
+                            $.messager.show({title: '错误', msg: '请求执行历史失败'});
+                        }
+                    });
+
+                    this.inited=true;
+                },
+
+                load: function(params) {
+                    this.propertygrid.propertygrid('load', params);
+                },
+
+                show: function(row) {
+                    params = {id:row.id};
+                    if(!this.inited)
+                        this.init(params);
+                    else
+                        this.load(params);
+                }
+            }
         },
 
         init: function () {
             // init list
             this.list.init();
+
+            // init tabs
+            this.tabs.init();
         }
     };
 
