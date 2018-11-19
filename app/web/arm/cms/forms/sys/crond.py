@@ -12,11 +12,11 @@ class Add(forms.Form):
     config = forms.CharField(min_length=1, max_length=32)
     method = forms.ChoiceField(choices=(('get','get'), ('post','post')))
     url = forms.CharField(min_length=1, max_length=256)
-    data = forms.CharField(initial=None, required=False)
-    json = forms.CharField(initial=None, required=False)
-    status = forms.CharField(min_length=1, max_length=8)
+    data = forms.CharField(required=False)
+    json = forms.CharField(required=False)
+    status = forms.CharField(initial='stopped', min_length=1, max_length=8, required=False)
     exclusive = forms.BooleanField()
-    maxkeep = forms.IntegerField()
+    maxkeep = forms.IntegerField(required=False)
 
 
 class Get(forms.Form):

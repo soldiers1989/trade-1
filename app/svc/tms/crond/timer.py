@@ -678,20 +678,19 @@ class _Timer(threading.Thread):
         :param id:
         :return:
         """
-        results = []
         with self._lock:
             # get timer status
             if id is None:
+                results = []
                 for t in self._tasks.values():
                     results.append(t.status())
+                return results
             else:
                 # get specified task status
                 t = self._tasks.get(id)
                 if t is None:
                     raise TimerError('time task with id: %s not exist' % (str(id)))
-                results.append(t.status())
-
-        return results
+                return t.status()
 
     def detail(self, id):
         """

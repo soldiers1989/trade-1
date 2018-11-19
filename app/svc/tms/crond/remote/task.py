@@ -1,12 +1,12 @@
 """
     remote task
 """
-import requests, logging, time
+import requests, logging, time, json
 from .. import timer, config, error
 
 
 class RemoteTask(timer.Runnable):
-    def __init__(self, id, code, name, method, url, data, json, ctime=int(time.time()), mtime=int(time.time())):
+    def __init__(self, id, code, name, method, url, data=None, jsons=None, ctime=int(time.time()), mtime=int(time.time())):
         """
             create a remote task with remote url and crond string
         :param url:
@@ -16,8 +16,15 @@ class RemoteTask(timer.Runnable):
         if method not in ['get', 'post']:
             raise error.method_not_support
 
-        if data is not None and json is not None:
+        data = data.strip() if data is not None else None
+        jsons = jsons.strip() if jsons is not None else None
+        data = None if data=='' else data
+        jsons = None if jsons=='' else jsons
+
+        if data is not None and jsons is not None:
             raise error.post_data_duplicate
+        if jsons is not None:
+            jsons = json.dumps(json.loads(jsons))
 
         self._id = id
         self._code = code
@@ -25,7 +32,7 @@ class RemoteTask(timer.Runnable):
         self._method = method
         self._url = url
         self._data = data
-        self._json = json
+        self._json = jsons
         self._ctime = ctime
         self._mtime = mtime
 

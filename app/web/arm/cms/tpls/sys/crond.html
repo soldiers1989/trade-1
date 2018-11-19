@@ -20,13 +20,13 @@
     </div>
 </div>
 
-<div id="toolbar_sys_crond_search">
+<div id="toolbar_sys_crond_list">
     <span style="float: left">
-        <a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="lever.update()">加载</a>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-clear" plain="true" onclick="lever.delete()">清空</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-reload" plain="true" onclick="syscrond.toolbar.load.do()">加载</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-clear" plain="true" onclick="syscrond.toolbar.clear.do()">清空</a>
     </span>
     <span>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="lever.add()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="syscrond.toolbar.add.open()">新建</a>
     </span>
     <span>
         <a href="javascript:void(0)" id="menubutton_sys_crond_operation" class="easyui-menubutton" data-options="menu:'#menu_sys_crond_operation', disabled:true,iconCls:'icon-edit'">操作</a>
@@ -39,14 +39,44 @@
     </span>
     <span style="float: right; margin-right: 18px;">
         <form class="easyui-form" id="form_sys_crond_search">
-            <input name="status" class="easyui-textbox" data-options="prompt:'任务状态', required:false">
+            <input name="status" class="easyui-combobox" data-options="prompt:'任务状态', required:false, editable:false, valueField:'id', textField:'text', data:[{'id':'','text':'全部'},{'id':'started','text':'已启动'},{'id':'stopped','text':'已停止'}]">
             <input name="words" class="easyui-textbox" data-options="prompt:'id/名称', required:false">
 
-            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="syscrond.search.do()">查询</a>
-            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="syscrond.search.reset()">重置</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="syscrond.toolbar.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="syscrond.toolbar.search.reset()">重置</a>
         </form>
     </span>
 </div>
+
+
+<div class="easyui-dialog" id="dialog_syscond_add" data-options="closed:true,modal:true,border:'thin',buttons:'#buttons_dialog_syscond_add'">
+    <form class="easyui-form" id="form_syscond_add" method="post" style="margin:0;padding:10px 20px">
+        <div style="margin-bottom:10px">
+            <span>
+                <input class="easyui-textbox" name="code" label="代码" prompt="任务代码" data-options="width:150,labelWidth:'35'" required>
+                <input class="easyui-textbox" name="name" label="名称" prompt="任务名称" data-options="width:150,labelWidth:'35'" required>
+                <input class="easyui-textbox" name="config" label="配置" prompt="定时配置" data-options="width:150,labelWidth:'35'" required>
+                <input class="easyui-combobox" name="exclusive" label="单例" prompt="单例执行" data-options="width:143,labelWidth:'35', editable:false, valueField:'id', textField:'text', data:[{'id':'True','text':'是'},{'id':'False','text':'否'}]" required>
+                <input class="easyui-combobox" name="method" label="方式" prompt="请求方式" data-options="width:150,labelWidth:'35', editable:false, valueField:'id', textField:'text', data:[{'id':'get','text':'GET'},{'id':'post','text':'POST'}]" required>
+            </span>
+        </div>
+        <div style="margin-bottom:10px">
+            <input class="easyui-textbox" name="url" label="URL" prompt="请求地址" data-options="width:760,labelWidth:'35'" required>
+        </div>
+        <div style="margin-bottom:10px">
+            <span>
+                <input class="easyui-textbox" name="json" label="Json" prompt="Json格式数据" data-options="width:760,height:250,multiline:true,labelPosition:'top',labelWidth:'35'">
+                <input class="easyui-textbox" name="data" label="Data" prompt="任意格式数据" data-options="width:760,height:250,multiline:true,labelPosition:'top',labelWidth:'35'">
+            </span>
+        </div>
+    </form>
+</div>
+
+<div id="buttons_dialog_syscond_add">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="syscrond.toolbar.add.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="syscrond.toolbar.add.close()" style="width:90px">取消</a>
+</div>
+
 
 <script type="text/javascript">
     var syscrond = {
@@ -54,17 +84,79 @@
         toolbar: {
             // load button
             load: {
+                url: '/api/sys/crond/load',
 
+                do: function () {
+                    $.post(this.url, {}, function(resp, status){
+                       syscrond.list.load({});
+                       $.messager.show({title: '信息', msg: '加载定时任务成功'});
+                    }, 'json').fail(function () {
+                        $.messager.show({title: '错误', msg: '加载定时任务失败'});
+                    });
+                }
             },
 
             // clear button
             clear: {
+                url: '/api/sys/crond/clear',
 
+                do: function () {
+                    $.messager.confirm({
+                        title: '清空任务',
+                        msg: '确认清空所有定时任务?',
+                        url: this.url,
+                        fn: function (r) {
+                            if (r) {
+                                $.post(this.url, {}, function (resp, status) {
+                                    syscrond.list.load({});
+                                    $.messager.show({title: '信息', msg: '清空定时任务成功'});
+                                }, 'json').fail(function () {
+                                    $.messager.show({title: '错误', msg: '清空定时任务失败'});
+                                });
+                            }
+                        }
+                    });
+                }
             },
 
-            // create button
-            create: {
+            // add button
+            add: {
+                url: '/api/sys/crond/add',
 
+                dialog: $('#dialog_syscond_add'),
+                form: $('#form_syscond_add'),
+
+                open: function (){
+                    //reset form
+                    this.form.form('clear');
+
+                    //open dialog
+                    this.dialog.dialog('open').dialog('center').dialog('setTitle','添加任务');
+                },
+                
+                save: function () {
+                    //submit form
+                    this.form.form('submit',{
+                        url: this.url,
+
+                        onSubmit: function(){
+                            return syscrond.toolbar.add.form.form('validate');
+                        },
+                        success: function(data){
+                            var resp = eval('('+data+')');
+                            if (resp.status){
+                                syscrond.toolbar.add.close();
+                                syscrond.list.insertRow(resp.data);
+                            } else {
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                            }
+                        }
+                    });
+                },
+                
+                close: function () {
+                    this.dialog.dialog('close');
+                }
             },
 
             // task operate
@@ -74,7 +166,29 @@
 
             // task search
             search: {
+                form: $('#form_sys_crond_search'),
 
+                do: function () {
+                    //check search form
+                    if(!this.form.form('validate'))
+                        return;
+
+                    //get parameters
+                    params = {
+                        status: this.form.find('input[name="status"]:first').val(),
+                        words: this.form.find('input[name="words"]:first').val()
+                    };
+
+                    //load data
+                    syscrond.list.load(params);
+                },
+                
+                reset: function () {
+                    // clear form
+                    this.form.form('clear');
+                    // load data
+                    syscrond.list.load({});
+                }
             }
         },
 
@@ -90,7 +204,7 @@
                     method: 'get',
                     url: this.url,
 
-                    toolbar: '#toolbar_sys_crond_search',
+                    toolbar: '#toolbar_sys_crond_list',
 
                     striped: true,
                     fitColumns: true,
@@ -120,7 +234,11 @@
                     ]],
 
                     loadFilter: function (resp) {
-                        console.log(resp);
+                        if(!resp.status){
+                            $.messager.show({title: '错误', msg: '请求定时任务数据失败'});
+                            return []
+                        }
+
                         return resp.data;
                     },
 
@@ -135,6 +253,20 @@
                     onSelect(index, row) {
                     }
                 });
+            },
+            
+            load: function (params) {
+                this.datagrid.datagrid('load', params);
+            },
+
+            insertRow: function(row) {
+                index = 0;
+                this.datagrid.datagrid('insertRow', {
+                  index: index,
+                  row: row
+                });
+
+                this.datagrid.datagrid('selectRow', index);
             }
         },
 

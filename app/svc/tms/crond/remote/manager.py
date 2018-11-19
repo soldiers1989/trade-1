@@ -29,7 +29,7 @@ class TaskManager:
         :return:
         """
         # create new remote runnable task
-        remotetask = task.RemoteTask(id, code, name, method, url, data=None, json=None, ctime=ctime, mtime=mtime)
+        remotetask = task.RemoteTask(id, code, name, method, url, data=data, jsons=json, ctime=ctime, mtime=mtime)
 
         # add to timer
         timer.default.add(id, name, cond, remotetask, stopped, exclusive, maxkeep)

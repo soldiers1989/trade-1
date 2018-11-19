@@ -1,5 +1,5 @@
-import time
-from .. import remote, handler, access, protocol, models, forms, error
+import time, json
+from .. import remote, handler, access, protocol, models, error
 
 
 class List(handler.Handler):
@@ -113,20 +113,23 @@ class Add(handler.Handler):
     def post(self):
         # get task id
         code, name, config, url, method = self.get_argument('code'), self.get_argument('name'), self.get_argument('config'), self.get_argument('url'), self.get_argument('method')
-        data, json, exclusive, maxkeep = self.get_argument('data', None), self.get_argument('json', None), self.get_argument('exclusive', True), self.get_argument('maxkeep', 20)
+        data, jsons, exclusive, maxkeep = self.get_argument('data', None), self.get_argument('json', None), self.get_argument('exclusive', True), self.get_argument('maxkeep', 20)
+
+        jsons = jsons.strip() if jsons is not None else None
+        jsons = json.dumps(json.loads(jsons)) if jsons is not None else jsons
 
         with models.db.atomic() as d:
             # add new crond object to database if task has exist
             crond = models.Crond.filter(d, code=code).one()
             if crond is None:
-                crond = models.Crond(code=code, name=name, config=config, method=method, url=url, data=data, json=json,
+                crond = models.Crond(code=code, name=name, config=config, method=method, url=url, data=data, json=jsons,
                                      status='stopped', exclusive=exclusive, maxkeep=maxkeep,
                                      ctime=int(time.time()), mtime=int(time.time())).save(d)
 
             id = str(crond.id)
             # add new task to task manager
             if not remote.taskmanager.exist(id):
-                remote.taskmanager.add(id, code, name, config, method, url, exclusive=exclusive, maxkeep=maxkeep, ctime=crond.ctime, mtime=crond.mtime)
+                remote.taskmanager.add(id, code, name, config, method, url, data=data, json=jsons, exclusive=exclusive, maxkeep=maxkeep, ctime=crond.ctime, mtime=crond.mtime)
 
             # get the new task
             crond = remote.taskmanager.status(id)

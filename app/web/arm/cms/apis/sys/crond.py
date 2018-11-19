@@ -64,7 +64,7 @@ def add(request):
     :param request:
     :return:
     """
-    form = forms.sys.crond.Add(request.GET)
+    form = forms.sys.crond.Add(request.POST)
     if form.is_valid():
         # get params
         params = form.cleaned_data
