@@ -21,15 +21,6 @@ class UserLogin(form.Form):
     vcode = field.StringField(max_length=16, null=True)
 
 
-class UserVerifyGet(form.Form):
-    type = field.StringField(max_length=16)
-    length = field.IntegerField()
-
-
-class UserVerifyPost(form.Form):
-    code = field.StringField(max_length=16)
-
-
 class UserPwdChange(form.Form):
     opwd = field.StringField(max_length=16, min_length=1)
     npwd = field.StringField(max_length=16, min_length=1)

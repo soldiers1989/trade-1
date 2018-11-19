@@ -1,7 +1,7 @@
 """
     service admin
 """
-from .. import access, handler, protocol, redis, error
+from .. import access, handler, protocol
 
 
 class EchoHandler(handler.Handler):

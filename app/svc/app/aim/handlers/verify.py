@@ -2,7 +2,7 @@
     service verifier, including image, sms
 """
 from tlib import rand, image, validator
-from .. import access, handler, error, protocol, config, verify, msgtpl, forms, remote
+from .. import access, handler, error, protocol, config, verify, forms, sms
 
 
 class VerifyIDGetHandler(handler.Handler):
@@ -39,7 +39,7 @@ class VerifyIDGetHandler(handler.Handler):
         self.write(protocol.success(data = data))
 
 
-class VerifyImageGeneralHandler(handler.Handler):
+class VerifyNormalImageHandler(handler.Handler):
     @access.exptproc
     def get(self):
         """
@@ -47,7 +47,7 @@ class VerifyImageGeneralHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.verify.VerifyImageGeneralGet(**self.arguments)
+        form = forms.verify.VerifyNormalImageGet(**self.arguments)
 
         fonts = [] # font sizes, split by ','
         for s in form.fonts.split(','):
@@ -77,7 +77,7 @@ class VerifyImageGeneralHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.verify.VerifyImageGeneralPost(**self.arguments)
+        form = forms.verify.VerifyNormalImagePost(**self.arguments)
 
         # get verify characters from session
         sc = verify.image.get(form.id)
@@ -89,7 +89,7 @@ class VerifyImageGeneralHandler(handler.Handler):
         self.write(protocol.success())
 
 
-class VerifyImageSessionHandler(handler.Handler):
+class VerifySessionImageHandler(handler.Handler):
     @access.exptproc
     def get(self):
         """
@@ -97,7 +97,7 @@ class VerifyImageSessionHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.verify.VerifyImageSessionGet(**self.arguments)
+        form = forms.verify.VerifySessionImageGet(**self.arguments)
 
         fonts = [] # font sizes, split by ','
         for s in form.fonts.split(','):
@@ -137,7 +137,7 @@ class VerifyImageSessionHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.verify.VerifyImageSessionPost(**self.arguments)
+        form = forms.verify.VerifySessionImagePost(**self.arguments)
 
         id = self.session.id  # use session id for image id
 
@@ -151,7 +151,7 @@ class VerifyImageSessionHandler(handler.Handler):
         self.write(protocol.success())
 
 
-class VerifySmsHandler(handler.Handler):
+class VerifyNormalSmsHandler(handler.Handler):
     @access.exptproc
     def get(self):
         """
@@ -159,15 +159,10 @@ class VerifySmsHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.verify.VerifySmsGet(**self.arguments)
+        form = forms.verify.VerifyNormalSmsGet(**self.arguments)
 
         # check phone number
         if not validator.phone(form.phone):
-            raise error.invalid_parameters
-
-        # get message template
-        tpl = msgtpl.sms.get(form.type)
-        if tpl is None:
             raise error.invalid_parameters
 
         # check verify code length
@@ -181,11 +176,10 @@ class VerifySmsHandler(handler.Handler):
         verify.sms.set(form.phone, code, config.EXPIRE_VERIFY_CODE)
 
         # send message by template
-        remote.sms.send(form.phone, tpl.format(code))
+        sms.send(form.phone, form.tpl, code=code)
 
         # response data
         data = {
-            'code': code,
             'expires': config.EXPIRE_VERIFY_CODE
         }
 
@@ -198,7 +192,7 @@ class VerifySmsHandler(handler.Handler):
         :return:
         """
         # get arguments
-        form = forms.verify.VerifySmsPost(**self.arguments)
+        form = forms.verify.VerifyNormalSmsPost(**self.arguments)
 
         # verify code
         sc = verify.sms.get(form.phone)
@@ -209,3 +203,59 @@ class VerifySmsHandler(handler.Handler):
         self.write(protocol.success())
 
 
+class VerifyUserSmsHandler(handler.Handler):
+    @access.exptproc
+    def get(self):
+        """
+            send sms
+        :return:
+        """
+        # get login user phone number
+        phone = self.session.get('phone')
+        if phone is None:
+            raise error.user_not_login
+
+        # get arguments
+        form = forms.verify.VerifyUserSmsGet(**self.arguments)
+
+        # check verify code length
+        if not validator.range(form.length, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
+            raise error.invalid_parameters
+
+        # generate verify code
+        code = rand.num(form.length)
+
+        # save verify code
+        verify.sms.set(phone, code, config.EXPIRE_VERIFY_CODE)
+
+        # send message
+        sms.send(phone, form.tpl, code=code)
+
+        # response data
+        data = {
+            'expires': config.EXPIRE_VERIFY_CODE
+        }
+
+        self.write(protocol.success(data = data))
+
+    @access.exptproc
+    def post(self):
+        """
+            check sms
+        :return:
+        """
+        # get login user phone number
+        phone = self.session.get('phone')
+        if phone is None:
+            raise error.user_not_login
+
+        # get arguments
+        form = forms.verify.VerifyUserSmsPost(**self.arguments)
+
+        # verify code
+        sc = verify.sms.get(phone)
+        if sc is None or form.code.lower() != sc.lower():
+            raise error.wrong_sms_verify_code
+
+        # response success
+        self.write(protocol.success())

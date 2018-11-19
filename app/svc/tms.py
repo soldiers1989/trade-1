@@ -7,7 +7,7 @@ import argparse
 actions = ['start', 'stop']
 
 # registered apps
-apps = ['crond', 'trade', 'quote', 'broker', 'mds']
+apps = ['crond', 'trade', 'quote', 'broker', 'mds', 'sms']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -35,6 +35,9 @@ if __name__ == "__main__":
         elif app == 'mds':
             import tms.mds
             tms.mds.service.start(port)
+        elif app == 'sms':
+            import tms.sms
+            tms.sms.service.start(port)
         else:
             pass
     elif action == 'stop':

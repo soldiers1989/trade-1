@@ -3,12 +3,12 @@
 """
 import time, datetime
 from tlib import validator, hash, rand
-from .. import access, handler, error, protocol, verify, forms, config, msgtpl, remote, models
+from .. import access, handler, error, protocol, verify, forms, models
 
 
 class SessionGetHandler(handler.Handler):
     @access.exptproc
-    async def get(self):
+    def get(self):
         """
             get session id
         :return:
@@ -139,69 +139,6 @@ class UserLogoutHandler(handler.Handler):
         self.write(protocol.success())
 
 
-class UserVerifyHandler(handler.Handler):
-    @access.exptproc
-    def get(self):
-        """
-            send sms
-        :return:
-        """
-        # get login user phone number
-        phone = self.session.get('phone')
-        if phone is None:
-            raise error.user_not_login
-
-        # get arguments
-        form = forms.user.UserVerifyGet(**self.arguments)
-
-        # get message template
-        tpl = msgtpl.sms.get(form.type)
-        if tpl is None:
-            raise error.invalid_parameters
-
-        # check verify code length
-        if not validator.range(form.length, config.LENGTH_VERIFY_CODE_MIN, config.LENGTH_VERIFY_CODE_MAX):
-            raise error.invalid_parameters
-
-        # generate verify code
-        code = rand.num(form.length)
-
-        # save verify code
-        verify.sms.set(phone, code, config.EXPIRE_VERIFY_CODE)
-
-        # send message by template
-        remote.sms.send(phone, tpl.format(code))
-
-        # response data
-        data = {
-            'expires': config.EXPIRE_VERIFY_CODE
-        }
-
-        self.write(protocol.success(data = data))
-
-    @access.exptproc
-    def post(self):
-        """
-            check sms
-        :return:
-        """
-        # get login user phone number
-        phone = self.session.get('phone')
-        if phone is None:
-            raise error.user_not_login
-
-        # get arguments
-        form = forms.user.UserVerifyPost(**self.arguments)
-
-        # verify code
-        sc = verify.sms.get(phone)
-        if sc is None or form.code.lower() != sc.lower():
-            raise error.wrong_sms_verify_code
-
-        # response success
-        self.write(protocol.success())
-
-
 class UserPwdChangeHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
@@ -264,7 +201,7 @@ class UserPwdResetHandler(handler.Handler):
 class GetBankHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
-    def post(self):
+    def get(self):
         """
             bank card
         :return:
@@ -323,7 +260,7 @@ class DelBankHandler(handler.Handler):
 class GetCouponHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
-    def post(self):
+    def get(self):
         """
             bank card
         :return:
@@ -345,7 +282,7 @@ class GetCouponHandler(handler.Handler):
 class GetBillHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
-    def post(self):
+    def get(self):
         """
             bills
         :return:
@@ -363,7 +300,7 @@ class GetBillHandler(handler.Handler):
 class GetChargeHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
-    def post(self):
+    def get(self):
         """
             charge record
         :return:
@@ -382,7 +319,7 @@ class GetChargeHandler(handler.Handler):
 class GetDrawHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
-    def post(self):
+    def get(self):
         """
             draw record
         :return:
@@ -401,7 +338,7 @@ class GetDrawHandler(handler.Handler):
 class GetStockHandler(handler.Handler):
     @access.exptproc
     @access.needlogin
-    def post(self):
+    def get(self):
         """
             user stock
         :return:
