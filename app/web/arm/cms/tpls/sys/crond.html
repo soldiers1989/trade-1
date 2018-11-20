@@ -363,7 +363,6 @@
                         {field: 'id', title: 'ID', sortable: false, width:'5%'},
                         {field: 'code', title: '代码', sortable: false, width:'10%'},
                         {field: 'name', title: '名称', sortable: false, width:'10%'},
-                        {field: 'config', title: '配置', sortable: false, width:'10%'},
                         {field: 'status', title: '状态', sortable: false, width:'6%', formatter: function (val) {
                                                                                 if(val==='started')
                                                                                     return '已启动';
@@ -375,9 +374,10 @@
                         {field: 'exclusive', title: '单例', sortable: false, formatter: cube.format.boolean},
                         {field: 'maxkeep', title: '保留', sortable: false},
                         {field: 'count', title: '次数', sortable: false, width:'5%'},
-                        {field: 'latest', title: '最近', sortable: false, width:'15%', formatter: cube.format.datetime}
+                        {field: 'latest', title: '最近', sortable: false, width:'16%', formatter: cube.format.datetime}
                     ]],
                     columns: [[
+                        {field: 'config', title: '配置', sortable: false},
                         {field: 'method', title: '方式', sortable: false},
                         {field: 'url', title: 'URL', sortable: false}
                     ]],

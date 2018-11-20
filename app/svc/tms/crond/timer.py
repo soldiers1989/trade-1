@@ -556,6 +556,13 @@ class _TimerTask(_Task):
 class _Timer(threading.Thread):
     """
         timer scheduler and executor, including timer task and crontab task
+        interval:
+            <interval>
+        crontab:
+            <min, hour, day, month, week>
+            <10 * * * *>
+            <10,11,12, * * * *>
+            <*/5 * * * *>
     """
     def __init__(self):
         """
