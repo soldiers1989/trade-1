@@ -14,9 +14,12 @@ class Add(forms.Form):
     url = forms.CharField(min_length=1, max_length=256)
     data = forms.CharField(required=False)
     json = forms.CharField(required=False)
-    status = forms.CharField(initial='stopped', min_length=1, max_length=8, required=False)
+    status = forms.ChoiceField(choices=(('started','started'), ('stopped','stopped')))
     exclusive = forms.BooleanField()
     maxkeep = forms.IntegerField(required=False)
+
+
+Update = Add
 
 
 class Get(forms.Form):

@@ -30,15 +30,16 @@
         <a href="#" class="easyui-linkbutton" iconCls="icon-clear" plain="true" onclick="syscrond.toolbar.clear.do()">清空</a>
     </span>
     <span>
-        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="syscrond.toolbar.add.open()">新建</a>
+        <a href="#" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="syscrond.toolbar.au.open('add')">新建</a>
     </span>
     <span>
-        <a href="javascript:void(0)" id="menubutton_sys_crond_operate" class="easyui-menubutton" data-options="menu:'#menu_sys_crond_operate', disabled:true,iconCls:'icon-edit'">操作</a>
+        <a href="javascript:void(0)" id="menubutton_sys_crond_operate" class="easyui-menubutton" data-options="menu:'#menu_sys_crond_operate', disabled:true,iconCls:'icon-man'">操作</a>
         <div id="menu_sys_crond_operate" style="width:150px;">
+            <div iconCls="icon-edit" onclick="syscrond.toolbar.au.open('update')">修改</div>
             <div iconCls="icon-reload" onclick="syscrond.toolbar.operate.start()">启动</div>
             <div iconCls="icon-lock" onclick="syscrond.toolbar.operate.stop()">停止</div>
             <div iconCls="icon-ok" onclick="syscrond.toolbar.operate.execute()">执行</div>
-            <div iconCls="icon-edit_remove" onclick="syscrond.toolbar.operate.delete()">删除</div>
+            <div iconCls="icon-remove" onclick="syscrond.toolbar.operate.delete()">删除</div>
         </div>
     </span>
     <span style="float: right; margin-right: 18px;">
@@ -53,15 +54,16 @@
 </div>
 
 
-<div class="easyui-dialog" id="dialog_syscond_add" data-options="closed:true,modal:true,border:'thin',buttons:'#buttons_dialog_syscond_add'">
-    <form class="easyui-form" id="form_syscond_add" method="post" style="margin:0;padding:10px 20px">
+<div class="easyui-dialog" id="dialog_syscond_au" data-options="closed:true,modal:true,border:'thin',buttons:'#buttons_dialog_syscond_au'">
+    <form class="easyui-form" id="form_syscond_au" method="post" style="margin:0;padding:10px 20px">
         <div style="margin-bottom:10px">
             <span>
-                <input class="easyui-textbox" name="code" label="代码" prompt="任务代码" data-options="width:150,labelWidth:'35'" required>
+                <input class="easyui-textbox" id="textbox_syscond_code" name="code" label="代码" prompt="任务代码" data-options="width:140,labelWidth:'35'" required>
                 <input class="easyui-textbox" name="name" label="名称" prompt="任务名称" data-options="width:150,labelWidth:'35'" required>
                 <input class="easyui-textbox" name="config" label="配置" prompt="定时配置" data-options="width:150,labelWidth:'35'" required>
-                <input class="easyui-combobox" name="exclusive" label="单例" prompt="单例执行" data-options="width:143,labelWidth:'35', editable:false, valueField:'id', textField:'text', data:[{'id':'True','text':'是'},{'id':'False','text':'否'}]" required>
-                <input class="easyui-combobox" name="method" label="方式" prompt="请求方式" data-options="width:150,labelWidth:'35', editable:false, valueField:'id', textField:'text', data:[{'id':'get','text':'GET'},{'id':'post','text':'POST'}]" required>
+                <input class="easyui-combobox" name="exclusive" label="单例" prompt="单例" data-options="width:100,labelWidth:'35', editable:false, valueField:'id', textField:'text', data:[{'id':'1','text':'是'},{'id':'0','text':'否'}]" required>
+                <input class="easyui-combobox" name="status" label="状态" prompt="状态" data-options="width:100,labelWidth:'35', editable:false, valueField:'id', textField:'text', data:[{'id':'stopped','text':'停止'},{'id':'started','text':'启动'}]" required>
+                <input class="easyui-combobox" name="method" label="方式" prompt="方式" data-options="width:100,labelWidth:'35', editable:false, valueField:'id', textField:'text', data:[{'id':'get','text':'GET'},{'id':'post','text':'POST'}]" required>
             </span>
         </div>
         <div style="margin-bottom:10px">
@@ -76,9 +78,9 @@
     </form>
 </div>
 
-<div id="buttons_dialog_syscond_add">
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="syscrond.toolbar.add.save()" style="width:90px">保存</a>
-    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="syscrond.toolbar.add.close()" style="width:90px">取消</a>
+<div id="buttons_dialog_syscond_au">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-ok" onclick="syscrond.toolbar.au.save()" style="width:90px">保存</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel" onclick="syscrond.toolbar.au.close()" style="width:90px">取消</a>
 </div>
 
 
@@ -123,33 +125,45 @@
                 }
             },
 
-            // add button
-            add: {
-                url: '/api/sys/crond/add',
+            // add/update button
+            au: {
+                option: null,
+                dialog: $('#dialog_syscond_au'),
+                form: $('#form_syscond_au'),
 
-                dialog: $('#dialog_syscond_add'),
-                form: $('#form_syscond_add'),
+                open: function (option){
+                    if (option === 'add'){
+                         //reset form
+                        this.form.form('clear');
+                        //open dialog
+                        this.dialog.dialog('open').dialog('center').dialog('setTitle','添加任务');
+                    } else if(option === 'update'){
+                         //reset form
+                        this.form.form('clear');
+                        //set form
+                        row = syscrond.list.getSelected();
+                        this.form.form('load', row);
+                        //open dialog
+                        this.dialog.dialog('open').dialog('center').dialog('setTitle','修改任务');
+                    } else{
+                        $.messager.show({ title: '错误',  msg: '操作不支持' });
+                    }
 
-                open: function (){
-                    //reset form
-                    this.form.form('clear');
-
-                    //open dialog
-                    this.dialog.dialog('open').dialog('center').dialog('setTitle','添加任务');
+                    this.option = option;
                 },
                 
-                save: function () {
+                add: function () {
                     //submit form
                     this.form.form('submit',{
-                        url: this.url,
+                        url: '/api/sys/crond/add',
 
                         onSubmit: function(){
-                            return syscrond.toolbar.add.form.form('validate');
+                            return syscrond.toolbar.au.form.form('validate');
                         },
                         success: function(data){
                             var resp = eval('('+data+')');
                             if (resp.status){
-                                syscrond.toolbar.add.close();
+                                syscrond.toolbar.au.close();
                                 syscrond.list.insertRow(resp.data);
                             } else {
                                 $.messager.show({ title: '错误',  msg: resp.msg });
@@ -157,7 +171,37 @@
                         }
                     });
                 },
-                
+
+                update: function () {
+                    //submit form
+                    this.form.form('submit',{
+                        url: '/api/sys/crond/update',
+
+                        onSubmit: function(){
+                            return syscrond.toolbar.au.form.form('validate');
+                        },
+                        success: function(data){
+                            var resp = eval('('+data+')');
+                            if (resp.status){
+                                syscrond.toolbar.au.close();
+                                syscrond.list.updateSelected(resp.data);
+                            } else {
+                                $.messager.show({ title: '错误',  msg: resp.msg });
+                            }
+                        }
+                    });
+                },
+
+                save: function(){
+                  if (this.option === 'add'){
+                      this.add();
+                  } else if (this.option === 'update') {
+                      this.update();
+                  } else{
+                      $.messager.show({ title: '错误',  msg: '操作不支持' });
+                  }
+                },
+
                 close: function () {
                     this.dialog.dialog('close');
                 }
@@ -178,7 +222,8 @@
                         this.menubutton.menubutton('disable');
                     }    
                 },
-                
+
+                // start task
                 start:function () {
                     url = '/api/sys/crond/enable';
                     row = syscrond.list.getSelected();
@@ -196,7 +241,8 @@
                         $.messager.show({title: '错误', msg: '启动定时任务失败'});
                     });
                 },
-                
+
+                // stop task
                 stop:function () {
                     url = '/api/sys/crond/disable';
                     row = syscrond.list.getSelected();
@@ -214,7 +260,8 @@
                         $.messager.show({title: '错误', msg: '停止定时任务失败'});
                     });
                 },
-                
+
+                // execute task
                 execute: function () {
                     url = '/api/sys/crond/execute';
                     row = syscrond.list.getSelected();
@@ -232,7 +279,8 @@
                         $.messager.show({title: '错误', msg: '执行定时任务失败'});
                     });
                 },
-                
+
+                // delete task
                 delete: function () {
                     row = syscrond.list.getSelected();
                     $.messager.confirm({
@@ -311,25 +359,27 @@
                     singleSelect: true,
 
                     idField: 'id',
-                    columns: [[
+                    frozenColumns: [[
                         {field: 'id', title: 'ID', sortable: false, width:'5%'},
                         {field: 'code', title: '代码', sortable: false, width:'10%'},
                         {field: 'name', title: '名称', sortable: false, width:'10%'},
                         {field: 'config', title: '配置', sortable: false, width:'10%'},
-                        {field: 'method', title: '方式', sortable: false, width:'5%'},
-                        {field: 'url', title: 'URL', sortable: false, width:'30%'},
-                        {field: 'status', title: '状态', sortable: false, width:'5%', formatter: function (val) {
-                                                                                                        if(val==='started')
-                                                                                                            return '已启动';
-                                                                                                        else if(val==='stopped')
-                                                                                                            return '已停止';
-                                                                                                        else
-                                                                                                            return '未知';
-                                                                                                    }},
-                        {field: 'exclusive', title: '单例', sortable: false, width:'5%', formatter: cube.format.boolean},
-                        {field: 'maxkeep', title: '保留', sortable: false, width:'5%'},
+                        {field: 'status', title: '状态', sortable: false, width:'6%', formatter: function (val) {
+                                                                                if(val==='started')
+                                                                                    return '已启动';
+                                                                                else if(val==='stopped')
+                                                                                    return '已停止';
+                                                                                else
+                                                                                    return '未知';
+                                                                            }},
+                        {field: 'exclusive', title: '单例', sortable: false, formatter: cube.format.boolean},
+                        {field: 'maxkeep', title: '保留', sortable: false},
                         {field: 'count', title: '次数', sortable: false, width:'5%'},
                         {field: 'latest', title: '最近', sortable: false, width:'15%', formatter: cube.format.datetime}
+                    ]],
+                    columns: [[
+                        {field: 'method', title: '方式', sortable: false},
+                        {field: 'url', title: 'URL', sortable: false}
                     ]],
 
                     loadFilter: function (resp) {

@@ -5,7 +5,8 @@ handlers = [
     (r"/task/load", handlers.task.Load),
 
     (r"/task/add", handlers.task.Add),
-    (r"/task/del", handlers.task.Delete),
+    (r"/task/update", handlers.task.Update),
+    (r"/task/delete", handlers.task.Delete),
     (r"/task/clear", handlers.task.Clear),
 
     (r"/task/enable", handlers.task.Enable),

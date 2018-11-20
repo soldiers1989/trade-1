@@ -79,6 +79,26 @@ def add(request):
 
 @auth.catch_exception
 @auth.need_login
+def update(request):
+    """
+        add
+    :param request:
+    :return:
+    """
+    form = forms.sys.crond.Update(request.POST)
+    if form.is_valid():
+        # get params
+        params = form.cleaned_data
+
+        # request rpc
+        data = remote.crond.update(**params)
+
+        # response data
+        return resp.success(data = data)
+
+
+@auth.catch_exception
+@auth.need_login
 def delete(request):
     """
         delete

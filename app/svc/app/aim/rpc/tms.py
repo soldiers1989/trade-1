@@ -263,6 +263,20 @@ class Crond(Rpc):
         # access service
         return self.post(path, params=params)
 
+    def update(self, **params):
+        """
+            udpate crond task
+        :param params:
+        :param data:
+        :param json:
+        :return:
+        """
+        # remote path
+        path = "/task/update"
+
+        # access service
+        return self.post(path, params=params)
+
     def delete(self, **params):
         """
             delete a timer task
@@ -270,7 +284,7 @@ class Crond(Rpc):
         :return:
         """
         # remote path
-        path = "/task/del"
+        path = "/task/delete"
 
         # access service
         return self.post(path, params=params)

@@ -79,40 +79,9 @@ class Load(handler.Handler):
 class Add(handler.Handler):
     @access.exptproc
     @access.needtoken
-    def get(self):
-        """
-            get quote service status
-        :return:
-        """
-        # get task id
-        code, name, config, url, method = self.get_argument('code'), self.get_argument('name'), self.get_argument('config'), self.get_argument('url'), self.get_argument('method')
-        exclusive, maxkeep = self.get_argument('exclusive', True), self.get_argument('maxkeep', 20)
-
-        with models.db.atomic() as d:
-            # add new crond object to database if task has exist
-            crond = models.Crond.filter(d, code=code).one()
-            if crond is None:
-                crond = models.Crond(code=code, name=name, config=config, method=method, url=url, data=None, json=None,
-                                     status='stopped', exclusive=exclusive, maxkeep=maxkeep,
-                                     ctime=int(time.time()), mtime=int(time.time())).save(d)
-
-            id = str(crond.id)
-            # add new task to task manager
-            if not remote.taskmanager.exist(id):
-                remote.taskmanager.add(id, code, name, config, method, url, exclusive=exclusive, maxkeep=maxkeep, ctime=crond.ctime, mtime=crond.mtime)
-
-            # get the new task
-            crond = remote.taskmanager.status(id)
-
-            # response data
-            self.write(protocol.success(data=crond))
-
-
-    @access.exptproc
-    @access.needtoken
     def post(self):
         # get task id
-        code, name, config, url, method = self.get_argument('code'), self.get_argument('name'), self.get_argument('config'), self.get_argument('url'), self.get_argument('method')
+        code, name, config, status, method, url = self.get_argument('code'), self.get_argument('name'), self.get_argument('config'), self.get_argument('status', 'stopped'), self.get_argument('method'), self.get_argument('url')
         data, jsons, exclusive, maxkeep = self.get_argument('data', None), self.get_argument('json', None), self.get_argument('exclusive', True), self.get_argument('maxkeep', 20)
 
         data = data.strip() if data is not None else None
@@ -125,13 +94,52 @@ class Add(handler.Handler):
             crond = models.Crond.filter(d, code=code).one()
             if crond is None:
                 crond = models.Crond(code=code, name=name, config=config, method=method, url=url, data=data, json=jsons,
-                                     status='stopped', exclusive=exclusive, maxkeep=maxkeep,
+                                     status=status, exclusive=exclusive, maxkeep=maxkeep,
                                      ctime=int(time.time()), mtime=int(time.time())).save(d)
 
             id = str(crond.id)
             # add new task to task manager
             if not remote.taskmanager.exist(id):
-                remote.taskmanager.add(id, code, name, config, method, url, data=data, json=jsons, exclusive=exclusive, maxkeep=maxkeep, ctime=crond.ctime, mtime=crond.mtime)
+                stopped = True if crond.status == 'stopped' else False
+                remote.taskmanager.add(id, code, name, config, method, url, data=data, json=jsons, stopped=stopped,
+                                       exclusive=exclusive, maxkeep=maxkeep, ctime=crond.ctime, mtime=crond.mtime)
+
+            # get the new task
+            crond = remote.taskmanager.status(id)
+
+            # response data
+            self.write(protocol.success(data=crond))
+
+
+class Update(handler.Handler):
+    @access.exptproc
+    @access.needtoken
+    def post(self):
+        # get task id
+        code, name, config, status, method, url = self.get_argument('code'), self.get_argument('name'), self.get_argument('config'), self.get_argument('status', 'stopped'), self.get_argument('method'), self.get_argument('url')
+        data, jsons, exclusive, maxkeep = self.get_argument('data', None), self.get_argument('json', None), self.get_argument('exclusive', True), self.get_argument('maxkeep', 20)
+
+        data = data.strip() if data is not None else None
+        data = data if data!='' else None
+        jsons = jsons.strip() if jsons is not None else None
+        jsons = json.dumps(json.loads(jsons)) if jsons is not None and jsons!='' else None
+
+        with models.db.atomic() as d:
+            # add new crond object to database if task has exist
+            crond = models.Crond.filter(d, code=code).one()
+            if crond is None:
+                raise error.task_not_exist
+
+            crond.update(code=code, name=name, config=config, method=method, url=url, data=data, json=jsons,
+                                 status=status, exclusive=exclusive, maxkeep=maxkeep, mtime=int(time.time()))
+            crond.save(d)
+
+            id = str(crond.id)
+            # replace task
+            stopped = True if crond.status=='stopped' else False
+            remote.taskmanager.delete(id)
+            remote.taskmanager.add(id, crond.code, crond.name, crond.config, crond.method, crond.url, data=crond.data, json=crond.json, stopped=stopped,
+                                   exclusive=crond.exclusive, maxkeep=crond.maxkeep, ctime=crond.ctime, mtime=crond.mtime)
 
             # get the new task
             crond = remote.taskmanager.status(id)

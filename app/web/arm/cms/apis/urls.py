@@ -120,6 +120,7 @@ urlpatterns = [
     path('sys/crond/load', sys.crond.load, name="api.sys.crond.load"),
     path('sys/crond/get', sys.crond.get, name="api.sys.crond.get"),
     path('sys/crond/add', sys.crond.add, name="api.sys.crond.add"),
+    path('sys/crond/update', sys.crond.update, name="api.sys.crond.update"),
     path('sys/crond/delete', sys.crond.delete, name="api.sys.crond.delete"),
     path('sys/crond/clear', sys.crond.clear, name="api.sys.crond.clear"),
     path('sys/crond/enable', sys.crond.enable, name="api.sys.crond.enable"),
