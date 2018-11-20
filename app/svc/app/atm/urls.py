@@ -11,5 +11,7 @@ handlers = [
     (r"/task/trade/place", handlers.trade.PlaceHandler),
     (r"/task/trade/notify", handlers.trade.NotifyHandler),
     (r"/task/trade/clear", handlers.trade.ClearHandler),
-    (r"/task/trade/expire", handlers.trade.ExpireHandler)
+    (r"/task/trade/expire", handlers.trade.ExpireHandler),
+
+    (r"/task/risk/check", handlers.risker.CheckHandler),
 ]

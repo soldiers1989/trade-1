@@ -36,7 +36,7 @@
             <div iconCls="icon-remove" onclick="tradeorder.edit.delete.do()">删除</div>
         </div>
     </span>
-    <span style="float: right; margin-right: 18px;">
+    <span style="float: right; margin-right: 10px;">
         <form class="easyui-form" id="trade_order_search_form">
             <input name="otype" data-options="prompt:'委托类型', editable:false, required:false" style="width: 12%;">
             <input name="optype" data-options="prompt:'报价类型', editable:false, required:false" style="width: 12%;">
@@ -45,7 +45,7 @@
             <input name="sdate" class="easyui-datebox" validType="date" style="width: 12%;">
             <span>-</span>
             <input name="edate" class="easyui-datebox" validType="date" style="width: 12%;">
-            <input name="words" class="easyui-textbox" data-options="prompt:'id/股票/账户/..'">
+            <input name="words" class="easyui-textbox" data-options="prompt:'id/股票/账户/..',width:100">
 
             <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="tradeorder.search.do()">查询</a>
             <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="tradeorder.search.reset()">重置</a>

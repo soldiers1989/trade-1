@@ -47,9 +47,12 @@ class MetaModel(type):
 
 class Model(dict, metaclass=MetaModel):
     def __init__(self, **kwargs):
-        super().__init__()
-        for code, field in self.fields().items():
-            self[code] = field.value(kwargs.get(code, field.default))
+        if hasattr(self.__class__, '__fields__'):
+            super().__init__()
+            for code, field in self.fields().items():
+                self[code] = field.value(kwargs.get(code, field.default))
+        else:
+            super().__init__(**kwargs)
 
     def __getattr__(self, code):
         return self[code]
@@ -64,12 +67,15 @@ class Model(dict, metaclass=MetaModel):
         :param value:
         :return:
         """
-        fields = self.fields()
-        field = fields.get(code)
-        if field is None:
-            raise field.ErrorFieldNotExist(code)
+        if hasattr(self.__class__, '__fields__'):
+            fields = self.fields()
+            field = fields.get(code)
+            if field is None:
+                raise field.ErrorFieldNotExist(code)
 
-        self[code] = field.value(value)
+            self[code] = field.value(value)
+        else:
+            self[code] = value
 
     def values(self, noauto=False):
         """
@@ -78,6 +84,9 @@ class Model(dict, metaclass=MetaModel):
         :return:
             list
         """
+        if not hasattr(self.__class__, '__fields__'):
+            return super().values()
+
         vals = []
         for code in self.fieldcodes():
             if noauto and self.__auto__ == code:
@@ -92,6 +101,9 @@ class Model(dict, metaclass=MetaModel):
         :return:
             dict
         """
+        if not hasattr(self.__class__, '__fields__'):
+            return self
+
         fvs = {}
         for k, v in self.items():
             if noauto and k == self.__auto__:
@@ -105,6 +117,9 @@ class Model(dict, metaclass=MetaModel):
         :param val:
         :return:
         """
+        #if hasattr(self.__class__, '__auto__'):
+        #    raise ModelError('auto field not set')
+
         if self.__auto__ is not None:
             self[self.__auto__] = val
 
@@ -115,10 +130,16 @@ class Model(dict, metaclass=MetaModel):
         :return:
             dict, name->field
         """
+        if not hasattr(cls, '__fields__'):
+            raise ModelError('fields not set')
+
         return cls.__fields__
 
     @classmethod
     def tablename(cls):
+        if not hasattr(cls, '__table__'):
+            raise ModelError('table name not set')
+
         return cls.__table__
 
     @classmethod
@@ -129,6 +150,9 @@ class Model(dict, metaclass=MetaModel):
         :return:
             list
         """
+        if not hasattr(cls, '__fields__'):
+            raise ModelError('fields not set')
+
         codes = []
         for k in cls.__fields__.keys():
             if noauto and cls.__auto__ == k:
@@ -143,6 +167,9 @@ class Model(dict, metaclass=MetaModel):
         :return:
             list
         """
+        if not hasattr(cls, '__fields__'):
+            raise ModelError('fields not set')
+
         names = []
         for field in cls.__fields__.values():
             names.append(field.name)

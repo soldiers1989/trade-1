@@ -129,6 +129,18 @@
   },
   {
     "model": "adb.module",
+    "pk": 17,
+    "fields": {
+      "parent": 10,
+      "name": "交易风控",
+      "path": "/cms/trade/risker/",
+      "order": 17,
+      "disable": 0,
+      "ctime": 1527261052
+    }
+  },
+  {
+    "model": "adb.module",
     "pk": 20,
     "fields": {
       "name": "用户管理",

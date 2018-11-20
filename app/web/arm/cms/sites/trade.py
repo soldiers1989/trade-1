@@ -41,3 +41,13 @@ def dash(request):
     :return:
     """
     return render(request, 'trade/dash.html')
+
+
+@auth.need_permit
+def risker(request):
+    """
+
+    :param request:
+    :return:
+    """
+    return render(request, 'trade/risker.html')

@@ -569,3 +569,39 @@ class Aam(Rpc):
 
         # access service
         return self.post(path, params=params)
+
+    def trade_risk_holds(self):
+        """
+            get user trade list holding now
+        :return:
+        """
+        # remote path
+        path = '/trade/risk/holds'
+
+        # access service
+        return self.get(path)
+
+    def trade_risk_get(self, type):
+        """
+            get risk trade list by type
+        :param type: str, warn or loss
+        :return:
+        """
+        # remote path
+        path = '/trade/risk/get'
+
+        # access service
+        return self.get(path, params={'type':type})
+
+    def trade_risk_set(self, type, trades):
+        """
+            set risk trade list by type
+        :param type: str, warn or loss
+        :param trades: list, trade list
+        :return:
+        """
+        # remote path
+        path = '/trade/risk/set'
+
+        # access service
+        return self.post(path, params={'type':type}, json=trades)

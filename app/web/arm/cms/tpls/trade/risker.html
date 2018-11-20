@@ -1,0 +1,284 @@
+<div class="easyui-layout" data-options="fit:true, split:true, border: true">
+    <div data-options="region:'center', split:true" style="width: 100%;">
+        <table id="datagrid_trade_risker_list" style="height: 100%;"></table>
+    </div>
+</div>
+
+<div id="toolbar_trade_risker_list" style="height: 32px">
+    <span style="float: left">
+        <a href="#" class="easyui-linkbutton" id="linkbutton_trade_risker_stoploss" iconCls="icon-reload" plain="true" onclick="traderisker.toolbar.stoploss.do()" disabled="">一键止损</a>
+    </span>
+    <span style="margin-left: 300px">
+        <span style="margin-left: 20px">本金总额:<b id="brief_trade_risker_capital" style="color: red">-</b></span>
+        <span style="margin-left: 20px">资产余额:<b id="brief_trade_risker_marketv" style="color: red">-</b></span>
+        <span style="margin-left: 20px">总保证金:<b id="brief_trade_risker_margin" style="color: red">-</b></span>
+        <span style="margin-left: 20px">总建仓费:<b id="brief_trade_risker_ofee" style="color: red">-</b></span>
+        <span style="margin-left: 20px">总延期费:<b id="brief_trade_risker_dfee" style="color: red">-</b></span>
+    </span>
+
+    <span style="float: right; margin-right: 18px;">
+        <form class="easyui-form" id="form_trade_risker_search">
+            <input name="type" class="easyui-combobox" data-options="prompt:'风控类别', required:false, editable:false, width:'100',
+                                                                     valueField:'id', textField:'text',
+                                                                     data:[{'id':'','text':'全部'},{'id':'stoploss','text':'止损'},{'id':'warning','text':'预警'},{'id':'normal','text':'正常'}],">
+
+            <a href="#" class="easyui-linkbutton" iconCls="icon-search" onclick="traderisker.toolbar.search.do()">查询</a>
+            <a href="#" class="easyui-linkbutton" iconCls="icon-reload" onclick="traderisker.toolbar.search.reset()">重置</a>
+        </form>
+    </span>
+</div>
+
+<script type="text/javascript">
+    var traderisker = {
+        // tool bar
+        toolbar: {
+            // stop loss
+            stoploss: {
+                url: '/api/trade/risker/stoploss',
+                btn: $('#linkbutton_trade_risker_stoploss'),
+
+                enable: function () {
+                    this.btn.linkbutton('enable');
+                },
+
+                disable: function () {
+                    this.btn.linkbutton('disable');
+                },
+
+                reset: function () {
+                    type = traderisker.toolbar.search.type();
+                    if (type==='stoploss'){
+                        this.enable();
+                    } else {
+                        this.disable();
+                    }
+                },
+
+                do: function () {
+                    $.messager.confirm({
+                        title: '确认',
+                        msg: '确认市价平仓全部止损交易?',
+                        url: traderisker.toolbar.stoploss.url,
+                        fn: function (r) {
+                            if (r) {
+                                $.post(this.url, {}, function (resp, status) {
+                                    if (resp.status)
+                                        $.messager.show({title: '信息', msg: '交易止损成功'});
+                                    else
+                                        $.messager.show({title: '错误', msg: '交易止损失败<br>'+resp.msg});
+                                }, 'json').fail(function () {
+                                    $.messager.show({title: '错误', msg: '交易止损失败'});
+                                });
+
+                                //reload data list
+                                traderisker.list.load({});
+                            }
+                        }
+                    });
+                }
+            },
+
+            // brief
+            brief: {
+                set: function (capital, marketv, margin, ofee, dfee) {
+                    $('#brief_trade_risker_capital').text(capital);
+                    $('#brief_trade_risker_marketv').text(marketv);
+                    $('#brief_trade_risker_margin').text(margin);
+                    $('#brief_trade_risker_ofee').text(ofee);
+                    $('#brief_trade_risker_dfee').text(dfee);
+                }
+            },
+
+            // search
+            search: {
+                form: $('#form_trade_risker_search'),
+
+                type: function () {
+                    return this.form.find('input[name="type"]:first').val();
+                },
+
+                do: function () {
+                    //check search form
+                    if(!this.form.form('validate'))
+                        return;
+
+                    //get parameters
+                    params = {
+                        type: this.form.find('input[name="type"]:first').val()
+                    };
+
+                    //load data
+                    traderisker.list.load(params);
+                },
+
+                reset: function () {
+                    // clear form
+                    this.form.form('clear');
+                    // load data
+                    traderisker.list.load({});
+                }
+            }
+        },
+
+        //trade list
+        list: {
+            url: '/api/trade/risker/list',
+            datagrid: $('#datagrid_trade_risker_list'),
+
+            init: function() {
+                this.datagrid.datagrid({
+                    method: 'get',
+                    url: this.url,
+
+                    toolbar: '#toolbar_trade_risker_list',
+
+                    striped: true,
+                    fitColumns: true,
+                    pagination: false,
+                    rownumbers: true,
+                    singleSelect: true,
+
+
+                    idField: 'id',
+                    frozenColumns: [[
+                        {field:'id', title:'ID'},
+                        {field:'user', title:'用户'},
+                        {field:'scode', title:'股票代码'},
+                        {field:'sname', title:'股票名称'},
+                        {field:'status', title:'交易状态'},
+                        {field:'capital', title:'初始本金'},
+                        {field:'marketv', title:'资产余额'},
+                        {field:'marketw', title:'预警余额'},
+                        {field:'markets', title:'止损余额'}
+                    ]],
+                    columns: [[
+                        {field:'account', title:'交易账户'},
+                        {field:'optype', title:'买入方式'},
+                        {field:'lever', title:'杠杆'},
+                        {field:'oprice', title:'订单价'},
+                        {field:'ocount', title:'订单量'},
+                        {field:'hprice', title:'持仓价'},
+                        {field:'hcount', title:'持仓量'},
+                        {field:'fcount', title:'可卖量'},
+                        {field:'bprice', title:'买入价'},
+                        {field:'bcount', title:'买入量'},
+                        {field:'sprice', title:'卖出价'},
+                        {field:'scount', title:'卖出量'},
+                        {field:'margin', title:'保证金'},
+                        {field:'ofee', title:'建仓费'},
+                        {field:'dday', title:'天数'},
+                        {field:'dfee', title:'延期费'},
+                        {field:'tprofit', title:'盈利'},
+                        {field:'sprofit', title:'分成'},
+                        {field:'ctime', title:'创建日', formatter: cube.format.datetime},
+                        {field:'ftime', title:'结束日', formatter: cube.format.datetime}
+                    ]],
+
+                    rowStyler: function(index, row) {
+                        if(row.risk==='normal'){
+                            return 'background: #4cae4c;';
+                        } else if (row.risk==='warning'){
+                            return 'background: #ff9999;';
+                        } else if (row.risk==='stoploss'){
+                            return 'background: #c9302c;';
+                        } else {
+                            return 'background: #698cba;';
+                        }
+                    },
+
+                    loadFilter: function (resp) {
+                        if(!resp.status){
+                            $.messager.show({title: '错误', msg: resp.msg});
+                            return {total:0, rows:[]}
+                        }
+                        return resp.data;
+                    },
+
+                    onLoadSuccess: function(data) {
+                        //console.log(data);
+                        //reset stop loss button
+                        traderisker.toolbar.stoploss.reset();
+
+                        //set brief data
+                        brief = data.brief;
+                        traderisker.toolbar.brief.set(brief.capital, brief.marketv, brief.margin, brief.ofee, brief.dfee);
+
+                        //clear selections
+                        $(this).datagrid('clearSelections');
+                    },
+
+                    onLoadError: function() {
+                        $.messager.show({title: '错误', msg: '请求风控数据失败'});
+                    },
+
+                    onSelect: function(index, row) {
+                    }
+                });
+            },
+
+            load: function(params) {
+                this.datagrid.datagrid('load', params);
+            },
+
+            reload: function() {
+                this.datagrid.datagrid('reload');
+            },
+
+            insertRow: function(row) {
+                index = 0;
+                this.datagrid.datagrid('insertRow', {
+                  index: index,
+                  row: row
+                });
+
+                this.datagrid.datagrid('selectRow', index);
+            },
+
+            updateRow: function(row) {
+                index = this.datagrid.datagrid('getRowIndex', row.id);
+                this.datagrid.datagrid('updateRow', {
+                    index: index,
+                    row: row
+                });
+                this.datagrid.datagrid('selectRow', index);
+            },
+
+            getSelected: function() {
+                row = this.datagrid.datagrid('getSelected');
+                return row;
+            },
+
+            deleteSelected: function() {
+                row = this.datagrid.datagrid('getSelected');
+                if(!row)
+                    return;
+
+                rindex = this.datagrid.datagrid('getRowIndex', row);
+
+                this.datagrid.datagrid('deleteRow', rindex);
+            },
+
+            updateSelected: function(rdata) {
+                row = this.datagrid.datagrid('getSelected');
+                if(!row)
+                    return;
+
+                rindex = this.datagrid.datagrid('getRowIndex', row);
+                this.datagrid.datagrid('updateRow', {
+                    index: rindex,
+                    row: rdata
+                });
+            }
+        },
+
+        init: function () {
+            this.list.init()
+        }
+    };
+
+    //init page
+    $(function(){
+        traderisker.init();
+    });
+
+</script>

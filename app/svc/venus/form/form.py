@@ -29,19 +29,25 @@ class MetaForm(type):
 
 class Form(dict, metaclass=MetaForm):
     def __init__(self, **kwargs):
-        super().__init__()
-        for code, field in self.fields().items():
-            self[code] = field.value(kwargs.get(code, field.default))
+        if hasattr(self.__class__, '__fields__'):
+            super().__init__()
+            for code, field in self.fields().items():
+                self[code] = field.value(kwargs.get(code, field.default))
+        else:
+            super().__init__(**kwargs)
 
     def __getattr__(self, name):
         return self[name]
 
     def __setattr__(self, name, value):
-        field = self.fields().get(name)
-        if field is None:
-            raise field.ErrorFieldNotExist(name)
+        if hasattr(self.__class__, '__fields__'):
+            field = self.fields().get(name)
+            if field is None:
+                raise field.ErrorFieldNotExist(name)
 
-        self[name] = field.value(value)
+            self[name] = field.value(value)
+        else:
+            self[name] = value
 
     def values(self):
         """
