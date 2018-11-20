@@ -586,6 +586,7 @@ class TradeMargin(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
     trade = models.ForeignKey('UserTrade', on_delete=models.CASCADE, verbose_name='订单ID')
     item = models.CharField(max_length=16, verbose_name='类目')
+    prepay = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='预付')
     money = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='金额')
     detail = models.CharField(max_length=64, verbose_name='详情')
     ctime = models.BigIntegerField(verbose_name='时间')  # create time

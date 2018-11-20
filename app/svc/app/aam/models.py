@@ -256,6 +256,7 @@ class TradeMargin(model.Model):
     trade_id = field.IntegerField()
     item = field.StringField(max_length=16)
     detail = field.StringField(max_length=64)
+    prepay = field.DecimalField(digits=10, decimals=2)
     money = field.DecimalField(digits=10, decimals=2)
     ctime = field.IntegerField()
 

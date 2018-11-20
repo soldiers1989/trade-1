@@ -65,6 +65,9 @@ order_notify_data_invalid = ProcessError(-1305, '委托回报数据无效')
 
 trade_not_exist = ProcessError(-1306, '交易不存在')
 trade_operation_denied = ProcessError(-1306, '交易操作禁止')
+trade_lever_not_exist = ProcessError(-1306, '交易杠杆记录不存在')
+trade_margin_not_exist = ProcessError(-1306, '交易保证金记录不存在')
+trade_user_not_exist = ProcessError(-1306, '交易用户记录不存在')
 
 trade_count_not_match = ProcessError(-1308, '卖出成交数量和委托数量不一致')
 

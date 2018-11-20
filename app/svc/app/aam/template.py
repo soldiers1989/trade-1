@@ -20,7 +20,7 @@ bill = _Bill
 
 class _Margin:
     init = _ItemTpl('初始', '初始保证金%s元')
-    add = _ItemTpl('追加', '追加保证金%s元')
+    add = _ItemTpl('补保', '补充保证金%s元')
 
 
 margin = _Margin

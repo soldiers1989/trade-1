@@ -219,7 +219,7 @@ class UserBuyHandler(handler.Handler):
 
             # add trade margin record
             trademargin = models.TradeMargin(trade_id=usertrade.id, item=template.margin.init.item, detail=template.margin.init.detail%str(margin),
-                                             money=margin, ctime=int(time.time())).save(d)
+                                             prepay=margin, money=margin, ctime=int(time.time())).save(d)
 
             # response data
             data = {
@@ -686,19 +686,19 @@ class OrderBoughtHandler(handler.Handler):
             # get trade order object
             tradeorder = models.TradeOrder.filter(d, id=form.id, otype='buy', status__in=('sent', 'tocancel', 'canceling')).one()
             if tradeorder is None:
-                raise error.trade_operation_denied
+                raise error.order_not_exist
 
             # get user trade object
             usertrade = models.UserTrade.filter(d, id=tradeorder.trade_id, status__in=('buying', 'cancelbuy','buycanceling')).one()
             if usertrade is None:
-                raise error.trade_operation_denied
+                raise error.trade_not_exist
 
             # lock user
             with locker.user(usertrade.user_id):
                 # get trade lever
                 tradelever = models.TradeLever.filter(d, trade_id=usertrade.id).one()
                 if tradelever is None:
-                    raise error.trade_operation_denied
+                    raise error.trade_lever_not_exist
 
                 # update trade order
                 orderprestatus = tradeorder.status
@@ -717,6 +717,35 @@ class OrderBoughtHandler(handler.Handler):
                 # add trade fee record
                 tradefee = models.TradeFee(trade_id=usertrade.id, item=template.fee.open.item, detail=template.fee.open.detail % ofee,
                                            money=ofee, ctime=int(time.time())).save(d)
+
+                # return extra margin
+                margin = (tradeorder.dcount*tradeorder.dprice) / tradelever.lever
+                if usertrade.margin > margin:
+                    # upate trade margin
+                    trademargin = models.TradeMargin.filter(d, trade_id=usertrade.id).one()
+                    if trademargin is None:
+                        raise error.trade_margin_not_exist
+                    trademargin.money = margin
+                    trademargin.save(d)
+
+                    # extra margin
+                    extramargin = usertrade.margin - margin
+                    # get trade user
+                    tradeuser = models.User.filter(d, id=usertrade.user_id).one()
+                    if tradeuser is None:
+                        raise error.trade_user_not_exist
+
+                    # add user bill
+                    userbill = models.UserBill(user_id=tradeuser.id, code=rand.uuid(),item=template.bill.rmargin.item, detail=template.bill.rmargin.detail%(extramargin),
+                                               money=extramargin, bmoney=tradeuser.money, lmoney=tradeuser.money+extramargin, ctime=int(time.time()))
+                    userbill.save(d)
+
+                    # udpate user money
+                    tradeuser.money = tradeuser.money + extramargin
+                    tradeuser.save(d)
+
+                    # update user trade
+                    usertrade.margin = margin
 
                 # update user trade
                 tradeprestatus = usertrade.status
