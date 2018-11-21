@@ -1,6 +1,10 @@
 <div class="easyui-layout" data-options="fit:true, split:true, border: true">
-    <div data-options="region:'center', split:true" style="width: 100%;">
+    <div data-options="region:'west', split:true" style="width: 72%;">
         <table id="datagrid_trade_risker_list" style="height: 100%;"></table>
+    </div>
+    <div data-options="region:'center', split:true" style="width: 28%;">
+        <iframe id="iframe_trade_risker_quote" src="" style="height: 100%;width: 100%"></iframe>
+        <div id="empty_trade_risker_detail"><p style="text-align: center;">没有选择记录!</p></div>
     </div>
 </div>
 
@@ -11,17 +15,17 @@
         <a href="#" class="easyui-linkbutton" id="linkbutton_trade_risker_sell" iconCls="icon-redo" plain="true" onclick="traderisker.toolbar.operate.sell.do()" disabled>平仓</a>
         <a href="#" class="easyui-linkbutton" id="linkbutton_trade_risker_cancel" iconCls="icon-undo" plain="true" onclick="traderisker.toolbar.operate.sell.cancel()" disabled>撤平</a>
     </span>
-    <span style="margin-left: 150px">
-        <span style="margin-left: 20px">本金总额:<b id="brief_trade_risker_capital" style="color: red">-</b></span>
-        <span style="margin-left: 20px">资产余额:<b id="brief_trade_risker_marketv" style="color: red">-</b></span>
-        <span style="margin-left: 20px">总保证金:<b id="brief_trade_risker_margin" style="color: red">-</b></span>
-        <span style="margin-left: 20px">总建仓费:<b id="brief_trade_risker_ofee" style="color: red">-</b></span>
-        <span style="margin-left: 20px">总延期费:<b id="brief_trade_risker_dfee" style="color: red">-</b></span>
+    <span style="margin-left: 10px">
+        <span>总本金:<b id="brief_trade_risker_capital" style="color: red">-</b></span>
+        <span>总资产:<b id="brief_trade_risker_marketv" style="color: red">-</b></span>
+        <span>总保证金:<b id="brief_trade_risker_margin" style="color: red">-</b></span>
+        <span>总建仓费:<b id="brief_trade_risker_ofee" style="color: red">-</b></span>
+        <span>总延期费:<b id="brief_trade_risker_dfee" style="color: red">-</b></span>
     </span>
 
-    <span style="float: right; margin-right: 18px;">
+    <span style="float: right; margin-right: 0px;">
         <form class="easyui-form" id="form_trade_risker_search">
-            <input name="type" class="easyui-combobox" data-options="prompt:'风控类别', required:false, editable:false, width:'100',
+            <input name="type" class="easyui-combobox" data-options="prompt:'类别', required:false, editable:false, width:'60',
                                                                      valueField:'id', textField:'text',
                                                                      data:[{'id':'','text':'全部'},{'id':'stoploss','text':'止损'},{'id':'warning','text':'预警'},{'id':'normal','text':'正常'}],">
 
@@ -252,6 +256,7 @@
                         {field:'ocount', title:'订单量'},
                         {field:'hprice', title:'持仓价'},
                         {field:'hcount', title:'持仓量'},
+                        {field:'dqj', title:'当前价'},
                         {field:'fcount', title:'可卖量'},
                         {field:'bprice', title:'买入价'},
                         {field:'bcount', title:'买入量'},
@@ -298,10 +303,13 @@
                     },
 
                     onLoadSuccess: function(data) {
-                        console.log(data);
+                        //console.log(data);
                         //reset operate button state
                         traderisker.toolbar.operate.sellall.reset();
                         traderisker.toolbar.operate.sell.reset();
+
+                        //clear detail
+                        traderisker.detail.clear();
 
                         //set brief data
                         brief = data.brief;
@@ -317,6 +325,7 @@
 
                     onSelect: function(index, row) {
                         traderisker.toolbar.operate.sell.onselect(row);
+                        traderisker.detail.show(row);
                     }
                 });
             },
@@ -373,6 +382,26 @@
                     index: rindex,
                     row: rdata
                 });
+            }
+        },
+
+        detail: {
+            frame: $('#iframe_trade_risker_quote'),
+            empty: $('#empty_trade_risker_detail'),
+
+            clear: function(){
+                this.frame.hide();
+                this.empty.show();
+            },
+
+            show: function (row) {
+                this.empty.hide();
+                this.frame.show();
+                //show stock quote
+                secmap = {'600':'1','601':'1','603':'1', '000':'2','002':'2','300':'2'};
+                code = row.scode + secmap[row.scode.substr(0,3)];
+                this.frame.attr('src', 'https://emwap.eastmoney.com/quota/stock/index/'+code);
+                //$('#iframe_trade_order_quote').attr('src', 'http://m.10jqka.com.cn/stockpage/hs_'+resp.data.scode+'/');
             }
         },
 
