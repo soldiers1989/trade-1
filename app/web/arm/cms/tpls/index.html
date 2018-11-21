@@ -36,7 +36,7 @@
 
     <div data-options="region:'center'">
         <div class="easyui-tabs" id="index_main_tabs">
-            <div title="欢迎">
+            <div id='0' title="欢迎">
                 <h1 style="text-align: center;">欢迎使用运营管理系统!</h1>
             </div>
         </div>
@@ -68,10 +68,12 @@
                 login: function() {
                     //get login user information
                     $.post(this.url, function(resp, status){
-                        if(status=='success'){
+                        if(status==='success'){
                             // set user data
                             home.user.admin = resp.data.admin;
                             home.user.modules = resp.data.modules;
+
+                            //console.log(home.user.modules);
 
                             // init index page
                             home.page.show();
@@ -79,7 +81,10 @@
                             window.location('/cms/login/');
                         }
 
-                    }, 'json');
+                    }, 'json').fail(function () {
+                        $.messager.show({title:'错误', msg:'请求当前登录用户信息失败，请重新登录'});
+                        window.location('/cms/login/');
+                    });
                 },
 
                 //user logout
@@ -99,25 +104,29 @@
 
                 // get module
                 getmodule: function(id) {
+                    //console.log('find----'+id);
                     return this._getmodule(this.modules, id);
                 },
 
                 // get module
-                _getmodule: function(mdls, id) {
-                    if (mdls) {
-                        for (var i=0; i<mdls.length; i++){
-                            if (mdls[i].id == id) {
-                                return {id: mdls[i].id, title: mdls[i].text, url: mdls[i].attributes.url};
-                            }
-                        }
+                _getmodule: function(modules, id) {
+                    if (!modules)
+                        return null;
 
-                        for (i=0; i<mdls.length; i++) {
-                            info = this._getmodule(mdls[i].children, id);
-                            if (info){
-                                return info;
+                    module = null;
+                    for (var i=0; i<modules.length; i++){
+                        if (modules[i].id == id) {
+                            module = {id: modules[i].id, title: modules[i].text, url: modules[i].attributes.url};
+                        } else {
+                            if (modules[i].children){
+                                module = this._getmodule(modules[i].children, id);
                             }
                         }
+                        if (module != null)
+                            break
                     }
+
+                    return module;
                 }
             },
 
@@ -223,14 +232,12 @@
                             data: home.user.modules,
 
                             onClick: function(node) {
-                                id = node.id;
-                                title = node.text;
-                                url = node.attributes.url;
+                                id = node.id; title = node.text; url = node.attributes.url;
                                 if(url)
-                                    home.page.main.open(id, title, url);
+                                    home.page.main.open({id:id, title:title, url:url});
                             }
                         });
-                    },
+                    }
 
                 },
 
@@ -260,18 +267,18 @@
                             border: true,
 
                             onSelect: function(title, index) {
-                                moduleid = $($(this).tabs('getTab', index)).attr('id');
-                                home.page.main.setSelectedTab(moduleid);
+                                //open tab
+                                home.page.main.select(index);
                             },
 
                             onAdd: function(title, index) {
                                 moduleid = $($(this).tabs('getTab', index)).attr('id');
-                                home.page.main.addOpenedTab(moduleid);
+                                home.page.main.cookie.addOpenedTab(moduleid);
                             },
 
                             onBeforeClose: function(title, index) {
                                 moduleid = $($(this).tabs('getTab', index)).attr('id');
-                                home.page.main.delClosedTab(moduleid);
+                                home.page.main.cookie.delClosedTab(moduleid);
                             },
 
                             onContextMenu: function(e, title, index) {
@@ -284,40 +291,80 @@
                         });
 
                         // recover opened tabs
-                        omodules = this.getOpenedTabs();
-                        if (omodules) {
-                            for (var i=0; i<omodules.length; i++){
-                                m = home.user.getmodule(omodules[i]);
-                                if (m) {
-                                    this.open(m.id, m.title, m.url);
+                        moduleids = this.cookie.getOpenedTabs();
+                        if (moduleids) {
+                            for (i=0; i<moduleids.length; i++){
+                                module = home.user.getmodule(moduleids[i]);
+                                if (module) {
+                                    //console.log('init:'+moduleids[i]);
+                                    this.init(module);
+                                } else {
+                                    //console.log('close:'+moduleids[i]);
+                                    this.cookie.delClosedTab(moduleids[i]);
                                 }
                             }
                         }
 
-                        //select last selected tab
-                        smodule = this.getSelectedTab();
-                        if (smodule) {
-                            m = home.user.getmodule(smodule);
+                        // recover last selected tab
+                        moduleid = this.cookie.getSelectedTab();
+                        if (moduleid) {
+                            m = home.user.getmodule(moduleid);
                             if (m) {
                                 this.tabs.tabs('select', m.title);
                             }
                         }
                     },
 
-                    open: function(id, title, url) {
-                        if(this.tabs.tabs('exists', title)){
-                            this.tabs.tabs('select', title);
+                    // init tab pancel for module
+                    init: function(module) {
+                        this.tabs.tabs('add', {
+                            id: module.id,
+                            title: module.title,
+                            //href: module.url,
+                            closable: true,
+                            selected: false
+                        });
+                    },
+
+                    // open tab
+                    open: function(module) {
+                        //console.log('open: '+ module.title);
+                        if (this.tabs.tabs('exists', module.title)){
+                            this.tabs.tabs('select', module.title);
                         } else {
                             this.tabs.tabs('add', {
-                                id: id,
-                                title: title,
-                                href: url,
-                                closable: true,
-                                extractor:function(data){
-                                    return data;
-                                }
+                                id: module.id,
+                                title: module.title,
+                                //href: module.url,
+                                closable: true
                             });
+
+                            this.cookie.addOpenedTab(module.id);
+                            //console.log('opened:'+this.cookie.getOpenedTabs());
                         }
+                    },
+
+                    // select tab
+                    select: function(index) {
+                        // get tab panel
+                        tab = home.page.main.tabs.tabs('getTab', index);
+                        // get module object
+                        moduleid = $(tab).attr('id');
+                        module = home.user.getmodule(moduleid);
+                        if (module == null)
+                            return;
+
+                        this.tabs.tabs('update', {
+                            tab: tab,
+                            type: 'body',
+                            options: {
+                                href: module.url
+                            }
+                        });
+
+                        //set cookie
+                        this.cookie.setSelectedTab(moduleid);
+                        //console.log('selected:'+this.cookie.getSelectedTab());
                     },
 
                     close: function(option) {
@@ -332,21 +379,21 @@
                                 this.tabs.tabs('close',index);
                                 break;
                             case 'all':
-                                for (var i=1; i<total; i++)
+                                for (i=1; i<total; i++)
                                     this.tabs.tabs('close',1);
                                 break;
                             case 'other':
-                                for (var i=total-1; i>index; i--)
+                                for (i=total-1; i>index; i--)
                                     this.tabs.tabs('close', i);
-                                for (var i=1; i<index; i++)
+                                for (i=1; i<index; i++)
                                     this.tabs.tabs('close', 1);
                                 break;
                             case 'left':
-                                for (var i=1; i<index; i++)
+                                for (i=1; i<index; i++)
                                     this.tabs.tabs('close', 1);
                                 break;
                             case 'right':
-                                for (var i=total-1; i>index; i--)
+                                for (i=total-1; i>index; i--)
                                     this.tabs.tabs('close', i);
                                 break;
                             default:
@@ -356,59 +403,61 @@
 
                     refresh: function() {
                         // get tab
-                        var tab = this.tabs.tabs('getSelected');
-
+                        tab = this.tabs.tabs('getSelected');
                         // refresh tab
                         tab.panel('refresh');
                     },
 
-                    setSelectedTab: function(moduleid) {
-                        //console.log('select: '+moduleid);
-                        $.cookie('selectedtab', moduleid, {path: '/'});
-                    },
+                    // cookie to save tabs status
+                    cookie: {
+                        setSelectedTab: function(moduleid) {
+                            //console.log('select: '+moduleid);
+                            $.cookie('selectedtab', moduleid, {path: '/'});
+                        },
 
-                    getSelectedTab: function() {
-                        return $.cookie('selectedtab');
-                    },
+                        getSelectedTab: function() {
+                            return $.cookie('selectedtab');
+                        },
 
-                    getOpenedTabs: function() {
-                        var strtabs = $.cookie('openedtabs');
-                        if (strtabs){
-                            return strtabs.split(',');
-                        }
-                    },
-
-                    addOpenedTab: function(moduleid) {
-                        //console.log('open: ' + moduleid);
-                        var strtabs = $.cookie('openedtabs');
-                        if (!strtabs){
-                            $.cookie('openedtabs', moduleid, {path: '/'});
-                        } else {
-                            var tabs = strtabs.split(',');
-                            for (i=0; i<tabs.length; i++){
-                                if (tabs[i] == moduleid) {
-                                    return;
-                                }
+                        getOpenedTabs: function() {
+                            var strtabs = $.cookie('openedtabs');
+                            if (strtabs){
+                                return strtabs.split(',');
                             }
+                        },
 
-                            tabs.push(moduleid);
-                            $.cookie('openedtabs', tabs.join(','), {path: '/'});
-                        }
-                    },
-
-                    delClosedTab: function(moduleid) {
-                        //console.log('close: ' + moduleid);
-                        var strtabs = $.cookie('openedtabs');
-                        if (strtabs){
-                            var newtabs = [];
-                            var tabs = strtabs.split(',');
-                            for (i=0; i<tabs.length; i++){
-                                if (tabs[i] != moduleid) {
-                                    newtabs.push(tabs[i]);
+                        addOpenedTab: function(moduleid) {
+                            //console.log('open: ' + moduleid);
+                            var strtabs = $.cookie('openedtabs');
+                            if (!strtabs){
+                                $.cookie('openedtabs', moduleid, {path: '/'});
+                            } else {
+                                var tabs = strtabs.split(',');
+                                for (i=0; i<tabs.length; i++){
+                                    if (tabs[i] == moduleid) {
+                                        return;
+                                    }
                                 }
-                            }
 
-                            $.cookie('openedtabs', newtabs.join(','), {path: '/'});
+                                tabs.push(moduleid);
+                                $.cookie('openedtabs', tabs.join(','), {path: '/'});
+                            }
+                        },
+
+                        delClosedTab: function(moduleid) {
+                            //console.log('close: ' + moduleid);
+                            var strtabs = $.cookie('openedtabs');
+                            if (strtabs){
+                                var newtabs = [];
+                                var tabs = strtabs.split(',');
+                                for (i=0; i<tabs.length; i++){
+                                    if (tabs[i] != moduleid) {
+                                        newtabs.push(tabs[i]);
+                                    }
+                                }
+
+                                $.cookie('openedtabs', newtabs.join(','), {path: '/'});
+                            }
                         }
                     }
                 },
@@ -428,7 +477,7 @@
                 
                 // user login
                 this.user.login();
-            },
+            }
         };
 
       

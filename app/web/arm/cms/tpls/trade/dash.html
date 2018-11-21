@@ -216,13 +216,17 @@
                 $.get(tradedash.usertrade.url, tradedash.usertrade.params,
                     function (resp, status, xhr) {
                         if (status==='success'){
-                            $('#refresh_time_dash_user_trade').text((new Date()).toLocaleString());
-                            tradedash.usertrade.updateRows(resp.data.rows);
+                            try{
+                                $('#refresh_time_dash_user_trade').text((new Date()).toLocaleString());
+                                tradedash.usertrade.updateRows(resp.data.rows);
+                                tradedash.usertrade.autoRefresh();
+                            } catch (e) {
+
+                            }
                         } else {
                             $.messager.show({title: '错误', msg: '刷新用户交易数据失败'});
+                            tradedash.usertrade.autoRefresh();
                         }
-
-                        tradedash.usertrade.autoRefresh();
                     },
                     'json'
                 ).fail(function () {
@@ -383,19 +387,22 @@
             reload: function() {
                 $.get(tradedash.userorder.url, tradedash.userorder.params,
                     function (resp, status, xhr) {
-                        if (status==='success'){
-                            $('#refresh_time_dash_user_order').text((new Date()).toLocaleString());
-                            tradedash.userorder.updateRows(resp.data.rows);
+                        if (status === 'success') {
+                            try{
+                                $('#refresh_time_dash_user_order').text((new Date()).toLocaleString());
+                                tradedash.userorder.updateRows(resp.data.rows);
+                                tradedash.userorder.autoRefresh();
+                            } catch (e) {
+                            }
                         } else {
                             $.messager.show({title: '错误', msg: '刷新用户委托数据失败'});
+                            tradedash.userorder.autoRefresh();
                         }
-
-                        tradedash.userorder.autoRefresh();
                     },
                     'json'
                 ).fail(function () {
-                        $.messager.show({title: '错误', msg: '刷新用户委托数据失败'});
-                        tradedash.userorder.autoRefresh();
+                    $.messager.show({title: '错误', msg: '刷新用户委托数据失败'});
+                    tradedash.userorder.autoRefresh();
                 })
             },
 
@@ -555,12 +562,17 @@
                 $.get(tradedash.tradeorder.url, tradedash.tradeorder.params,
                     function (resp, status, xhr) {
                         if (status==='success'){
-                            $('#refresh_time_dash_trade_order').text((new Date()).toLocaleString());
-                            tradedash.tradeorder.updateRows(resp.data.rows);
+                            try{
+                                $('#refresh_time_dash_trade_order').text((new Date()).toLocaleString());
+                                tradedash.tradeorder.updateRows(resp.data.rows);
+                                tradedash.tradeorder.autoRefresh();
+                            } catch (e) {
+
+                            }
                         } else {
                             $.messager.show({title: '错误', msg: '刷新交易委托数据失败'});
+                            tradedash.tradeorder.autoRefresh();
                         }
-                        tradedash.tradeorder.autoRefresh();
                     },
                     'json'
                 ).fail(function () {
