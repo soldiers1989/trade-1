@@ -108,9 +108,9 @@
 </div>
 
 
-<div class="easyui-dialog" id="trade_update_dialog" style="width:620px;height: 500px;" data-options="closed:true,modal:true,border:'thin',buttons:'#trade_update_dialog_buttons'">
-    <form class="easyui-form" id="trade_update_form" method="post">
-        <div class="easyui-layout" style="width: 620px;height: 500px">
+<div class="easyui-dialog" id="user_trade_update_dialog" style="width:650px;height: 500px;" data-options="closed:true,modal:true,border:'thin',buttons:'#trade_update_dialog_buttons'">
+    <form class="easyui-form" id="user_trade_update_form" method="post">
+        <div class="easyui-layout" style="width: 620px;height: 480px;">
             <div region="west" style="width: 300px;padding: 10px;">
                 <div style="margin-bottom:10px">
                     <input class="easyui-textbox"  name="id" type="text" label="ID" style="width:100%" readonly>
@@ -181,7 +181,10 @@
                     <input class="easyui-textbox" name="sprice" data-options="label:'卖出价格', prompt:'输入卖出价格（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
                 </div>
                 <div style="margin-bottom:10px">
-                    <input class="easyui-textbox" name="margin" data-options="label:'保证金', prompt:'输入保证金（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                    <input class="easyui-textbox" name="margin" data-options="label:'初始保证金', prompt:'输入初始保证金（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                </div>
+                <div style="margin-bottom:10px">
+                    <input class="easyui-textbox" name="amargin" data-options="label:'补充保证金', prompt:'输入补充保证金（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
                 </div>
                 <div style="margin-bottom:10px">
                     <input class="easyui-textbox" name="ofee" data-options="label:'建仓费', prompt:'输入建仓费（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
@@ -193,7 +196,7 @@
                     <input class="easyui-textbox" name="dfee" data-options="label:'延期费', prompt:'输入延期费（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
                 </div>
                 <div style="margin-bottom:10px">
-                    <input class="easyui-textbox" name="tprofit" data-options="label:'盈利总额', prompt:'输入盈利总额（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
+                    <input class="easyui-textbox" name="tprofit" data-options="label:'盈利总额', prompt:'输入盈利总额（元）', required:false, validType:['number']" style="width:100%">
                 </div>
                 <div style="margin-bottom:10px">
                     <input class="easyui-textbox" name="sprofit" data-options="label:'盈利分成', prompt:'输入盈利分成（元）', required:false, validType:['number', 'min[0]']" style="width:100%">
@@ -372,8 +375,8 @@
             //modify action
             modify: {
                 url: '/api/user/trade/update',
-                dialog: $('#trade_update_dialog'),
-                form: $('#trade_update_form'),
+                dialog: $('#user_trade_update_dialog'),
+                form: $('#user_trade_update_form'),
 
                 // open update dialog
                 open: function() {
@@ -558,7 +561,8 @@
                         {field:'bcount', title:'买入量', sortable:true, formatter: cube.format.none},
                         {field:'sprice', title:'卖出价', sortable:true, formatter: cube.format.none},
                         {field:'scount', title:'卖出量', sortable:true, formatter: cube.format.none},
-                        {field:'margin', title:'保证金', sortable:true},
+                        {field:'margin', title:'初始保证金', sortable:true},
+                        {field:'amargin', title:'补充保证金', sortable:true},
                         {field:'ofee', title:'建仓费', sortable:true},
                         {field:'dday', title:'天数', sortable:true, formatter: cube.format.none},
                         {field:'dfee', title:'延期费', sortable:true, formatter: cube.format.none},

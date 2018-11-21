@@ -28,7 +28,7 @@ class ListHandler(handler.Handler):
             self.write(protocol.success(data=orders))
 
 
-class AccoutsHandler(handler.Handler):
+class AccountsHandler(handler.Handler):
     @access.exptproc
     @access.needtoken
     def get(self):

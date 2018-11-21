@@ -196,6 +196,7 @@ class UserTrade(model.Model):
     sprice = field.DecimalField(digits=10, decimals=2, default='0.00')
     scount = field.IntegerField(default=0)
     margin = field.DecimalField(digits=10, decimals=2)
+    amargin = field.DecimalField(digits=10, decimals=2)
     ofee = field.DecimalField(digits=10, decimals=2, default='0.00') # open fee
     dday = field.IntegerField(default=0) # delay days
     dfee = field.DecimalField(digits=10, decimals=2, default='0.00') # delay fee

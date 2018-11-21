@@ -421,7 +421,8 @@ class UserTrade(models.Model):
     bcount = models.IntegerField(verbose_name='买入数量')
     sprice = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='卖出价格')
     scount = models.IntegerField(verbose_name='卖出数量')
-    margin = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='保证金')
+    margin = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='初始保证金')
+    amargin = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='补充保证金')
     ofee = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='建仓费') # open fee
     dday = models.IntegerField(verbose_name='延期日') # delay days
     dfee = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='延期费') # delay fee

@@ -265,6 +265,7 @@
                             plain: true,
                             fit: true,
                             border: true,
+                            //pill: true,
 
                             onSelect: function(title, index) {
                                 //open tab
@@ -374,6 +375,7 @@
                         // current selected tab
                         var index = this.tabs.tabs('getTabIndex', tab);
 
+                        var i;
                         switch (option) {
                             case 'current':
                                 this.tabs.tabs('close',index);
@@ -433,7 +435,7 @@
                                 $.cookie('openedtabs', moduleid, {path: '/'});
                             } else {
                                 var tabs = strtabs.split(',');
-                                for (i=0; i<tabs.length; i++){
+                                for (var i=0; i<tabs.length; i++){
                                     if (tabs[i] == moduleid) {
                                         return;
                                     }
@@ -450,7 +452,7 @@
                             if (strtabs){
                                 var newtabs = [];
                                 var tabs = strtabs.split(',');
-                                for (i=0; i<tabs.length; i++){
+                                for (var i=0; i<tabs.length; i++){
                                     if (tabs[i] != moduleid) {
                                         newtabs.push(tabs[i]);
                                     }

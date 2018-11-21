@@ -58,7 +58,9 @@ urlpatterns = [
     path('trade/order/process', trade.order.process, name="api.trade.order.process"),
 
     path('trade/risker/list', trade.risker.list, name="api.trade.risker.list"),
-    path('trade/risker/stoploss', trade.risker.stoploss, name="api.trade.risker.stoploss"),
+    path('trade/risker/check', trade.risker.check, name="api.trade.risker.check"),
+    path('trade/risker/sell', trade.risker.sell, name="api.trade.risker.sell"),
+    path('trade/risker/cancel', trade.risker.cancel, name="api.trade.risker.cancel"),
 
     path('user/user/list', user.user.list, name="api.user.user.list"),
     path('user/user/query', user.user.query, name="api.user.user.query"),

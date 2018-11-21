@@ -87,7 +87,7 @@ def check(*args, **kwargs):
             usertrade['capital'] = str(_money(_money(usertrade['bprice'])*_money(usertrade['bcount']))) # original capital
             usertrade['marketw'] = str(_money(_money(usertrade['capital']) * decimal.Decimal(usertrade['wline']))) # warning market value
             usertrade['markets'] = str(_money(_money(usertrade['capital']) * decimal.Decimal(usertrade['sline']))) # stop loss market value
-            usertrade['marketv'] = str(_money(_money(usertrade['hcount'])*_money(quotes[usertrade['scode']]['dqj']) + _money(usertrade['sprice'])*_money(usertrade['scount']) + _money(usertrade['margin']))) # current market value
+            usertrade['marketv'] = str(_money(_money(usertrade['hcount'])*_money(quotes[usertrade['scode']]['dqj']) + _money(usertrade['sprice'])*_money(usertrade['scount']) + _money(usertrade['amargin']))) # current market value
             usertrade['rtime'] = int(time.time()) # risk fresh time
 
             if decimal.Decimal(usertrade['marketv']) < decimal.Decimal(usertrade['markets']):

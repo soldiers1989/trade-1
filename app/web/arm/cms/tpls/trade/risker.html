@@ -6,9 +6,12 @@
 
 <div id="toolbar_trade_risker_list" style="height: 32px">
     <span style="float: left">
-        <a href="#" class="easyui-linkbutton" id="linkbutton_trade_risker_stoploss" iconCls="icon-reload" plain="true" onclick="traderisker.toolbar.stoploss.do()" disabled="">一键止损</a>
+        <a href="#" class="easyui-linkbutton" id="linkbutton_trade_risker_check" iconCls="icon-help" plain="true" onclick="traderisker.toolbar.operate.check.do()">检查</a>
+        <a href="#" class="easyui-linkbutton" id="linkbutton_trade_risker_sellall" iconCls="icon-reload" plain="true" onclick="traderisker.toolbar.operate.sellall.do()" disabled>全平</a>
+        <a href="#" class="easyui-linkbutton" id="linkbutton_trade_risker_sell" iconCls="icon-redo" plain="true" onclick="traderisker.toolbar.operate.sell.do()" disabled>平仓</a>
+        <a href="#" class="easyui-linkbutton" id="linkbutton_trade_risker_cancel" iconCls="icon-undo" plain="true" onclick="traderisker.toolbar.operate.sell.cancel()" disabled>撤平</a>
     </span>
-    <span style="margin-left: 300px">
+    <span style="margin-left: 150px">
         <span style="margin-left: 20px">本金总额:<b id="brief_trade_risker_capital" style="color: red">-</b></span>
         <span style="margin-left: 20px">资产余额:<b id="brief_trade_risker_marketv" style="color: red">-</b></span>
         <span style="margin-left: 20px">总保证金:<b id="brief_trade_risker_margin" style="color: red">-</b></span>
@@ -32,49 +35,138 @@
     var traderisker = {
         // tool bar
         toolbar: {
-            // stop loss
-            stoploss: {
-                url: '/api/trade/risker/stoploss',
-                btn: $('#linkbutton_trade_risker_stoploss'),
+            // operate for record
+            operate: {
+                // risk check
+                check: {
+                    url: '/api/trade/risker/check',
+                    btncheck: $('#linkbutton_trade_risker_check'),
 
-                enable: function () {
-                    this.btn.linkbutton('enable');
-                },
-
-                disable: function () {
-                    this.btn.linkbutton('disable');
-                },
-
-                reset: function () {
-                    type = traderisker.toolbar.search.type();
-                    if (type==='stoploss'){
-                        this.enable();
-                    } else {
-                        this.disable();
+                    do: function () {
+                        $.post(this.url, {}, function (resp, status) {
+                            if (resp.status){
+                                $.messager.show({title: '信息', msg: '开始风控检查'});
+                            }
+                            else
+                                $.messager.show({title: '错误', msg: '风控检查失败<br>' + resp.msg});
+                        }, 'json').fail(function () {
+                            $.messager.show({title: '错误', msg: '风控检查失败'});
+                        });
                     }
                 },
 
-                do: function () {
-                    $.messager.confirm({
-                        title: '确认',
-                        msg: '确认市价平仓全部止损交易?',
-                        url: traderisker.toolbar.stoploss.url,
-                        fn: function (r) {
-                            if (r) {
-                                $.post(this.url, {}, function (resp, status) {
-                                    if (resp.status)
-                                        $.messager.show({title: '信息', msg: '交易止损成功'});
-                                    else
-                                        $.messager.show({title: '错误', msg: '交易止损失败<br>'+resp.msg});
-                                }, 'json').fail(function () {
-                                    $.messager.show({title: '错误', msg: '交易止损失败'});
-                                });
+                // sell all
+                sellall: {
+                    btnsellall: $('#linkbutton_trade_risker_sellall'),
 
-                                //reload data list
-                                traderisker.list.load({});
+                    do: function () {
+                        $.messager.confirm({
+                            title: '确认',
+                            msg: '确认市价平仓全部止损交易?',
+                            url: '/api/trade/risker/sell',
+                            fn: function (r) {
+                                if (r) {
+                                    $.post(this.url, {}, function (resp, status) {
+                                        if (resp.status)
+                                            $.messager.show({title: '信息', msg: '止损交易全部平仓成功'});
+                                        else
+                                            $.messager.show({title: '错误', msg: '止损交易全部平仓失败<br>' + resp.msg});
+
+                                        //reload data list
+                                        traderisker.list.reload();
+                                    }, 'json').fail(function () {
+                                        $.messager.show({title: '错误', msg: '止损交易全部平仓失败'});
+                                    });
+                                }
                             }
+                        });
+                    },
+
+                    reset: function () {
+                        type = traderisker.toolbar.search.type();
+                        if (type === 'stoploss') {
+                            this.btnsellall.linkbutton('enable');
+                        } else {
+                            this.btnsellall.linkbutton('disable');
                         }
-                    });
+                    }
+                },
+
+                sell: {
+                    btnsell: $('#linkbutton_trade_risker_sell'),
+                    btncancel: $('#linkbutton_trade_risker_cancel'),
+
+                    do: function () {
+                        var row = traderisker.list.getSelected();
+                        $.messager.confirm({
+                            title: '确认',
+                            msg: '确认市价平仓当前交易?',
+                            url: '/api/trade/risker/sell',
+                            row: row,
+                            fn: function (r) {
+                                if (r) {
+                                    $.post(this.url, {id:this.row.id}, function (resp, status) {
+                                        if (resp.status)
+                                            $.messager.show({title: '信息', msg: '止损交易平仓成功'});
+                                        else
+                                            $.messager.show({title: '错误', msg: '止损交易平仓失败<br>' + resp.msg});
+
+                                         //reload data list
+                                        traderisker.list.reload();
+
+                                    }, 'json').fail(function () {
+                                        $.messager.show({title: '错误', msg: '止损交易平仓失败'});
+                                    });
+
+                                    //reload data list
+                                    traderisker.list.reload();
+                                }
+                            }
+                        });
+                    },
+
+                    cancel: function () {
+                        var row = traderisker.list.getSelected();
+                        $.messager.confirm({
+                            title: '确认',
+                            msg: '确认撤销平仓操作?',
+                            url: '/api/trade/risker/cancel',
+                            row: row,
+                            fn: function (r) {
+                                if (r) {
+                                    $.post(this.url, {id:this.row.id}, function (resp, status) {
+                                        if (resp.status)
+                                            $.messager.show({title: '信息', msg: '撤销平仓操作成功'});
+                                        else
+                                            $.messager.show({title: '错误', msg: '撤销平仓操作失败<br>' + resp.msg});
+
+                                         //reload data list
+                                        traderisker.list.reload();
+                                    }, 'json').fail(function () {
+                                        $.messager.show({title: '错误', msg: '撤销平仓操作失败'});
+                                    });
+                                }
+                            }
+                        });
+                    },
+
+                    reset: function () {
+                        this.btnsell.linkbutton('disable');
+                        this.btncancel.linkbutton('disable');
+                    },
+
+                    onselect: function (row) {
+                        if (row.status==='toclose' || row.status==='closing'){
+                            this.btnsell.linkbutton('disable');
+                            this.btncancel.linkbutton('enable');
+                        } else if(row.status==='hold' && row.risk==='stoploss'){
+                            this.btnsell.linkbutton('enable');
+                            this.btncancel.linkbutton('disable');
+                        } else {
+                            this.btnsell.linkbutton('disable');
+                            this.btncancel.linkbutton('disable');
+                        }
+                    }
                 }
             },
 
@@ -141,19 +233,20 @@
 
                     idField: 'id',
                     frozenColumns: [[
+                        {field:'rtime', title:'检查时间', formatter: cube.format.datetime},
+                        {field:'_status', title:'交易状态'},
                         {field:'id', title:'ID'},
                         {field:'user', title:'用户'},
                         {field:'scode', title:'股票代码'},
                         {field:'sname', title:'股票名称'},
-                        {field:'status', title:'交易状态'},
                         {field:'capital', title:'初始本金'},
-                        {field:'marketv', title:'资产余额'},
                         {field:'marketw', title:'预警余额'},
+                        {field:'marketv', title:'资产余额'},
                         {field:'markets', title:'止损余额'}
                     ]],
                     columns: [[
                         {field:'account', title:'交易账户'},
-                        {field:'optype', title:'买入方式'},
+                        {field:'_optype', title:'买入方式'},
                         {field:'lever', title:'杠杆'},
                         {field:'oprice', title:'订单价'},
                         {field:'ocount', title:'订单量'},
@@ -164,7 +257,8 @@
                         {field:'bcount', title:'买入量'},
                         {field:'sprice', title:'卖出价'},
                         {field:'scount', title:'卖出量'},
-                        {field:'margin', title:'保证金'},
+                        {field:'margin', title:'初始保证金'},
+                        {field:'amargin', title:'补充保证金'},
                         {field:'ofee', title:'建仓费'},
                         {field:'dday', title:'天数'},
                         {field:'dfee', title:'延期费'},
@@ -176,11 +270,20 @@
 
                     rowStyler: function(index, row) {
                         if(row.risk==='normal'){
-                            return 'background: #4cae4c;';
+                            return 'background: #00cd00;';
                         } else if (row.risk==='warning'){
-                            return 'background: #ff9999;';
+                            return 'background: #ffd700;';
                         } else if (row.risk==='stoploss'){
-                            return 'background: #c9302c;';
+                            if(row.status==='hold')
+                                return 'background: #ff3030;';
+                            else if(row.status==='toclose')
+                                return 'background: #ff9090;';
+                            else if(row.status==='closing')
+                                return 'background: #ffE0E0;';
+                            else if(row.status==='closed')
+                                return 'background: #FFEFDB;';
+                            else
+                                return 'background: #ff0000;';
                         } else {
                             return 'background: #698cba;';
                         }
@@ -195,9 +298,10 @@
                     },
 
                     onLoadSuccess: function(data) {
-                        //console.log(data);
-                        //reset stop loss button
-                        traderisker.toolbar.stoploss.reset();
+                        console.log(data);
+                        //reset operate button state
+                        traderisker.toolbar.operate.sellall.reset();
+                        traderisker.toolbar.operate.sell.reset();
 
                         //set brief data
                         brief = data.brief;
@@ -212,16 +316,17 @@
                     },
 
                     onSelect: function(index, row) {
+                        traderisker.toolbar.operate.sell.onselect(row);
                     }
                 });
             },
 
             load: function(params) {
-                this.datagrid.datagrid('load', params);
+                traderisker.list.datagrid.datagrid('load', params);
             },
 
             reload: function() {
-                this.datagrid.datagrid('reload');
+                traderisker.list.datagrid.datagrid('reload');
             },
 
             insertRow: function(row) {

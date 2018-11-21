@@ -16,9 +16,9 @@ class HoldsHandler(handler.Handler):
         with models.db.create() as d:
             # sql for tasks
             sql = 'select a.id, a.user_id, b.user, c.id as scode, c.name as sname, d.lever, d.wline, d.sline, a.tcode, a.optype, a.oprice, a.ocount, a.hprice, a.hcount, a.fcount, ' \
-                  'a.bprice, a.bcount, a.sprice, a.scount, a.margin, a.ofee, a.dday, a.dfee, a.tprofit, a.sprofit, a.account, a.status, a.ctime, a.mtime ' \
+                  'a.bprice, a.bcount, a.sprice, a.scount, a.margin, a.amargin, a.ofee, a.dday, a.dfee, a.tprofit, a.sprofit, a.account, a.status, a.ctime, a.mtime ' \
                   'from tb_user_trade a, tb_user b, tb_stock c, tb_trade_lever d ' \
-                  'where a.status="hold" and a.user_id=b.id and a.stock_id=c.id and a.id=d.trade_id'
+                  'where (a.status="hold" or a.status="toclose" or a.status="closing"or a.status="cancelclose") and a.user_id=b.id and a.stock_id=c.id and a.id=d.trade_id'
 
 
             # get hold status trade list
@@ -45,18 +45,17 @@ class GetHandler(handler.Handler):
 
         with models.db.create() as d:
             # get holding trade list from database
-            holds = models.UserTrade.filter(d, status__in=('hold','toclose','closing')).all()
+            holds = models.UserTrade.filter(d, status__in=('hold','toclose','closing','cancelclose','closed')).all()
             holds = {trade['id']: trade for trade in holds}
 
-            results = []
             # process risk data
             for item in data:
                 if item['id'] in holds.keys():
-                    item['status'] = holds[item['id']]['status']
-                    results.append(item)
+                    del holds[item['id']]['slog']
+                    item.update(holds[item['id']])
 
             # response data
-            self.write(protocol.success(msg='success', data=results))
+            self.write(protocol.success(msg='success', data=data))
 
 
 class SetHandler(handler.Handler):

@@ -46,6 +46,7 @@ class Update(forms.Form):
     sprice = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
     scount = forms.IntegerField(required=False)
     margin = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
+    amargin = forms.DecimalField(required=False, max_digits=10, decimal_places=2)
     ofee = forms.DecimalField(required=False, max_digits=10, decimal_places=2) # open fee
     dday = forms.IntegerField(required=False) # delay days
     dfee = forms.DecimalField(required=False, max_digits=10, decimal_places=2) # delay fee

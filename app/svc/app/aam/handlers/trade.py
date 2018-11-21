@@ -196,7 +196,7 @@ class UserBuyHandler(handler.Handler):
 
             # add user trade
             usertrade = models.UserTrade(user_id=form.user, stock_id=form.stock, coupon_id=form.coupon,
-                                        tcode=rand.uuid(), optype=form.optype, oprice=form.oprice, ocount=form.ocount, margin=margin,
+                                        tcode=rand.uuid(), optype=form.optype, oprice=form.oprice, ocount=form.ocount, margin=margin, amargin=0,
                                         status='tobuy', ctime=int(time.time()), mtime=int(time.time()))
             detail = status.trade_detail(**usertrade)
             usertrade.slog = status.append('user', 'buy', '', 'tobuy', detail)
@@ -327,7 +327,17 @@ class UserCancelHandler(handler.Handler):
 
             # get next status
             tradeprestatus = usertrade.status
+
+            # next trade status
             usertrade.status = tradestatus[tradeprestatus]
+            # process when order has canceled
+            if tradeorder.status == 'tcanceled':
+                if tradeprestatus in ['tosell', 'toclose', 'selling', 'closing']:
+                    usertrade.status = 'hold'
+                elif tradeprestatus in ['tobuy', 'buying']:
+                    usertrade.status = 'canceled'
+                else:
+                    pass
 
             # process cancel operation
             if usertrade.status == 'canceled': # -> canceled
@@ -341,7 +351,7 @@ class UserCancelHandler(handler.Handler):
                     usercoupon.utime = None
                     usercoupon.save(d)
 
-                # return margin #
+                # return init margin #
                 # add bill
                 models.UserBill(user_id=usertrade.id, code=rand.uuid(),
                                item=template.bill.rmargin.item, detail=template.bill.rmargin.detail % str(usertrade.margin),
@@ -561,7 +571,7 @@ class SysDropHandler(handler.Handler):
                     usercoupon.utime = None
                     usercoupon.save(d)
 
-                # return margin #
+                # return init margin #
                 # add bill
                 models.UserBill(user_id=usertrade.user_id, code=rand.uuid(),
                                 item=template.bill.rmargin.item, detail=template.bill.rmargin.detail % str(usertrade.margin),
@@ -784,7 +794,7 @@ class OrderSoldHandler(handler.Handler):
                 raise error.trade_operation_denied
 
             # get user trade object
-            usertrade = models.UserTrade.filter(d, id=tradeorder.trade_id, status__in=('selling', 'cancelsell','sellcanceling')).one()
+            usertrade = models.UserTrade.filter(d, id=tradeorder.trade_id, status__in=('selling', 'cancelsell','sellcanceling', 'closing', 'cancelclose', 'closecanceling')).one()
             if usertrade is None:
                 raise error.trade_operation_denied
 
@@ -822,14 +832,14 @@ class OrderSoldHandler(handler.Handler):
                 usertrade.scount = scount
                 usertrade.tprofit = tprofit
                 usertrade.sprofit = sprofit
-                usertrade.status = 'hold' if usertrade.hcount > 0 else 'sold'
+                usertrade.status = 'hold' if usertrade.hcount > 0 else 'sold' if tradeprestatus in ['selling','cancelsell','sellcanceling'] else 'closed'
                 usertrade.mtime = int(time.time())
                 detail = status.trade_detail(**usertrade)
                 usertrade.slog = status.append('sys', 'sold', tradeprestatus, usertrade.status, detail, usertrade.slog)
                 usertrade.save(d)
 
                 # settlement
-                if usertrade.status == 'sold':
+                if usertrade.status in ['sold','closed']:
                     # get user
                     user = models.User.filter(d, id=usertrade.user_id).one()
                     if user is None:
@@ -845,16 +855,17 @@ class OrderSoldHandler(handler.Handler):
                             coupon_discount = usercoupon.value
 
                     # bill money
-                    money = tprofit + usertrade.margin + coupon_cash - sprofit - (usertrade.ofee + usertrade.dfee)*coupon_discount
+                    money = tprofit + usertrade.margin  + usertrade.amargin + coupon_cash - sprofit - (usertrade.ofee + usertrade.dfee)*coupon_discount
+                    clearmoney = decimal.Decimal('0.00') if money < 0 else money
                     # bill detail
                     detail = template.bill.settle.detail % money.quantize(decimal.Decimal('0.00'))
                     # add bill
                     models.UserBill(user_id=user.id, code=rand.uuid(),
                                     item=template.bill.settle.item, detail=detail,
-                                    money=money, bmoney=user.money, lmoney=user.money+money, ctime=int(time.time())).save(d)
+                                    money=money, bmoney=user.money, lmoney=user.money+clearmoney, ctime=int(time.time())).save(d)
 
                     # update user
-                    user.money += money
+                    user.money += clearmoney
                     user.save(d)
 
                 # response data
@@ -910,7 +921,7 @@ class OrderCanceledHandler(handler.Handler):
                         usercoupon.utime = None
                         usercoupon.save(d)
 
-                    # return margin #
+                    # return initial margin #
                     # add bill
                     models.UserBill(user_id=user.id, code=rand.uuid(),
                                     item=template.bill.rmargin.item, detail=template.bill.rmargin.detail%(usertrade.margin),
@@ -981,7 +992,7 @@ class OrderExpiredHandler(handler.Handler):
                         usercoupon.utime = None
                         usercoupon.save(d)
 
-                    # return margin #
+                    # return initial margin #
                     # add bill
                     models.UserBill(user_id=user.id, code=rand.uuid(),
                                     item=template.bill.settle.item, detail=template.bill.settle.detail%(usertrade.margin),

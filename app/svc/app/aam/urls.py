@@ -13,7 +13,7 @@ handlers = [
     (r"/account/list", handlers.account.ListHandler),
     (r"/account/select", handlers.account.SelectHandler),
     (r"/account/order/list", handlers.order.ListHandler),
-    (r"/account/order/accounts", handlers.order.AccoutsHandler),
+    (r"/account/order/accounts", handlers.order.AccountsHandler),
     (r"/account/order/update", handlers.order.UpdateHandler),
     (r"/account/order/take", handlers.order.TakeHandler),
     (r"/account/order/place", handlers.order.PlaceHandler),
@@ -46,7 +46,7 @@ handlers = [
     (r"/trade/order/expired", handlers.trade.OrderExpiredHandler),
     (r"/trade/order/update", handlers.trade.OrderUpdateHandler),
 
-    (r"/trade/risk/holds", handlers.risk.HoldsHandler),
-    (r"/trade/risk/get", handlers.risk.GetHandler),
-    (r"/trade/risk/set", handlers.risk.SetHandler),
+    (r"/trade/risk/holds", handlers.risker.HoldsHandler),
+    (r"/trade/risk/get", handlers.risker.GetHandler),
+    (r"/trade/risk/set", handlers.risker.SetHandler),
 ]
