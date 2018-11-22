@@ -18,7 +18,7 @@ class PayHandler(handler.Handler):
         # get stock list
         results = provider.alipay.pay()
 
-        self.write(results)
+        #self.write(results)
         #self.redirect(results)
-        #self.write(template.loadpage('pay.html', form=results))
+        self.write(template.loadpage('pay.html', form=results))
 
